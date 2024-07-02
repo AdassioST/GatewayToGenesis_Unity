@@ -16,6 +16,8 @@ public class GameData : MonoBehaviour
 
     public bool canHaveVagabonds;
 
+    public _Resources resource;
+
     public string activeResourceTag = "food", foodStatus = "Stagnant";
 
     // Start is called before the first frame update
@@ -28,11 +30,12 @@ public class GameData : MonoBehaviour
     void Update()
     {
         UpdatePopulation();
+        UpdateClickPower();
     }
 
     private void UpdatePopulation()
     {
-        //Añadir el check de si hay casas libres. Si no hay disponibles y no se pueden vagabundos, no aumenta la población. Si se puede, se añaden como vagabundos, no como pop.
+        //Aï¿½adir el check de si hay casas libres. Si no hay disponibles y no se pueden vagabundos, no aumenta la poblaciï¿½n. Si se puede, se aï¿½aden como vagabundos, no como pop.
         //Cada pop utiliza 1 casa. Los vagabundos se convierten en pop cuando vuelve a haber casas disponibles cada cierto tiempo. Ej. 100 vagabundos se vuelven 10 pop cada 2 segundos por cada 10 casas libres.
 
         if (food >= populationGrowthThreshhold)
@@ -52,11 +55,26 @@ public class GameData : MonoBehaviour
             }
             else
             {
-                //Está 3 para tener un fijo de comida del siguiente nivel sin entrar enseguida al status de starving
+                //Estï¿½ 3 para tener un fijo de comida del siguiente nivel sin entrar enseguida al status de starving
 
                 food = food / 3;
             }
 
+        }
+
+    }
+
+    private void UpdateClickPower(){
+        if(population==basePopulation*10){
+            clickPower++;
+            basePopulation=population;
+        }
+    }
+
+    private void UpdateHousing(){
+        if(wood>20){
+            housing++;
+            
         }
 
     }
@@ -65,17 +83,18 @@ public class GameData : MonoBehaviour
     {
         food = 0; wood = 0;
 
-        housing = baseHousing; population = basePopulation;
+        housing = baseHousing; 
+        population = basePopulation;
 
         clickPower = baseClickPower;
     }
 
     public void AddResource(int amount, string resourceTag)
     {
-        switch (resourceTag)
+        switch (resource.tag)
         {
             case FOOD_TAG:
-                food += amount;
+                resource.addResource();
 
                 break;
 
