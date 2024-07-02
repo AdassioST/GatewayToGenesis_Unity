@@ -2,14 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-
+using UnityEngine.UI;
 public class DataTracker : MonoBehaviour
 {
-    [SerializeField] GameData gameData;
-
-    [SerializeField] private TMP_Text trackerText, statusText;
+   
 
     private bool hasUpdateStatus;
+
+    public _Resources resource;
+
+
+    public TMP_Text amount;
+    public TMP_Text status;
 
     // Start is called before the first frame update
     void Start()
@@ -25,18 +29,10 @@ public class DataTracker : MonoBehaviour
 
     public void UpdateTrackerUI()
     {
-        //Esto solo funciona para la comida, hay que hacer que todos tengan su update respectivo. Población, materiales para construir edificios, housing.
-
-        //También falta hacer que el Click Power se refleje en el número del material activo. El material activo depende de los materiales que se necesitan para cada edificio. Por default es comida.
-
-        trackerText.text = gameData.food + "/" + gameData.populationGrowthThreshhold;
-
-        if (hasUpdateStatus)
-        {
-            //Solo Population no debería tener estado.
-
-            statusText.text = gameData.foodStatus;
-        }
-
+       if(resource != null){
+        amount.text = resource.setText();
+       }
+        //Esto solo funciona para la comida, hay que hacer que todos tengan su update respectivo. Poblaciï¿½n, materiales para construir edificios, housing.
+        //Tambiï¿½n falta hacer que el Click Power se refleje en el nï¿½mero del material activo. El material activo depende de los materiales que se necesitan para cada edificio. Por default es comida.
     }
 }
