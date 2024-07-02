@@ -5,7 +5,17 @@ using UnityEngine.UI;
 using TMPro;
 
 [CreateAssetMenu(fileName = "Resource", menuName = "Resource", order = 0)]
-public class _Resources : ScriptableObject {
+public class ResourceSO : ScriptableObject 
+{
+    //Datos del Excel
+    public int id = 1, tier = 1;
+
+    public string resourceName = "", resourceType = "", resourceDescription = "";
+
+    public bool hasSpecialProperties;
+
+    //Datos del Gayvian
+
     public float amount;
     public int clickPower;
 

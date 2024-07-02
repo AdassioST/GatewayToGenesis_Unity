@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca1150d0c175d53449355f0579d95e94, type: 3}
+  m_Name: HollowWatchpost
+  m_EditorClassIdentifier: 
+  id: 4
+  tier: 1
+  limit: 1
+  productionCost: 75
+  productionName: Hollow Watchpost
+  productionType: Special Building
+  productionDescription: '"An old watchpost providing a limited view of the surrounding
+    area."'
+  productionMaterial: Duskstone
+  hasSpecialProperties: 1
+  hasLimit: 1

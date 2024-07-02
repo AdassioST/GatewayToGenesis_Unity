@@ -7,8 +7,8 @@ using UnityEngine;
 public class HousingManage : MonoBehaviour
 {
     // Start is called before the first frame update
-   public _Resources housing;
-   public _Resources wood;
+   public ResourceSO housing;
+   public ResourceSO wood;
 
     void Update(){
         UpdateHousing();

@@ -6,10 +6,10 @@ using TMPro;
 public class PopulationManager : MonoBehaviour
 {
 
-    public _Resources food;
+    public ResourceSO food;
 
-    public _Resources pop;
-    public _Resources housing;
+    public ResourceSO pop;
+    public ResourceSO housing;
 
     public int popInc;
 

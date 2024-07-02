@@ -16,7 +16,7 @@ public class GameData : MonoBehaviour
 
     public bool canHaveVagabonds;
 
-    public _Resources resource;
+    public ResourceSO resource;
 
     public string activeResourceTag = "food", foodStatus = "Stagnant";
 

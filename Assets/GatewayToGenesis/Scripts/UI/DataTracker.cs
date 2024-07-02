@@ -9,7 +9,7 @@ public class DataTracker : MonoBehaviour
 
     private bool hasUpdateStatus;
 
-    public _Resources resource;
+    public ResourceSO resource;
 
 
     public TMP_Text amount;
