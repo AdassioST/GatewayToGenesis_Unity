@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5d0e7fd352fe545967d8a6fce00db5, type: 3}
+  m_Name: Radiance
+  m_EditorClassIdentifier: 
+  id: 4
+  age: 3
+  goldenEraScore: 75
+  darkEraScore: 50
+  ageName: Age of Radiance
+  ageQuote: '"A New Coming of the Golden, perhaps?"'
+  ageType: Golden Era
+  eraDescription: O gayvian, mi gayvian.
+  crisisName: "Gayvian se volvi\xF3 Furro."
+  crisisDescription: O gayvian, mi gayvian.
+  hasOutcomes: 1
+  crisisTriggers: 
+  crisisRequirements: 

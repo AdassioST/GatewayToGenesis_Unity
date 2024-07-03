@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5d0e7fd352fe545967d8a6fce00db5, type: 3}
+  m_Name: Desolation
+  m_EditorClassIdentifier: 
+  id: 1
+  age: 1
+  goldenEraScore: 0
+  darkEraScore: 0
+  ageName: Age of Desolation
+  ageQuote: '"Golden ashes forsaken by the Gods."'
+  ageType: Default Era
+  eraDescription: The world is plunged into chaos and ruin after the catastrophic
+    Shattering of Old Arcanoria.   The once-great civilization is now reduced to
+    a faraway memory, dwindled to dust, and scattered survivors struggling to find
+    food, shelter, and safety.   The land is littered with crumbling structures,
+    decaying in remnants of a golden past and steeped in a pervasive sense of despair.
+    Only slim, isolated communities form as people strive to piece together their
+    shattered lives, clinging to fragments of ancient knowledge and relics for hope.
+  crisisName: The Great Hunger
+  crisisDescription: The collapse of ancient irrigation systems and the scarcity
+    of arable land led to widespread starvation following the first population growth.
+  hasOutcomes: 0
+  crisisTriggers: 000000
+  crisisRequirements: 00
