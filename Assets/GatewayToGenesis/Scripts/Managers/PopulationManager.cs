@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Unity.VisualScripting;
 
 public class PopulationManager : MonoBehaviour
 {
@@ -16,10 +17,15 @@ public class PopulationManager : MonoBehaviour
     private int overflowMax=100;
 
     public TMP_Text clickPower;
-
+    void Start(){
+         InvokeRepeating("Starvation", 2.0f, 5.0f);
+    }
     void Update(){
-        UpdatePopulation();
+        AddPopulation();
         UpdateClickPower();
+       
+       
+       
        
     }
 
@@ -32,7 +38,7 @@ public class PopulationManager : MonoBehaviour
         clickPower.text = food.clickPower.ToString();
         food.addAmount = food.clickPower;
     }
-        private void UpdatePopulation()
+        private void AddPopulation()
     {
         //A�adir el check de si hay casas libres. Si no hay disponibles y no se pueden vagabundos, no aumenta la poblaci�n. Si se puede, se a�aden como vagabundos, no como pop.
         //Cada pop utiliza 1 casa. Los vagabundos se convierten en pop cuando vuelve a haber casas disponibles cada cierto tiempo. Ej. 100 vagabundos se vuelven 10 pop cada 2 segundos por cada 10 casas libres.
@@ -43,11 +49,36 @@ public class PopulationManager : MonoBehaviour
 
             Debug.Log("Population is now: " + pop.amount);
 
-            float foodOverflow = food.amount - pop.threshhold;
+            float foodOverflow = food.placeholder - pop.threshhold;
 
-            if (foodOverflow > 0)
+           FoodOverflow(foodOverflow);
+            food.amount = food.amount + food.placeholder - food.threshhold;
+
+            housing.removeResource(1);
+
+
+        }
+        else if(food.placeholder > food.threshhold && housing.amount == 0){
+            float foodOverflow = food.placeholder - pop.threshhold;
+            FoodOverflow(foodOverflow);
+        }
+
+       
+
+    }
+
+ 
+
+    private void Starvation(){
+        if(food.amount==0){
+        pop.removeResource(1);
+        }
+        
+    }
+    private void FoodOverflow(float foodOverflow){
+         if (foodOverflow > 0)
             {
-                food.amount = food.amount / 3 + Mathf.Clamp(foodOverflow, 0, overflowMax);
+                food.placeholder = food.placeholder / 3 + Mathf.Clamp(foodOverflow, 0, overflowMax);
 
                 Debug.Log("Food Overflow of: " + foodOverflow);
 
@@ -56,17 +87,8 @@ public class PopulationManager : MonoBehaviour
             {
                 //Est� 3 para tener un fijo de comida del siguiente nivel sin entrar enseguida al status de starving
 
-                food.amount = Mathf.Round(food.amount / 3);
+                food.placeholder = Mathf.Round(food.placeholder / 3);
             }
-            housing.amount--;
-
-        }
-
-    }
-
-    public void OmarNoSabe(string omar, int id){
-
-        Debug.Log(omar + id);
 
     }
 

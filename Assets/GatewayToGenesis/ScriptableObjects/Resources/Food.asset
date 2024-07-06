@@ -18,9 +18,10 @@ MonoBehaviour:
   resourceType: Vital Resource
   resourceDescription: '"Peaches, perhaps."'
   hasSpecialProperties: 1
-  amount: 8
-  clickPower: 2
+  amount: 3
+  clickPower: 1
   threshhold: 10
-  addAmount: 2
+  addAmount: 1
+  placeholder: 3
   tag: food
-  text: 8/10
+  text: 3/10

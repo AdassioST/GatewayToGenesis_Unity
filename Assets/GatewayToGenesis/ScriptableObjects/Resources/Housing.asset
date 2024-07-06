@@ -12,9 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d7c681ab6b5c1f4283b1dbaee75144b, type: 3}
   m_Name: Housing
   m_EditorClassIdentifier: 
-  amount: 8
+  id: 1
+  tier: 1
+  resourceName: 
+  resourceType: 
+  resourceDescription: 
+  hasSpecialProperties: 0
+  amount: 1
   clickPower: 0
   threshhold: 0
   addAmount: 7
+  placeholder: 0
   tag: Housing
-  text: 8
+  text: 1

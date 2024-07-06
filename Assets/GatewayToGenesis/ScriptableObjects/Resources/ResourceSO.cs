@@ -8,7 +8,7 @@ using TMPro;
 public class ResourceSO : ScriptableObject 
 {
     //Datos del Excel
-    public int id = 1, tier = 1;
+    [SerializeField] int id = 1, tier = 1;
 
     public string resourceName = "", resourceType = "", resourceDescription = "";
 
@@ -23,22 +23,28 @@ public class ResourceSO : ScriptableObject
 
     public int addAmount;
 
+    public float placeholder;
+
     public string tag;
 
     public string text="none";
 
     public void addResource() {
+        if(tag=="food"){
+            placeholder=placeholder+addAmount;
+             
+        }
         amount=amount + addAmount;
     }
        
     
-    private void removeResource(float subAmount){
+    public void removeResource(float subAmount){
         amount= amount -subAmount; 
     }
 
     public string setText(){
         if(tag=="food"){
-             text = amount.ToString() + "/" + threshhold.ToString();
+             text = placeholder.ToString() + "/" + threshhold.ToString();
         }
         else{
         text = amount.ToString();
