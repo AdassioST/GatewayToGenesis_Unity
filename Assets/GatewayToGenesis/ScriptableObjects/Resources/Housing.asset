@@ -18,10 +18,10 @@ MonoBehaviour:
   resourceType: 
   resourceDescription: 
   hasSpecialProperties: 0
-  amount: 1
+  amount: 0
   clickPower: 0
   threshhold: 0
   addAmount: 7
   placeholder: 0
   tag: Housing
-  text: 1
+  text: 0

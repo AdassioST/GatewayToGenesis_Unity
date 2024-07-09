@@ -6,6 +6,7 @@ using UnityEngine;
 public class FoodManager : MonoBehaviour
 {
     public ResourceSO food;
+    public ResourceSO pop;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,6 +18,12 @@ public class FoodManager : MonoBehaviour
     {
         
     }
+    void fooodDecrease(){
 
+        
+
+
+
+    }
   
 }

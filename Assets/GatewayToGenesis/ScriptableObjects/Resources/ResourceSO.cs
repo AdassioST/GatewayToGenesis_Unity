@@ -16,8 +16,8 @@ public class ResourceSO : ScriptableObject
 
     //Datos del Gayvian
 
-    public float amount;
-    public int clickPower;
+    [SerializeField] float amount;
+     [SerializeField] int clickPower;
 
     public int threshhold;
 
@@ -53,5 +53,25 @@ public class ResourceSO : ScriptableObject
 
     }
 
-    
+    public float getAmount(){
+        return amount;
+    }
+    public float setAmount(float amount){
+        this.amount = amount;
+        return amount;
+    }
+
+     public int getClickPower(){
+        return clickPower;
+    }
+    public int setClickPower(int clickPower){
+        this.clickPower =  clickPower;
+        return clickPower;
+        
+    }
+        
 }
+
+
+    
+ 

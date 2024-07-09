@@ -16,9 +16,9 @@ public class HousingManage : MonoBehaviour
     }
    private void UpdateHousing(){
     housing.addAmount=7;
-    if(wood.amount> 30){
+    if(wood.getAmount()> 30){
         housing.addResource();
-        wood.amount-=30;
+        wood.setAmount(wood.getAmount()-30);
     }
    }
 }

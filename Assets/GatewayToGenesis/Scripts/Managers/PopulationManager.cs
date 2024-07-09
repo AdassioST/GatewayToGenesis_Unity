@@ -12,6 +12,10 @@ public class PopulationManager : MonoBehaviour
     public ResourceSO pop;
     public ResourceSO housing;
 
+    private int vagabondThreshold;
+
+    public int activeVagabonds;
+
     public int popInc;
 
     private int overflowMax=100;
@@ -23,6 +27,7 @@ public class PopulationManager : MonoBehaviour
     void Update(){
         AddPopulation();
         UpdateClickPower();
+        checkVagabonds();
        
        
        
@@ -31,46 +36,49 @@ public class PopulationManager : MonoBehaviour
 
 
  private void UpdateClickPower(){
-        if(pop.amount==pop.threshhold){
-            food.clickPower++;
+        if(pop.getAmount()==pop.threshhold){
+            food.setClickPower(food.getClickPower()+1);
             pop.threshhold = pop.threshhold*10;
         }
-        clickPower.text = food.clickPower.ToString();
-        food.addAmount = food.clickPower;
+        clickPower.text = food.getClickPower().ToString();
+        food.addAmount = food.getClickPower();
     }
         private void AddPopulation()
     {
         //A�adir el check de si hay casas libres. Si no hay disponibles y no se pueden vagabundos, no aumenta la poblaci�n. Si se puede, se a�aden como vagabundos, no como pop.
         //Cada pop utiliza 1 casa. Los vagabundos se convierten en pop cuando vuelve a haber casas disponibles cada cierto tiempo. Ej. 100 vagabundos se vuelven 10 pop cada 2 segundos por cada 10 casas libres.
 
-        if (food.amount >= food.threshhold && housing.amount > 0)
+        if (food.getAmount() >= food.threshhold && housing.getAmount() > 0 && activeVagabonds==0)
         {
             pop.addResource();
 
-            Debug.Log("Population is now: " + pop.amount);
+            Debug.Log("Population is now: " + pop.getAmount());
 
             float foodOverflow = food.placeholder - pop.threshhold;
 
            FoodOverflow(foodOverflow);
-            food.amount = food.amount + food.placeholder - food.threshhold;
+            food.setAmount(food.getAmount() + food.placeholder - food.threshhold); 
 
             housing.removeResource(1);
 
 
         }
-        else if(food.placeholder > food.threshhold && housing.amount == 0){
+        else if(food.placeholder > food.threshhold && housing.getAmount() == 0){
+
             float foodOverflow = food.placeholder - pop.threshhold;
             FoodOverflow(foodOverflow);
+            
         }
-
-       
-
+        
+    
+            
+    
     }
 
  
 
     private void Starvation(){
-        if(food.amount==0){
+        if(food.getAmount()==0){
         pop.removeResource(1);
         }
         
@@ -90,7 +98,26 @@ public class PopulationManager : MonoBehaviour
                 food.placeholder = Mathf.Round(food.placeholder / 3);
             }
 
+    } 
+
+    private void checkVagabonds(){
+        vagabondThreshold=(int)pop.getAmount()/10;
+        if(activeVagabonds < vagabondThreshold && housing.getAmount()==0 && food.getAmount() >= food.threshhold){
+            float foodOverflow = food.placeholder - pop.threshhold;
+
+           FoodOverflow(foodOverflow);
+            food.setAmount(food.getAmount() + food.placeholder - food.threshhold); 
+            Debug.Log("Vagabonds is now: " + activeVagabonds);
+            activeVagabonds++;
+        }
+        else if(activeVagabonds !=0 && housing.getAmount() !=0){
+            activeVagabonds--;
+            pop.setAmount(pop.getAmount()+1);
+            housing.removeResource(1);
+        }
+       
     }
+
 
     
 
