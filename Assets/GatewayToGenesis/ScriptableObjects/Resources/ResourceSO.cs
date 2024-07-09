@@ -17,7 +17,7 @@ public class ResourceSO : ScriptableObject
     //Datos del Gayvian
 
     [SerializeField] float amount;
-     [SerializeField] int clickPower;
+    [SerializeField] int clickPower;
 
     public int threshhold;
 
