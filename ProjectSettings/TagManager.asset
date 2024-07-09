@@ -11,11 +11,11 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Foreground
+  - Middle
+  - Platou
+  - Mountains
+  - Sky
   - 
   - 
   - 
@@ -40,4 +40,19 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Sky
+    uniqueID: 1286152467
+    locked: 0
+  - name: Mountains
+    uniqueID: 225171479
+    locked: 0
+  - name: Platou
+    uniqueID: 397200041
+    locked: 0
+  - name: middle
+    uniqueID: 4210346505
+    locked: 0
+  - name: Forground
+    uniqueID: 2784879761
     locked: 0

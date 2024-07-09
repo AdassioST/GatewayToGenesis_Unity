@@ -24,7 +24,7 @@ public class cameraTarget : MonoBehaviour
     targetPos.x = Mathf.Clamp(targetPos.x, -xThreshold + player.position.x, xThreshold + player.position.x);
     targetPos.y = Mathf.Clamp(targetPos.y, -yThreshold + player.position.y,yThreshold +player.position.y);
     if(targetPos.x>=cam.transform.position.x+2 || targetPos.x<= cam.transform.position.x-2||targetPos.y>=cam.transform.position.y+1.5 || targetPos.y<= cam.transform.position.y-1.5){
-        cam.transform.position = Vector3.Lerp(start,targetPos,2.0f*Time.deltaTime); 
+        this.transform.position = Vector3.Lerp(start,targetPos,100.0f*Time.deltaTime); 
     }
 
     }

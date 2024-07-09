@@ -12,7 +12,7 @@ public class Parallax : MonoBehaviour
 
     private void Awake()
     {
-        material = GetComponent<SpriteRenderer>().material;
+        material = GetComponent<Renderer>().material;
     }
 
     // Update is called once per frame
