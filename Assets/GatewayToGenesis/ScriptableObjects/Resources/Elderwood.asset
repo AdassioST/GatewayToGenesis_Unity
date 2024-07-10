@@ -18,9 +18,10 @@ MonoBehaviour:
   resourceType: Building Material
   resourceDescription: '"Still lingering with a the faint essence of a golden lineage."'
   hasSpecialProperties: 0
-  amount: 1
+  amount: 17
   clickPower: 1
   threshhold: 0
   addAmount: 1
+  placeholder: 0
   tag: wood
   text: 17

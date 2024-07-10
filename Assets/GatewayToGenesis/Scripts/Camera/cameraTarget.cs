@@ -7,8 +7,7 @@ public class cameraTarget : MonoBehaviour
 {
  [SerializeField] Camera cam;   
  [SerializeField] Transform player;
- [SerializeField] float xThreshold;
- [SerializeField] float yThreshold;
+
 
  private void Update(){
 
@@ -21,9 +20,8 @@ public class cameraTarget : MonoBehaviour
     Vector3 targetPos = (mousePos + cam.transform.position)/2;
     Vector3 start=cam.transform.position;
 
-    targetPos.x = Mathf.Clamp(targetPos.x, -xThreshold + player.position.x, xThreshold + player.position.x);
-    targetPos.y = Mathf.Clamp(targetPos.y, -yThreshold + player.position.y,yThreshold +player.position.y);
-    if(targetPos.x>=cam.transform.position.x+2 || targetPos.x<= cam.transform.position.x-2||targetPos.y>=cam.transform.position.y+1.5 || targetPos.y<= cam.transform.position.y-1.5){
+   
+    if(targetPos.x>=cam.transform.position.x+2 || targetPos.x<= cam.transform.position.x-2||targetPos.y>=cam.transform.position.y+1 || targetPos.y<= cam.transform.position.y-1){
         this.transform.position = Vector3.Lerp(start,targetPos,100.0f*Time.deltaTime); 
     }
 

@@ -12,6 +12,9 @@ public class PopulationManager : MonoBehaviour
     public ResourceSO pop;
     public ResourceSO housing;
 
+    public NotificationsSO vagabond;
+    public NotificationsSO death;
+
     private int vagabondThreshold;
 
     public int activeVagabonds;
@@ -27,11 +30,7 @@ public class PopulationManager : MonoBehaviour
     void Update(){
         AddPopulation();
         UpdateClickPower();
-        checkVagabonds();
-       
-       
-       
-       
+        checkVagabonds();   
     }
 
 
@@ -74,12 +73,10 @@ public class PopulationManager : MonoBehaviour
             
     
     }
-
- 
-
     private void Starvation(){
         if(food.getAmount()==0){
         pop.removeResource(1);
+        death.setAmount(death.getAmount()+1);
         }
         
     }
@@ -115,12 +112,8 @@ public class PopulationManager : MonoBehaviour
             pop.setAmount(pop.getAmount()+1);
             housing.removeResource(1);
         }
+        vagabond.setAmount(activeVagabonds);
        
     }
-
-
-    
-
-
     // Start is called before the first frame update
 }

@@ -9,19 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d7c681ab6b5c1f4283b1dbaee75144b, type: 3}
-  m_Name: pop
+  m_Script: {fileID: 11500000, guid: 23b3cb070ca5f2d47b622f176342e36f, type: 3}
+  m_Name: Vagabond
   m_EditorClassIdentifier: 
-  id: 1
-  tier: 1
-  resourceName: 
-  resourceType: 
-  resourceDescription: 
-  hasSpecialProperties: 0
-  amount: 9
-  clickPower: 0
-  threshhold: 10000
-  addAmount: 1
-  placeholder: 0
-  tag: pop
-  text: 9
+  amount: 0
+  modifier: 0
+  text: 0
+  tag: 

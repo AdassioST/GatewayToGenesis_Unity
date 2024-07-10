@@ -11,6 +11,8 @@ public class DataTracker : MonoBehaviour
 
     public ResourceSO resource;
 
+    public NotificationsSO notification;
+
 
     public TMP_Text amount;
     public TMP_Text status;
@@ -32,7 +34,12 @@ public class DataTracker : MonoBehaviour
        if(resource != null){
         amount.text = resource.setText();
        }
+       if(notification != null){
+            amount.text = notification.setText();
+       }
+
+       }
         //Esto solo funciona para la comida, hay que hacer que todos tengan su update respectivo. Poblaci�n, materiales para construir edificios, housing.
         //Tambi�n falta hacer que el Click Power se refleje en el n�mero del material activo. El material activo depende de los materiales que se necesitan para cada edificio. Por default es comida.
-    }
 }
+
