@@ -47,12 +47,15 @@ TagManager:
   - name: Mountains
     uniqueID: 225171479
     locked: 0
-  - name: Platou
+  - name: Plateau
     uniqueID: 397200041
     locked: 0
-  - name: middle
+  - name: Middle
     uniqueID: 4210346505
     locked: 0
-  - name: Forground
+  - name: Foreground
     uniqueID: 2784879761
+    locked: 0
+  - name: Characters
+    uniqueID: 3429275087
     locked: 0
