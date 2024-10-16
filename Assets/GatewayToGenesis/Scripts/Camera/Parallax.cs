@@ -16,7 +16,7 @@ public class Parallax : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         offset = (cam.velocity.x * 0.1f) * movSpeed * Time.deltaTime;
         material.mainTextureOffset += offset;
