@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3340f43e2be8e54c94b973038c977af, type: 3}
+  m_Name: Waltz
+  m_EditorClassIdentifier: 
+  _name: Waltz
+  _description: The essence of Symphony and Endurance
+  _value: 0
+  property1: {fileID: 11400000, guid: 8362252eb07c5b340a4c682a581cbc9e, type: 2}
+  property2: {fileID: 11400000, guid: 71a651e5000fece479a9eeb3040e04e5, type: 2}

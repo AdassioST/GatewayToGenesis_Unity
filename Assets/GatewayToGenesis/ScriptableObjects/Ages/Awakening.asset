@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5d0e7fd352fe545967d8a6fce00db5, type: 3}
+  m_Name: Awakening
+  m_EditorClassIdentifier: 
+  id: 3
+  age: 3
+  goldenEraScore: 75
+  darkEraScore: 50
+  ageName: Age of Awakening
+  ageQuote: '"In the Symphony of rebirth."'
+  ageType: Default Era
+  eraDescription: As Aetherlight and Moonshine begin to regenerate, the Era of Awakening
+    dawns, marked by the resurgence of magical powers through music, singing, and
+    dancing.   These ethereal energies start to weave back into the fabric of the
+    land. Thus, the steady flow of Aetherlight and Moonshine revitalizes the world,
+    and the latent power within the people begins to resonate.  Embrace these newfound
+    powers. Heal the land. Arise the new Schools of harmony and symphony, teaching
+    the ancient musical arts that channel Aetherlight and Moonshine.
+  crisisName: The Discordant Choir
+  crisisDescription: O gayvian, mi gayvian
+  hasOutcomes: 1
+  crisisTriggers: 
+  crisisRequirements: 
