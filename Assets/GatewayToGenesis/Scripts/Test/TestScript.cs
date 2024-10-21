@@ -7,15 +7,15 @@ public class TestScript : MonoBehaviour
 {
     private ResourceController rsController;
     private ProductionEntityController peController;
-    private Calculator calculator;
-    private CalculatorMediator calculatorMediator;
+    private ResourceCalculator calculator;
+    private ResourceAndProductionMediator calculatorMediator;
 
 
     // Start is called before the first frame update
     void Awake()
     {
         // Generate calculator
-        this.calculator = new Calculator();
+        this.calculator = new ResourceCalculator();
         //Generate controllers
         this.rsController = new ResourceController(calculator);
         this.peController = new ProductionEntityController();
@@ -63,7 +63,7 @@ public class TestScript : MonoBehaviour
         this.peController.AddProductionEntity("PE02", pe2);
 
         //Generate mediator
-        this.calculatorMediator = new CalculatorMediator(this.rsController, this.peController, this.calculator);
+        this.calculatorMediator = new ResourceAndProductionMediator(this.rsController, this.peController, this.calculator);
 
     }
     void Start()

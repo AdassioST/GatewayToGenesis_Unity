@@ -1,13 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class ResourcePassiveGenerationComparer : IComparer<Resource>
-{
-    public int Compare(Resource x, Resource y)
-    {
-        return x.passiveGeneration.CompareTo(y.passiveGeneration);
-    }
-}
 public class Resource
 {
     public string id { get; }

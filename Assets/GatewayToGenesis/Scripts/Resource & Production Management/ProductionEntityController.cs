@@ -1,11 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using UnityEngine;
 
-public class ProductionEntityController : ComponentCalculatorMediator
+public class ProductionEntityController : ResourceAndProductionMediatorComponent
 {
     private class ProductionEntityDisableInfo
     {
@@ -18,6 +14,7 @@ public class ProductionEntityController : ComponentCalculatorMediator
             this.resourceID = resourceID;
         }
     }
+
     public Dictionary<string, ProductionEntitySO> productionsSO;
     private Dictionary<string, ProductionEntity> productionEntities;
     private List<ProductionEntityDisableInfo> productionEntitiesToDisable;
@@ -29,41 +26,18 @@ public class ProductionEntityController : ComponentCalculatorMediator
         this.productionEntitiesToDisable = new List<ProductionEntityDisableInfo>();
         this.productionEntitiesDisabled = new List<ProductionEntityDisableInfo>();
     }
+
     public void AddProductionEntityAmount(string productionEntityID)
     {
-        if (productionEntities.ContainsKey(productionEntityID))
-        {
-            ProductionEntity production = productionEntities[productionEntityID];
-            production.amount += 1f;
-            this.NotifyNewProductionEntity(production.id);
-        }
+        ProductionEntity production = productionEntities[productionEntityID];
+        production.amount += 1f;
+        this.NotifyNewProductionEntity(production.id);
     }
 
     public void SubstractProductionEntityAmount(string productionEntityID)
     {
-        if (productionEntities.ContainsKey(productionEntityID))
-        {
-            ProductionEntity production = productionEntities[productionEntityID];
-            production.amount -= 1f;
-        }
-    }
-
-    private void UpdateProductionEntityAmount(string productionEntityID, float amount)
-    {
-        if (productionEntities.ContainsKey(productionEntityID))
-        {
-            ProductionEntity production = productionEntities[productionEntityID];
-            production.amount = amount;
-        }
-    }
-
-    private ProductionEntity GetProductionEntityByID(string productionEntityID)
-    {
-        if (productionEntities.ContainsKey((productionEntityID)))
-        {
-            return productionEntities[productionEntityID];
-        }
-        return null;
+        ProductionEntity production = productionEntities[productionEntityID];
+        production.amount -= 1f;
     }
 
     public void AddProductionEntity(string productionEntityID, ProductionEntity production)
@@ -131,15 +105,6 @@ public class ProductionEntityController : ComponentCalculatorMediator
         this.RemoveElementsOfListFromIndexesList(this.productionEntitiesToDisable, indexesToRemove);
     }
 
-    private void RemoveElementsOfListFromIndexesList<T>(List<T> originalList, List<int> indexesToRemove)
-    {
-        indexesToRemove.Sort((a, b) => b.CompareTo(a));
-        foreach (var p in indexesToRemove)
-        {
-            originalList.RemoveAt(p);
-        }
-    }
-
     public void ActivateProductionEntityByResourceID(string resourceID, float currentPassiveGeneration, float currentResourceAmount)
     {
         int i = 0;
@@ -171,6 +136,26 @@ public class ProductionEntityController : ComponentCalculatorMediator
         return false;
     }
 
+    private ProductionEntity GetProductionEntityByID(string productionEntityID)
+    {
+        return productionEntities[productionEntityID];
+    }
+
+    private void UpdateProductionEntityAmount(string productionEntityID, float amount)
+    {
+        ProductionEntity production = productionEntities[productionEntityID];
+        production.amount = amount;
+    }
+
+    private void RemoveElementsOfListFromIndexesList<T>(List<T> originalList, List<int> indexesToRemove)
+    {
+        indexesToRemove.Sort((a, b) => b.CompareTo(a));
+        foreach (var p in indexesToRemove)
+        {
+            originalList.RemoveAt(p);
+        }
+    }
+
     private void NotifyNewProductionEntity(string productionEntityID)
     {
         this._mediator.notify(this, "new_building", productionEntityID);
@@ -180,20 +165,9 @@ public class ProductionEntityController : ComponentCalculatorMediator
     {
         this._mediator.notify(this, "deactivation_production_entity", productionEntityID);
     }
+
     private void NotifyActivationProductionEntity(string productionEntityID)
     {
         this._mediator.notify(this, "activation_production_entity", productionEntityID);
-    }
-    private static bool Contains<T>(Queue<T> queue, T item, Func<T, float> floatSelector)
-    {
-        float itemFloatValue = floatSelector(item);
-        foreach (var element in queue)
-        {
-            if (floatSelector(element) == itemFloatValue)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 }
