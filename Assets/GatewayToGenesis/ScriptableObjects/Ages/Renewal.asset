@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee5d0e7fd352fe545967d8a6fce00db5, type: 3}
+  m_Name: Renewal
+  m_EditorClassIdentifier: 
+  id: 2
+  age: 2
+  goldenEraScore: 35
+  darkEraScore: 20
+  ageName: Age of Renewal
+  ageQuote: '"With each new leaf, hope for grows stronger."'
+  ageType: Default Era
+  eraDescription: Following the first major crisis, the world sees the first signs
+    of regrowth and renewal in the core of magical currents.  Nature begins to reclaim
+    the land, with new vegetation sprouting amidst the ruins. Pre-shattering farming
+    techniques and irrigation systems are rediscovered and restored, ensuring a more
+    reliable food supply. To never again feel the strains of the Great Hunger.  Guide
+    the rebuilding of infrastructure and the awakening of the first fields of glimmerfern
+    and deep wells of emberwhisper. Be careful, this new period of prosperity fosters
+    a false sense of security.
+  crisisName: The Euphoria Fracture
+  crisisDescription: The unchecked use of Aetherlight and Moonshine created a fracture
+    in magical fluctuations, leading to widespread euphoria, mass hysteria, and delirium
+    following the overflow of magical energy.  Your civilization plunged into a state
+    of chaos, mass panic, dancing until death. Establish quarantine and create relics
+    to absorb the downpour of the ember fallout.  Form an eminent institution to
+    oversee their ethical use. To balance the influx of Aetherlight and Moonshine
+    and ensure that the lessons of the Euphoric Frenzy are never forgotten.
+  hasOutcomes: 1
+  crisisTriggers: 000000
+  crisisRequirements: 000000
