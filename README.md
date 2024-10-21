@@ -1,4 +1,4 @@
-# Gateway to Gaybienesis
+# Gateway to Genesis
 An incremental clicker strategy game where you embark on an epic journey through time. In this game, you will:
 
 - Expand your empire by constructing buildings and settlements.
