@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Production", menuName = "Production", order = 1)]
-public class ProductionSO : ScriptableObject
+public class ProductionEntitySO : ScriptableObject
 {
     //Datos del Excel
 
