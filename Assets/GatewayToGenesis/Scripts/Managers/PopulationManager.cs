@@ -104,7 +104,7 @@ public class PopulationManager : MonoBehaviour
 
            FoodOverflow(foodOverflow);
             food.setAmount(food.getAmount() + food.placeholder - food.threshhold); 
-            Debug.Log("Vagabonds is now: " + activeVagabonds);
+            //Debug.Log("Vagabonds is now: " + activeVagabonds);
             activeVagabonds++;
         }
         else if(activeVagabonds !=0 && housing.getAmount() !=0){

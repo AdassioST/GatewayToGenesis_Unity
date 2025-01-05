@@ -28,6 +28,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             ""id"": ""f739132c-652c-47a4-90ef-37b86677ea1c"",
             ""actions"": [
                 {
+                    ""name"": ""PointerPosition"",
+                    ""type"": ""Value"",
+                    ""id"": ""a2918384-08e2-4a43-afce-ccad4b890ac7"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
                     ""name"": ""Click"",
                     ""type"": ""Button"",
                     ""id"": ""c31b62eb-e1b5-464d-9990-e74caef2b20f"",
@@ -35,9 +44,100 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Storage"",
+                    ""type"": ""Button"",
+                    ""id"": ""01d94ff9-67a5-4094-bb1d-2bbac3734fa0"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Production"",
+                    ""type"": ""Button"",
+                    ""id"": ""1841d890-cb39-45c0-87ae-a7bb67ef2de6"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Government"",
+                    ""type"": ""Button"",
+                    ""id"": ""befd020a-6343-4020-a777-44c6a3994070"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Research"",
+                    ""type"": ""Button"",
+                    ""id"": ""9037d55d-57cc-4981-ba43-5ad1b4c80ccf"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""95e57223-a6c0-4fb6-b271-408ce48ce225"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Storage"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2b7ae91b-2ef8-4048-8dcf-f7e022e8b569"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Production"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""4c3426fe-b305-43f7-939c-d55052c0f766"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Government"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0728ad73-8800-424e-909c-4cc25c70b21c"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Research"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2f015c13-388c-45a1-b945-9dda9c46557c"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""PointerPosition"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
                 {
                     ""name"": """",
                     ""id"": ""26e2d124-d678-448d-ace5-9170375070ab"",
@@ -67,7 +167,12 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
 }");
         // DefaultControls
         m_DefaultControls = asset.FindActionMap("DefaultControls", throwIfNotFound: true);
+        m_DefaultControls_PointerPosition = m_DefaultControls.FindAction("PointerPosition", throwIfNotFound: true);
         m_DefaultControls_Click = m_DefaultControls.FindAction("Click", throwIfNotFound: true);
+        m_DefaultControls_Storage = m_DefaultControls.FindAction("Storage", throwIfNotFound: true);
+        m_DefaultControls_Production = m_DefaultControls.FindAction("Production", throwIfNotFound: true);
+        m_DefaultControls_Government = m_DefaultControls.FindAction("Government", throwIfNotFound: true);
+        m_DefaultControls_Research = m_DefaultControls.FindAction("Research", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -129,12 +234,22 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     // DefaultControls
     private readonly InputActionMap m_DefaultControls;
     private List<IDefaultControlsActions> m_DefaultControlsActionsCallbackInterfaces = new List<IDefaultControlsActions>();
+    private readonly InputAction m_DefaultControls_PointerPosition;
     private readonly InputAction m_DefaultControls_Click;
+    private readonly InputAction m_DefaultControls_Storage;
+    private readonly InputAction m_DefaultControls_Production;
+    private readonly InputAction m_DefaultControls_Government;
+    private readonly InputAction m_DefaultControls_Research;
     public struct DefaultControlsActions
     {
         private @PlayerControls m_Wrapper;
         public DefaultControlsActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @PointerPosition => m_Wrapper.m_DefaultControls_PointerPosition;
         public InputAction @Click => m_Wrapper.m_DefaultControls_Click;
+        public InputAction @Storage => m_Wrapper.m_DefaultControls_Storage;
+        public InputAction @Production => m_Wrapper.m_DefaultControls_Production;
+        public InputAction @Government => m_Wrapper.m_DefaultControls_Government;
+        public InputAction @Research => m_Wrapper.m_DefaultControls_Research;
         public InputActionMap Get() { return m_Wrapper.m_DefaultControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -144,16 +259,46 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_DefaultControlsActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_DefaultControlsActionsCallbackInterfaces.Add(instance);
+            @PointerPosition.started += instance.OnPointerPosition;
+            @PointerPosition.performed += instance.OnPointerPosition;
+            @PointerPosition.canceled += instance.OnPointerPosition;
             @Click.started += instance.OnClick;
             @Click.performed += instance.OnClick;
             @Click.canceled += instance.OnClick;
+            @Storage.started += instance.OnStorage;
+            @Storage.performed += instance.OnStorage;
+            @Storage.canceled += instance.OnStorage;
+            @Production.started += instance.OnProduction;
+            @Production.performed += instance.OnProduction;
+            @Production.canceled += instance.OnProduction;
+            @Government.started += instance.OnGovernment;
+            @Government.performed += instance.OnGovernment;
+            @Government.canceled += instance.OnGovernment;
+            @Research.started += instance.OnResearch;
+            @Research.performed += instance.OnResearch;
+            @Research.canceled += instance.OnResearch;
         }
 
         private void UnregisterCallbacks(IDefaultControlsActions instance)
         {
+            @PointerPosition.started -= instance.OnPointerPosition;
+            @PointerPosition.performed -= instance.OnPointerPosition;
+            @PointerPosition.canceled -= instance.OnPointerPosition;
             @Click.started -= instance.OnClick;
             @Click.performed -= instance.OnClick;
             @Click.canceled -= instance.OnClick;
+            @Storage.started -= instance.OnStorage;
+            @Storage.performed -= instance.OnStorage;
+            @Storage.canceled -= instance.OnStorage;
+            @Production.started -= instance.OnProduction;
+            @Production.performed -= instance.OnProduction;
+            @Production.canceled -= instance.OnProduction;
+            @Government.started -= instance.OnGovernment;
+            @Government.performed -= instance.OnGovernment;
+            @Government.canceled -= instance.OnGovernment;
+            @Research.started -= instance.OnResearch;
+            @Research.performed -= instance.OnResearch;
+            @Research.canceled -= instance.OnResearch;
         }
 
         public void RemoveCallbacks(IDefaultControlsActions instance)
@@ -173,6 +318,11 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     public DefaultControlsActions @DefaultControls => new DefaultControlsActions(this);
     public interface IDefaultControlsActions
     {
+        void OnPointerPosition(InputAction.CallbackContext context);
         void OnClick(InputAction.CallbackContext context);
+        void OnStorage(InputAction.CallbackContext context);
+        void OnProduction(InputAction.CallbackContext context);
+        void OnGovernment(InputAction.CallbackContext context);
+        void OnResearch(InputAction.CallbackContext context);
     }
 }
