@@ -19961,6 +19961,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameUnitsLogic: {fileID: 118059065}
+  currentMode: 0
   activeResource: Duskstone
 --- !u!1 &1263573018
 GameObject:

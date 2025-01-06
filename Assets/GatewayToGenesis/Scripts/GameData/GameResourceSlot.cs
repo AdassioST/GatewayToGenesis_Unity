@@ -8,11 +8,12 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
 {
     //INTERFACES
     public GameUnit gameUnit { get; set; }
-    public float clickPower { get; set; } = 1.0f; 
+    public float clickPower { get; set; } = 1.0f;
+    public float amount { get; set; }
 
     //VARIABLES
 
-    public float amount = 0, productionRate = 0, maxStorage = 1, baseClickPower = 1f;
+    public float productionRate = 0, maxStorage = 1, baseClickPower = 1f;
 
     public Image icon, fill;
 

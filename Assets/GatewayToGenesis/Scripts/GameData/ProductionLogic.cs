@@ -4,12 +4,19 @@ using UnityEngine;
 
 public class ProductionLogic : MonoBehaviour
 {
+    private IGameUnitSlot unitSlot;
+
     private GameResourceSlot resourceSlot;
 
     void Start()
     {
-        resourceSlot = GetComponent<GameResourceSlot>();
-        InvokeRepeating("PassiveProduction", 0.1f, 1f);
+        unitSlot = GetComponent<IGameUnitSlot>();
+
+        if (unitSlot != null)
+        {
+            InvokeRepeating("PassiveProduction", 0.1f, 1f);
+        }
+
     }
 
     void Update() { }
@@ -17,15 +24,25 @@ public class ProductionLogic : MonoBehaviour
     private void PassiveProduction()
     {
         if (resourceSlot != null)
-            ChangeResourceAmount(resourceSlot.productionRate);
+            ChangeUnitAmount(resourceSlot.productionRate);
     }
 
-    public void ChangeResourceAmount(float amount)
+    public void ChangeUnitAmount(float amount)
     {
-        if (resourceSlot != null)
+        if (unitSlot == null) return;
+
+        if (unitSlot is GameResourceSlot resourceSlot)
         {
+            //IF RESOURCE ADD MAX STORAGE
             resourceSlot.amount = Mathf.Clamp(resourceSlot.amount + amount, 0f, resourceSlot.maxStorage);
             resourceSlot.RefreshProductionAmount();
         }
+
+        if (unitSlot is GameProductionSlot productionSlot)
+        {
+            unitSlot.amount += amount;
+            productionSlot.RefreshProductionAmount();
+        }
     }
+
 }

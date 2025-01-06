@@ -359,6 +359,8 @@ GameObject:
   - component: {fileID: 2252048780257002580}
   - component: {fileID: 660882779477946861}
   - component: {fileID: 7358284950667846832}
+  - component: {fileID: -6637687677453659016}
+  - component: {fileID: 1739170357355687843}
   m_Layer: 5
   m_Name: ProductionUnitSlot
   m_TagString: Untagged
@@ -471,7 +473,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2252048780257002580}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1739170357355687843}
+        m_TargetAssemblyTypeName: ClickLogic, Assembly-CSharp
+        m_MethodName: OnButtonClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &7358284950667846832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -484,8 +498,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c90b0a2e417674cb308d981c8c8a2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  productionUnit: {fileID: 11400000, guid: e661b53791897424884a6b964c1c67bd, type: 2}
-  amount: 0
   isUnique: 0
   producedResources: []
   inputResources: []
@@ -497,6 +509,35 @@ MonoBehaviour:
   amountText: {fileID: 3639429343076454079}
   nameText: {fileID: 8942691450898504955}
   typeText: {fileID: 3203598975580554704}
+--- !u!114 &-6637687677453659016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6348907647636965890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c33d9653fd43109469a53fb61c191666, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1739170357355687843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6348907647636965890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1507e6340dda937479d8ca1a6d767393, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameUnitsLogic: {fileID: 0}
+  currentMode: 1
+  activeResource: 
+  affordableSprite: {fileID: 21300000, guid: f77355ab4c16c084f94f1b2d11a90c51, type: 3}
+  unaffordableSprite: {fileID: 21300000, guid: e2941ed45e751994aa8040e87d102710, type: 3}
 --- !u!1 &8084542632042339266
 GameObject:
   m_ObjectHideFlags: 0

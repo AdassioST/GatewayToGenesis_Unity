@@ -9,10 +9,9 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
     //INTERFACES
     public GameUnit gameUnit { get; set; }
     public float clickPower { get; set; } = 0.0f;
+    public float amount { get; set; }
 
     //VARIABLES
-
-    public float amount;
 
     public bool isUnique;
 
