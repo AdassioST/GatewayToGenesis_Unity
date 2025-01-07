@@ -1,15 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static System.Collections.Specialized.BitVector32;
 
 public class TabBuilderLogic : MonoBehaviour
 {
     public List<GameUnit> units = new List<GameUnit>();
-
     public List<GameObject> sections = new List<GameObject>(), slots = new List<GameObject>();
 
     [SerializeField] private GameObject tabContent, newSectionPrefab, newSlotPrefab;
@@ -17,6 +15,14 @@ public class TabBuilderLogic : MonoBehaviour
     private GameObject section;
 
     public GameUnit testUnit;
+
+    private GlobalProductionManager globalProductionManager;
+
+    private void Start()
+    {
+        globalProductionManager = FindObjectOfType<GlobalProductionManager>();
+    }
+
     public void AddNewUnit(GameUnit unit)
     {
         bool isSectionActive = sections.Any(x => x.name == unit.section);
@@ -24,7 +30,6 @@ public class TabBuilderLogic : MonoBehaviour
         if (!isSectionActive)
         {
             GameObject newSection = Instantiate(newSectionPrefab);
-
             newSection.name = unit.section;
             newSection.transform.SetParent(tabContent.transform);
 
@@ -33,15 +38,12 @@ public class TabBuilderLogic : MonoBehaviour
 
             Transform name = section.transform.Find("Banner/Name");
             name.GetComponent<TextMeshProUGUI>().text = unit.section;
-
         }
-
         else
         {
             section = sections.Find((x) => x.name == unit.section);
         }
 
-        //PREVENT DUPLICATES ON UNIT LISTS
         bool isUnitPresent = units.Any(r => r.name == unit.name);
 
         if (!isUnitPresent)
@@ -53,12 +55,10 @@ public class TabBuilderLogic : MonoBehaviour
 
             if (slotsParent != null)
             {
-                // Attach to "Slots" child if it exists
                 newSlot.transform.SetParent(slotsParent, false);
             }
             else
             {
-                // Attach directly to the section if "Slots" child doesn't exist
                 newSlot.transform.SetParent(section.transform, false);
             }
 
@@ -67,6 +67,16 @@ public class TabBuilderLogic : MonoBehaviour
             if (slotComponent != null)
             {
                 slotComponent.gameUnit = unit;
+
+                // Directly add the slot to the GlobalProductionManager
+                if (slotComponent is GameResourceSlot resourceSlot)
+                {
+                    globalProductionManager.AddResourceSlot(resourceSlot);
+                }
+                else if (slotComponent is GameProductionSlot productionSlot)
+                {
+                    globalProductionManager.AddProductionSlot(productionSlot);
+                }
             }
             else
             {
@@ -75,13 +85,11 @@ public class TabBuilderLogic : MonoBehaviour
 
             units.Add(unit);
             slots.Add(newSlot);
-
         }
         else
         {
             Debug.LogWarning($"Unit {unit.name} is already in section {section.name}");
         }
-
     }
 
     private void Update()
@@ -90,7 +98,6 @@ public class TabBuilderLogic : MonoBehaviour
         {
             AddNewUnit(testUnit);
         }
-
     }
-
 }
+

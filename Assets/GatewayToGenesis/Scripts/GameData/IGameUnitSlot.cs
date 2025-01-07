@@ -6,5 +6,6 @@ public interface IGameUnitSlot
     GameUnit gameUnit { get; set; }
     float clickPower { get; set; } // Default 0 for non-resource slots
     float amount { get; set; }
+    float maxAmount { get; set; }
 
 }

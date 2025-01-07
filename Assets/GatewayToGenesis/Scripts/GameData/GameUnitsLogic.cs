@@ -8,10 +8,15 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] private TabBuilderLogic storageTab;
     [SerializeField] private TabBuilderLogic productionTab;
     [SerializeField] private TabBuilderLogic researchTab;
-    private void Awake()
-    {
 
+    private GlobalProductionManager global;
+
+    private void Start()
+    {
+        global = GetComponent<GlobalProductionManager>();
+        Debug.Log(global);
     }
+
     public void ChangeResourceFromName(string name, float amount, bool changeFromClickPower)
     {
         bool isUnitPresent = storageTab.slots.Any(r => r.name == name);
@@ -76,10 +81,21 @@ public class GameUnitsLogic : MonoBehaviour
         GameObject productionSlotObj = productionTab.slots.Find(slot => slot.name == productionUnitName);
         GameProductionSlot productionSlot = productionSlotObj.GetComponent<GameProductionSlot>();
 
-        for (int i = 0; i < productionSlot.buildResourceRequirements.Count; i++)
+        ProductionUnitData productionUnitData = productionSlot.productionUnitData;
+
+        bool isUnit = productionSlot.gameUnit.type == "Unit";
+
+
+        for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
-            string resourceName = productionSlot.buildResourceRequirements[i];
-            float requiredAmount = productionSlot.buildRequirementsAmount[i];
+            string resourceName = productionUnitData.buildResourceRequirements[i];
+            float requiredAmount = productionUnitData.buildRequirementsAmount[i];
+
+            // Calculate the cost creep only for buildings
+            if (!isUnit)
+            {
+                requiredAmount *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+            }
 
             // Find the corresponding resource slot in storage
             GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
@@ -87,31 +103,41 @@ public class GameUnitsLogic : MonoBehaviour
 
             if (resourceSlot == null || resourceSlot.amount < requiredAmount)
             {
-                //Debug.LogWarning($"Not enough {resourceName} to build {productionUnitName}. Required: {requiredAmount}, Available: {resourceSlot?.amount ?? 0}");
                 return false;
             }
         }
 
-        // If all requirements are met
         return true;
     }
     public bool BuildProductionUnit(string productionUnitName)
     {
-
         if (!CanBuildProductionUnit(productionUnitName))
         {
             return false;
         }
 
-        // Deduct resources
         GameObject productionSlotObj = productionTab.slots.Find(slot => slot.name == productionUnitName);
         GameProductionSlot productionSlot = productionSlotObj.GetComponent<GameProductionSlot>();
 
-        for (int i = 0; i < productionSlot.buildResourceRequirements.Count; i++)
+        ProductionUnitData productionUnitData = productionSlot.productionUnitData;
+
+        bool isUnit = productionSlot.gameUnit.type == "Unit";
+
+        for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
-            string resourceName = productionSlot.buildResourceRequirements[i];
-            float requiredAmount = productionSlot.buildRequirementsAmount[i];
-            ChangeResourceFromName(resourceName, -requiredAmount, false);
+            string resourceName = productionUnitData.buildResourceRequirements[i];
+            float baseCost = productionUnitData.buildRequirementsAmount[i];
+
+            // Calculate the cost creep only for buildings
+            if (!isUnit)
+            {
+                baseCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+            }
+
+            Debug.Log($"Building {productionUnitName}: Deducting {baseCost} from {resourceName} (Available: {storageTab.slots.Find(slot => slot.name == resourceName).GetComponent<GameResourceSlot>().amount})");
+
+
+            ChangeResourceFromName(resourceName, -baseCost, false);
         }
 
         ChangeProductionUnitFromName(productionUnitName, 1);

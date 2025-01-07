@@ -6,8 +6,6 @@ public class ProductionLogic : MonoBehaviour
 {
     private IGameUnitSlot unitSlot;
 
-    private GameResourceSlot resourceSlot;
-
     void Start()
     {
         unitSlot = GetComponent<IGameUnitSlot>();
@@ -23,8 +21,10 @@ public class ProductionLogic : MonoBehaviour
 
     private void PassiveProduction()
     {
-        if (resourceSlot != null)
+        if (unitSlot is GameResourceSlot resourceSlot)
+        {
             ChangeUnitAmount(resourceSlot.productionRate);
+        }
     }
 
     public void ChangeUnitAmount(float amount)
@@ -34,13 +34,14 @@ public class ProductionLogic : MonoBehaviour
         if (unitSlot is GameResourceSlot resourceSlot)
         {
             //IF RESOURCE ADD MAX STORAGE
-            resourceSlot.amount = Mathf.Clamp(resourceSlot.amount + amount, 0f, resourceSlot.maxStorage);
+            resourceSlot.amount = Mathf.Clamp(resourceSlot.amount + amount, 0f, resourceSlot.maxAmount);
             resourceSlot.RefreshProductionAmount();
         }
 
         if (unitSlot is GameProductionSlot productionSlot)
         {
-            unitSlot.amount += amount;
+            unitSlot.maxAmount += amount;
+
             productionSlot.RefreshProductionAmount();
         }
     }

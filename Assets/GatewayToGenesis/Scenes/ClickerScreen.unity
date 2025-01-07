@@ -1444,6 +1444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 118059064}
   - component: {fileID: 118059065}
+  - component: {fileID: 118059066}
   m_Layer: 0
   m_Name: GameLogic
   m_TagString: Untagged
@@ -1481,6 +1482,22 @@ MonoBehaviour:
   storageTab: {fileID: 1465858056}
   productionTab: {fileID: 989069526}
   researchTab: {fileID: 0}
+--- !u!114 &118059066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118059063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e5000a9ec84024c93165339aed3271, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resourceSlots: []
+  productionSlots: []
+  techTier: 1
+  costBalance: 0.05
 --- !u!1 &118555721
 GameObject:
   m_ObjectHideFlags: 0
@@ -16306,7 +16323,7 @@ MonoBehaviour:
   tabContent: {fileID: 2002197162}
   newSectionPrefab: {fileID: 8921941214632747772, guid: 03f4338eb5690a24fb2b3b0195f5cc5e, type: 3}
   newSlotPrefab: {fileID: 6348907647636965890, guid: a183e64bfd97dc54193a394a579aa2aa, type: 3}
-  testUnit: {fileID: 11400000, guid: 9d92d11b6df03334193a3b3a1909d9db, type: 2}
+  testUnit: {fileID: 11400000, guid: 11e9461fe087160429c49d3841e95bf5, type: 2}
 --- !u!1 &994690117
 GameObject:
   m_ObjectHideFlags: 0
@@ -19963,6 +19980,8 @@ MonoBehaviour:
   gameUnitsLogic: {fileID: 118059065}
   currentMode: 0
   activeResource: Duskstone
+  affordableSprite: {fileID: 0}
+  unaffordableSprite: {fileID: 0}
 --- !u!1 &1263573018
 GameObject:
   m_ObjectHideFlags: 0
