@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GlobalProductionManager : MonoBehaviour
 {
     public List<GameResourceSlot> resourceSlots = new List<GameResourceSlot>();
     public List<GameProductionSlot> productionSlots = new List<GameProductionSlot>();
+    public List<GameTechnologySlot> technologySlots = new List<GameTechnologySlot>();
 
     // Dictionaries to store global values for each resource type
     public Dictionary<string, float> netProductionRates = new Dictionary<string, float>();
@@ -64,6 +66,13 @@ public class GlobalProductionManager : MonoBehaviour
             productionSlots.Add(productionSlot);
         }
     }
+    public void AddTechnologySlot(GameTechnologySlot technologySlot)
+    {
+        if (!technologySlots.Contains(technologySlot))
+        {
+            technologySlots.Add(technologySlot);
+        }
+    }
 
     public void RemoveResourceSlot(GameResourceSlot resourceSlot)
     {
@@ -84,6 +93,13 @@ public class GlobalProductionManager : MonoBehaviour
         if (productionSlots.Contains(productionSlot))
         {
             productionSlots.Remove(productionSlot);
+        }
+    }
+    public void RemoveTechnologySlot(GameTechnologySlot technologySlot)
+    {
+        if (technologySlots.Contains(technologySlot))
+        {
+            technologySlots.Remove(technologySlot);
         }
     }
 

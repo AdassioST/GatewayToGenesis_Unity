@@ -105,7 +105,7 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
             }
             else
             {
-                Debug.LogWarning($"Duplicate ProductionUnitData found for {unitData.name}. Skipping.");
+                Debug.LogWarning($"Duplicate ProductionUnitData found for {unitData.name} Skipping");
             }
         }
     }

@@ -5,16 +5,29 @@ using UnityEngine;
 
 public class GameUnitsLogic : MonoBehaviour
 {
+    public static GameUnitsLogic Instance { get; private set; }
+
     [SerializeField] private TabBuilderLogic storageTab;
     [SerializeField] private TabBuilderLogic productionTab;
     [SerializeField] private TabBuilderLogic researchTab;
 
     private GlobalProductionManager global;
 
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("Duplicate GameUnitsLogic found, destroying the new one.");
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
+    }
     private void Start()
     {
         global = GetComponent<GlobalProductionManager>();
-        Debug.Log(global);
     }
 
     public void ChangeResourceFromName(string name, float amount, bool changeFromClickPower)
@@ -64,15 +77,19 @@ public class GameUnitsLogic : MonoBehaviour
             ChangeResourceFromName("Elderwood", 3, false);
         }
 
-        if (Input.GetKeyDown("g"))
+        if (Input.GetKeyDown("r"))
         {
-            ChangeResourceFromName("Elderwood", -2, false);
-            ChangeProductionUnitFromName("Ancient Windmill", -5);
+            ChangeResourceFromName("Research", 100, false);
         }
 
-        if (Input.GetKeyDown("b"))
+        if (Input.GetKeyDown("t"))
         {
-            BuildProductionUnit("Ancient Windmill");
+            UnlockTechnologyWithRequirements("Reconstruction");
+        }
+
+        if (Input.GetKeyDown("g"))
+        {
+            UnlockTechnologyWithRequirements("Woodcraft Mastery");
         }
     }
 
@@ -136,12 +153,118 @@ public class GameUnitsLogic : MonoBehaviour
 
             Debug.Log($"Building {productionUnitName}: Deducting {baseCost} from {resourceName} (Available: {storageTab.slots.Find(slot => slot.name == resourceName).GetComponent<GameResourceSlot>().amount})");
 
-
             ChangeResourceFromName(resourceName, -baseCost, false);
         }
 
         ChangeProductionUnitFromName(productionUnitName, 1);
         return true;
     }
+
+    public bool CanUnlockTechnology(string technologyName)
+    {
+        GameObject technologySlotObj = researchTab.slots.Find(slot => slot.name == technologyName);
+        GameTechnologySlot technologySlot = technologySlotObj.GetComponent<GameTechnologySlot>();
+
+        TechnologyData technologyData = technologySlot.technologyData;
+
+        // Check if tech lock prerequisites are met
+        foreach (string requiredTech in technologyData.techRequirements)
+        {
+            GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
+            if (requiredTechObj == null || !requiredTechObj.GetComponent<GameTechnologySlot>().isUnlocked)
+            {
+                Debug.LogWarning($"Prerequisite technology {requiredTech} not unlocked.");
+                return false;
+            }
+        }
+
+        // Check if enough resources are available
+        for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
+        {
+            string resourceName = technologyData.resourceRequirements[i];
+            float requiredAmount = technologyData.resourceAmount[i];
+
+            GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
+            GameResourceSlot resourceSlot = resourceSlotObj.GetComponent<GameResourceSlot>();
+
+            if (resourceSlot == null || resourceSlot.amount < requiredAmount)
+            {
+                Debug.LogWarning($"Not enough {resourceName} to unlock {technologyName}.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public bool UnlockTechnologyWithRequirements(string technologyName)
+    {
+        GameObject technologySlotObj = researchTab.slots.Find(slot => slot.name == technologyName);
+        GameTechnologySlot technologySlot = technologySlotObj.GetComponent<GameTechnologySlot>();
+
+        if (!CanUnlockTechnology(technologyName) || technologySlot.isUnlocked)
+        {
+            return false;
+        }
+
+        TechnologyData technologyData = technologySlot.technologyData;
+
+        // Deduct resources
+        for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
+        {
+            string resourceName = technologyData.resourceRequirements[i];
+            float requiredAmount = technologyData.resourceAmount[i];
+
+            ChangeResourceFromName(resourceName, -requiredAmount, false);
+        }
+
+        technologySlot.UnlockTechnology();
+        return true;
+    }
+
+    public void HandleTechUnlockable(TechUnlockable unlockable)
+    {
+        switch (unlockable.unlockableType)
+        {
+            case TechUnlockableType.ClickPower:
+
+                storageTab.AddNewUnit(unlockable.gameUnit);
+                Debug.Log($"ClickPower unit {unlockable.gameUnit.name} has been added to Storage.");
+                break;
+
+            case TechUnlockableType.Building:
+
+                productionTab.AddNewUnit(unlockable.gameUnit);
+                Debug.Log($"Building unit {unlockable.gameUnit.name} has been added to Production.");
+                break;
+
+            case TechUnlockableType.Unit:
+
+                productionTab.AddNewUnit(unlockable.gameUnit);
+                Debug.Log($"Unit {unlockable.gameUnit.name} has been added to Production.");
+                break;
+
+            case TechUnlockableType.Modifier:
+
+                Debug.Log($"Modifier {unlockable.gameUnit.name} has been unlocked.");
+                break;
+
+            case TechUnlockableType.Arts:
+
+                Debug.Log($"Arts unit {unlockable.gameUnit.name} has been unlocked.");
+                break;
+
+            case TechUnlockableType.Special:
+
+                Debug.Log($"Special unlockable {unlockable.gameUnit.name} has been unlocked.");
+                break;
+
+            default:
+                Debug.LogWarning($"Unknown unlockable type: {unlockable.unlockableType}");
+                break;
+        }
+    }
+
+
 }
 

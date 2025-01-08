@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74db04cd43e523f44b174ab4eb35a1e2, type: 3}
+  m_Name: Timber Camp
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: ba7b4f75d76759b48bbb1daacd0121a8, type: 2}
+  isUnique: 0
+  buildResourceRequirements:
+  - Elderwood
+  buildRequirementsAmount:
+  - 125
+  producedResources:
+  - Elderwood
+  productionRates:
+  - 3
+  consumedResources: []
+  consumeRates: []

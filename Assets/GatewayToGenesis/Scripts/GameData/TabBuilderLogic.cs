@@ -16,6 +16,8 @@ public class TabBuilderLogic : MonoBehaviour
 
     public GameUnit testUnit;
 
+    public bool hasTestUnit;
+
     private GlobalProductionManager globalProductionManager;
 
     private void Start()
@@ -77,6 +79,11 @@ public class TabBuilderLogic : MonoBehaviour
                 {
                     globalProductionManager.AddProductionSlot(productionSlot);
                 }
+                else if (slotComponent is GameTechnologySlot technologySlot)
+                {
+                    globalProductionManager.AddTechnologySlot(technologySlot);
+                }
+
             }
             else
             {
@@ -94,7 +101,7 @@ public class TabBuilderLogic : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown("space"))
+        if (Input.GetKeyDown("space") && hasTestUnit)
         {
             AddNewUnit(testUnit);
         }
