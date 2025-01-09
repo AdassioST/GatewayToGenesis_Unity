@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class TabHotkeys : MonoBehaviour
 {
@@ -10,87 +7,87 @@ public class TabHotkeys : MonoBehaviour
     [SerializeField] private GameObject[] tabs;
 
     public bool tabsDisabled;
+
     public void ToggleStorageTab()
     {
         if (tabsDisabled) return;
 
-        if (storageTab.activeSelf == false) 
-        { 
-            storageTab.SetActive(true);
-
-            //ADD HERE VFX IF PRODUCTION IS ALSO ENABLED
-        }
-        else
-        {
-            storageTab.SetActive(false);
-        }
-
+        ToggleTabDisplay(storageTab, allowIndependent: true);
     }
 
     public void ToggleProductionTab()
     {
         if (tabsDisabled) return;
 
-        if (productionTab.activeSelf == false)
-        {
-            productionTab.SetActive(true);
-
-            //ADD HERE VFX IF STORAGE IS ALSO ENABLED
-        }
-        else
-        {
-            productionTab.SetActive(false);
-        }
-
+        ToggleTabDisplay(productionTab, allowIndependent: true);
     }
 
     public void ToggleGovernmentTab()
     {
         if (tabsDisabled) return;
 
-        if (governmentTab.activeSelf == false)
-        {
-            HUD.SetActive(false);
-
-            ClearTabs();
-            governmentTab.SetActive(true);
-        }
-        else
-        {
-            governmentTab.SetActive(false);
-
-            ClearTabs();
-            HUD.SetActive(true);
-        }
-
+        ToggleTabDisplay(governmentTab, updateHUD: true);
     }
 
     public void ToggleResearchTab()
     {
         if (tabsDisabled) return;
 
-        if (researchTab.activeSelf == false)
-        {
-            HUD.SetActive(false);
+        ToggleTabDisplay(researchTab, updateHUD: true);
+    }
 
-            ClearTabs();
-            researchTab.SetActive(true);
+    private void ToggleTabDisplay(GameObject tab, bool updateHUD = false, bool allowIndependent = false)
+    {
+        Transform display = tab.transform.Find("Display");
+        if (display == null)
+        {
+            Debug.LogError($"Tab {tab.name} does not have a 'Display' child object.");
+            return;
+        }
+
+        bool isActive = display.gameObject.activeSelf;
+
+        if (!isActive)
+        {
+            if (!allowIndependent)
+            {
+                ClearTabs();
+            }
+            display.gameObject.SetActive(true);
+
+            if (updateHUD)
+            {
+                HUD.SetActive(false);
+            }
+
+            // Log for debugging and future VFX implementation
+            if (allowIndependent && storageTab.transform.Find("Display").gameObject.activeSelf
+                && productionTab.transform.Find("Display").gameObject.activeSelf)
+            {
+                Debug.Log("Both StorageTab and ProductionTab are enabled.");
+                // Add VFX or additional functionality here if both are active
+            }
         }
         else
         {
-            researchTab.SetActive(false);
+            display.gameObject.SetActive(false);
 
-            ClearTabs();
-            HUD.SetActive(true);
+            if (updateHUD)
+            {
+                HUD.SetActive(true);
+            }
         }
-
     }
 
     private void ClearTabs()
     {
-        foreach(GameObject tab in tabs)
+        foreach (GameObject tab in tabs)
         {
-            tab.SetActive(false);
+            Transform display = tab.transform.Find("Display");
+            if (display != null)
+            {
+                display.gameObject.SetActive(false);
+            }
         }
     }
 }

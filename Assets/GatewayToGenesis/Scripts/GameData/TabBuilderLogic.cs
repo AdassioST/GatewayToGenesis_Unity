@@ -68,21 +68,17 @@ public class TabBuilderLogic : MonoBehaviour
 
             if (slotComponent != null)
             {
-                slotComponent.gameUnit = unit;
+                // Initialize the slot properly based on its type
+                if (slotComponent is GameProductionSlot productionSlot)
+                {
+                    productionSlot.InitializeSlot(unit); // Initialize with the GameUnit
+                }
+                else
+                {
+                    slotComponent.gameUnit = unit; // For other slot types
+                }
 
-                // Directly add the slot to the GlobalProductionManager
-                if (slotComponent is GameResourceSlot resourceSlot)
-                {
-                    globalProductionManager.AddResourceSlot(resourceSlot);
-                }
-                else if (slotComponent is GameProductionSlot productionSlot)
-                {
-                    globalProductionManager.AddProductionSlot(productionSlot);
-                }
-                else if (slotComponent is GameTechnologySlot technologySlot)
-                {
-                    globalProductionManager.AddTechnologySlot(technologySlot);
-                }
+                AddSlotToGlobalManager(slotComponent);
 
             }
             else
@@ -96,6 +92,26 @@ public class TabBuilderLogic : MonoBehaviour
         else
         {
             Debug.LogWarning($"Unit {unit.name} is already in section {section.name}");
+        }
+    }
+
+    private void AddSlotToGlobalManager(IGameUnitSlot slotComponent)
+    {
+        if (slotComponent is GameResourceSlot resourceSlot)
+        {
+            globalProductionManager.AddResourceSlot(resourceSlot);
+        }
+        else if (slotComponent is GameProductionSlot productionSlot)
+        {
+            globalProductionManager.AddProductionSlot(productionSlot);
+        }
+        else if (slotComponent is GameTechnologySlot technologySlot)
+        {
+            globalProductionManager.AddTechnologySlot(technologySlot);
+        }
+        else
+        {
+            Debug.LogWarning("Slot does not match any known slot types.");
         }
     }
 

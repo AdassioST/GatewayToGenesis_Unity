@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,55 +12,51 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
     public float maxAmount { get; set; }
 
     // VARIABLES
-
-    public bool insufficientProduction; 
+    public bool insufficientProduction;
 
     public ProductionUnitData productionUnitData;
 
     public Image icon;
-
     public TMP_Text amountText, nameText, typeText;
 
     // Dictionary to store ProductionUnitData by GameUnit name
     private static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
 
-    // Start is called before the first frame update
-    public void Start()
-    {
-        if (productionUnitDataDictionary == null)
-        {
-            InitializeProductionUnitDataDictionary();
-        }
-
-        if (gameUnit != null)
-        {
-            // Try to assign the correct productionUnitData based on the name of the gameUnit
-            if (productionUnitDataDictionary.ContainsKey(gameUnit.name))
-            {
-                productionUnitData = productionUnitDataDictionary[gameUnit.name];
-            }
-            else
-            {
-                Debug.LogWarning($"No ProductionUnitData found for {gameUnit.name}");
-            }
-        }
-
-        InitialiseProductionUnit(gameUnit);
-    }
-
-    void Update()
+    private void Update()
     {
         if (gameUnit != null && productionUnitData != null)
         {
             UpdateMaxAmount();
         }
     }
+
+    // Initialize the slot with its GameUnit and associated data
+    public void InitializeSlot(GameUnit newGameUnit)
+    {
+        if (productionUnitDataDictionary == null)
+        {
+            InitializeProductionUnitDataDictionary();
+        }
+
+        gameUnit = newGameUnit;
+
+        // Assign the correct ProductionUnitData
+        if (productionUnitDataDictionary.ContainsKey(gameUnit.name))
+        {
+            productionUnitData = productionUnitDataDictionary[gameUnit.name];
+        }
+        else
+        {
+            Debug.LogWarning($"No ProductionUnitData found for {gameUnit.name}");
+        }
+
+        InitialiseProductionUnit(newGameUnit);
+    }
+
     public void InitialiseProductionUnit(GameUnit newProductionUnit)
     {
         gameUnit = newProductionUnit;
-
         icon.sprite = newProductionUnit.icon;
-
         RefreshProductionAmount();
     }
 
@@ -71,7 +66,7 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
         {
             amount = maxAmount * 0.25f;
 
-            //ADD HERE INSUFFICIENT AMOUNT EVENT TRIGGER
+            // ADD HERE INSUFFICIENT AMOUNT EVENT TRIGGER
         }
         else
         {
@@ -83,9 +78,7 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
 
     public void RefreshProductionAmount()
     {
-
         amountText.text = Mathf.Round(maxAmount).ToString();
-
         nameText.text = gameUnit.name.ToString();
         typeText.text = gameUnit.type.ToString();
     }
@@ -105,10 +98,9 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
             }
             else
             {
-                Debug.LogWarning($"Duplicate ProductionUnitData found for {unitData.name} Skipping");
+                Debug.LogWarning($"Duplicate ProductionUnitData found for {unitData.name}, Skipping");
             }
         }
     }
-
 }
 
