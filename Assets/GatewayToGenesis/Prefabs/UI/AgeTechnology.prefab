@@ -231,6 +231,7 @@ GameObject:
   - component: {fileID: 1272787351903819926}
   - component: {fileID: 5412487930893801080}
   - component: {fileID: 6386208222860851831}
+  - component: {fileID: 1045840292762193562}
   m_Layer: 5
   m_Name: AgeTechnology
   m_TagString: Untagged
@@ -300,6 +301,30 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1045840292762193562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3051181861600236901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1976232f0f321a449d6315797354573, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  emptySlotPrefab: {fileID: 5009538304740054428, guid: 31379f946fa6bcf46b4b3b8c57f13663, type: 3}
+  slots: {fileID: 1605607714919460212}
+  eraTechnologies:
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 8c2113d3dfb68a448a545a984939268a, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: cd1b4bbdaa58d9142b6d7ea5c6335066, type: 2}
+  - {fileID: 11400000, guid: abb72343f3efec04c8d1e42e690dd5b4, type: 2}
+  - {fileID: 11400000, guid: 815232cddbb09b0429d02ec3f3600fcc, type: 2}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: d1c3bbe1f8e8ca34fb3105b41888e2f2, type: 2}
 --- !u!1 &5896269168963237032
 GameObject:
   m_ObjectHideFlags: 0

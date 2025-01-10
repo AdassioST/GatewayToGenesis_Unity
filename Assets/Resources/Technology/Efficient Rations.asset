@@ -14,14 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: f22e266197ab4984aa9af710a666e2f8, type: 2}
   isEventTech: 0
-  researchCost: 45
-  tier: 2
+  tier: 1
   techRequirements:
   - Reconstruction
-  resourceRequirements: []
-  resourceAmount: []
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 25
   eurekaConditions:
   - type: 3
     trigger: Food
     requiredAmount: 80
     description: Accumulate 80 Food
+  techUnlockables:
+  - {fileID: 11400000, guid: d17450aef6e9d2746ab07af3580450f9, type: 2}

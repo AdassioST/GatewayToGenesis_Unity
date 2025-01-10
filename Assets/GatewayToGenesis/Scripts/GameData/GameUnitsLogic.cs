@@ -7,11 +7,19 @@ public class GameUnitsLogic : MonoBehaviour
 {
     public static GameUnitsLogic Instance { get; private set; }
 
-    [SerializeField] private TabBuilderLogic storageTab;
-    [SerializeField] private TabBuilderLogic productionTab;
-    [SerializeField] private TabBuilderLogic researchTab;
+    [SerializeField] public TabBuilderLogic storageTab;
+    [SerializeField] public TabBuilderLogic productionTab;
+    [SerializeField] public TabBuilderLogic researchTab;
 
     private GlobalProductionManager global;
+
+    private Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
+
+    public GameTechnologySlot activeTechnologySlot;
+
+    public bool switchedTechnologies;
+    private Coroutine activeTechnologySlotCoroutine;
+
 
     private void Awake()
     {
@@ -23,8 +31,8 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         Instance = this;
-
     }
+
     private void Start()
     {
         global = GetComponent<GlobalProductionManager>();
@@ -49,7 +57,6 @@ public class GameUnitsLogic : MonoBehaviour
         {
             Debug.LogWarning($"Resource {name} is not in the resource storage slots");
         }
-
     }
 
     public void ChangeProductionUnitFromName(string name, float amount)
@@ -66,31 +73,6 @@ public class GameUnitsLogic : MonoBehaviour
         {
             Debug.LogWarning($"Production Unit {name} is not in the production storage slots");
         }
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown("s"))
-        {
-            ChangeResourceFromName("Elderwood", 3, false);
-        }
-
-        if (Input.GetKeyDown("r"))
-        {
-            ChangeResourceFromName("Research", 100, false);
-        }
-
-        if (Input.GetKeyDown("t"))
-        {
-            UnlockTechnologyWithRequirements("Reconstruction");
-        }
-
-        if (Input.GetKeyDown("g"))
-        {
-            UnlockTechnologyWithRequirements("Woodcraft Mastery");
-        }
     }
 
     public bool CanBuildProductionUnit(string productionUnitName)
@@ -102,19 +84,16 @@ public class GameUnitsLogic : MonoBehaviour
 
         bool isUnit = productionSlot.gameUnit.type == "Unit";
 
-
         for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
             string resourceName = productionUnitData.buildResourceRequirements[i];
             float requiredAmount = productionUnitData.buildRequirementsAmount[i];
 
-            // Calculate the cost creep only for buildings
             if (!isUnit)
             {
                 requiredAmount *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
             }
 
-            // Find the corresponding resource slot in storage
             GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
             GameResourceSlot resourceSlot = resourceSlotObj.GetComponent<GameResourceSlot>();
 
@@ -126,12 +105,10 @@ public class GameUnitsLogic : MonoBehaviour
 
         return true;
     }
+
     public bool BuildProductionUnit(string productionUnitName)
     {
-        if (!CanBuildProductionUnit(productionUnitName))
-        {
-            return false;
-        }
+        if (!CanBuildProductionUnit(productionUnitName)) return false;
 
         GameObject productionSlotObj = productionTab.slots.Find(slot => slot.name == productionUnitName);
         GameProductionSlot productionSlot = productionSlotObj.GetComponent<GameProductionSlot>();
@@ -145,14 +122,12 @@ public class GameUnitsLogic : MonoBehaviour
             string resourceName = productionUnitData.buildResourceRequirements[i];
             float baseCost = productionUnitData.buildRequirementsAmount[i];
 
-            // Calculate the cost creep only for buildings
             if (!isUnit)
             {
                 baseCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
             }
 
-            Debug.Log($"Building {productionUnitName}: Deducting {baseCost} from {resourceName} (Available: {storageTab.slots.Find(slot => slot.name == resourceName).GetComponent<GameResourceSlot>().amount})");
-
+            Debug.Log($"Building {productionUnitName}: Deducting {baseCost} from {resourceName}");
             ChangeResourceFromName(resourceName, -baseCost, false);
         }
 
@@ -167,18 +142,17 @@ public class GameUnitsLogic : MonoBehaviour
 
         TechnologyData technologyData = technologySlot.technologyData;
 
-        // Check if tech lock prerequisites are met
+        if (technologyData == null) return false;
+
         foreach (string requiredTech in technologyData.techRequirements)
         {
             GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
             if (requiredTechObj == null || !requiredTechObj.GetComponent<GameTechnologySlot>().isUnlocked)
             {
-                Debug.LogWarning($"Prerequisite technology {requiredTech} not unlocked.");
                 return false;
             }
         }
 
-        // Check if enough resources are available
         for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
         {
             string resourceName = technologyData.resourceRequirements[i];
@@ -189,7 +163,6 @@ public class GameUnitsLogic : MonoBehaviour
 
             if (resourceSlot == null || resourceSlot.amount < requiredAmount)
             {
-                Debug.LogWarning($"Not enough {resourceName} to unlock {technologyName}.");
                 return false;
             }
         }
@@ -197,65 +170,148 @@ public class GameUnitsLogic : MonoBehaviour
         return true;
     }
 
-    public bool UnlockTechnologyWithRequirements(string technologyName)
+    public void StartTechnologyProgress(GameTechnologySlot technologySlot)
     {
-        GameObject technologySlotObj = researchTab.slots.Find(slot => slot.name == technologyName);
-        GameTechnologySlot technologySlot = technologySlotObj.GetComponent<GameTechnologySlot>();
-
-        if (!CanUnlockTechnology(technologyName) || technologySlot.isUnlocked)
+        if (technologySlot == null || technologySlot.isUnlocked || technologySlot.technologyData == null)
         {
-            return false;
+            return; // Invalid or already unlocked slot
         }
 
-        TechnologyData technologyData = technologySlot.technologyData;
-
-        // Deduct resources
-        for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
+        // Check if all required technologies are unlocked
+        foreach (string requiredTech in technologySlot.technologyData.techRequirements)
         {
-            string resourceName = technologyData.resourceRequirements[i];
-            float requiredAmount = technologyData.resourceAmount[i];
-
-            ChangeResourceFromName(resourceName, -requiredAmount, false);
+            GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
+            if (requiredTechObj == null || !requiredTechObj.GetComponent<GameTechnologySlot>().isUnlocked)
+            {
+                Debug.LogWarning($"Cannot start research on {technologySlot.name} because required technologies are not unlocked.");
+                return;
+            }
         }
 
-        technologySlot.UnlockTechnology();
-        return true;
+        // If switching from a different technology, pause the current one
+        if (activeTechnologySlot != null && activeTechnologySlot != technologySlot)
+        {
+            activeTechnologySlot.alreadyClicked = false;
+
+            switchedTechnologies = true;
+
+            if (activeTechnologySlotCoroutine != null)
+            {
+                StopCoroutine(activeTechnologySlotCoroutine);
+            }
+
+            Debug.Log($"Switched from {activeTechnologySlot.name} to {technologySlot.name}");
+        }
+
+        activeTechnologySlot = technologySlot;
+        switchedTechnologies = false;
+
+        // Progress tracking
+        if (!technologyProgress.ContainsKey(technologySlot))
+        {
+            technologyProgress[technologySlot] = technologySlot.technologyData.resourceRequirements.ToDictionary(resource => resource, _ => 0f);
+        }
+
+        technologySlot.alreadyClicked = true;
+
+        // Anti stacking check
+        if (activeTechnologySlotCoroutine != null)
+        {
+            StopCoroutine(activeTechnologySlotCoroutine); 
+        }
+        activeTechnologySlotCoroutine = StartCoroutine(ProcessTechnologyProgress(technologySlot));
     }
+
+    private IEnumerator ProcessTechnologyProgress(GameTechnologySlot technologySlot)
+    {
+        var technologyData = technologySlot.technologyData;
+        var resourceProgress = technologyProgress[technologySlot];
+
+        while (!technologySlot.isUnlocked)
+        {
+            // Exit if switching or pausing
+            if (switchedTechnologies)
+            {
+                Debug.Log($"Progress interrupted for {technologySlot.name}");
+                yield break;
+            }
+
+            bool allResourcesComplete = true;
+
+            for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
+            {
+                var resourceName = technologyData.resourceRequirements[i];
+                var requiredAmount = technologyData.resourceAmount[i];
+                var processedAmount = resourceProgress[resourceName];
+
+                // Calculate remaining and processable amounts
+                var remainingAmount = requiredAmount - processedAmount;
+                if (remainingAmount > 0)
+                {
+                    GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
+                    var resourceSlot = resourceSlotObj?.GetComponent<GameResourceSlot>();
+
+                    if (resourceSlot == null) continue;
+
+                    var availableAmount = Mathf.Min(resourceSlot.amount, remainingAmount);
+                    var amountToProcess = Mathf.Min(availableAmount, requiredAmount * 0.1f);
+
+                    resourceSlot.amount -= amountToProcess;
+                    resourceProgress[resourceName] += amountToProcess;
+                }
+
+                if (resourceProgress[resourceName] < requiredAmount)
+                {
+                    allResourcesComplete = false;
+                }
+            }
+
+            // Update progress and UI
+            technologySlot.researchProgress = resourceProgress.Values.Sum() / technologyData.resourceAmount.Sum();
+            technologySlot.UpdateProgressUI();
+
+            if (allResourcesComplete)
+            {
+                technologySlot.UnlockTechnology();
+                technologyProgress.Remove(technologySlot); // Clear progress tracking
+                activeTechnologySlot = null; // Reset active slot
+                activeTechnologySlotCoroutine = null; // Reset coroutine reference
+                Debug.Log($"{technologySlot.name} unlocked.");
+                yield break;
+            }
+
+            yield return new WaitForSeconds(1.0f);
+        }
+
+        // Clean up coroutine reference when finished
+        activeTechnologySlotCoroutine = null;
+    }
+
 
     public void HandleTechUnlockable(TechUnlockable unlockable)
     {
         switch (unlockable.unlockableType)
         {
             case TechUnlockableType.ClickPower:
-
                 storageTab.AddNewUnit(unlockable.gameUnit);
                 Debug.Log($"ClickPower unit {unlockable.gameUnit.name} has been added to Storage.");
                 break;
 
             case TechUnlockableType.Building:
-
-                productionTab.AddNewUnit(unlockable.gameUnit);
-                Debug.Log($"Building unit {unlockable.gameUnit.name} has been added to Production.");
-                break;
-
             case TechUnlockableType.Unit:
-
                 productionTab.AddNewUnit(unlockable.gameUnit);
-                Debug.Log($"Unit {unlockable.gameUnit.name} has been added to Production.");
+                Debug.Log($"Unit/Building {unlockable.gameUnit.name} has been added to Production.");
                 break;
 
             case TechUnlockableType.Modifier:
-
                 Debug.Log($"Modifier {unlockable.gameUnit.name} has been unlocked.");
                 break;
 
             case TechUnlockableType.Arts:
-
                 Debug.Log($"Arts unit {unlockable.gameUnit.name} has been unlocked.");
                 break;
 
             case TechUnlockableType.Special:
-
                 Debug.Log($"Special unlockable {unlockable.gameUnit.name} has been unlocked.");
                 break;
 
@@ -265,6 +321,16 @@ public class GameUnitsLogic : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown("a"))
+        {
+            ChangeResourceFromName("Elderwood", 3, false);
+        }
 
+        if (Input.GetKeyDown("s"))
+        {
+            ChangeResourceFromName("Research", 100, false);
+        }
+    }
 }
-

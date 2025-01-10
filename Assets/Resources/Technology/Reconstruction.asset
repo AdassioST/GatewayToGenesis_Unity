@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: a30558c3c59df134f818543c4210c399, type: 2}
   isEventTech: 0
-  tier: 1
+  tier: 0
   techRequirements: []
   resourceRequirements:
   - Research
@@ -23,4 +23,4 @@ MonoBehaviour:
   eurekaConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: 52262f0b4f668834d8a0c4083af8da6d, type: 2}
-  - {fileID: 11400000, guid: ff25ad263f6fd324baeb398ded87ec46, type: 2}
+  - {fileID: 11400000, guid: 2ed189d4865af2b42859ae7723b3c6e0, type: 2}

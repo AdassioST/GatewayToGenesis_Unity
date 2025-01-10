@@ -14,14 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 0890a2beb6654c340bcb386543759bd7, type: 2}
   isEventTech: 0
-  researchCost: 75
-  tier: 3
+  tier: 2
   techRequirements:
   - Efficient Rations
-  resourceRequirements: []
-  resourceAmount: []
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 45
   eurekaConditions:
   - type: 1
     trigger: Timber Camp
     requiredAmount: 3
     description: Build 3 Timber Camp
+  techUnlockables:
+  - {fileID: 11400000, guid: 34840888851390a4fb6d599ccd34af1d, type: 2}

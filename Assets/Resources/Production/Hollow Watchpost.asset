@@ -17,8 +17,10 @@ MonoBehaviour:
   buildResourceRequirements:
   - Duskstone
   buildRequirementsAmount:
-  - 75
-  producedResources: []
-  productionRates: []
+  - 5
+  producedResources:
+  - Elderwood
+  productionRates:
+  - 15
   consumedResources: []
   consumeRates: []

@@ -1,8 +1,8 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static UnityEngine.Mesh;
 
 public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 {
@@ -14,31 +14,33 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
     // VARIABLES
     public float researchProgress { get; set; } = 0.0f;
-    public float researchCost { get; set; }
-    public bool isUnlocked;
+    public float researchCost { get; private set; }
+
+    [SerializeField] private GameObject enlightened, unlockFilter;
+
+    public Image slotImage;
+
+    public bool isUnlocked, enlightenedCompleted, alreadyClicked;
+    public Sprite unlockedSprite, unlockedProgressBar;
 
     public TechnologyData technologyData;
 
     public Image icon;
-    public TMP_Text nameText, eurekaText, researchProgressText;
-
-    [SerializeField] private GameObject techUnlockableSlotPrefab, techUnlockables;
+    public TMP_Text nameText, enlightenedText, researchCostText;
+    [SerializeField] private Image progressBar; // Image component for the ProgressBar
 
     private GameUnitsLogic gameUnitsLogic;
 
-    // Dictionary to store TechnologyData by GameUnit name
+    // Static dictionary to hold TechnologyData
     private static Dictionary<string, TechnologyData> technologyDataDictionary;
 
-    // Start is called before the first frame update
-    public void Start()
+    [SerializeField] private GameObject techUnlockableSlotPrefab, techUnlockables;
+
+    private void Start()
     {
-        gameUnitsLogic = FindObjectOfType<GameUnitsLogic>();
+        gameUnitsLogic = GameUnitsLogic.Instance;
 
-        if (gameUnitsLogic == null)
-        {
-            Debug.LogError("GameUnitsLogic component not found in the scene.");
-        }
-
+        // Initialize the technology data dictionary if not already done
         if (technologyDataDictionary == null)
         {
             InitializeTechnologyDataDictionary();
@@ -46,71 +48,10 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         if (gameUnit != null)
         {
-            if (technologyDataDictionary.ContainsKey(gameUnit.name))
-            {
-                technologyData = technologyDataDictionary[gameUnit.name];
-                researchCost = technologyData.resourceAmount[0];
-
-                if (technologyData.eurekaConditions.Count > 0)
-                {
-                    eurekaText.text = technologyData.eurekaConditions[0].description;
-                }
-            }
-
-            else
-            {
-                Debug.LogWarning($"No TechnologyData found for {gameUnit.name}");
-            }
+            InitializeTechnologyData();
         }
 
         InitializeTechnology(gameUnit);
-    }
-
-    public void InitializeTechnology(GameUnit newTechnology)
-    {
-        gameUnit = newTechnology;
-
-        icon.sprite = newTechnology.icon;
-
-        foreach (var techUnlockable in technologyData.techUnlockables)
-        {
-            GameObject unlockableSlot = Instantiate(techUnlockableSlotPrefab, techUnlockables.transform);
-            TechUnlockableSlot slotComponent = unlockableSlot.GetComponent<TechUnlockableSlot>();
-
-            if (slotComponent != null)
-            {
-                slotComponent.InitializeTechUnlockable(techUnlockable);
-            }
-            else
-            {
-                Debug.LogWarning("UnlockSlot prefab is missing the UnlockSlot component.");
-            }
-        }
-
-        RefreshTechnologyUI();
-    }
-
-    public void RefreshTechnologyUI()
-    {
-        nameText.text = gameUnit.name;
-
-        researchProgressText.text = $"Research Progress: {Mathf.Round(researchProgress)} / {researchCost}"; //Change this to fill
-    }
-
-    public void UnlockTechnology()
-    {
-        if (isUnlocked) return;
-
-        isUnlocked = true;
-        RefreshTechnologyUI();
-
-        // Call for each unlockable associated with the technology
-        foreach (TechUnlockable unlockable in technologyData.techUnlockables)
-        {
-            gameUnitsLogic.HandleTechUnlockable(unlockable);
-        }
-
-        Debug.Log($"{gameUnit.name} has been unlocked and its unlockables have been processed!");
     }
 
     private void InitializeTechnologyDataDictionary()
@@ -122,15 +63,107 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         foreach (var techData in technologyDataArray)
         {
-            if (!technologyDataDictionary.ContainsKey(techData.gameUnit.name))
+            Debug.Log("Loaded TechnologyData: " + techData.name);
+            if (!technologyDataDictionary.ContainsKey(techData.name))
             {
-                technologyDataDictionary.Add(techData.gameUnit.name, techData);
+                technologyDataDictionary.Add(techData.name, techData);
             }
             else
             {
-                Debug.LogWarning($"Duplicate TechnologyData found for {techData.gameUnit.name} Skipping");
+                Debug.LogWarning($"Duplicate TechnologyData found for {techData.name}, Skipping");
             }
         }
     }
-}
 
+    private void InitializeTechnologyData()
+    {
+        if (gameUnit == null) return;
+
+        Debug.Log("Looking for TechnologyData for: " + gameUnit.name);
+
+        // Fetch the TechnologyData from the dictionary
+        if (technologyDataDictionary.ContainsKey(gameUnit.name))
+        {
+            technologyData = technologyDataDictionary[gameUnit.name];
+            researchCost = technologyData.resourceAmount[0];
+
+            if (technologyData.eurekaConditions.Count > 0)
+            {
+                enlightenedText.text = technologyData.eurekaConditions[0].description;
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"No TechnologyData found for {gameUnit.name}. Make sure the data is loaded correctly.");
+        }
+    }
+
+    public void InitializeTechnology(GameUnit newTechnology)
+    {
+        gameUnit = newTechnology;
+
+        if (gameUnit == null) return;
+
+        icon.sprite = newTechnology.icon;
+
+        // Initialize unlockables if any
+        if (technologyData != null && technologyData.techUnlockables != null)
+        {
+            foreach (var techUnlockable in technologyData.techUnlockables)
+            {
+                GameObject unlockableSlot = Instantiate(techUnlockableSlotPrefab, techUnlockables.transform);
+                TechUnlockableSlot slotComponent = unlockableSlot.GetComponent<TechUnlockableSlot>();
+
+                if (slotComponent != null)
+                {
+                    slotComponent.InitializeTechUnlockable(techUnlockable);
+                }
+                else
+                {
+                    Debug.LogWarning("UnlockSlot prefab is missing the UnlockSlot component.");
+                }
+            }
+        }
+
+        RefreshTechnologyUI();
+    }
+
+    public void RefreshTechnologyUI()
+    {
+        nameText.text = gameUnit.name;
+        enlightened.SetActive(enlightenedCompleted);
+
+        researchCostText.text = researchCost.ToString(); //Change this to fill
+
+        UpdateProgressUI();
+    }
+
+    public void UnlockTechnology()
+    {
+        if (isUnlocked) return;
+
+        isUnlocked = true;
+        enlightenedCompleted = true;
+
+        gameUnitsLogic.activeTechnologySlot = null;
+
+        slotImage.sprite = unlockedSprite;
+        progressBar.sprite = unlockedProgressBar;
+
+        unlockFilter.SetActive(false);
+
+        RefreshTechnologyUI();
+
+        foreach (var unlockable in technologyData.techUnlockables)
+        {
+            gameUnitsLogic.HandleTechUnlockable(unlockable);
+        }
+
+        Debug.Log($"{gameUnit.name} has been unlocked and its unlockables have been processed!");
+    }
+
+    public void UpdateProgressUI()
+    {
+        progressBar.fillAmount = researchProgress; // Update the ProgressBar fill amount
+    }
+}
