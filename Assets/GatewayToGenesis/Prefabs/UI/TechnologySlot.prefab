@@ -423,6 +423,8 @@ MonoBehaviour:
   slotImage: {fileID: 8409738293382820374}
   isUnlocked: 0
   enlightenedCompleted: 0
+  alreadyClicked: 0
+  isVisible: 0
   unlockedSprite: {fileID: 21300000, guid: ff0ba0408ae20c04f9fcc6caff211bf2, type: 3}
   unlockedProgressBar: {fileID: 21300000, guid: c92bafcb66fc88a4d96559ed1a1a5257, type: 3}
   technologyData: {fileID: 0}
@@ -433,6 +435,10 @@ MonoBehaviour:
   progressBar: {fileID: 5771203446796023234}
   techUnlockableSlotPrefab: {fileID: 2750549909202460731, guid: 1292e43ea3c79cb498252129ff90b3c9, type: 3}
   techUnlockables: {fileID: 6789139691360840092}
+  unavailableFilter: {fileID: 2453592559697371440}
+  displayComponent: {fileID: 393085265450812179}
+  technologyTreeLogic: {fileID: 0}
+  techState: 0
 --- !u!114 &5534880100735388201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -451,7 +457,6 @@ MonoBehaviour:
   affordableSprite: {fileID: 0}
   unaffordableSprite: {fileID: 0}
   technologySlot: {fileID: -5214368541619111204}
-  unavailableFilter: {fileID: 2453592559697371440}
 --- !u!1 &3772719155555540830
 GameObject:
   m_ObjectHideFlags: 0
@@ -587,7 +592,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.34901962}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.2509804}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

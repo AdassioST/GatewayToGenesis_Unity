@@ -15,7 +15,9 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: bb75dda441e78374890496085d3c7802, type: 2}
   isEventTech: 0
   tier: 2
-  techRequirements: []
+  techRequirements:
+  - Woodcraft Mastery
+  - Efficient Rations
   resourceRequirements:
   - Research
   resourceAmount:

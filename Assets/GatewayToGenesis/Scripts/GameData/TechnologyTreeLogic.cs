@@ -1,11 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using static GameTechnologySlot;
 
 public class TechnologyTreeLogic : MonoBehaviour
 {
     [SerializeField] private GameObject emptySlotPrefab, slots;
-
     [SerializeField] private List<TechnologyData> eraTechnologies = new List<TechnologyData>();
 
     private TabBuilderLogic tabBuilderLogic;
@@ -14,44 +14,125 @@ public class TechnologyTreeLogic : MonoBehaviour
     {
         tabBuilderLogic = GetComponentInParent<TabBuilderLogic>();
 
-        if (tabBuilderLogic == null)
-        {
-            Debug.LogError("TabBuilderLogic component not found in parent");
-        }
+        if (!tabBuilderLogic) Debug.LogError("TabBuilderLogic component not found in parent");
 
         InitializeTree(eraTechnologies);
+
+        StartCoroutine(InitialVisibilityRefresh());
     }
 
     public void InitializeTree(List<TechnologyData> technologies)
     {
-        //ClearSlots();
+        // VFX LOGIC HERE
 
         BuildTechTree(technologies);
     }
 
-    private void ClearSlots()
-    {
-        foreach (Transform child in slots.transform)
-        {
-            Destroy(child.gameObject);
-        }
-    }
-
     private void BuildTechTree(List<TechnologyData> technologies)
     {
-        for (int i = 0; i < technologies.Count; i++)
+        foreach (var techData in technologies)
         {
-            TechnologyData techData = technologies[i];
-
-            if (techData != null)
-            {
-                tabBuilderLogic.AddNewUnit(techData.gameUnit);
-            }
-            else
-            {
+            if (techData == null) 
+            { 
                 Instantiate(emptySlotPrefab, slots.transform);
+
+                continue;
             }
+
+            tabBuilderLogic.AddNewUnit(techData.gameUnit);
+
+            GameObject techSlotObj = slots.transform.Find(techData.gameUnit.name)?.gameObject;
+
+            if (techSlotObj == null) 
+            {
+                Debug.LogError($"Slot for {techData.name} not found in the hierarchy.");
+
+                continue;
+            }
+
+            var techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
+
+            if (techSlot != null) DetermineTechnologyVisibility(techSlot);
+        }
+
+        DetermineTechnologyVisibilityForAllSlots();
+    }
+
+    public void DetermineTechnologyVisibility(GameTechnologySlot techSlot)
+    {
+        if (techSlot?.technologyData == null) return;
+
+        TechnologyData techData = techSlot.technologyData;
+
+        if (techSlot.isUnlocked)
+        {
+            techSlot.techState = TechnologyState.Unlocked;
+
+            HandleSlotVisibilityState(techSlot);
+
+            return;
+        }
+
+        bool hasPrerequisites = techData.techRequirements.Count > 0;
+
+        bool allPrerequisitesUnlocked = true;
+
+        bool anyPrerequisiteCurrentlyResearching = false;
+
+        foreach (var requiredTech in techData.techRequirements)
+        {
+            Transform requiredTechTransform = slots.transform.Find(requiredTech);
+
+            if (requiredTechTransform == null)
+            { 
+                allPrerequisitesUnlocked = false;
+
+                continue;
+            }
+
+            var requiredTechSlot = requiredTechTransform.GetComponent<GameTechnologySlot>();
+
+            if (requiredTechSlot == null) 
+            { 
+                allPrerequisitesUnlocked = false;
+
+                continue; 
+            }
+
+            if (!requiredTechSlot.isUnlocked) allPrerequisitesUnlocked = false;
+
+            if (requiredTechSlot.techState == TechnologyState.CurrentResearchOption) anyPrerequisiteCurrentlyResearching = true;
+        }
+
+        techSlot.techState = hasPrerequisites ? (anyPrerequisiteCurrentlyResearching ? TechnologyState.NextResearchOption : (allPrerequisitesUnlocked ? TechnologyState.CurrentResearchOption : TechnologyState.Invisible)) : TechnologyState.CurrentResearchOption;
+
+        HandleSlotVisibilityState(techSlot);
+    }
+
+    private void HandleSlotVisibilityState(GameTechnologySlot techSlot)
+    {
+        bool isActive = techSlot.techState != TechnologyState.Invisible;
+
+        bool isUnavailable = techSlot.techState == TechnologyState.NextResearchOption;
+
+        techSlot.displayComponent.SetActive(isActive);
+        techSlot.unavailableFilter.SetActive(isUnavailable);
+    }
+
+    public void DetermineTechnologyVisibilityForAllSlots()
+    {
+        foreach (Transform slotTransform in slots.transform)
+        {
+            var techSlot = slotTransform.GetComponent<GameTechnologySlot>();
+
+            if (techSlot?.technologyData != null) DetermineTechnologyVisibility(techSlot);
         }
     }
-}
 
+    private IEnumerator InitialVisibilityRefresh()
+    {
+        yield return null; // Wait one frame
+
+        DetermineTechnologyVisibilityForAllSlots();
+    }
+}

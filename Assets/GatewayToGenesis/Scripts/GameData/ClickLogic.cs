@@ -25,8 +25,6 @@ public class ClickLogic : MonoBehaviour
 
     public GameTechnologySlot technologySlot;
 
-    [SerializeField] GameObject unavailableFilter;
-
     // Cooldown variables for UnlockTechnology only
     private float unlockSwapCooldown = 1.0f;  // Cooldown time (seconds)
     private float lastClickTime = 0f;          // Last click time to track cooldown
@@ -47,7 +45,6 @@ public class ClickLogic : MonoBehaviour
 
     private void Update()
     {
-        RefreshTechSlotAppearance();
         RefreshButtonAppearance();
     }
 
@@ -97,15 +94,6 @@ public class ClickLogic : MonoBehaviour
 
         bool canAfford = gameUnitsLogic.CanBuildProductionUnit(productionSlot.gameUnit.name);
         buttonImage.sprite = canAfford ? affordableSprite : unaffordableSprite;
-    }
-
-    private void RefreshTechSlotAppearance()
-    {
-        if (currentMode != ClickMode.UnlockTechnology || technologySlot == null || technologySlot.isUnlocked || technologySlot.gameUnit == null)
-            return;
-
-        bool canAfford = gameUnitsLogic.CanUnlockTechnology(technologySlot.gameUnit.name);
-        unavailableFilter.SetActive(!canAfford);
     }
     private void ResetCooldown()
     {

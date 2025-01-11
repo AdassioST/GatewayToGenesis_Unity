@@ -20,7 +20,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
     public Image slotImage;
 
-    public bool isUnlocked, enlightenedCompleted, alreadyClicked;
+    public bool isUnlocked, enlightenedCompleted, alreadyClicked, isVisible;
     public Sprite unlockedSprite, unlockedProgressBar;
 
     public TechnologyData technologyData;
@@ -35,6 +35,20 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
     private static Dictionary<string, TechnologyData> technologyDataDictionary;
 
     [SerializeField] private GameObject techUnlockableSlotPrefab, techUnlockables;
+    
+    public GameObject unavailableFilter, displayComponent;
+
+    public TechnologyTreeLogic technologyTreeLogic; // Reference to TechnologyTreeLogic
+
+    public enum TechnologyState
+    {
+        CurrentResearchOption,
+        NextResearchOption,
+        Invisible,
+        Unlocked
+    }
+
+    public TechnologyState techState;
 
     private void Start()
     {
@@ -51,6 +65,11 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
             InitializeTechnologyData();
         }
 
+        if (technologyTreeLogic == null)
+        {
+            technologyTreeLogic = FindObjectOfType<TechnologyTreeLogic>(); // Find the instance at runtime
+        }
+
         InitializeTechnology(gameUnit);
     }
 
@@ -63,7 +82,6 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         foreach (var techData in technologyDataArray)
         {
-            Debug.Log("Loaded TechnologyData: " + techData.name);
             if (!technologyDataDictionary.ContainsKey(techData.name))
             {
                 technologyDataDictionary.Add(techData.name, techData);
@@ -78,8 +96,6 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
     private void InitializeTechnologyData()
     {
         if (gameUnit == null) return;
-
-        Debug.Log("Looking for TechnologyData for: " + gameUnit.name);
 
         // Fetch the TechnologyData from the dictionary
         if (technologyDataDictionary.ContainsKey(gameUnit.name))
@@ -150,7 +166,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         slotImage.sprite = unlockedSprite;
         progressBar.sprite = unlockedProgressBar;
 
-        unlockFilter.SetActive(false);
+        unlockFilter.SetActive(true);
 
         RefreshTechnologyUI();
 
@@ -160,10 +176,19 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         }
 
         Debug.Log($"{gameUnit.name} has been unlocked and its unlockables have been processed!");
+
+        // Refresh visibility directly after unlocking
+        if (technologyTreeLogic != null)
+        {
+            technologyTreeLogic.DetermineTechnologyVisibilityForAllSlots(); // Recalculate visibility
+        }
+
     }
+
 
     public void UpdateProgressUI()
     {
         progressBar.fillAmount = researchProgress; // Update the ProgressBar fill amount
     }
+
 }
