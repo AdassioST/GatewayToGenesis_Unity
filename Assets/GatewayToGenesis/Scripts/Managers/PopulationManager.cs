@@ -28,9 +28,9 @@ public class PopulationManager : MonoBehaviour
          InvokeRepeating("Starvation", 2.0f, 5.0f);
     }
     void Update(){
-        AddPopulation();
-        UpdateClickPower();
-        checkVagabonds();   
+        //AddPopulation();
+        //UpdateClickPower();
+        //checkVagabonds();   
     }
 
 

@@ -64,39 +64,36 @@ public class TechnologyTreeLogic : MonoBehaviour
 
         TechnologyData techData = techSlot.technologyData;
 
+        // Handle technologies that are already unlocked
         if (techSlot.isUnlocked)
         {
             techSlot.techState = TechnologyState.Unlocked;
-
             HandleSlotVisibilityState(techSlot);
-
             return;
         }
 
+        // Check for prerequisites
         bool hasPrerequisites = techData.techRequirements.Count > 0;
-
         bool allPrerequisitesUnlocked = true;
-
         bool anyPrerequisiteCurrentlyResearching = false;
 
+        // Iterate over prerequisites and check their statuses
         foreach (var requiredTech in techData.techRequirements)
         {
             Transform requiredTechTransform = slots.transform.Find(requiredTech);
 
             if (requiredTechTransform == null)
-            { 
+            {
                 allPrerequisitesUnlocked = false;
-
                 continue;
             }
 
             var requiredTechSlot = requiredTechTransform.GetComponent<GameTechnologySlot>();
 
-            if (requiredTechSlot == null) 
-            { 
+            if (requiredTechSlot == null)
+            {
                 allPrerequisitesUnlocked = false;
-
-                continue; 
+                continue;
             }
 
             if (!requiredTechSlot.isUnlocked) allPrerequisitesUnlocked = false;
@@ -104,10 +101,36 @@ public class TechnologyTreeLogic : MonoBehaviour
             if (requiredTechSlot.techState == TechnologyState.CurrentResearchOption) anyPrerequisiteCurrentlyResearching = true;
         }
 
-        techSlot.techState = hasPrerequisites ? (anyPrerequisiteCurrentlyResearching ? TechnologyState.NextResearchOption : (allPrerequisitesUnlocked ? TechnologyState.CurrentResearchOption : TechnologyState.Invisible)) : TechnologyState.CurrentResearchOption;
+        // Reveal early when enlightened
+        if (techSlot.enlightenedCompleted)
+        {
+            techSlot.techState = TechnologyState.NextResearchOption;
+        }
+
+        // Transition to CurrentResearchOption when all prerequisites met
+        else if (allPrerequisitesUnlocked)
+        {
+            techSlot.techState = TechnologyState.CurrentResearchOption;
+        }
+        else if (hasPrerequisites)
+        {
+            techSlot.techState = anyPrerequisiteCurrentlyResearching ? TechnologyState.NextResearchOption : TechnologyState.Invisible;
+        }
+        else
+        {
+            techSlot.techState = TechnologyState.CurrentResearchOption;
+        }
+
+        // Transition Enlightened tech back to CurrentResearchOption
+        if (allPrerequisitesUnlocked && techSlot.techState == TechnologyState.NextResearchOption)
+        {
+            techSlot.techState = TechnologyState.CurrentResearchOption;
+        }
 
         HandleSlotVisibilityState(techSlot);
     }
+
+
 
     private void HandleSlotVisibilityState(GameTechnologySlot techSlot)
     {

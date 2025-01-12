@@ -321,16 +321,4 @@ public class GameUnitsLogic : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        if (Input.GetKeyDown("a"))
-        {
-            ChangeResourceFromName("Elderwood", 3, false);
-        }
-
-        if (Input.GetKeyDown("s"))
-        {
-            ChangeResourceFromName("Research", 100, false);
-        }
-    }
 }

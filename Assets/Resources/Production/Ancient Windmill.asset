@@ -19,7 +19,7 @@ MonoBehaviour:
   buildRequirementsAmount:
   - 5
   producedResources:
-  - Elderwood
+  - Food
   productionRates:
   - 3
   consumedResources: []

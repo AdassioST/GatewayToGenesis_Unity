@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class GlobalProductionManager : MonoBehaviour
 {
+    public static GlobalProductionManager Instance { get; private set; }
+
     public List<GameResourceSlot> resourceSlots = new List<GameResourceSlot>();
     public List<GameProductionSlot> productionSlots = new List<GameProductionSlot>();
     public List<GameTechnologySlot> technologySlots = new List<GameTechnologySlot>();
@@ -14,15 +16,34 @@ public class GlobalProductionManager : MonoBehaviour
     public Dictionary<string, float> positiveModifiers = new Dictionary<string, float>();
     public Dictionary<string, float> negativeModifiers = new Dictionary<string, float>();
 
+    public Dictionary<string, float> persistentPositiveModifiers = new Dictionary<string, float>();
+    public Dictionary<string, float> persistentNegativeModifiers = new Dictionary<string, float>();
+
     private ResourceModifierLogic modifierLogic;
 
     public float techTier = 1f, costBalance = 0.05f;
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("Duplicate PopGrowthLogic found, destroying the new one.");
+            Destroy(gameObject);
+            return;
+        }
 
+        Instance = this;
+    }
     private void Start()
     {
         modifierLogic = GetComponent<ResourceModifierLogic>();
 
         InitializeProductionRates();
+    }
+    private void Update()
+    {
+        CalculateGlobalProductionRates();
+        DisableProductionUnitsIfResourceDepleted();
+        EnableProductionUnitsIfResourcesSufficient();
     }
 
     private void InitializeProductionRates()
@@ -49,15 +70,19 @@ public class GlobalProductionManager : MonoBehaviour
 
             string resourceName = resourceSlot.gameUnit.name;
 
-            // Ensure the resource has default entries in the dictionaries
             if (!netProductionRates.ContainsKey(resourceName))
             {
                 netProductionRates[resourceName] = 0f;
+
                 positiveModifiers[resourceName] = 0f;
                 negativeModifiers[resourceName] = 0f;
+
+                persistentPositiveModifiers[resourceName] = 0f;
+                persistentNegativeModifiers[resourceName] = 0f;
             }
         }
     }
+
 
     public void AddProductionSlot(GameProductionSlot productionSlot)
     {
@@ -102,17 +127,42 @@ public class GlobalProductionManager : MonoBehaviour
             technologySlots.Remove(technologySlot);
         }
     }
-
-    private void Update()
+    public void AdjustResourceModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd)
     {
-        CalculateGlobalProductionRates();
-        DisableProductionUnitsIfResourceDepleted();
-        EnableProductionUnitsIfResourcesSufficient();
-    }
+        if (!netProductionRates.ContainsKey(resourceName))
+        {
+            Debug.LogWarning($"Resource {resourceName} does not exist in netProductionRates.");
+            return;
+        }
 
+        if (isPositive)
+        {
+            if (isAdd)
+            {
+                persistentPositiveModifiers[resourceName] += modifierAmount;
+            }
+            else
+            {
+                persistentPositiveModifiers[resourceName] -= modifierAmount;
+            }
+        }
+        else
+        {
+            if (isAdd)
+            {
+                persistentNegativeModifiers[resourceName] += modifierAmount;
+            }
+            else
+            {
+                persistentNegativeModifiers[resourceName] -= modifierAmount;
+            }
+        }
+
+        CalculateGlobalProductionRates();
+    }
     private void CalculateGlobalProductionRates()
     {
-        // Reset the modifiers before recalculation
+        // Reset the temporary modifiers before recalculation
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
@@ -121,7 +171,7 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] = 0f;
         }
 
-        // Calculate production and consumption rates
+        // Calculate temporary production and consumption rates
         foreach (var productionSlot in productionSlots)
         {
             var productionUnitData = productionSlot.productionUnitData;
@@ -151,6 +201,17 @@ public class GlobalProductionManager : MonoBehaviour
             }
         }
 
+        // Add persistent modifiers
+        foreach (var resourceName in persistentPositiveModifiers.Keys)
+        {
+            positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
+        }
+
+        foreach (var resourceName in persistentNegativeModifiers.Keys)
+        {
+            negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
+        }
+
         // Update net production rates and resource slots
         foreach (var resourceSlot in resourceSlots)
         {
@@ -161,6 +222,7 @@ public class GlobalProductionManager : MonoBehaviour
             resourceSlot.productionRate = netRate;
         }
     }
+
     private void DisableProductionUnitsIfResourceDepleted()
     {
         foreach (var productionSlot in productionSlots)
