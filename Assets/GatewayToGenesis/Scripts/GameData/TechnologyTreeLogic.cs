@@ -23,13 +23,13 @@ public class TechnologyTreeLogic : MonoBehaviour
 
     public void InitializeTree(List<TechnologyData> technologies)
     {
-        // VFX LOGIC HERE
-
         BuildTechTree(technologies);
     }
 
     private void BuildTechTree(List<TechnologyData> technologies)
     {
+        bool isFirstTechSwapped = false;
+
         foreach (var techData in technologies)
         {
             if (techData == null) 
@@ -56,6 +56,13 @@ public class TechnologyTreeLogic : MonoBehaviour
         }
 
         DetermineTechnologyVisibilityForAllSlots();
+
+        //Always swap First and Second Tech Slot
+        Transform firstSlot = slots.transform.GetChild(0);
+        Transform secondSlot = slots.transform.GetChild(1);
+
+        firstSlot.SetSiblingIndex(1);
+        secondSlot.SetSiblingIndex(0);
     }
 
     public void DetermineTechnologyVisibility(GameTechnologySlot techSlot)

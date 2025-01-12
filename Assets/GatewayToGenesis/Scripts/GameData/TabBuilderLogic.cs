@@ -14,15 +14,20 @@ public class TabBuilderLogic : MonoBehaviour
 
     private GameObject section;
 
-    public GameUnit testUnit;
+    public GameUnit initializationUnit;
 
-    public bool hasTestUnit;
+    public bool hasInitializationUnit;
 
     private GlobalProductionManager globalProductionManager;
 
     private void Start()
     {
         globalProductionManager = FindObjectOfType<GlobalProductionManager>();
+
+        if (hasInitializationUnit)
+        {
+            AddNewUnit(initializationUnit);
+        }
     }
 
     public void AddNewUnit(GameUnit unit)
@@ -112,14 +117,6 @@ public class TabBuilderLogic : MonoBehaviour
         else
         {
             Debug.LogWarning("Slot does not match any known slot types.");
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown("space") && hasTestUnit)
-        {
-            AddNewUnit(testUnit);
         }
     }
 }

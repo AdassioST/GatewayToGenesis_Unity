@@ -272,4 +272,14 @@ public class GlobalProductionManager : MonoBehaviour
             }
         }
     }
+
+    public float GetNetProductionRate(string resourceName)
+    {
+        if (netProductionRates.ContainsKey(resourceName))
+        {
+            return netProductionRates[resourceName];
+        }
+
+        return 0f;  // Return 0 if the resource doesn't exist
+    }
 }

@@ -10,7 +10,7 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
     public GameUnit gameUnit { get; set; }
     public float clickPower { get; set; } = 1.0f;
     public float amount { get; set; }
-    public float maxAmount { get; set; }
+    public float maxAmount { get; set; } = 2500f;
 
     //VARIABLES
 
@@ -31,8 +31,6 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
         gameUnit = newResource;
         icon.sprite = newResource.icon;
         clickPower = baseClickPower;
-
-        maxAmount = 55f;
 
         originalProductionRateColor = productionRateText.color;
 

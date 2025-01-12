@@ -317,7 +317,6 @@ MonoBehaviour:
   slots: {fileID: 1605607714919460212}
   eraTechnologies:
   - {fileID: 0}
-  - {fileID: 11400000, guid: 8c2113d3dfb68a448a545a984939268a, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 11400000, guid: cd1b4bbdaa58d9142b6d7ea5c6335066, type: 2}

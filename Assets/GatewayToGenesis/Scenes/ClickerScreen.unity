@@ -1509,10 +1509,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaa643587ce2037458451a69ac8f90e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  foodThreshold: 10
+  foodThreshold: 12
   vagrantToPopulationRate: 4
   researchPerPopulation: 0.01
-  housing: 0
+  foodDemandBuffer: -2.5
+  demandRateConstant: 0.03
+  sustainabilityTier: 1
+  housing: 35
   population: 0
   vagrants: 0
   freeHousing: 0
@@ -1522,6 +1525,7 @@ MonoBehaviour:
   freeHousingText: {fileID: 285776228}
   populationText: {fileID: 1445115353}
   vagrantsText: {fileID: 1296550667}
+  allowVagrants: 0
 --- !u!1 &118555721
 GameObject:
   m_ObjectHideFlags: 0
@@ -1553,7 +1557,6 @@ RectTransform:
   - {fileID: 1696987252}
   - {fileID: 555142227}
   - {fileID: 1135957557}
-  - {fileID: 1845007560}
   m_Father: {fileID: 845168991}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2193,7 +2196,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 668560535}
+      - m_Target: {fileID: 742367966}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
@@ -4628,7 +4631,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &359213420
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10541,8 +10544,8 @@ MonoBehaviour:
   tabContent: {fileID: 1781297306}
   newSectionPrefab: {fileID: 3051181861600236901, guid: 5e3f8a3e9fa1fd945a0ffde91d822632, type: 3}
   newSlotPrefab: {fileID: 2651581061940678124, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
-  testUnit: {fileID: 11400000, guid: a30558c3c59df134f818543c4210c399, type: 2}
-  hasTestUnit: 1
+  initializationUnit: {fileID: 11400000, guid: a30558c3c59df134f818543c4210c399, type: 2}
+  hasInitializationUnit: 1
 --- !u!1 &671844793
 GameObject:
   m_ObjectHideFlags: 0
@@ -10577,7 +10580,7 @@ RectTransform:
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -14979,8 +14982,8 @@ MonoBehaviour:
   tabContent: {fileID: 2002197162}
   newSectionPrefab: {fileID: 8921941214632747772, guid: 03f4338eb5690a24fb2b3b0195f5cc5e, type: 3}
   newSlotPrefab: {fileID: 6348907647636965890, guid: a183e64bfd97dc54193a394a579aa2aa, type: 3}
-  testUnit: {fileID: 0}
-  hasTestUnit: 0
+  initializationUnit: {fileID: 0}
+  hasInitializationUnit: 0
 --- !u!1 &994690117
 GameObject:
   m_ObjectHideFlags: 0
@@ -16566,7 +16569,8 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.35, y: 0.35, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1845007560}
   m_Father: {fileID: 118555722}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -16643,7 +16647,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 668560535}
+      - m_Target: {fileID: 742367966}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
@@ -21561,8 +21565,8 @@ MonoBehaviour:
   tabContent: {fileID: 1429569787}
   newSectionPrefab: {fileID: 4447615838777336740, guid: f594dca8bd5df084680a817c60092272, type: 3}
   newSlotPrefab: {fileID: 6633163747064205874, guid: a4bcfcd56c3593b4f945081d172bf53a, type: 3}
-  testUnit: {fileID: 11400000, guid: 01e2de00a8ea89f449c2036615051d7d, type: 2}
-  hasTestUnit: 1
+  initializationUnit: {fileID: 0}
+  hasInitializationUnit: 0
 --- !u!1 &1469910756
 GameObject:
   m_ObjectHideFlags: 3
@@ -26330,7 +26334,7 @@ GameObject:
   - component: {fileID: 1845007564}
   - component: {fileID: 1845007563}
   m_Layer: 5
-  m_Name: Research (1)
+  m_Name: Icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26345,15 +26349,15 @@ RectTransform:
   m_GameObject: {fileID: 1845007559}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.35, y: 0.35, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 118555722}
+  m_Father: {fileID: 1135957557}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -165, y: -70.1}
+  m_AnchoredPosition: {x: -471.4286, y: -200.28574}
   m_SizeDelta: {x: 52.6098, y: 76.5234}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1845007563
