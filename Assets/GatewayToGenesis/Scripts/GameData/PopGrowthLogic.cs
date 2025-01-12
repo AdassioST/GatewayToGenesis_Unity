@@ -18,6 +18,9 @@ public class PopGrowthLogic : MonoBehaviour
 
     private GameUnitsLogic unitsLogic;
 
+    private GlobalCharacterManager globalCharacterManager;
+
+
     public TMP_Text foodText, freeHousingText, populationText, vagrantsText;
 
     private float lastResearchModifier, lastFoodModifier, foodDemand;
@@ -41,6 +44,8 @@ public class PopGrowthLogic : MonoBehaviour
     private void Start()
     {
         unitsLogic = GameUnitsLogic.Instance;
+
+        globalCharacterManager = GlobalCharacterManager.Instance;
 
         if (unitsLogic == null || unitsLogic.storageTab == null)
         {
@@ -83,6 +88,10 @@ public class PopGrowthLogic : MonoBehaviour
                 {
                     population += 1;
                     UpdateResearchGenerationRate();
+
+                    // Spawn new villager when population increases
+                    Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
+                    globalCharacterManager.SpawnCharacterFromName("Villager");
                 }
                 else if (allowVagrants)
                 {
@@ -178,6 +187,21 @@ public class PopGrowthLogic : MonoBehaviour
         {
             population -= 1;
             deaths += 1;
+
+            // Remove a random character (villager) when a death occurs
+            if (globalCharacterManager.activeCharacters.Count > 0)
+            {
+                // Get a random index to remove a character from the list
+                int randomIndex = Random.Range(0, globalCharacterManager.activeCharacters.Count);
+
+                // Get the random character to remove
+                GameCharacterLogic characterToRemove = globalCharacterManager.activeCharacters[randomIndex];
+
+                // Remove the character from the list
+                globalCharacterManager.RemoveCharacter(characterToRemove);
+
+            }
+
             UpdateResearchGenerationRate();
 
             unitsLogic.ChangeResourceFromName("Food", foodThreshold * starvationRecoveryRate, false);
@@ -203,6 +227,13 @@ public class PopGrowthLogic : MonoBehaviour
             UpdateResearchGenerationRate();
 
             Debug.Log($"Converting {conversionAmount} vagrants to population.");
+
+            // Spawn new villagers if vagrants convert to population
+            for (int i = 0; i < conversionAmount; i++)
+            {
+                Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
+                globalCharacterManager.SpawnCharacterFromName("Villager");
+            }
         }
     }
 
