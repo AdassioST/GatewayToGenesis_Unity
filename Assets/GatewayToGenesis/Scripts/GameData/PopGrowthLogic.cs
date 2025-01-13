@@ -25,9 +25,7 @@ public class PopGrowthLogic : MonoBehaviour
 
     private float lastResearchModifier, lastFoodModifier, foodDemand;
 
-    public bool allowVagrants;
-
-    private bool isFoodScarce = false;
+    public bool allowVagrants, isFoodScarce;
 
     private void Awake()
     {

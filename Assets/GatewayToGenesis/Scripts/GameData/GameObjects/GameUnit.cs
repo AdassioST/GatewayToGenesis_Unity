@@ -5,7 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Game Unit", menuName = "Game Object/Unit", order = 1)]
 public class GameUnit : ScriptableObject
 {
-    public string name = "", type = "", section = "", description = "";
+    public new string name = "";
+    public string type = "", section = "", description = "";
 
     public Sprite icon;
 

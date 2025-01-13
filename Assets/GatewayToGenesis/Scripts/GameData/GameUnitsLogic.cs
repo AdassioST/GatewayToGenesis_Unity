@@ -183,7 +183,6 @@ public class GameUnitsLogic : MonoBehaviour
             GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
             if (requiredTechObj == null || !requiredTechObj.GetComponent<GameTechnologySlot>().isUnlocked)
             {
-                Debug.LogWarning($"Cannot start research on {technologySlot.name} because required technologies are not unlocked.");
                 return;
             }
         }
@@ -199,8 +198,6 @@ public class GameUnitsLogic : MonoBehaviour
             {
                 StopCoroutine(activeTechnologySlotCoroutine);
             }
-
-            Debug.Log($"Switched from {activeTechnologySlot.name} to {technologySlot.name}");
         }
 
         activeTechnologySlot = technologySlot;
@@ -232,7 +229,6 @@ public class GameUnitsLogic : MonoBehaviour
             // Exit if switching or pausing
             if (switchedTechnologies)
             {
-                Debug.Log($"Progress interrupted for {technologySlot.name}");
                 yield break;
             }
 
@@ -276,7 +272,7 @@ public class GameUnitsLogic : MonoBehaviour
                 technologyProgress.Remove(technologySlot); // Clear progress tracking
                 activeTechnologySlot = null; // Reset active slot
                 activeTechnologySlotCoroutine = null; // Reset coroutine reference
-                Debug.Log($"{technologySlot.name} unlocked.");
+
                 yield break;
             }
 

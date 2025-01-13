@@ -28,7 +28,6 @@ public class TechnologyTreeLogic : MonoBehaviour
 
     private void BuildTechTree(List<TechnologyData> technologies)
     {
-        bool isFirstTechSwapped = false;
 
         foreach (var techData in technologies)
         {

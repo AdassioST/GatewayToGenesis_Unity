@@ -25,11 +25,6 @@ public class ClickLogic : MonoBehaviour
 
     public GameTechnologySlot technologySlot;
 
-    // Cooldown variables for UnlockTechnology only
-    private float unlockSwapCooldown = 1.0f;  // Cooldown time (seconds)
-    private float lastClickTime = 0f;          // Last click time to track cooldown
-    private bool isCooldownActive = false;    // Flag to track if cooldown is active
-
     private void Start()
     {
         if (gameUnitsLogic == null)
@@ -94,12 +89,5 @@ public class ClickLogic : MonoBehaviour
 
         bool canAfford = gameUnitsLogic.CanBuildProductionUnit(productionSlot.gameUnit.name);
         buttonImage.sprite = canAfford ? affordableSprite : unaffordableSprite;
-    }
-    private void ResetCooldown()
-    {
-        if (Time.time - lastClickTime >= unlockSwapCooldown)
-        {
-            isCooldownActive = false;
-        }
     }
 }

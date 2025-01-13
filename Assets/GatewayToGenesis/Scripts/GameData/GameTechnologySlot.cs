@@ -175,8 +175,6 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
             gameUnitsLogic.HandleTechUnlockable(unlockable);
         }
 
-        Debug.Log($"{gameUnit.name} has been unlocked and its unlockables have been processed!");
-
         // Refresh visibility directly after unlocking
         if (technologyTreeLogic != null)
         {
