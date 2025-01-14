@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,7 +22,7 @@ public class PopGrowthLogic : MonoBehaviour
     private GlobalCharacterManager globalCharacterManager;
 
 
-    public TMP_Text foodText, freeHousingText, populationText, vagrantsText;
+    public TMP_Text foodText, freeHousingText, populationText, vagrantsText, foodStateText;
 
     private float lastResearchModifier, lastFoodModifier, foodDemand;
 
@@ -148,6 +149,51 @@ public class PopGrowthLogic : MonoBehaviour
 
         populationText.text = GameUnitsLogic.Instance.FormatValue(population);
         vagrantsText.text = GameUnitsLogic.Instance.FormatValue(vagrants);
+
+        float netFoodRate = GlobalProductionManager.Instance.GetNetProductionRate("Food");
+
+        float foodRateRatio = (netFoodRate / foodDemand) * 100;
+        float deficitRatio = netFoodRate < 0 ? Mathf.Abs((netFoodRate / foodDemand) * 100) : 0;
+
+        // Special case for stagnant production
+        if (netFoodRate == 0)
+        {
+            foodStateText.text = "Stagnant";
+        }
+        else if (netFoodRate > 0) // Positive net production
+        {
+            switch (foodRateRatio)
+            {
+                case > 200:
+                    foodStateText.text = "Thriving";
+                    break;
+                case > 150:
+                    foodStateText.text = "Blooming";
+                    break;
+                default:
+                    foodStateText.text = "Ripening";
+                    break;
+            }
+        }
+        else // Negative net production (starving categories)
+        {
+            switch (deficitRatio)
+            {
+                case > 50:
+                    foodStateText.text = "Famine";
+                    break;
+                case > 30:
+                    foodStateText.text = "Withering";
+                    break;
+                case > 10:
+                    foodStateText.text = "Dwindling";
+                    break;
+                default:
+                    foodStateText.text = "Stagnant";
+                    break;
+            }
+        }
+
     }
     private float GetResourceSlotAmount(string resourceName)
     {
