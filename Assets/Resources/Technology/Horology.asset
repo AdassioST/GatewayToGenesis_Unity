@@ -26,4 +26,5 @@ MonoBehaviour:
     trigger: Duskstone
     requiredAmount: 10
     description: Gather 10 Duskstone
-  techUnlockables: []
+  techUnlockables:
+  - {fileID: 11400000, guid: 2bc949d230da6944192882a761c18e72, type: 2}

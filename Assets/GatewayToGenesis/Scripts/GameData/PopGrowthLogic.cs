@@ -10,7 +10,7 @@ public class PopGrowthLogic : MonoBehaviour
 
     public float foodThreshold = 12f, vagrantToPopulationRate = 1f, researchPerPopulation = 1f, starvationRecoveryRate = 0.05f;
 
-    public float foodDemandBuffer = -2.5f, demandRateConstant = 0.03f, sustainabilityTier = 1f;
+    public float foodDemandBuffer = -2.5f, demandRateConstant = 0.03f, sustainabilityTier = 1f, demandModifier = 1.0f;
 
     public int housing, population, vagrants, freeHousing, deaths;
 
@@ -63,11 +63,6 @@ public class PopGrowthLogic : MonoBehaviour
         UpdateFoodDemand();
 
         RefreshHUD();
-
-        if (Input.GetKeyDown("s"))
-        {
-            housing += 3;
-        }
     }
 
     private void ManagePopulationGrowth()
@@ -122,7 +117,7 @@ public class PopGrowthLogic : MonoBehaviour
         }
 
         // FOOD DEMAND FORMULA
-        foodDemand = (float)(foodDemandBuffer + Mathf.Exp((demandRateConstant / sustainabilityTier) * population));
+        foodDemand = (float)(foodDemandBuffer + Mathf.Exp((demandRateConstant / sustainabilityTier) * population)) * demandModifier;
 
         // Only apply the modifier if foodDemand is negative
         if (foodDemand > 0)
@@ -148,11 +143,11 @@ public class PopGrowthLogic : MonoBehaviour
     }
     public void RefreshHUD()
     {
-        foodText.text = GetResourceSlotAmount("Food").ToString();
-        freeHousingText.text = freeHousing.ToString();
+        foodText.text = GameUnitsLogic.Instance.FormatValue(GetResourceSlotAmount("Food"));
+        freeHousingText.text = GameUnitsLogic.Instance.FormatValue(freeHousing);
 
-        populationText.text = population.ToString();
-        vagrantsText.text = vagrants.ToString();
+        populationText.text = GameUnitsLogic.Instance.FormatValue(population);
+        vagrantsText.text = GameUnitsLogic.Instance.FormatValue(vagrants);
     }
     private float GetResourceSlotAmount(string resourceName)
     {

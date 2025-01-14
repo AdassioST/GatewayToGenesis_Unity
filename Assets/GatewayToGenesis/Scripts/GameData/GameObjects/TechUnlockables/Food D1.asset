@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e3ad31953dc8f74abd1deb8156355c3, type: 3}
-  m_Name: Timber Camp
+  m_Name: Food D1
   m_EditorClassIdentifier: 
-  gameUnit: {fileID: 11400000, guid: ba7b4f75d76759b48bbb1daacd0121a8, type: 2}
-  slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
-  resourceModifier: 0
-  unlockableType: 1
+  gameUnit: {fileID: 11400000, guid: e2b858dcf49d8cc45b74f165d8b18088, type: 2}
+  slotImage: {fileID: 21300000, guid: 75faacdf0f1a6b544824e7b4fec50945, type: 3}
+  resourceModifier: 10
+  unlockableType: 3

@@ -31,6 +31,8 @@ public class TimeSystemLogic : MonoBehaviour
 
     private Color originalColor;
 
+    public bool canTrackTime;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -56,7 +58,7 @@ public class TimeSystemLogic : MonoBehaviour
     {
         timeSinceLastSeventh += Time.deltaTime;
 
-        if (timeSinceLastSeventh >= secondsPerSeventh)
+        if (timeSinceLastSeventh >= secondsPerSeventh && canTrackTime)
         {
             timeSinceLastSeventh = 0f;
             IncrementSeventh();

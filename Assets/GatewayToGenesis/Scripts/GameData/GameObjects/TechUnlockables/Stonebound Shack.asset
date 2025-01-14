@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Stonebound Shack
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 97eae1a17ee53e94dba25cf4f88442a5, type: 2}
-  icon: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  resourceModifier: 0
   unlockableType: 1

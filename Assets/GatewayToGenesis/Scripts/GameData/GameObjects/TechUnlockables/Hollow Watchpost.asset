@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Hollow Watchpost
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: deb537b9e018b8e4f816de4d485e1fda, type: 2}
-  icon: {fileID: 21300000, guid: d4589dc48b02df44589868b747f0dfb3, type: 3}
+  slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  resourceModifier: 0
   unlockableType: 5

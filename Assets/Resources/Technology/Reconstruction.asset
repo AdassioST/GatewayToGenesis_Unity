@@ -23,4 +23,5 @@ MonoBehaviour:
   eurekaConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: 52262f0b4f668834d8a0c4083af8da6d, type: 2}
-  - {fileID: 11400000, guid: 2ed189d4865af2b42859ae7723b3c6e0, type: 2}
+  - {fileID: 11400000, guid: 6cd52abc6a66967469663540e33cc797, type: 2}
+  - {fileID: 11400000, guid: 0d54f5982b323f54690a90bb21bf08f2, type: 2}

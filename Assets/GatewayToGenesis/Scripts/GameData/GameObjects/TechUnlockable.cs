@@ -7,7 +7,8 @@ public class TechUnlockable : ScriptableObject
 {
     public GameUnit gameUnit;
 
-    public Sprite icon;
+    public Sprite slotImage;
+    public float resourceModifier;
     public TechUnlockableType unlockableType;
 }
 public enum TechUnlockableType

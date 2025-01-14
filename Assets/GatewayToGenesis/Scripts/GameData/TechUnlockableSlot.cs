@@ -5,11 +5,19 @@ using UnityEngine.UI;
 
 public class TechUnlockableSlot : MonoBehaviour
 {
-    public Image icon, techIcon;
+    public Image slot, techIcon;
 
     public void InitializeTechUnlockable(TechUnlockable unlockableData)
     {
-        icon.sprite = unlockableData.icon;
-        techIcon.sprite = unlockableData.gameUnit.icon;
+        slot.sprite = unlockableData.slotImage;
+
+        if (unlockableData.unlockableType != TechUnlockableType.Special)
+        {
+            techIcon.sprite = unlockableData.gameUnit.icon;
+        }
+        else
+        {
+            techIcon.enabled = false;
+        }
     }
 }

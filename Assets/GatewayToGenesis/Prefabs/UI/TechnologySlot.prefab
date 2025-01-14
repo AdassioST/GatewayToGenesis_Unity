@@ -427,6 +427,12 @@ MonoBehaviour:
   isVisible: 0
   unlockedSprite: {fileID: 21300000, guid: ff0ba0408ae20c04f9fcc6caff211bf2, type: 3}
   unlockedProgressBar: {fileID: 21300000, guid: c92bafcb66fc88a4d96559ed1a1a5257, type: 3}
+  eventEnlightenedSprite: {fileID: 21300000, guid: 453eeae21b7ec9e4ea646d715cd82ea7, type: 3}
+  crisisEnlightenedSprite: {fileID: 21300000, guid: 5c6e7e57d424af84b83aaf54cd316909, type: 3}
+  eventSlotSprite: {fileID: 21300000, guid: 845371a0fe32a2e4e893ce61a54179f2, type: 3}
+  crisisSlotSprite: {fileID: 21300000, guid: 7a6e695f4d3dc1c4ea62b45a1103a6f2, type: 3}
+  eventProgressBarSprite: {fileID: 21300000, guid: e86afb7c96e02e043b7687a3629a4e57, type: 3}
+  crisisProgressBarSprite: {fileID: 21300000, guid: c92bafcb66fc88a4d96559ed1a1a5257, type: 3}
   technologyData: {fileID: 0}
   icon: {fileID: 5228798955488399833}
   nameText: {fileID: 5694184987343912348}

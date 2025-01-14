@@ -19,15 +19,13 @@ MonoBehaviour:
   - Reconstruction
   resourceRequirements:
   - Research
-  - Elderwood
   resourceAmount:
-  - 20
-  - 30
+  - 25
   eurekaConditions:
   - type: 1
     trigger: Decaying Hut
     requiredAmount: 2
     description: Build 2 Decaying Hut
   techUnlockables:
-  - {fileID: 11400000, guid: 0da9353191d56234498f58b7a0ca658e, type: 2}
-  - {fileID: 11400000, guid: 5d6a1e7e8170df04182613fb404010a9, type: 2}
+  - {fileID: 11400000, guid: d17450aef6e9d2746ab07af3580450f9, type: 2}
+  - {fileID: 11400000, guid: ed4a4e0598c0c1e42a80536fd47a8b2f, type: 2}

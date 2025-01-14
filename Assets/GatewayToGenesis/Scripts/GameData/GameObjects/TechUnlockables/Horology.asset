@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e3ad31953dc8f74abd1deb8156355c3, type: 3}
-  m_Name: Timber Camp
+  m_Name: Horology
   m_EditorClassIdentifier: 
-  gameUnit: {fileID: 11400000, guid: ba7b4f75d76759b48bbb1daacd0121a8, type: 2}
-  slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  gameUnit: {fileID: 0}
+  slotImage: {fileID: 21300000, guid: d4589dc48b02df44589868b747f0dfb3, type: 3}
   resourceModifier: 0
-  unlockableType: 1
+  unlockableType: 5

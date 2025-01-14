@@ -20,6 +20,7 @@ public class GameUnitsLogic : MonoBehaviour
     public bool switchedTechnologies;
     private Coroutine activeTechnologySlotCoroutine;
 
+    [SerializeField] private GameObject expandibleHUD, buildingMaterialButton;
 
     private void Awake()
     {
@@ -94,8 +95,7 @@ public class GameUnitsLogic : MonoBehaviour
                 requiredAmount *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
             }
 
-            GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
-            GameResourceSlot resourceSlot = resourceSlotObj.GetComponent<GameResourceSlot>();
+            GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
             if (resourceSlot == null || resourceSlot.amount < requiredAmount)
             {
@@ -131,6 +131,26 @@ public class GameUnitsLogic : MonoBehaviour
             ChangeResourceFromName(resourceName, -baseCost, false);
         }
 
+        if (productionUnitData.housing > 0)
+        {
+            PopGrowthLogic.Instance.housing += productionUnitData.housing;
+        }
+
+        if (productionUnitData.storageResources != null && productionUnitData.storageResources.Count > 0)
+        {
+            for (int i = 0; i < productionUnitData.storageResources.Count; i++)
+            {
+                string storageResource = productionUnitData.storageResources[i];
+                float storageIncrease = productionUnitData.storageAmount[i];
+
+                GameResourceSlot resourceSlot = GetResourceSlotFromName(storageResource);
+
+                resourceSlot.maxAmount += storageIncrease;
+
+                resourceSlot.RefreshProductionAmount();
+            }
+        }
+
         ChangeProductionUnitFromName(productionUnitName, 1);
         return true;
     }
@@ -158,8 +178,7 @@ public class GameUnitsLogic : MonoBehaviour
             string resourceName = technologyData.resourceRequirements[i];
             float requiredAmount = technologyData.resourceAmount[i];
 
-            GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
-            GameResourceSlot resourceSlot = resourceSlotObj.GetComponent<GameResourceSlot>();
+            GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
             if (resourceSlot == null || resourceSlot.amount < requiredAmount)
             {
@@ -242,10 +261,10 @@ public class GameUnitsLogic : MonoBehaviour
 
                 // Calculate remaining and processable amounts
                 var remainingAmount = requiredAmount - processedAmount;
+
                 if (remainingAmount > 0)
                 {
-                    GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == resourceName);
-                    var resourceSlot = resourceSlotObj?.GetComponent<GameResourceSlot>();
+                    GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
                     if (resourceSlot == null) continue;
 
@@ -289,8 +308,18 @@ public class GameUnitsLogic : MonoBehaviour
         switch (unlockable.unlockableType)
         {
             case TechUnlockableType.ClickPower:
-                storageTab.AddNewUnit(unlockable.gameUnit);
-                Debug.Log($"ClickPower unit {unlockable.gameUnit.name} has been added to Storage.");
+
+                if(unlockable.resourceModifier > 0)
+                {
+                    GameResourceSlot resourceSlot = GetResourceSlotFromName(unlockable.gameUnit.name);
+
+                    resourceSlot.clickPower += unlockable.resourceModifier;
+                }
+                else
+                {
+                    storageTab.AddNewUnit(unlockable.gameUnit);
+                }
+
                 break;
 
             case TechUnlockableType.Building:
@@ -300,7 +329,15 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
 
             case TechUnlockableType.Modifier:
-                Debug.Log($"Modifier {unlockable.gameUnit.name} has been unlocked.");
+
+                if (unlockable.name.StartsWith("Food D"))
+                {
+                    PopGrowthLogic.Instance.demandModifier -= unlockable.resourceModifier / 100;
+                }
+                else
+                {
+                    GlobalProductionManager.Instance.AdjustPercentageModifier(unlockable.gameUnit.name, unlockable.resourceModifier, true, true);
+                }
                 break;
 
             case TechUnlockableType.Arts:
@@ -308,7 +345,11 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
 
             case TechUnlockableType.Special:
-                Debug.Log($"Special unlockable {unlockable.gameUnit.name} has been unlocked.");
+
+                HandleSpecialUnlockable(unlockable);
+
+                Debug.Log($"Special unit {unlockable.name} has been unlocked.");
+
                 break;
 
             default:
@@ -316,5 +357,52 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
         }
     }
+    public GameResourceSlot GetResourceSlotFromName(string name)
+    {
+        GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == name);
+        return resourceSlotObj?.GetComponent<GameResourceSlot>();
+    }
 
+    private void HandleSpecialUnlockable(TechUnlockable unlockable)
+    {
+        switch (unlockable.name)
+        {
+            case "Vagrants":
+
+                PopGrowthLogic.Instance.allowVagrants = true;
+
+                break;
+
+            case "Horology":
+                TimeSystemLogic.Instance.canTrackTime = true;
+
+                expandibleHUD.SetActive(true);
+                break;
+
+
+            case "Building Material Button":
+
+                buildingMaterialButton.SetActive(true);
+                break;
+
+            default:
+
+            Debug.LogWarning($"Unknown special type effects for: {unlockable.unlockableType}");
+            break;
+        }
+    }
+    public string FormatValue(float value)
+    {
+        string[] units = { "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "O", "N", "D", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "V", "Uv", "Dv", "Tv", "Qav", "Qiv", "Sxv", "Spv", "Ov", "Nv", "Tr", "Ut", "Dt", "G"}; // Units for Thousand, Million, Billion, Trillion, up to Googol
+        int unitIndex = 0;
+
+        // Reduce the value and increment the unit index until it's in the desired range
+        while (value >= 1000f && unitIndex < units.Length - 1)
+        {
+            value /= 1000f;
+            unitIndex++;
+        }
+
+        return $"{value:0.##}{units[unitIndex]}";
+    }
 }

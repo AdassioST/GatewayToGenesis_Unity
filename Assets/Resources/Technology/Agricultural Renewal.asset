@@ -27,4 +27,6 @@ MonoBehaviour:
     requiredAmount: 3
     description: Build 3 Timber Camp
   techUnlockables:
-  - {fileID: 11400000, guid: 34840888851390a4fb6d599ccd34af1d, type: 2}
+  - {fileID: 11400000, guid: 0da9353191d56234498f58b7a0ca658e, type: 2}
+  - {fileID: 11400000, guid: ff25ad263f6fd324baeb398ded87ec46, type: 2}
+  - {fileID: 11400000, guid: e4ac1649899bf6641a39a0db2f2e66d5, type: 2}

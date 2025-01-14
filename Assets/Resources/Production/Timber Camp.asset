@@ -14,13 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: ba7b4f75d76759b48bbb1daacd0121a8, type: 2}
   isUnique: 0
+  housing: 0
   buildResourceRequirements:
   - Elderwood
   buildRequirementsAmount:
-  - 125
+  - 85
   producedResources:
   - Elderwood
   productionRates:
-  - 3
+  - 2
   consumedResources: []
   consumeRates: []
+  storageResources: []
+  storageAmount: []

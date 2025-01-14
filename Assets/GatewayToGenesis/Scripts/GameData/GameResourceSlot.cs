@@ -10,7 +10,7 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
     public GameUnit gameUnit { get; set; }
     public float clickPower { get; set; } = 1.0f;
     public float amount { get; set; }
-    public float maxAmount { get; set; } = 2500f;
+    public float maxAmount { get; set; } = 200f;
 
     //VARIABLES
 
@@ -39,8 +39,8 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
 
     public void RefreshProductionAmount()
     {
-        amountText.text = amount.ToString();
-        productionRateText.text = productionRate.ToString() + "/s";
+        amountText.text = GameUnitsLogic.Instance.FormatValue(amount);
+        productionRateText.text = GameUnitsLogic.Instance.FormatValue(productionRate) + "/s";
 
         fill.fillAmount = amount / maxAmount;
 

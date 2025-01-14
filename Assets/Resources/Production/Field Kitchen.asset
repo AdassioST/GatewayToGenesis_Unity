@@ -10,21 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74db04cd43e523f44b174ab4eb35a1e2, type: 3}
-  m_Name: Ancient Windmill
+  m_Name: Field Kitchen
   m_EditorClassIdentifier: 
-  gameUnit: {fileID: 11400000, guid: 9d92d11b6df03334193a3b3a1909d9db, type: 2}
+  gameUnit: {fileID: 11400000, guid: b4af47ff59642fd418dc9ceab16665f6, type: 2}
   isUnique: 0
-  housing: 3
+  housing: 0
   buildResourceRequirements:
   - Elderwood
-  - Duskstone
   buildRequirementsAmount:
-  - 135
-  - 35
+  - 45
   producedResources:
   - Food
   productionRates:
-  - 5
+  - 1
   consumedResources: []
   consumeRates: []
   storageResources: []

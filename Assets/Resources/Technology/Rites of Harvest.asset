@@ -17,7 +17,6 @@ MonoBehaviour:
   tier: 2
   techRequirements:
   - Woodcraft Mastery
-  - Efficient Rations
   resourceRequirements:
   - Research
   resourceAmount:
@@ -25,7 +24,8 @@ MonoBehaviour:
   eurekaConditions:
   - type: 0
     trigger: Food
-    requiredAmount: 120
-    description: Collect 120 Food from Clicks
+    requiredAmount: 350
+    description: Collect 350 Resources from Clicks
   techUnlockables:
-  - {fileID: 11400000, guid: ff25ad263f6fd324baeb398ded87ec46, type: 2}
+  - {fileID: 11400000, guid: 7972761754dd3dd4a92d2059e4e94daa, type: 2}
+  - {fileID: 11400000, guid: 21c3bacde34ecf04a83f3f43eb5710af, type: 2}

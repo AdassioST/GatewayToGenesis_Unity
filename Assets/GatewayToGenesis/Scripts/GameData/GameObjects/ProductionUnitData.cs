@@ -9,6 +9,8 @@ public class ProductionUnitData : ScriptableObject
 
     public bool isUnique;
 
+    public int housing;
+
     public List<string> buildResourceRequirements = new List<string>();
     public List<float> buildRequirementsAmount = new List<float>();
 
@@ -17,4 +19,7 @@ public class ProductionUnitData : ScriptableObject
 
     public List<string> consumedResources = new List<string>();
     public List<float> consumeRates = new List<float>();
+
+    public List<string> storageResources = new List<string>();
+    public List<float> storageAmount = new List<float>();
 }

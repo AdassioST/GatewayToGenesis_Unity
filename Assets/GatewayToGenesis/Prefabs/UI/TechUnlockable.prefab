@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6a7ce7925efc904390bed3c44ce8905, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  icon: {fileID: 4881835533030420440}
+  slot: {fileID: 4881835533030420440}
   techIcon: {fileID: 7856813167622257534}
 --- !u!1 &6923707677704304760
 GameObject:

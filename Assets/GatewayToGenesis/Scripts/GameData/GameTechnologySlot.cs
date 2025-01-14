@@ -21,7 +21,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
     public Image slotImage;
 
     public bool isUnlocked, enlightenedCompleted, alreadyClicked, isVisible;
-    public Sprite unlockedSprite, unlockedProgressBar;
+    public Sprite unlockedSprite, unlockedProgressBar, eventEnlightenedSprite, crisisEnlightenedSprite, eventSlotSprite, crisisSlotSprite, eventProgressBarSprite, crisisProgressBarSprite;
 
     public TechnologyData technologyData;
 
@@ -121,6 +121,21 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         if (gameUnit == null) return;
 
         icon.sprite = newTechnology.icon;
+
+        if (gameUnit.type == "Event")
+        {
+            slotImage.sprite = eventSlotSprite; // Replace with your Event slot sprite
+            progressBar.sprite = eventProgressBarSprite; // Replace with your Event progress bar sprite
+
+            enlightened.GetComponent<Image>().sprite = eventEnlightenedSprite; // Replace with your Event enlightened sprite
+        }
+        else if (gameUnit.type == "Crisis")
+        {
+            slotImage.sprite = crisisSlotSprite; // Replace with your Crisis slot sprite
+            progressBar.sprite = crisisProgressBarSprite; // Replace with your Crisis progress bar sprite
+
+            enlightened.GetComponent<Image>().sprite = crisisEnlightenedSprite; // Replace with your Crisis enlightened sprite
+        }
 
         // Initialize unlockables if any
         if (technologyData != null && technologyData.techUnlockables != null)

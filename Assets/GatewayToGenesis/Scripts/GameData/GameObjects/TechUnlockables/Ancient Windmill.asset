@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Ancient Windmill
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 9d92d11b6df03334193a3b3a1909d9db, type: 2}
-  icon: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
+  resourceModifier: 0
   unlockableType: 1

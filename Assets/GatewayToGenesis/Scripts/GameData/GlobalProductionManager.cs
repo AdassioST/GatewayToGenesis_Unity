@@ -13,13 +13,15 @@ public class GlobalProductionManager : MonoBehaviour
 
     // Dictionaries to store global values for each resource type
     public Dictionary<string, float> netProductionRates = new Dictionary<string, float>();
+
     public Dictionary<string, float> positiveModifiers = new Dictionary<string, float>();
     public Dictionary<string, float> negativeModifiers = new Dictionary<string, float>();
 
     public Dictionary<string, float> persistentPositiveModifiers = new Dictionary<string, float>();
     public Dictionary<string, float> persistentNegativeModifiers = new Dictionary<string, float>();
 
-    private ResourceModifierLogic modifierLogic;
+    public Dictionary<string, float> percentagePositiveModifiers = new Dictionary<string, float>();
+    public Dictionary<string, float> percentageNegativeModifiers = new Dictionary<string, float>();
 
     public float techTier = 1f, costBalance = 0.05f;
     private void Awake()
@@ -35,8 +37,6 @@ public class GlobalProductionManager : MonoBehaviour
     }
     private void Start()
     {
-        modifierLogic = GetComponent<ResourceModifierLogic>();
-
         InitializeProductionRates();
     }
     private void Update()
@@ -129,37 +129,48 @@ public class GlobalProductionManager : MonoBehaviour
     }
     public void AdjustResourceModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd)
     {
-        if (!netProductionRates.ContainsKey(resourceName))
+        var targetModifiers = isPositive ? persistentPositiveModifiers : persistentNegativeModifiers;
+
+        if (!targetModifiers.ContainsKey(resourceName))
         {
-            Debug.LogWarning($"Resource {resourceName} does not exist in netProductionRates.");
-            return;
+            targetModifiers[resourceName] = 0f;
         }
 
-        if (isPositive)
+        if (isAdd)
         {
-            if (isAdd)
-            {
-                persistentPositiveModifiers[resourceName] += modifierAmount;
-            }
-            else
-            {
-                persistentPositiveModifiers[resourceName] -= modifierAmount;
-            }
+            targetModifiers[resourceName] += modifierAmount;
         }
+
         else
         {
-            if (isAdd)
-            {
-                persistentNegativeModifiers[resourceName] += modifierAmount;
-            }
-            else
-            {
-                persistentNegativeModifiers[resourceName] -= modifierAmount;
-            }
+            targetModifiers[resourceName] -= modifierAmount;
         }
 
         CalculateGlobalProductionRates();
     }
+
+    public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd)
+    {
+        var targetModifiers = isPositive ? percentagePositiveModifiers : percentageNegativeModifiers;
+
+        if (!targetModifiers.ContainsKey(resourceName))
+        {
+            targetModifiers[resourceName] = 0f;
+        }
+
+        if (isAdd)
+        {
+            targetModifiers[resourceName] += modifierAmount;
+        }
+
+        else
+        {
+            targetModifiers[resourceName] -= modifierAmount;
+        }
+
+        CalculateGlobalProductionRates();
+    }
+
     private void CalculateGlobalProductionRates()
     {
         // Reset the temporary modifiers before recalculation
@@ -201,7 +212,7 @@ public class GlobalProductionManager : MonoBehaviour
             }
         }
 
-        // Add persistent modifiers
+        // Add persistent flat modifiers
         foreach (var resourceName in persistentPositiveModifiers.Keys)
         {
             positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
@@ -212,14 +223,26 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
         }
 
-        // Update net production rates and resource slots
+        // Calculate net rates and apply percentage modifiers
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
-            float netRate = positiveModifiers[resourceName] - negativeModifiers[resourceName];
 
-            netProductionRates[resourceName] = netRate;
-            resourceSlot.productionRate = netRate;
+            float baseNetRate = positiveModifiers[resourceName] - negativeModifiers[resourceName];
+
+            if (percentagePositiveModifiers.TryGetValue(resourceName, out var positivePercent))
+            {
+                baseNetRate *= (1 + positivePercent / 100f);
+            }
+
+            if (percentageNegativeModifiers.TryGetValue(resourceName, out var negativePercent))
+            {
+                baseNetRate *= (1 - negativePercent / 100f);
+            }
+
+            netProductionRates[resourceName] = baseNetRate;
+
+            resourceSlot.productionRate = baseNetRate;
         }
     }
 

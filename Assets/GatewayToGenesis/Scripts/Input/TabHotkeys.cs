@@ -64,7 +64,7 @@ public class TabHotkeys : MonoBehaviour
             if (allowIndependent && storageTab.transform.Find("Display").gameObject.activeSelf
                 && productionTab.transform.Find("Display").gameObject.activeSelf)
             {
-                Debug.Log("Both StorageTab and ProductionTab are enabled.");
+                //Debug.Log("Both StorageTab and ProductionTab are enabled.");
                 // Add VFX or additional functionality here if both are active
             }
         }
