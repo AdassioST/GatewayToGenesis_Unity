@@ -11,7 +11,7 @@ public class TimeSystemLogic : MonoBehaviour
     [SerializeField] private float secondsPerSeventh = 180f; // 1 Seventh = 3 minutes
     private float timeSinceLastSeventh = 0f;
 
-    [SerializeField] private TMP_Text cycleText, echoText, seventhText, phaseText;
+    [SerializeField] private TMP_Text cycleText, echoText, seventhText;
     [SerializeField] private Image phaseImage;
 
     [SerializeField] private TimeUnit[] echoes, phases;
@@ -128,18 +128,27 @@ public class TimeSystemLogic : MonoBehaviour
         if (CurrentEcho - 1 < echoes.Length)
         {
             echoText.text = echoes[CurrentEcho - 1].unitName;
+
+            echoText.GetComponentInParent<TooltipTrigger>().customTitle = echoes[CurrentEcho - 1].description;
+
         }
 
         // Update Phase Image
         if (totalPhaseIndex < phases.Length)
         {
             phaseImage.sprite = phases[totalPhaseIndex].icon;
-            phaseText.text = phases[totalPhaseIndex].unitName;
+
+            phaseImage.GetComponentInParent<TooltipTrigger>().customTitle = phases[totalPhaseIndex].unitName;
+            phaseImage.GetComponentInParent<TooltipTrigger>().customDescription = phases[totalPhaseIndex].description;
         }
 
         // Update Seventh Text and Color
         seventhText.text = CurrentSeventh.ToString();
+
         seventhText.color = CurrentSeventh == 21 ? Color.red : originalColor;
+
+        seventhText.GetComponentInParent<TooltipTrigger>().customTitle = CurrentSeventh == 21 ? "Ritual Seventh" : "Seventh";
+        seventhText.GetComponentInParent<TooltipTrigger>().customDescription = CurrentSeventh == 21 ? "The world has perfectly attuned!" : "The minimum unit of time tracking.";
     }
 }
 

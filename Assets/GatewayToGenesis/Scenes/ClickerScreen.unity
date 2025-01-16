@@ -1191,6 +1191,7 @@ GameObject:
   - component: {fileID: 127967681}
   - component: {fileID: 127967680}
   - component: {fileID: 127967679}
+  - component: {fileID: 127967683}
   m_Layer: 5
   m_Name: Last
   m_TagString: Untagged
@@ -1312,6 +1313,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 127967677}
   m_CullTransparentMesh: 1
+--- !u!114 &127967683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127967677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: Last Gusis Tab
+  customDescription: 
 --- !u!1 &128309859
 GameObject:
   m_ObjectHideFlags: 0
@@ -1673,11 +1689,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerSeventh: 180
+  secondsPerSeventh: 1
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
   seventhText: {fileID: 932212500}
-  phaseText: {fileID: 977093884}
   phaseImage: {fileID: 2114523555}
   echoes:
   - {fileID: 11400000, guid: e30bd7816cedbe446af565872ace82a3, type: 2}
@@ -3443,6 +3458,7 @@ GameObject:
   - component: {fileID: 360860080}
   - component: {fileID: 360860079}
   - component: {fileID: 360860078}
+  - component: {fileID: 360860082}
   m_Layer: 5
   m_Name: Keynotes
   m_TagString: Untagged
@@ -3564,6 +3580,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 360860076}
   m_CullTransparentMesh: 1
+--- !u!114 &360860082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360860076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: Keynotes Tab
+  customDescription: 
 --- !u!1 &364030543
 GameObject:
   m_ObjectHideFlags: 0
@@ -6856,6 +6887,7 @@ GameObject:
   - component: {fileID: 555142227}
   - component: {fileID: 555142229}
   - component: {fileID: 555142228}
+  - component: {fileID: 555142230}
   m_Layer: 5
   m_Name: Expandible
   m_TagString: Untagged
@@ -6926,6 +6958,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 555142226}
   m_CullTransparentMesh: 1
+--- !u!114 &555142230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 555142226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &569040767
 GameObject:
   m_ObjectHideFlags: 0
@@ -7998,6 +8042,7 @@ GameObject:
   - component: {fileID: 655627173}
   - component: {fileID: 655627175}
   - component: {fileID: 655627174}
+  - component: {fileID: 655627176}
   m_Layer: 5
   m_Name: Cycle
   m_TagString: Untagged
@@ -8122,6 +8167,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 655627172}
   m_CullTransparentMesh: 1
+--- !u!114 &655627176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655627172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: '"A vow of fate. Each movement carries the world through creation,
+    prosperity, chaos, and the final note of silent rebirth."'
+  customDescription: 
 --- !u!1 &662964097
 GameObject:
   m_ObjectHideFlags: 0
@@ -11024,6 +11085,7 @@ GameObject:
   - component: {fileID: 932212499}
   - component: {fileID: 932212501}
   - component: {fileID: 932212500}
+  - component: {fileID: 932212502}
   m_Layer: 5
   m_Name: Seventh
   m_TagString: Untagged
@@ -11048,8 +11110,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1321.0999, y: -299.19986}
-  m_SizeDelta: {x: 330.13, y: 48.077}
+  m_AnchoredPosition: {x: 1337.3, y: -294.18}
+  m_SizeDelta: {x: 47, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &932212500
 MonoBehaviour:
@@ -11134,7 +11196,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 6.1973686, y: -1.7477857, z: 277.3907, w: 10.5179405}
+  m_margin: {x: -0.037282206, y: 0.08600797, z: 0.050010625, w: 0.24909782}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -11148,6 +11210,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 932212498}
   m_CullTransparentMesh: 1
+--- !u!114 &932212502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 932212498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: 
+  customDescription: 
 --- !u!1 &933602351
 GameObject:
   m_ObjectHideFlags: 0
@@ -12019,141 +12096,6 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 967597200}
-  m_CullTransparentMesh: 1
---- !u!1 &977093882
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 977093883}
-  - component: {fileID: 977093885}
-  - component: {fileID: 977093884}
-  m_Layer: 5
-  m_Name: PhaseText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &977093883
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 977093882}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.6742857, y: 2.6742857, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2114523553}
-  m_RootOrder: -1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1515.3427, y: -120.14801}
-  m_SizeDelta: {x: 340.098, y: 42.362}
-  m_Pivot: {x: 0, y: 1}
---- !u!114 &977093884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 977093882}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: 12
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
-  m_sharedMaterial: {fileID: 979175463580449235, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4290899199
-  m_fontColor: {r: 1, g: 0.92549026, b: 0.7568628, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 14
-  m_fontSizeBase: 14
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 512
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 1
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: -0.005133909, y: 0.4509148, z: 3.5912325, w: 1.6167183}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!222 &977093885
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 977093882}
   m_CullTransparentMesh: 1
 --- !u!1 &982237049
 GameObject:
@@ -13214,6 +13156,7 @@ GameObject:
   - component: {fileID: 1100659447}
   - component: {fileID: 1100659446}
   - component: {fileID: 1100659445}
+  - component: {fileID: 1100659449}
   m_Layer: 5
   m_Name: Military
   m_TagString: Untagged
@@ -13335,6 +13278,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1100659443}
   m_CullTransparentMesh: 1
+--- !u!114 &1100659449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1100659443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: Military Tab
+  customDescription: 
 --- !u!1 &1131584662
 GameObject:
   m_ObjectHideFlags: 0
@@ -16274,6 +16232,7 @@ GameObject:
   - component: {fileID: 1419971881}
   - component: {fileID: 1419971880}
   - component: {fileID: 1419971879}
+  - component: {fileID: 1419971883}
   m_Layer: 5
   m_Name: NationSlot
   m_TagString: Untagged
@@ -16395,6 +16354,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1419971877}
   m_CullTransparentMesh: 1
+--- !u!114 &1419971883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419971877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: Your Nation
+  customDescription: 
 --- !u!1 &1429569787
 GameObject:
   m_ObjectHideFlags: 0
@@ -16813,6 +16787,7 @@ GameObject:
   - component: {fileID: 1438061976}
   - component: {fileID: 1438061975}
   - component: {fileID: 1438061974}
+  - component: {fileID: 1438061978}
   m_Layer: 5
   m_Name: Faith
   m_TagString: Untagged
@@ -16934,6 +16909,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1438061972}
   m_CullTransparentMesh: 1
+--- !u!114 &1438061978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438061972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: Faith Tab
+  customDescription: 
 --- !u!1 &1445115352
 GameObject:
   m_ObjectHideFlags: 0
@@ -17202,8 +17192,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
-  customTitle: Food
-  customDescription: '"Sweet nectar of life."'
+  customTitle: Provisions
+  customDescription: '"Peaches, perhaps."'
 --- !u!1 &1465858054
 GameObject:
   m_ObjectHideFlags: 0
@@ -18209,6 +18199,7 @@ GameObject:
   - component: {fileID: 1564349249}
   - component: {fileID: 1564349251}
   - component: {fileID: 1564349250}
+  - component: {fileID: 1564349252}
   m_Layer: 5
   m_Name: Echo
   m_TagString: Untagged
@@ -18333,6 +18324,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1564349248}
   m_CullTransparentMesh: 1
+--- !u!114 &1564349252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1564349248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: 
+  customDescription: 
 --- !u!1 &1585513879
 GameObject:
   m_ObjectHideFlags: 0
@@ -23828,6 +23834,8 @@ GameObject:
   - component: {fileID: 2114523553}
   - component: {fileID: 2114523556}
   - component: {fileID: 2114523555}
+  - component: {fileID: 2114523557}
+  - component: {fileID: 2114523558}
   m_Layer: 5
   m_Name: Phase
   m_TagString: Untagged
@@ -23846,8 +23854,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 977093883}
+  m_Children: []
   m_Father: {fileID: 555142227}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -23894,6 +23901,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2114523552}
   m_CullTransparentMesh: 1
+--- !u!114 &2114523557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114523552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2114523558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114523552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  customTitle: 
+  customDescription: 
 --- !u!1 &2117258318
 GameObject:
   m_ObjectHideFlags: 0
