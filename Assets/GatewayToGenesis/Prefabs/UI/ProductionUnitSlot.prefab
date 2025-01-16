@@ -361,6 +361,7 @@ GameObject:
   - component: {fileID: 7358284950667846832}
   - component: {fileID: -6637687677453659016}
   - component: {fileID: 1739170357355687843}
+  - component: {fileID: 3894765646047160414}
   m_Layer: 5
   m_Name: ProductionUnitSlot
   m_TagString: Untagged
@@ -498,13 +499,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c90b0a2e417674cb308d981c8c8a2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isUnique: 0
-  producedResources: []
-  inputResources: []
-  buildResourceRequirements: []
-  productionRates: []
-  inputRates: []
-  buildRequirementsAmount: []
+  insufficientProduction: 0
+  productionUnitData: {fileID: 0}
   icon: {fileID: 6983088396586475580}
   amountText: {fileID: 3639429343076454079}
   nameText: {fileID: 8942691450898504955}
@@ -538,6 +534,22 @@ MonoBehaviour:
   activeResource: 
   affordableSprite: {fileID: 21300000, guid: f77355ab4c16c084f94f1b2d11a90c51, type: 3}
   unaffordableSprite: {fileID: 21300000, guid: e2941ed45e751994aa8040e87d102710, type: 3}
+  technologySlot: {fileID: 0}
+--- !u!114 &3894765646047160414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6348907647636965890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 0
+  customTitle: 
+  customDescription: 
 --- !u!1 &8084542632042339266
 GameObject:
   m_ObjectHideFlags: 0

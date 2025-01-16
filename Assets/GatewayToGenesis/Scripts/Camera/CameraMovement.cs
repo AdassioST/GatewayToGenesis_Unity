@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class CameraMovement : MonoBehaviour
 {
     [SerializeField] CinemachineVirtualCamera virtualCamera;
-    [SerializeField] Camera mainCamera;                    
+    [SerializeField] Camera mainCamera;
 
     [SerializeField] float moveSpeed = 5f, zoomSpeed = 1f, screenEdgePercentage = 0.15f, smoothingTime = 0.2f;
 
@@ -21,23 +21,28 @@ public class CameraMovement : MonoBehaviour
     private CinemachineTransposer transposer;
     private Vector3 velocity = Vector3.zero;
 
-    [SerializeField] private float minZoom = 4f, maxZoom = 9f, currentZoom = 7f;
+    [SerializeField] private float minZoom = 3f, maxZoom = 10f, currentZoom = 7f;
+
+    // Bounds percentage adjustment
+    [SerializeField, Range(0.5f, 1f)] private float minBoundsScale = 0.9f; // Minimum scale at max zoom-in
+    [SerializeField, Range(0.5f, 1f)] private float maxBoundsScale = 1f;   // Maximum scale at max zoom-out
 
     private Vector3 screenSize;
 
     private float edgeX, edgeY;
+
+    private Vector3 minBounds, maxBounds;
+    private float cameraWidth, cameraHeight;
 
     private void Awake()
     {
         if (virtualCamera != null)
         {
             transposer = virtualCamera.GetCinemachineComponent<CinemachineTransposer>();
-
             currentZoom = virtualCamera.m_Lens.OrthographicSize;
         }
 
         screenSize = new Vector3(Screen.width, Screen.height, 0);
-
         edgeX = screenSize.x * screenEdgePercentage;
         edgeY = screenSize.y * screenEdgePercentage;
 
@@ -45,16 +50,17 @@ public class CameraMovement : MonoBehaviour
         {
             confiner2D.m_BoundingShape2D = worldBoundPolygon;
         }
+
+        UpdateCameraBounds();
     }
+
     private void Update()
     {
         if (IsPointerOverUI()) return;
 
         HandleZoom();
-
         HandleMovement();
     }
-
 
     private void HandleZoom()
     {
@@ -62,13 +68,17 @@ public class CameraMovement : MonoBehaviour
 
         if (scrollInput != 0)
         {
-            currentZoom -= scrollInput * zoomSpeed;
-            currentZoom = Mathf.Clamp(currentZoom, minZoom, maxZoom);
+            float newZoom = Mathf.Clamp(currentZoom - scrollInput * zoomSpeed, minZoom, maxZoom);
 
+            currentZoom = newZoom;
             virtualCamera.m_Lens.OrthographicSize = currentZoom;
 
+            // Update move speed and smoothing dynamically
             moveSpeed = Mathf.Lerp(5f, 10f, (currentZoom - minZoom) / (maxZoom - minZoom));
             smoothingTime = Mathf.Lerp(0.5f, 0.2f, (currentZoom - minZoom) / (maxZoom - minZoom));
+
+            // Update bounds for the new zoom level
+            UpdateCameraBounds();
         }
     }
 
@@ -105,14 +115,11 @@ public class CameraMovement : MonoBehaviour
             };
 
             List<RaycastResult> results = new List<RaycastResult>();
-
             EventSystem.current.RaycastAll(pointerData, results);
 
             foreach (var result in results)
             {
-
                 Image image = result.gameObject.GetComponent<Image>();
-
                 if (image != null && image.alphaHitTestMinimumThreshold > 0f)
                 {
                     return false;
@@ -128,16 +135,33 @@ public class CameraMovement : MonoBehaviour
         mainCamera.transform.position = Vector3.SmoothDamp(mainCamera.transform.position, targetPosition, ref velocity, smoothingTime);
     }
 
+    private void UpdateCameraBounds()
+    {
+        // Calculate the zoom factor (e.g., 1 at max zoom-out, less at higher zoom-in levels)
+        float zoomFactor = (currentZoom - minZoom) / (maxZoom - minZoom);
+
+        // Lerp the bounds scale between minBoundsScale and maxBoundsScale based on zoomFactor
+        float boundsScale = Mathf.Lerp(minBoundsScale, maxBoundsScale, zoomFactor);
+
+        // Adjust bounds based on scaled size
+        float adjustedWidth = worldBoundPolygon.bounds.size.x * boundsScale;
+        float adjustedHeight = worldBoundPolygon.bounds.size.y * boundsScale;
+
+        Vector2 adjustedMin = worldBoundPolygon.bounds.center - new Vector3(adjustedWidth / 2, adjustedHeight / 2, 0);
+        Vector2 adjustedMax = worldBoundPolygon.bounds.center + new Vector3(adjustedWidth / 2, adjustedHeight / 2, 0);
+
+        minBounds = new Vector3(adjustedMin.x, adjustedMin.y, 0);
+        maxBounds = new Vector3(adjustedMax.x, adjustedMax.y, 0);
+
+        // Update the camera size dynamically
+        cameraWidth = currentZoom * 2 * mainCamera.aspect;
+        cameraHeight = currentZoom * 2;
+    }
+
     private Vector3 ClampPositionWithinBounds(Vector3 position)
     {
-        float width = mainCamera.orthographicSize * 2 * mainCamera.aspect;
-        float height = mainCamera.orthographicSize * 2;
-
-        Vector3 minBounds = worldBoundPolygon.bounds.min;
-        Vector3 maxBounds = worldBoundPolygon.bounds.max;
-
-        position.x = Mathf.Clamp(position.x, minBounds.x + width / 2, maxBounds.x - width / 2);
-        position.y = Mathf.Clamp(position.y, minBounds.y + height / 2, maxBounds.y - height / 2);
+        position.x = Mathf.Clamp(position.x, minBounds.x + cameraWidth / 2, maxBounds.x - cameraWidth / 2);
+        position.y = Mathf.Clamp(position.y, minBounds.y + cameraHeight / 2, maxBounds.y - cameraHeight / 2);
 
         return position;
     }
