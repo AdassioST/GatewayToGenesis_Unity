@@ -13,6 +13,7 @@ public class TimeSystemLogic : MonoBehaviour
 
     [SerializeField] private TMP_Text cycleText, echoText, seventhText;
     [SerializeField] private Image phaseImage;
+    [SerializeField] private GameObject expandible;
 
     [SerializeField] private TimeUnit[] echoes, phases;
 
@@ -121,6 +122,8 @@ public class TimeSystemLogic : MonoBehaviour
 
     private void UpdateUI()
     {
+        if (!expandible.activeSelf) return;
+
         // Update Cycle Text
         cycleText.text = $"Cycle {CurrentCycle} ◦ {currentCycleName}";
 
@@ -128,7 +131,6 @@ public class TimeSystemLogic : MonoBehaviour
         if (CurrentEcho - 1 < echoes.Length)
         {
             echoText.text = echoes[CurrentEcho - 1].unitName;
-
             echoText.GetComponentInParent<TooltipTrigger>().customTitle = echoes[CurrentEcho - 1].description;
 
         }

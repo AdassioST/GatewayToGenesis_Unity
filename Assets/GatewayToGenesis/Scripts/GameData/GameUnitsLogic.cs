@@ -53,6 +53,8 @@ public class GameUnitsLogic : MonoBehaviour
             }
 
             slot.GetComponent<ProductionLogic>().ChangeUnitAmount(amount);
+
+            TooltipSystemLogic.Instance.RefreshAllTooltips();
         }
         else
         {
@@ -88,16 +90,16 @@ public class GameUnitsLogic : MonoBehaviour
         for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
             string resourceName = productionUnitData.buildResourceRequirements[i];
-            float requiredAmount = productionUnitData.buildRequirementsAmount[i];
+            productionSlot.incrementalCost = productionUnitData.buildRequirementsAmount[i];
 
             if (!isUnit)
             {
-                requiredAmount *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+                productionSlot.incrementalCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
             }
 
             GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
-            if (resourceSlot == null || resourceSlot.amount < requiredAmount)
+            if (resourceSlot == null || resourceSlot.amount < productionSlot.incrementalCost)
             {
                 return false;
             }
@@ -120,15 +122,13 @@ public class GameUnitsLogic : MonoBehaviour
         for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
             string resourceName = productionUnitData.buildResourceRequirements[i];
-            float baseCost = productionUnitData.buildRequirementsAmount[i];
+            productionSlot.incrementalCost = productionUnitData.buildRequirementsAmount[i];
 
             if (!isUnit)
             {
-                baseCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+                productionSlot.incrementalCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
             }
-
-            Debug.Log($"Building {productionUnitName}: Deducting {baseCost} from {resourceName}");
-            ChangeResourceFromName(resourceName, -baseCost, false);
+            ChangeResourceFromName(resourceName, -productionSlot.incrementalCost, false);
         }
 
         if (productionUnitData.housing > 0)
@@ -152,6 +152,7 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         ChangeProductionUnitFromName(productionUnitName, 1);
+
         return true;
     }
 
@@ -361,6 +362,11 @@ public class GameUnitsLogic : MonoBehaviour
     {
         GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == name);
         return resourceSlotObj?.GetComponent<GameResourceSlot>();
+    }
+
+    public List<GameResourceSlot> GetAvailableResources()
+    {
+        return storageTab.slots.Select(slot => slot.GetComponent<GameResourceSlot>()).ToList();
     }
 
     private void HandleSpecialUnlockable(TechUnlockable unlockable)

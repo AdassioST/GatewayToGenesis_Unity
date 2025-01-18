@@ -45,5 +45,4 @@ public class ProductionLogic : MonoBehaviour
             productionSlot.RefreshProductionAmount();
         }
     }
-
 }

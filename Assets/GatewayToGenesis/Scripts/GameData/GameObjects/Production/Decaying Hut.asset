@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Decaying Hut
   m_EditorClassIdentifier: 
   name: Decaying Hut
-  type: Housing
+  type: Residence
   section: Residential District
   description: '"Better than nothing."'
   icon: {fileID: 21300000, guid: 0d85347b0ba09f74db5c87a9a9498658, type: 3}

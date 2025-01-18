@@ -1102,7 +1102,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   foodThreshold: 12
   vagrantToPopulationRate: 4
-  researchPerPopulation: 0.01
+  researchPerPopulation: 100
   starvationRecoveryRate: 0.05
   foodDemandBuffer: -2.5
   demandRateConstant: 0.03
@@ -1328,6 +1328,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Last Gusis Tab
   customDescription: 
+  customType: 
 --- !u!1 &128309859
 GameObject:
   m_ObjectHideFlags: 0
@@ -1694,6 +1695,7 @@ MonoBehaviour:
   echoText: {fileID: 1564349250}
   seventhText: {fileID: 932212500}
   phaseImage: {fileID: 2114523555}
+  expandible: {fileID: 555142226}
   echoes:
   - {fileID: 11400000, guid: e30bd7816cedbe446af565872ace82a3, type: 2}
   - {fileID: 11400000, guid: c567d35f8518f9e43bf99a8d111601ae, type: 2}
@@ -2148,6 +2150,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Select to change Material Production on Click
   customDescription: 
+  customType: 
 --- !u!1 &205922992
 GameObject:
   m_ObjectHideFlags: 0
@@ -3442,7 +3445,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 340, y: 450}
+  m_AnchoredPosition: {x: 340, y: 448}
   m_SizeDelta: {x: 663.63574, y: 650}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &360860076
@@ -3595,6 +3598,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Keynotes Tab
   customDescription: 
+  customType: 
 --- !u!1 &364030543
 GameObject:
   m_ObjectHideFlags: 0
@@ -7295,7 +7299,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 671844794}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99837345
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7542,6 +7546,7 @@ GameObject:
   - component: {fileID: 622732908}
   - component: {fileID: 622732907}
   - component: {fileID: 622732910}
+  - component: {fileID: 622732911}
   m_Layer: 5
   m_Name: Tooltip Canvas
   m_TagString: Untagged
@@ -7628,6 +7633,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tooltipSlotPrefab: {fileID: 4380297239658714753, guid: 42481a3d12fdcea4ca3c2ea89bab7f2c, type: 3}
+--- !u!114 &622732911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 622732905}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64aa73079856fea4eb38418fe7529d40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spriteAsset: {fileID: 11400000, guid: 401de288b996a894c80cfca59deb3467, type: 2}
 --- !u!1 &626324754
 GameObject:
   m_ObjectHideFlags: 0
@@ -7954,6 +7972,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Vagrants
   customDescription: '"A bunch of rags."'
+  customType: Gayvians
 --- !u!1 &641540256
 GameObject:
   m_ObjectHideFlags: 0
@@ -8183,6 +8202,7 @@ MonoBehaviour:
   customTitle: '"A vow of fate. Each movement carries the world through creation,
     prosperity, chaos, and the final note of silent rebirth."'
   customDescription: 
+  customType: 
 --- !u!1 &662964097
 GameObject:
   m_ObjectHideFlags: 0
@@ -11225,6 +11245,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: 
   customDescription: 
+  customType: 
 --- !u!1 &933602351
 GameObject:
   m_ObjectHideFlags: 0
@@ -13293,6 +13314,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Military Tab
   customDescription: 
+  customType: 
 --- !u!1 &1131584662
 GameObject:
   m_ObjectHideFlags: 0
@@ -13545,6 +13567,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Research Tab
   customDescription: 
+  customType: 
 --- !u!1 &1141332810
 GameObject:
   m_ObjectHideFlags: 0
@@ -16084,6 +16107,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Population
   customDescription: '"A few dudes and dudettes."'
+  customType: Citizens
 --- !u!1 &1397909682
 GameObject:
   m_ObjectHideFlags: 0
@@ -16369,6 +16393,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Your Nation
   customDescription: 
+  customType: 
 --- !u!1 &1429569787
 GameObject:
   m_ObjectHideFlags: 0
@@ -16924,6 +16949,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Faith Tab
   customDescription: 
+  customType: 
 --- !u!1 &1445115352
 GameObject:
   m_ObjectHideFlags: 0
@@ -17192,8 +17218,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
-  customTitle: Provisions
-  customDescription: '"Peaches, perhaps."'
+  customTitle: Food
+  customDescription: '"Peaches, perhaps?"'
+  customType: Unique
 --- !u!1 &1465858054
 GameObject:
   m_ObjectHideFlags: 0
@@ -17992,6 +18019,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Select to change Vital Resource on Click
   customDescription: 
+  customType: 
 --- !u!1 &1545618665
 GameObject:
   m_ObjectHideFlags: 0
@@ -18339,6 +18367,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: 
   customDescription: 
+  customType: 
 --- !u!1 &1585513879
 GameObject:
   m_ObjectHideFlags: 0
@@ -18798,7 +18827,7 @@ MonoBehaviour:
     bottomLeft: {r: 1, g: 1, b: 1, a: 1}
     bottomRight: {r: 1, g: 1, b: 1, a: 1}
   m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
+  m_spriteAsset: {fileID: 11400000, guid: 67bc89ff198ce894a949534daf6124ad, type: 2}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
   m_TextStyleHashCode: -1183493901
@@ -19840,6 +19869,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: Housing
   customDescription: '"A home."'
+  customType: Infrastructure
 --- !u!1 &1733786000
 GameObject:
   m_ObjectHideFlags: 0
@@ -23928,6 +23958,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   customTitle: 
   customDescription: 
+  customType: 
 --- !u!1 &2117258318
 GameObject:
   m_ObjectHideFlags: 0

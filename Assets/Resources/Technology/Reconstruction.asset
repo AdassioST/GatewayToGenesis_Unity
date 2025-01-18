@@ -18,8 +18,10 @@ MonoBehaviour:
   techRequirements: []
   resourceRequirements:
   - Research
+  - Food
   resourceAmount:
   - 10
+  - 5
   eurekaConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: 52262f0b4f668834d8a0c4083af8da6d, type: 2}

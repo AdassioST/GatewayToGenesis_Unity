@@ -45,6 +45,8 @@ public class TabHotkeys : MonoBehaviour
             return;
         }
 
+        TooltipSystemLogic.Instance.HideTooltip();
+
         bool isActive = display.gameObject.activeSelf;
 
         if (!isActive)
@@ -81,6 +83,8 @@ public class TabHotkeys : MonoBehaviour
 
     private void ClearTabs()
     {
+        TooltipSystemLogic.Instance.HideTooltip();
+
         foreach (GameObject tab in tabs)
         {
             Transform display = tab.transform.Find("Display");

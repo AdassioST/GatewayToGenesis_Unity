@@ -1,14 +1,22 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class TooltipSystemLogic : MonoBehaviour
 {
     public static TooltipSystemLogic Instance { get; private set; }
 
     [SerializeField] private TooltipSlot tooltipSlotPrefab;
-    private TooltipSlot currentTooltipSlot;
+
+    public TooltipSlot currentTooltipSlot;
+    public TooltipData currentTooltipData;
+
     private Coroutine tooltipCoroutine;
-    private bool isTooltipActive = false;
+    
+    public bool isTooltipActive = false;
+
+    public static event Action<TooltipData> OnTooltipShown;
+    public static event Action<TooltipData> OnTooltipHidden;
 
     private void Awake()
     {
@@ -28,6 +36,7 @@ public class TooltipSystemLogic : MonoBehaviour
         }
     }
 
+
     public void ShowTooltip(TooltipData data)
     {
         if (currentTooltipSlot != null)
@@ -39,16 +48,13 @@ public class TooltipSystemLogic : MonoBehaviour
         currentTooltipSlot.InitializeTooltipData(data);
         currentTooltipSlot.transform.SetParent(transform);
 
-        isTooltipActive = true;
-        tooltipCoroutine = StartCoroutine(TooltipTimer());
-    }
+        currentTooltipData = data; // Store the active tooltip data
 
-    private void LockTooltip()
-    {
-        if (currentTooltipSlot != null)
-        {
-            currentTooltipSlot.Lock();
-        }
+        isTooltipActive = true;
+
+        OnTooltipShown?.Invoke(data);
+
+        tooltipCoroutine = StartCoroutine(TooltipTimer());
     }
 
     public void HideTooltip()
@@ -58,12 +64,48 @@ public class TooltipSystemLogic : MonoBehaviour
             Destroy(currentTooltipSlot.gameObject);
         }
 
+        // Prevent null reference by ensuring we only invoke when necessary
+        if (currentTooltipData != null)
+        {
+            OnTooltipHidden?.Invoke(currentTooltipData);
+        }
+
         isTooltipActive = false;
+        currentTooltipData = null;
     }
+
+
+    private void LockTooltip()
+    {
+        if (currentTooltipSlot != null)
+        {
+            currentTooltipSlot.Lock();
+        }
+    }
+
 
     private IEnumerator TooltipTimer()
     {
         yield return new WaitForSeconds(2f);  // Wait for 2 seconds before locking the tooltip
         LockTooltip();
     }
+
+    public void RefreshTooltip(TooltipData data)
+    {
+        if (currentTooltipSlot != null && isTooltipActive)
+        {
+            currentTooltipSlot.UpdateTooltipData(data);
+        }
+    }
+
+    public void RefreshAllTooltips()
+    {
+        if (isTooltipActive && currentTooltipSlot != null)
+        {
+            // Refresh the tooltip if it's active
+
+            currentTooltipSlot.UpdateTooltipData(currentTooltipData);
+        }
+    }
+
 }

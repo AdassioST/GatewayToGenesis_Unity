@@ -17,6 +17,7 @@ MonoBehaviour:
   tier: 2
   techRequirements:
   - Woodcraft Mastery
+  - Efficient Rations
   resourceRequirements:
   - Research
   resourceAmount:

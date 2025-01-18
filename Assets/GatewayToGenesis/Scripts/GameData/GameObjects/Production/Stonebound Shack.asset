@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Stonebound Shack
   m_EditorClassIdentifier: 
   name: Stonebound Shack
-  type: Housing
+  type: Residence
   section: Residential District
   description: '"A little better."'
   icon: {fileID: 21300000, guid: c2834ac431256d2488e7133949f68959, type: 3}

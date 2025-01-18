@@ -8,11 +8,32 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     [Header("Fallback Tooltip Settings")]
     public bool useCustomTooltip;
 
-    public string customTitle;
-    public string customDescription;
+    public string customTitle, customDescription, customType;
+    private void Update()
+    {
+
+        if (TooltipSystemLogic.Instance.isTooltipActive && TooltipSystemLogic.Instance.currentTooltipData?.sourceObject == gameObject)
+        {
+            GameProductionSlot productionSlot = GetComponent<GameProductionSlot>();
+
+            GameTechnologySlot technologySlot = GetComponent<GameTechnologySlot>();
+
+            if (productionSlot != null || technologySlot != null)
+            {
+                TooltipData updatedData = CreateDynamicTooltipData();
+                TooltipSystemLogic.Instance.RefreshTooltip(updatedData);
+            }
+        }
+    }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        Transform displayTransform = transform.Find("Display");
+        if (displayTransform != null && !displayTransform.gameObject.activeSelf)
+        {
+            return;
+        }
+
         TooltipData tooltipData = CreateDynamicTooltipData();
         TooltipSystemLogic.Instance.ShowTooltip(tooltipData);
     }
@@ -24,6 +45,8 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private TooltipData CreateDynamicTooltipData()
     {
         TooltipData dynamicData = ScriptableObject.CreateInstance<TooltipData>();
+
+        dynamicData.sourceObject = gameObject; // Associate TooltipData with the GameObject
 
         if (useCustomTooltip)
         {
@@ -37,6 +60,11 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
                 dynamicData.tooltipDescription = customDescription;
             }
 
+            if (!string.IsNullOrEmpty(customType))
+            {
+                dynamicData.type = customType;
+            }
+
             return dynamicData;
         }
 
@@ -47,6 +75,8 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         {
             dynamicData.tooltipTitle = resourceSlot.gameUnit.name;
             dynamicData.tooltipDescription = resourceSlot.gameUnit.description;
+
+            dynamicData.type = resourceSlot.gameUnit.type;
 
             //ADD IF CHECK TO STORAGE DISPLAYS IF THE TAB HAS IT.
 
@@ -62,23 +92,40 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             dynamicData.tooltipTitle = productionSlot.gameUnit.name;
             dynamicData.tooltipDescription = productionSlot.gameUnit.description;
 
-            //ADD IF CHECK TO BUILD REQUIREMENTS DISPLAY.
+            dynamicData.type = productionSlot.gameUnit.type;
 
-            //ADD IF CHECK TO PRODUCTION EFFECTS.
+            List<GameResourceSlot> availableResources = GameUnitsLogic.Instance.GetAvailableResources();
+            dynamicData.resourceRequirements = dynamicData.FormatResourceRequirementsWithIncrementalCost(productionSlot.productionUnitData.buildResourceRequirements,productionSlot.productionUnitData.buildRequirementsAmount, productionSlot);
+
+            dynamicData.productionEffects = dynamicData.FormatProductionUnitEffects(productionSlot.productionUnitData);
 
             return dynamicData;
         }
 
         // Check for GameTechnologySlot
         GameTechnologySlot technologySlot = GetComponent<GameTechnologySlot>();
+
         if (technologySlot != null)
         {
             dynamicData.tooltipTitle = technologySlot.gameUnit.name;
             dynamicData.tooltipDescription = technologySlot.gameUnit.description;
 
-            //ADD IF CHECK TO BUILD REQUIREMENTS DISPLAY.
+            dynamicData.type = technologySlot.gameUnit.type + " Tech";
 
-            //ADD IF CHECK TO PREVIOUS TECH REQUIREMENTS DISPLAY.
+            if (dynamicData.type != "Normal Tech")
+            {
+                string typeColor = dynamicData.type == "Event Tech" ? "yellow" : "red";
+                dynamicData.type = $"<color={typeColor}>{dynamicData.type}</color>\n";
+            }
+
+            List<GameResourceSlot> availableResources = GameUnitsLogic.Instance.GetAvailableResources();
+            dynamicData.resourceRequirements = dynamicData.FormatResourceRequirements(technologySlot.technologyData.resourceRequirements, technologySlot.technologyData.resourceAmount, availableResources);
+
+            if (technologySlot.technologyData.techRequirements.Count > 0)
+            {
+                TabBuilderLogic researchTab = GameUnitsLogic.Instance.researchTab;
+                dynamicData.techRequirements = dynamicData.FormatTechRequirements(technologySlot.technologyData.techRequirements, researchTab);
+            }
 
             return dynamicData;
         }
@@ -86,16 +133,4 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         return dynamicData;
     }
 
-    public string GetFormattedText()
-    {
-        string formattedText = customTitle + "\n" + customDescription;
-
-        // Add extra information or breakdowns as needed
-        if (!string.IsNullOrEmpty(customTitle))
-        {
-            formattedText += "\n" + customTitle;
-        }
-
-        return formattedText;
-    }
 }

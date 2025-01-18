@@ -19,6 +19,8 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
     public Image icon;
     public TMP_Text amountText, nameText, typeText;
 
+    public float incrementalCost;
+
     // Dictionary to store ProductionUnitData by GameUnit name
     private static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
 

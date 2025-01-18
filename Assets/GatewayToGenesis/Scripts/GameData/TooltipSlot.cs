@@ -11,9 +11,9 @@ public class TooltipSlot : MonoBehaviour
 
     [SerializeField] private LayoutElement layoutElement;
 
-    [SerializeField] private GameObject titleSection, descriptionSection, productionModifiersSection, storageBreakdownSection, resourceRequirementsSection, effectsSection, techRequirementsSection;
+    [SerializeField] private GameObject titleSection, descriptionSection, typeSection, productionModifiersSection, storageBreakdownSection, resourceRequirementsSection, effectsSection, techRequirementsSection;
 
-    public TextMeshProUGUI title, description, productionModifiers, storageBreakdown, resourceRequirements, effects, techRequirements;
+    public TextMeshProUGUI title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements;
 
     private void Update()
     {
@@ -39,6 +39,7 @@ public class TooltipSlot : MonoBehaviour
     {
         title.text = data.tooltipTitle;
         description.text = data.tooltipDescription;
+        type.text = data.type;
 
         resourceRequirements.text = data.resourceRequirements;
         productionModifiers.text = data.productionModifiers;
@@ -50,6 +51,7 @@ public class TooltipSlot : MonoBehaviour
 
         titleSection.SetActive(!string.IsNullOrEmpty(data.tooltipTitle));
         descriptionSection.SetActive(!string.IsNullOrEmpty(data.tooltipDescription));
+        typeSection.SetActive(!string.IsNullOrEmpty(data.type));
 
         resourceRequirementsSection.SetActive(!string.IsNullOrEmpty(data.resourceRequirements));
         productionModifiersSection.SetActive(!string.IsNullOrEmpty(data.productionModifiers));
@@ -67,4 +69,30 @@ public class TooltipSlot : MonoBehaviour
 
         Debug.Log("Tooltip locked");
     }
+
+    public void UpdateTooltipData(TooltipData data)
+    {
+        // Update only the dynamic sections
+        if (!string.IsNullOrEmpty(data.resourceRequirements))
+        {
+            resourceRequirements.text = data.resourceRequirements;
+
+            resourceRequirementsSection.SetActive(true);
+        }
+
+        if (!string.IsNullOrEmpty(data.productionEffects))
+        {
+            effects.text = data.productionEffects;
+
+            effectsSection.SetActive(true);
+        }
+
+        if (!string.IsNullOrEmpty(data.techRequirements))
+        {
+            techRequirements.text = data.techRequirements;
+
+            techRequirementsSection.SetActive(true);
+        }
+    }
+
 }
