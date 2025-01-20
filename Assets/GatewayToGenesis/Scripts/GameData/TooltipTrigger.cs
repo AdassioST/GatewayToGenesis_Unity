@@ -9,6 +9,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public bool useCustomTooltip;
 
     public string customTitle, customDescription, customType;
+
     private void Update()
     {
 
@@ -129,6 +130,102 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
             return dynamicData;
         }
+
+        TechUnlockableSlot techUnlockableSlot = GetComponent<TechUnlockableSlot>();
+        if (techUnlockableSlot != null)
+        {
+            // Extract data from the associated TechUnlockable
+            TechUnlockable unlockableData = techUnlockableSlot.techUnlockableData;
+
+            if (unlockableData != null)
+            {
+                if (unlockableData.gameUnit != null)
+                dynamicData.tooltipTitle = unlockableData.gameUnit.name;
+
+                // Handle unlockable type-specific logic
+                switch (unlockableData.unlockableType)
+                {
+                    case TechUnlockableType.ClickPower:
+                        if (unlockableData.resourceModifier > 0)
+                        {
+                            dynamicData.type = "Click Power Modifier";
+
+                            dynamicData.productionEffects = $"Increases the Click Power of {unlockableData.gameUnit.name} by {unlockableData.resourceModifier}";
+
+                            dynamicData.tooltipDescription = "Carpal Tunnel Power!";
+                        }
+
+                        else
+                        {
+                            dynamicData.tooltipDescription = unlockableData.gameUnit.description;
+
+                            dynamicData.type = unlockableData.gameUnit.type;
+                        }
+
+                        break;
+
+                    case TechUnlockableType.Building:
+                    case TechUnlockableType.Unit:
+                        GameProductionSlot.InitializeProductionUnitDataDictionary();
+
+                        if (GameProductionSlot.productionUnitDataDictionary.TryGetValue(unlockableData.gameUnit.name, out ProductionUnitData productionData))
+                        {
+                            dynamicData.tooltipDescription = unlockableData.gameUnit.description;
+                            dynamicData.resourceRequirements = dynamicData.FormatResourceRequirements(
+                                productionData.buildResourceRequirements,
+                                productionData.buildRequirementsAmount,
+                                GameUnitsLogic.Instance.GetAvailableResources()
+                            );
+                            dynamicData.productionEffects = dynamicData.FormatProductionUnitEffects(productionData);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Production data not found for unlockable: {unlockableData.gameUnit.name}");
+                        }
+
+                        dynamicData.type = unlockableData.unlockableType.ToString();
+                        break;
+
+                    case TechUnlockableType.Modifier:
+                        dynamicData.productionEffects = $"Boosts the efficiency of all workshops producing {unlockableData.gameUnit.name} by {unlockableData.resourceModifier}%";
+                        dynamicData.tooltipDescription = "Upping the uppies 100% upper";
+
+                        //ADD COLORS TO TYPES "<color=green>Bonus Modifier</color>"
+                        dynamicData.type = "Bonus Modifier";
+                        break;
+
+                    case TechUnlockableType.Arts:
+                        dynamicData.tooltipDescription = $"Unlocks a unique Arts unit: {unlockableData.gameUnit.name}";
+                        dynamicData.type = "Arts";
+                        break;
+
+                    case TechUnlockableType.Special:
+                        if (!string.IsNullOrEmpty(unlockableData.description))
+                        {
+                            dynamicData.productionEffects = unlockableData.effects;
+                        }
+                        else
+                        {
+                            dynamicData.productionEffects = $"Unlocks a special unit: {unlockableData.gameUnit.name}";
+                        }
+
+                        dynamicData.tooltipTitle = "Special Unlock";
+
+                        dynamicData.tooltipDescription = unlockableData.description;
+                        break;
+
+                    default:
+                        Debug.LogWarning($"Unknown unlockable type: {unlockableData.unlockableType}");
+                        dynamicData.tooltipDescription = "Unknown unlockable type.";
+                        dynamicData.type = "Unknown";
+                        break;
+                }
+            }
+
+            return dynamicData;
+        }
+
+
 
         return dynamicData;
     }

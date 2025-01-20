@@ -8,6 +8,42 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: icon
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: nameText
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: enlightened
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: progressBar
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: unlockFilter
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: enlightenedText
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: techUnlockables
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: researchCostText
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+      propertyPath: unavailableFilter
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2651581061940678124, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
       propertyPath: m_Name
       value: TechnologySlot_Empty
@@ -136,7 +172,12 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3263413075821521238, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+    - {fileID: 6694037707227684050, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+    - {fileID: 2865860990139125370, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+    - {fileID: -5214368541619111204, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
+    - {fileID: 5534880100735388201, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
     m_RemovedGameObjects:
     - {fileID: 6789139691360840092, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}
     - {fileID: 8201364600319230205, guid: a036f2c89d1be8448b6e27185bc08b45, type: 3}

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using Unity.Loading;
 using UnityEngine;
@@ -15,26 +16,77 @@ public class TooltipSlot : MonoBehaviour
 
     public TextMeshProUGUI title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements;
 
+    private List<TextMeshProUGUI> textElements;
+
+    public RectTransform rectTransform;
+
+    private void Start()
+    {
+        rectTransform = GetComponent<RectTransform>();
+        textElements = new List<TextMeshProUGUI> { title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements };
+    }
     private void Update()
     {
         ResizeTooltip();
-
-        Vector2 position = Input.mousePosition;
-
-        transform.position = position + offset;
+        AdjustTooltipPosition();
     }
-
-    public void ResizeTooltip()
+    private void AdjustTooltipPosition()
     {
-        if (title.text != null && description.text != null)
-        {
-            int headerLength = title.text.Length;
-            int contentLength = description.text.Length;
+        Vector2 mousePosition = Input.mousePosition;
+        Vector2 tooltipSize = rectTransform.sizeDelta * rectTransform.lossyScale;
 
-            layoutElement.enabled = Mathf.Max(title.preferredWidth, description.preferredWidth) >= layoutElement.preferredWidth;
+        Vector2 screenSize = new Vector2(Screen.width, Screen.height);
+
+        Vector2 pivot = new Vector2(0f, 1f);
+        Vector2 offset = new Vector2(20f, -5f);
+
+        if (mousePosition.x + tooltipSize.x > screenSize.x) // Too far right
+        {
+            pivot.x = 1f; // Move to the left
+            offset.x = -10f;
         }
 
+        if (mousePosition.y - tooltipSize.y < 0) // Too far down
+        {
+            pivot.y = 0f; // Move up
+            offset.y = 5f;
+        }
+
+        if (mousePosition.x - tooltipSize.x < 0) // Too far left
+        {
+            pivot.x = 0f; // Back to right
+            offset.x = 20f;
+        }
+
+        if (mousePosition.y + tooltipSize.y > screenSize.y) // Too far up
+        {
+            pivot.y = 1f; // Back to down
+            offset.y = -5f;
+        }
+
+        rectTransform.pivot = pivot;
+        transform.position = mousePosition + offset;
     }
+    public void ResizeTooltip()
+    {
+        bool shouldEnableLayout = false;
+
+        foreach (TextMeshProUGUI textElement in textElements)
+        {
+            if (textElement != null && textElement.text != null)
+            {
+                if (textElement.preferredWidth >= layoutElement.preferredWidth)
+                {
+                    shouldEnableLayout = true;
+
+                    break;
+                }
+            }
+        }
+
+        layoutElement.enabled = shouldEnableLayout;
+    }
+
     public void InitializeTooltipData(TooltipData data)
     {
         title.text = data.tooltipTitle;

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 558101091607594648}
   - component: {fileID: 8849344923265218174}
   - component: {fileID: 2408889428024560705}
+  - component: {fileID: 3062125740450982550}
   m_Layer: 5
   m_Name: TechUnlockable
   m_TagString: Untagged
@@ -150,6 +151,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slot: {fileID: 4881835533030420440}
   techIcon: {fileID: 7856813167622257534}
+--- !u!114 &3062125740450982550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2750549909202460731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 0
+  customTitle: 
+  customDescription: 
+  customType: 
 --- !u!1 &6923707677704304760
 GameObject:
   m_ObjectHideFlags: 0

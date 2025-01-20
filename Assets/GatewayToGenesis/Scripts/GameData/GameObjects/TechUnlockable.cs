@@ -8,6 +8,9 @@ public class TechUnlockable : ScriptableObject
     public GameUnit gameUnit;
 
     public Sprite slotImage;
+
+    public string description, effects;
+
     public float resourceModifier;
     public TechUnlockableType unlockableType;
 }

@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 0}
   slotImage: {fileID: 21300000, guid: d4589dc48b02df44589868b747f0dfb3, type: 3}
+  description: '"Crooked teeth all the way."'
+  effects: Unlocks the ability to recruit vagrants as population when there is no
+    housing available
   resourceModifier: 0
   unlockableType: 5

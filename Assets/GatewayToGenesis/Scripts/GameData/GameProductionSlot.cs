@@ -22,7 +22,7 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
     public float incrementalCost;
 
     // Dictionary to store ProductionUnitData by GameUnit name
-    private static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
+    public static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
 
     private void Update()
     {
@@ -85,7 +85,7 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
         typeText.text = gameUnit.type.ToString();
     }
 
-    private void InitializeProductionUnitDataDictionary()
+    public static void InitializeProductionUnitDataDictionary()
     {
         productionUnitDataDictionary = new Dictionary<string, ProductionUnitData>();
 
