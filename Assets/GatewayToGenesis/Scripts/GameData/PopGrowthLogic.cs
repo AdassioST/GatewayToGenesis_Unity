@@ -100,12 +100,12 @@ public class PopGrowthLogic : MonoBehaviour
         // Remove the previously applied modifier
         if (lastResearchModifier != 0f)
         {
-            GlobalProductionManager.Instance.AdjustResourceModifier("Research", lastResearchModifier, true, false);
+            GlobalProductionManager.Instance.AdjustResourceModifier("Research", lastResearchModifier, true, false, "Citizen Research");
         }
 
         float researchAmount = population * researchPerPopulation;
 
-        GlobalProductionManager.Instance.AdjustResourceModifier("Research", researchAmount, true, true);
+        GlobalProductionManager.Instance.AdjustResourceModifier("Research", researchAmount, true, true, "Citizen Research");
 
         lastResearchModifier = researchAmount;
     }
@@ -114,7 +114,7 @@ public class PopGrowthLogic : MonoBehaviour
     {
         if (lastFoodModifier != 0f)
         {
-            GlobalProductionManager.Instance.AdjustResourceModifier("Food", lastFoodModifier, false, false);
+            GlobalProductionManager.Instance.AdjustResourceModifier("Food", lastFoodModifier, false, false, "Population Food Demand");
         }
 
         // FOOD DEMAND FORMULA
@@ -123,7 +123,7 @@ public class PopGrowthLogic : MonoBehaviour
         // Only apply the modifier if foodDemand is negative
         if (foodDemand > 0)
         {
-            GlobalProductionManager.Instance.AdjustResourceModifier("Food", foodDemand, false, true);
+            GlobalProductionManager.Instance.AdjustResourceModifier("Food", foodDemand, false, true, "Population Food Demand");
             lastFoodModifier = foodDemand;
         }
         else

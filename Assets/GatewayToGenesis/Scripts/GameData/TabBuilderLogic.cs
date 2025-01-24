@@ -85,6 +85,18 @@ public class TabBuilderLogic : MonoBehaviour
 
                 AddSlotToGlobalManager(slotComponent);
 
+                // Handle resource initialization dynamically
+                if (slotComponent is GameResourceSlot resourceSlot)
+                {
+                    string resourceName = resourceSlot.gameUnit.name;
+
+                    if (!GameUnitsLogic.Instance.storageBreakdown.ContainsKey(resourceName))
+                    {
+                        GameUnitsLogic.Instance.storageBreakdown[resourceName] = new Dictionary<string, float>{{ "Base", resourceSlot.maxAmount }};
+
+                    }
+                }
+
             }
             else
             {

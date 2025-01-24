@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
 
@@ -60,6 +61,120 @@ public class TooltipData : ScriptableObject
 
         return formattedText;
     }
+
+    public string FormatStorageBreakdown(Dictionary<string, Dictionary<string, float>> storageBreakdown, string resourceName)
+    {
+        if (!storageBreakdown.ContainsKey(resourceName))
+        {
+            return "";
+        }
+
+        var resourceBreakdown = storageBreakdown[resourceName];
+        float totalStorage = 0;
+        string formattedText = $"Total Storage: <color=yellow>{totalStorage:0.##}</color>\n\n"; // Always show Total Storage
+
+        string breakdownText = "";
+
+        // Iterate through the storage breakdown for the resource
+        foreach (var entry in resourceBreakdown)
+        {
+            breakdownText += $"- {entry.Key}: <color=green>{entry.Value:0.##}</color>\n";
+            totalStorage += entry.Value;
+        }
+
+        // Update the Total Storage text after the breakdown calculation
+        formattedText = $"Total Storage: <color=yellow>{totalStorage:0.##}</color>\n\n";
+
+        // Rename to "Detailed Breakdown" and append the breakdown
+        formattedText += "<b>Detailed Breakdown:</b>\n" + breakdownText;
+
+        return formattedText;
+    }
+
+
+    public string FormatProductionModifiers(string resourceName)
+    {
+        if (!GlobalProductionManager.Instance.netProductionRates.ContainsKey(resourceName))
+        {
+            Debug.LogError($"No production data found for resource: {resourceName}");
+            return "";
+        }
+
+        // Extract data from GlobalProductionManager
+        float netRate = GlobalProductionManager.Instance.netProductionRates[resourceName];
+        string formattedText = $"Net Production Rate: <color=yellow>{netRate:0.##}</color>\n\n"; // Always show Net Production Rate, even if it's 0
+
+        bool hasModifiers = false;
+        string breakdownText = "";
+
+        // Add breakdown from production and consumption slots
+        foreach (var productionSlot in GlobalProductionManager.Instance.productionSlots)
+        {
+            var productionData = productionSlot.productionUnitData;
+
+            // Check production
+            if (productionData.producedResources.Contains(resourceName))
+            {
+                int index = productionData.producedResources.IndexOf(resourceName);
+                float productionRate = productionData.productionRates[index] * productionSlot.amount;
+                if (productionRate != 0)
+                {
+                    breakdownText += $"- {productionSlot.productionUnitData.name}: <color=green>{productionRate:0.##}</color>\n";
+                    hasModifiers = true;
+                }
+            }
+
+            // Check consumption
+            if (productionData.consumedResources.Contains(resourceName))
+            {
+                int index = productionData.consumedResources.IndexOf(resourceName);
+                float consumptionRate = productionData.consumeRates[index] * productionSlot.amount;
+                if (consumptionRate != 0)
+                {
+                    breakdownText += $"- {productionSlot.productionUnitData.name} (Consumption): <color=red>{consumptionRate:0.##}</color>\n";
+                    hasModifiers = true;
+                }
+            }
+        }
+
+        // Add persistent positive modifiers (from Technologies, Events, or Special Cases)
+        if (GlobalProductionManager.Instance.persistentPositiveModifiers.TryGetValue(resourceName, out var persistentPositive) && persistentPositive != 0)
+        {
+            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{persistentPositive:0.##}</color>\n";
+            hasModifiers = true;
+        }
+
+        // Add persistent negative modifiers (from Technologies, Events, or Special Cases)
+        if (GlobalProductionManager.Instance.persistentNegativeModifiers.TryGetValue(resourceName, out var persistentNegative) && persistentNegative != 0)
+        {
+            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{persistentNegative:0.##}</color>\n";
+            hasModifiers = true;
+        }
+
+        // Add percentage positive modifiers (from Technologies, Events, or Special Cases)
+        if (GlobalProductionManager.Instance.percentagePositiveModifiers.TryGetValue(resourceName, out var percentagePositive) && percentagePositive != 0)
+        {
+            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{percentagePositive:0.##}%</color>\n";
+            hasModifiers = true;
+        }
+
+        // Add percentage negative modifiers (from Technologies, Events, or Special Cases)
+        if (GlobalProductionManager.Instance.percentageNegativeModifiers.TryGetValue(resourceName, out var percentageNegative) && percentageNegative != 0)
+        {
+            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{percentageNegative:0.##}%</color>\n";
+            hasModifiers = true;
+        }
+
+        // Only show "Detailed Breakdown:" if there were any modifiers or production/consumption data
+        if (hasModifiers)
+        {
+            formattedText += "<b>Detailed Breakdown:</b>\n" + breakdownText;
+        }
+
+        return formattedText;
+    }
+
+
 
     public string FormatTechRequirements(List<string> techRequirements, TabBuilderLogic researchTab)
     {
@@ -143,8 +258,5 @@ public class TooltipData : ScriptableObject
 
         return formattedText;
     }
-
-
-
 
 }

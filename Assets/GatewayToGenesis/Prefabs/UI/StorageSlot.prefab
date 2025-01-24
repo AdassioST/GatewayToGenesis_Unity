@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2025270880572493149}
   - component: {fileID: 1680275148165061676}
   - component: {fileID: 7605580928955011884}
+  - component: {fileID: 4241845371602219081}
   m_Layer: 5
   m_Name: Amount
   m_TagString: Untagged
@@ -135,6 +136,24 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4241845371602219081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264658043524473048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 0
+  isBreakdownDisplay: 1
+  isProductionModifiers: 0
+  customTitle: 
+  customDescription: 
+  customType: 
 --- !u!1 &4966480070914332286
 GameObject:
   m_ObjectHideFlags: 0
@@ -413,8 +432,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 0
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: 
   customDescription: 
+  customType: 
 --- !u!1 &7432190097657362238
 GameObject:
   m_ObjectHideFlags: 0
@@ -426,6 +448,7 @@ GameObject:
   - component: {fileID: 2644489073299396621}
   - component: {fileID: 1938893162004227254}
   - component: {fileID: 5366967753272818567}
+  - component: {fileID: 4560193756734344079}
   m_Layer: 5
   m_Name: StorageBar
   m_TagString: Untagged
@@ -492,6 +515,24 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4560193756734344079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7432190097657362238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 0
+  isBreakdownDisplay: 1
+  isProductionModifiers: 0
+  customTitle: 
+  customDescription: 
+  customType: 
 --- !u!1 &9060808935099214167
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,6 +544,7 @@ GameObject:
   - component: {fileID: 3408823985858073627}
   - component: {fileID: 3949811704842529503}
   - component: {fileID: 4305950335191361176}
+  - component: {fileID: 5796162928152903555}
   m_Layer: 5
   m_Name: Production
   m_TagString: Untagged
@@ -627,3 +669,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5796162928152903555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9060808935099214167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 0
+  isBreakdownDisplay: 0
+  isProductionModifiers: 1
+  customTitle: 
+  customDescription: 
+  customType: 

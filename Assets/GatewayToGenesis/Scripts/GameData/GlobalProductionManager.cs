@@ -19,26 +19,31 @@ public class GlobalProductionManager : MonoBehaviour
 
     public Dictionary<string, float> persistentPositiveModifiers = new Dictionary<string, float>();
     public Dictionary<string, float> persistentNegativeModifiers = new Dictionary<string, float>();
-
     public Dictionary<string, float> percentagePositiveModifiers = new Dictionary<string, float>();
     public Dictionary<string, float> percentageNegativeModifiers = new Dictionary<string, float>();
 
+    public Dictionary<string, List<string>> modifierSourceDict = new Dictionary<string, List<string>>();
+
+
     public float techTier = 1f, costBalance = 0.05f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("Duplicate PopGrowthLogic found, destroying the new one.");
+            Debug.LogWarning("Duplicate GlobalProductionManager found, destroying the new one.");
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
     }
+
     private void Start()
     {
         InitializeProductionRates();
     }
+
     private void Update()
     {
         CalculateGlobalProductionRates();
@@ -48,7 +53,6 @@ public class GlobalProductionManager : MonoBehaviour
 
     private void InitializeProductionRates()
     {
-        // Initialize dictionaries for resources already present in resourceSlots
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
@@ -58,6 +62,10 @@ public class GlobalProductionManager : MonoBehaviour
                 netProductionRates[resourceName] = 0f;
                 positiveModifiers[resourceName] = 0f;
                 negativeModifiers[resourceName] = 0f;
+                persistentPositiveModifiers[resourceName] = 0f;
+                persistentNegativeModifiers[resourceName] = 0f;
+                percentagePositiveModifiers[resourceName] = 0f;
+                percentageNegativeModifiers[resourceName] = 0f;
             }
         }
     }
@@ -73,16 +81,15 @@ public class GlobalProductionManager : MonoBehaviour
             if (!netProductionRates.ContainsKey(resourceName))
             {
                 netProductionRates[resourceName] = 0f;
-
                 positiveModifiers[resourceName] = 0f;
                 negativeModifiers[resourceName] = 0f;
-
                 persistentPositiveModifiers[resourceName] = 0f;
                 persistentNegativeModifiers[resourceName] = 0f;
+                percentagePositiveModifiers[resourceName] = 0f;
+                percentageNegativeModifiers[resourceName] = 0f;
             }
         }
     }
-
 
     public void AddProductionSlot(GameProductionSlot productionSlot)
     {
@@ -91,6 +98,7 @@ public class GlobalProductionManager : MonoBehaviour
             productionSlots.Add(productionSlot);
         }
     }
+
     public void AddTechnologySlot(GameTechnologySlot technologySlot)
     {
         if (!technologySlots.Contains(technologySlot))
@@ -110,6 +118,10 @@ public class GlobalProductionManager : MonoBehaviour
             netProductionRates.Remove(resourceName);
             positiveModifiers.Remove(resourceName);
             negativeModifiers.Remove(resourceName);
+            persistentPositiveModifiers.Remove(resourceName);
+            persistentNegativeModifiers.Remove(resourceName);
+            percentagePositiveModifiers.Remove(resourceName);
+            percentageNegativeModifiers.Remove(resourceName);
         }
     }
 
@@ -120,6 +132,7 @@ public class GlobalProductionManager : MonoBehaviour
             productionSlots.Remove(productionSlot);
         }
     }
+
     public void RemoveTechnologySlot(GameTechnologySlot technologySlot)
     {
         if (technologySlots.Contains(technologySlot))
@@ -127,7 +140,8 @@ public class GlobalProductionManager : MonoBehaviour
             technologySlots.Remove(technologySlot);
         }
     }
-    public void AdjustResourceModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd)
+
+    public void AdjustResourceModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
     {
         var targetModifiers = isPositive ? persistentPositiveModifiers : persistentNegativeModifiers;
 
@@ -136,20 +150,27 @@ public class GlobalProductionManager : MonoBehaviour
             targetModifiers[resourceName] = 0f;
         }
 
-        if (isAdd)
-        {
-            targetModifiers[resourceName] += modifierAmount;
-        }
+        targetModifiers[resourceName] += isAdd ? modifierAmount : -modifierAmount;
 
-        else
+        // Store the source for later use
+        if (!string.IsNullOrEmpty(modifierSource))
         {
-            targetModifiers[resourceName] -= modifierAmount;
+            if (!modifierSourceDict.ContainsKey(resourceName))
+            {
+                modifierSourceDict[resourceName] = new List<string>();
+            }
+
+            // Ensure the source is added only once
+            if (!modifierSourceDict[resourceName].Contains(modifierSource))
+            {
+                modifierSourceDict[resourceName].Add(modifierSource);
+            }
         }
 
         CalculateGlobalProductionRates();
     }
 
-    public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd)
+    public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
     {
         var targetModifiers = isPositive ? percentagePositiveModifiers : percentageNegativeModifiers;
 
@@ -158,22 +179,30 @@ public class GlobalProductionManager : MonoBehaviour
             targetModifiers[resourceName] = 0f;
         }
 
-        if (isAdd)
-        {
-            targetModifiers[resourceName] += modifierAmount;
-        }
+        targetModifiers[resourceName] += isAdd ? modifierAmount : -modifierAmount;
 
-        else
+        // Store the source for later use
+        if (!string.IsNullOrEmpty(modifierSource))
         {
-            targetModifiers[resourceName] -= modifierAmount;
+            if (!modifierSourceDict.ContainsKey(resourceName))
+            {
+                modifierSourceDict[resourceName] = new List<string>();
+            }
+
+            // Ensure the source is added only once
+            if (!modifierSourceDict[resourceName].Contains(modifierSource))
+            {
+                modifierSourceDict[resourceName].Add(modifierSource);
+            }
         }
 
         CalculateGlobalProductionRates();
     }
 
+
+
     private void CalculateGlobalProductionRates()
     {
-        // Reset the temporary modifiers before recalculation
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
@@ -182,37 +211,27 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] = 0f;
         }
 
-        // Calculate temporary production and consumption rates
         foreach (var productionSlot in productionSlots)
         {
             var productionUnitData = productionSlot.productionUnitData;
 
-            // Positive modifiers (produced resources)
             for (int i = 0; i < productionUnitData.producedResources.Count; i++)
             {
                 string producedResource = productionUnitData.producedResources[i];
                 float productionRate = productionUnitData.productionRates[i] * productionSlot.amount;
 
-                if (positiveModifiers.ContainsKey(producedResource))
-                {
-                    positiveModifiers[producedResource] += productionRate;
-                }
+                positiveModifiers[producedResource] += productionRate;
             }
 
-            // Negative modifiers (consumed resources)
             for (int i = 0; i < productionUnitData.consumedResources.Count; i++)
             {
                 string consumedResource = productionUnitData.consumedResources[i];
                 float consumptionRate = productionUnitData.consumeRates[i] * productionSlot.amount;
 
-                if (negativeModifiers.ContainsKey(consumedResource))
-                {
-                    negativeModifiers[consumedResource] += consumptionRate;
-                }
+                negativeModifiers[consumedResource] += consumptionRate;
             }
         }
 
-        // Add persistent flat modifiers
         foreach (var resourceName in persistentPositiveModifiers.Keys)
         {
             positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
@@ -223,7 +242,6 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
         }
 
-        // Calculate net rates and apply percentage modifiers
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
@@ -253,7 +271,6 @@ public class GlobalProductionManager : MonoBehaviour
             var productionUnitData = productionSlot.productionUnitData;
             bool isResourceDepleted = false;
 
-            // Check if any consumed resource is depleted
             foreach (var resourceName in productionUnitData.consumedResources)
             {
                 var resourceSlot = resourceSlots.Find(slot => slot.gameUnit.name == resourceName);
@@ -264,10 +281,7 @@ public class GlobalProductionManager : MonoBehaviour
                 }
             }
 
-            if (isResourceDepleted)
-            {
-                productionSlot.insufficientProduction = true;
-            }
+            productionSlot.insufficientProduction = isResourceDepleted;
         }
     }
 
@@ -278,7 +292,6 @@ public class GlobalProductionManager : MonoBehaviour
             var productionUnitData = productionSlot.productionUnitData;
             bool areAllResourcesAvailable = true;
 
-            // Check if all consumed resources are available
             foreach (var resourceName in productionUnitData.consumedResources)
             {
                 var resourceSlot = resourceSlots.Find(slot => slot.gameUnit.name == resourceName);
@@ -289,20 +302,12 @@ public class GlobalProductionManager : MonoBehaviour
                 }
             }
 
-            if (areAllResourcesAvailable)
-            {
-                productionSlot.insufficientProduction = false;
-            }
+            productionSlot.insufficientProduction = !areAllResourcesAvailable;
         }
     }
 
     public float GetNetProductionRate(string resourceName)
     {
-        if (netProductionRates.ContainsKey(resourceName))
-        {
-            return netProductionRates[resourceName];
-        }
-
-        return 0f;  // Return 0 if the resource doesn't exist
+        return netProductionRates.TryGetValue(resourceName, out var rate) ? rate : 0f;
     }
 }

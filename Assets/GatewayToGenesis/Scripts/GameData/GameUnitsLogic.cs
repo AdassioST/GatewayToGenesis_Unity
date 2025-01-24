@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameUnitsLogic : MonoBehaviour
@@ -21,6 +22,8 @@ public class GameUnitsLogic : MonoBehaviour
     private Coroutine activeTechnologySlotCoroutine;
 
     [SerializeField] private GameObject expandibleHUD, buildingMaterialButton;
+
+    public Dictionary<string, Dictionary<string, float>> storageBreakdown = new Dictionary<string, Dictionary<string, float>>();
 
     private void Awake()
     {
@@ -145,9 +148,22 @@ public class GameUnitsLogic : MonoBehaviour
 
                 GameResourceSlot resourceSlot = GetResourceSlotFromName(storageResource);
 
+                // Record base storage amount as the first entry
+                if (!storageBreakdown.ContainsKey(storageResource))
+                {
+                    storageBreakdown[storageResource] = new Dictionary<string, float>{{ "Base", resourceSlot.maxAmount }};
+                }
+
                 resourceSlot.maxAmount += storageIncrease;
 
                 resourceSlot.RefreshProductionAmount();
+
+                if (!storageBreakdown[storageResource].ContainsKey(productionUnitName))
+                {
+                    storageBreakdown[storageResource][productionUnitName] = 0;
+                }
+
+                storageBreakdown[storageResource][productionUnitName] += storageIncrease;
             }
         }
 
@@ -304,7 +320,7 @@ public class GameUnitsLogic : MonoBehaviour
     }
 
 
-    public void HandleTechUnlockable(TechUnlockable unlockable)
+    public void HandleTechUnlockable(TechUnlockable unlockable, GameTechnologySlot techSlot)
     {
         switch (unlockable.unlockableType)
         {
@@ -337,7 +353,7 @@ public class GameUnitsLogic : MonoBehaviour
                 }
                 else
                 {
-                    GlobalProductionManager.Instance.AdjustPercentageModifier(unlockable.gameUnit.name, unlockable.resourceModifier, true, true);
+                    GlobalProductionManager.Instance.AdjustPercentageModifier(unlockable.gameUnit.name, unlockable.resourceModifier, true, true, techSlot.gameUnit.name);
                 }
                 break;
 

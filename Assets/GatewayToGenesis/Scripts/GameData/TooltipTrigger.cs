@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Fallback Tooltip Settings")]
-    public bool useCustomTooltip;
+    public bool useCustomTooltip, isBreakdownDisplay, isProductionModifiers;
 
     public string customTitle, customDescription, customType;
 
@@ -42,6 +42,19 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public void OnPointerExit(PointerEventData eventData)
     {
         TooltipSystemLogic.Instance.HideTooltip();
+
+        GameObject hoveredObject = eventData.pointerCurrentRaycast.gameObject;
+
+        if (hoveredObject != null)
+        {
+            TooltipTrigger newTrigger = hoveredObject.GetComponentInParent<TooltipTrigger>();
+
+            if (newTrigger != null)
+            {
+                TooltipData newTooltipData = newTrigger.CreateDynamicTooltipData();
+                TooltipSystemLogic.Instance.ShowTooltip(newTooltipData);
+            }
+        }
     }
     private TooltipData CreateDynamicTooltipData()
     {
@@ -72,19 +85,41 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         // Check for GameResourceSlot
         GameResourceSlot resourceSlot = GetComponent<GameResourceSlot>();
 
+        if (resourceSlot == null) resourceSlot = GetComponentInParent<GameResourceSlot>();
+
         if (resourceSlot != null)
         {
             dynamicData.tooltipTitle = resourceSlot.gameUnit.name;
-            dynamicData.tooltipDescription = resourceSlot.gameUnit.description;
 
-            dynamicData.type = resourceSlot.gameUnit.type;
+            if (isBreakdownDisplay)
+            {
+                string storageBreakdownText = dynamicData.FormatStorageBreakdown(GameUnitsLogic.Instance.storageBreakdown, resourceSlot.gameUnit.name);
 
-            //ADD IF CHECK TO STORAGE DISPLAYS IF THE TAB HAS IT.
+                if (!string.IsNullOrEmpty(storageBreakdownText))
+                {
+                    dynamicData.storageBreakdown = storageBreakdownText;
+                }
+            }
 
-            //ADD IF CHECK TO NET PRODUCTION RATE BREAKDOWN IF THE TAB HAS IT.
+            else if (isProductionModifiers)
+            {
+                string productionModifiersText = dynamicData.FormatProductionModifiers(resourceSlot.gameUnit.name);
+
+                if (!string.IsNullOrEmpty(productionModifiersText))
+                {
+                    dynamicData.productionModifiers = productionModifiersText;
+                }
+            }
+
+            else
+            {
+                dynamicData.tooltipDescription = resourceSlot.gameUnit.description;
+                dynamicData.type = resourceSlot.gameUnit.type;
+            }
 
             return dynamicData;
         }
+
 
         // Check for GameProductionSlot
         GameProductionSlot productionSlot = GetComponent<GameProductionSlot>();

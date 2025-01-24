@@ -187,7 +187,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         foreach (var unlockable in technologyData.techUnlockables)
         {
-            gameUnitsLogic.HandleTechUnlockable(unlockable);
+            gameUnitsLogic.HandleTechUnlockable(unlockable, this);
         }
 
         // Refresh visibility directly after unlocking

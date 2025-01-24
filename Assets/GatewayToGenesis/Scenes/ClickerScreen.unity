@@ -1326,6 +1326,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Last Gusis Tab
   customDescription: 
   customType: 
@@ -2148,6 +2150,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Select to change Material Production on Click
   customDescription: 
   customType: 
@@ -3596,6 +3600,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Keynotes Tab
   customDescription: 
   customType: 
@@ -7299,7 +7305,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 671844794}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7973,6 +7979,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Vagrants
   customDescription: '"A bunch of rags."'
   customType: Gayvians
@@ -8202,6 +8210,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: '"A vow of fate. Each movement carries the world through creation,
     prosperity, chaos, and the final note of silent rebirth."'
   customDescription: 
@@ -11246,6 +11256,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: 
   customDescription: 
   customType: 
@@ -13315,6 +13327,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Military Tab
   customDescription: 
   customType: 
@@ -13568,6 +13582,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Research Tab
   customDescription: 
   customType: 
@@ -16108,6 +16124,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Population
   customDescription: '"A few dudes and dudettes."'
   customType: Citizens
@@ -16394,6 +16412,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Your Nation
   customDescription: 
   customType: 
@@ -16434,7 +16454,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0.000061035156}
   m_SizeDelta: {x: 320, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1429569790
@@ -16950,6 +16970,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Faith Tab
   customDescription: 
   customType: 
@@ -17221,6 +17243,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Food
   customDescription: '"Peaches, perhaps?"'
   customType: Unique
@@ -18020,6 +18044,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Select to change Vital Resource on Click
   customDescription: 
   customType: 
@@ -18368,6 +18394,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: 
   customDescription: 
   customType: 
@@ -19870,6 +19898,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: Housing
   customDescription: '"A home."'
   customType: Infrastructure
@@ -23959,6 +23989,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
   customTitle: 
   customDescription: 
   customType: 

@@ -23,5 +23,7 @@ MonoBehaviour:
   productionRates: []
   consumedResources: []
   consumeRates: []
-  storageResources: []
-  storageAmount: []
+  storageResources:
+  - Elderwood
+  storageAmount:
+  - 250
