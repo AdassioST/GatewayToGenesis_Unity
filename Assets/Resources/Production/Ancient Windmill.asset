@@ -25,7 +25,15 @@ MonoBehaviour:
   - Food
   productionRates:
   - 5
-  consumedResources: []
-  consumeRates: []
-  storageResources: []
-  storageAmount: []
+  consumedResources:
+  - Elderwood
+  - Food
+  consumeRates:
+  - 2
+  - 1
+  storageResources:
+  - Duskstone
+  - Elderwood
+  storageAmount:
+  - 25
+  - 2

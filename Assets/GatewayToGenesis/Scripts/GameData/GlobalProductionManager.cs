@@ -211,6 +211,8 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] = 0f;
         }
 
+        // Apply workshop rates
+
         foreach (var productionSlot in productionSlots)
         {
             var productionUnitData = productionSlot.productionUnitData;
@@ -232,6 +234,8 @@ public class GlobalProductionManager : MonoBehaviour
             }
         }
 
+        // Apply persistent modifiers
+
         foreach (var resourceName in persistentPositiveModifiers.Keys)
         {
             positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
@@ -242,25 +246,31 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
         }
 
+
+        // Apply percentage modifiers
+
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
 
-            float baseNetRate = positiveModifiers[resourceName] - negativeModifiers[resourceName];
+            float basePositiveRate = positiveModifiers[resourceName];
+            float baseNegativeRate = negativeModifiers[resourceName];
 
-            if (percentagePositiveModifiers.TryGetValue(resourceName, out var positivePercent))
+            if (percentagePositiveModifiers.TryGetValue(resourceName, out var positivePercent) && basePositiveRate > 0)
             {
-                baseNetRate *= (1 + positivePercent / 100f);
+                basePositiveRate *= (1 + positivePercent / 100f);
             }
 
-            if (percentageNegativeModifiers.TryGetValue(resourceName, out var negativePercent))
+            if (percentageNegativeModifiers.TryGetValue(resourceName, out var negativePercent) && baseNegativeRate > 0)
             {
-                baseNetRate *= (1 - negativePercent / 100f);
+                baseNegativeRate *= (1 + negativePercent / 100f);
             }
 
-            netProductionRates[resourceName] = baseNetRate;
+            float netRate = basePositiveRate - baseNegativeRate;
 
-            resourceSlot.productionRate = baseNetRate;
+            netProductionRates[resourceName] = netRate;
+
+            resourceSlot.productionRate = netRate;
         }
     }
 

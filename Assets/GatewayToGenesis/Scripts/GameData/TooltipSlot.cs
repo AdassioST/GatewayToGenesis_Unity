@@ -124,27 +124,31 @@ public class TooltipSlot : MonoBehaviour
 
     public void UpdateTooltipData(TooltipData data)
     {
-        // Update only the dynamic sections
+        if (!string.IsNullOrEmpty(data.productionModifiers))
+        {
+            productionModifiers.text = data.productionModifiers;
+            productionModifiersSection.SetActive(true);
+        }
+
         if (!string.IsNullOrEmpty(data.resourceRequirements))
         {
             resourceRequirements.text = data.resourceRequirements;
-
             resourceRequirementsSection.SetActive(true);
         }
 
         if (!string.IsNullOrEmpty(data.productionEffects))
         {
             effects.text = data.productionEffects;
-
             effectsSection.SetActive(true);
         }
 
         if (!string.IsNullOrEmpty(data.techRequirements))
         {
             techRequirements.text = data.techRequirements;
-
             techRequirementsSection.SetActive(true);
         }
+
     }
+
 
 }

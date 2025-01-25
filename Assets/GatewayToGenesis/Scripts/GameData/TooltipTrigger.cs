@@ -12,19 +12,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     private void Update()
     {
-
-        if (TooltipSystemLogic.Instance.isTooltipActive && TooltipSystemLogic.Instance.currentTooltipData?.sourceObject == gameObject)
-        {
-            GameProductionSlot productionSlot = GetComponent<GameProductionSlot>();
-
-            GameTechnologySlot technologySlot = GetComponent<GameTechnologySlot>();
-
-            if (productionSlot != null || technologySlot != null)
-            {
-                TooltipData updatedData = CreateDynamicTooltipData();
-                TooltipSystemLogic.Instance.RefreshTooltip(updatedData);
-            }
-        }
+        UpdateDynamicTooltipData();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -56,6 +44,38 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             }
         }
     }
+
+    private void UpdateDynamicTooltipData()
+    {
+        if (TooltipSystemLogic.Instance.isTooltipActive && TooltipSystemLogic.Instance.currentTooltipData?.sourceObject == gameObject)
+        {
+            GameResourceSlot resourceSlot = GetComponent<GameResourceSlot>() ?? GetComponentInParent<GameResourceSlot>();
+
+            GameProductionSlot productionSlot = GetComponent<GameProductionSlot>();
+
+            GameTechnologySlot technologySlot = GetComponent<GameTechnologySlot>();
+
+            // If a resource slot exists, refresh tooltip with dynamic data
+            if (resourceSlot != null && isProductionModifiers)
+            {
+                TooltipData updatedData = CreateDynamicTooltipData();
+                TooltipSystemLogic.Instance.RefreshTooltip(updatedData);
+            }
+            // If a production slot exists, refresh tooltip with dynamic data
+            if (productionSlot != null)
+            {
+                TooltipData updatedData = CreateDynamicTooltipData();
+                TooltipSystemLogic.Instance.RefreshTooltip(updatedData);
+            }
+            // If a technology slot exists, refresh tooltip with dynamic data
+            if (technologySlot != null)
+            {
+                TooltipData updatedData = CreateDynamicTooltipData();
+                TooltipSystemLogic.Instance.RefreshTooltip(updatedData);
+            }
+        }
+    }
+
     private TooltipData CreateDynamicTooltipData()
     {
         TooltipData dynamicData = ScriptableObject.CreateInstance<TooltipData>();

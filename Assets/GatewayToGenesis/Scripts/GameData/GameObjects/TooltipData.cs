@@ -9,26 +9,13 @@ public class TooltipData : ScriptableObject
 {
     public GameObject sourceObject;
 
-    public string tooltipTitle;
-    public string tooltipDescription;
+    public string tooltipTitle, tooltipDescription, type;
 
-    public string type;
+    public string resourceRequirements, productionModifiers, storageBreakdown;
 
-    //Usable for both Technology and ProductionUnits
-    public string resourceRequirements; // E.g. 50: Gold, 75 Elderwood
+    public string productionEffects;
 
-    // Resource-specific fields
-    public string productionModifiers; // E.g., "+200 Base, +50 Building Bonus"
-    public string storageBreakdown; // E.g., "Max: 1000 (Building A: +500, Building B: +500)"
-
-    // Production unit fields
-    public string productionEffects; // E.g., "+5 Food per second"
-
-    // Technology-specific fields
-
-    public string techRequirements; // E.g., "Requires: Agriculture, Masonry"
-
-    // Add any relevant data required for tooltips
+    public string techRequirements;
 
     public string FormatResourceRequirements(List<string> resourceNames, List<float> resourceAmounts, List<GameResourceSlot> availableResources)
     {
@@ -59,7 +46,7 @@ public class TooltipData : ScriptableObject
             }
         }
 
-        return formattedText;
+        return formattedText.Trim();
     }
 
     public string FormatStorageBreakdown(Dictionary<string, Dictionary<string, float>> storageBreakdown, string resourceName)
@@ -78,17 +65,15 @@ public class TooltipData : ScriptableObject
         // Iterate through the storage breakdown for the resource
         foreach (var entry in resourceBreakdown)
         {
-            breakdownText += $"- {entry.Key}: <color=green>{entry.Value:0.##}</color>\n";
+            breakdownText += $" - {entry.Key}: <color=green>{entry.Value:0.##}</color>\n";
             totalStorage += entry.Value;
         }
 
-        // Update the Total Storage text after the breakdown calculation
         formattedText = $"Total Storage: <color=yellow>{totalStorage:0.##}</color>\n\n";
 
-        // Rename to "Detailed Breakdown" and append the breakdown
         formattedText += "<b>Detailed Breakdown:</b>\n" + breakdownText;
 
-        return formattedText;
+        return formattedText.Trim();
     }
 
 
@@ -100,14 +85,12 @@ public class TooltipData : ScriptableObject
             return "";
         }
 
-        // Extract data from GlobalProductionManager
         float netRate = GlobalProductionManager.Instance.netProductionRates[resourceName];
         string formattedText = $"Net Production Rate: <color=yellow>{netRate:0.##}</color>\n\n"; // Always show Net Production Rate, even if it's 0
 
         bool hasModifiers = false;
         string breakdownText = "";
 
-        // Add breakdown from production and consumption slots
         foreach (var productionSlot in GlobalProductionManager.Instance.productionSlots)
         {
             var productionData = productionSlot.productionUnitData;
@@ -119,7 +102,7 @@ public class TooltipData : ScriptableObject
                 float productionRate = productionData.productionRates[index] * productionSlot.amount;
                 if (productionRate != 0)
                 {
-                    breakdownText += $"- {productionSlot.productionUnitData.name}: <color=green>{productionRate:0.##}</color>\n";
+                    breakdownText += $" - {productionSlot.productionUnitData.name}: <color=green>{productionRate:0.##}</color>\n";
                     hasModifiers = true;
                 }
             }
@@ -131,37 +114,33 @@ public class TooltipData : ScriptableObject
                 float consumptionRate = productionData.consumeRates[index] * productionSlot.amount;
                 if (consumptionRate != 0)
                 {
-                    breakdownText += $"- {productionSlot.productionUnitData.name} (Consumption): <color=red>{consumptionRate:0.##}</color>\n";
+                    breakdownText += $" - {productionSlot.productionUnitData.name} (Consumption): <color=red>{consumptionRate:0.##}</color>\n";
                     hasModifiers = true;
                 }
             }
         }
 
-        // Add persistent positive modifiers (from Technologies, Events, or Special Cases)
         if (GlobalProductionManager.Instance.persistentPositiveModifiers.TryGetValue(resourceName, out var persistentPositive) && persistentPositive != 0)
         {
-            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{persistentPositive:0.##}</color>\n";
+            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{persistentPositive:0.##}</color>\n";
             hasModifiers = true;
         }
 
-        // Add persistent negative modifiers (from Technologies, Events, or Special Cases)
         if (GlobalProductionManager.Instance.persistentNegativeModifiers.TryGetValue(resourceName, out var persistentNegative) && persistentNegative != 0)
         {
-            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{persistentNegative:0.##}</color>\n";
+            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{persistentNegative:0.##}</color>\n";
             hasModifiers = true;
         }
 
-        // Add percentage positive modifiers (from Technologies, Events, or Special Cases)
         if (GlobalProductionManager.Instance.percentagePositiveModifiers.TryGetValue(resourceName, out var percentagePositive) && percentagePositive != 0)
         {
-            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{percentagePositive:0.##}%</color>\n";
+            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{percentagePositive:0.##}%</color>\n";
             hasModifiers = true;
         }
 
-        // Add percentage negative modifiers (from Technologies, Events, or Special Cases)
         if (GlobalProductionManager.Instance.percentageNegativeModifiers.TryGetValue(resourceName, out var percentageNegative) && percentageNegative != 0)
         {
-            breakdownText += $"- {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{percentageNegative:0.##}%</color>\n";
+            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{percentageNegative:0.##}%</color>\n";
             hasModifiers = true;
         }
 
@@ -171,7 +150,7 @@ public class TooltipData : ScriptableObject
             formattedText += "<b>Detailed Breakdown:</b>\n" + breakdownText;
         }
 
-        return formattedText;
+        return formattedText.Trim();
     }
 
 
@@ -182,7 +161,6 @@ public class TooltipData : ScriptableObject
 
         foreach (string requiredTech in techRequirements)
         {
-            // Find the required technology slot
             GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
             bool isUnlocked = requiredTechObj != null && requiredTechObj.GetComponent<GameTechnologySlot>().isUnlocked;
 
@@ -191,17 +169,16 @@ public class TooltipData : ScriptableObject
             formattedText += $"<color={color}> {requiredTech}</color>\n";
         }
 
-        return formattedText;
+        return formattedText.Trim();
     }
 
     public string FormatProductionUnitEffects(ProductionUnitData productionUnitData)
     {
         string formattedText = "Effects:\n";
 
-        // Add housing if applicable
         if (productionUnitData.housing > 0)
         {
-            formattedText += $" Housing +{productionUnitData.housing}\n";
+            formattedText += $" +{productionUnitData.housing} Housing\n";
         }
 
         // Format produced resources
@@ -211,18 +188,7 @@ public class TooltipData : ScriptableObject
             {
                 string resourceName = productionUnitData.producedResources[i];
                 float productionRate = productionUnitData.productionRates[i];
-                formattedText += $" +{productionRate} {resourceName}\n";
-            }
-        }
-
-        // Format consumed resources
-        if (productionUnitData.consumedResources.Count > 0)
-        {
-            for (int i = 0; i < productionUnitData.consumedResources.Count; i++)
-            {
-                string resourceName = productionUnitData.consumedResources[i];
-                float consumeRate = productionUnitData.consumeRates[i];
-                formattedText += $" -{consumeRate} {resourceName}\n";
+                formattedText += $" +{productionRate:0.##}/s {resourceName}\n";
             }
         }
 
@@ -233,14 +199,30 @@ public class TooltipData : ScriptableObject
             {
                 string resourceName = productionUnitData.storageResources[i];
                 float storageAmount = productionUnitData.storageAmount[i];
-                formattedText += $" Max +{storageAmount} {resourceName}\n";
+                formattedText += $" Max +{storageAmount:0.##} {resourceName}\n";
             }
         }
 
-        return formattedText;
+        // Format consumed resources
+        if (productionUnitData.consumedResources.Count > 0)
+        {
+            formattedText += "Consumption:\n";
+            for (int i = 0; i < productionUnitData.consumedResources.Count; i++)
+            {
+                string resourceName = productionUnitData.consumedResources[i];
+                float consumeRate = productionUnitData.consumeRates[i];
+                formattedText += $" -{consumeRate:0.##}/s {resourceName}\n";
+            }
+        }
+
+        return formattedText.Trim();
     }
 
-    public string FormatResourceRequirementsWithIncrementalCost(List<string> resourceNames,List<float> resourceAmounts,GameProductionSlot productionSlot)
+
+    public string FormatResourceRequirementsWithIncrementalCost(
+        List<string> resourceNames,
+        List<float> resourceAmounts,
+        GameProductionSlot productionSlot)
     {
         string formattedText = "Requires:\n";
 
@@ -248,15 +230,29 @@ public class TooltipData : ScriptableObject
         {
             string resourceName = resourceNames[i];
 
+            // Get the base requirement for the resource
+            float baseAmount = resourceAmounts[i];
+
+            // Calculate the incremental cost for this resource
+            float incrementalCost = baseAmount;
+
+            bool isUnit = productionSlot.gameUnit.type == "Unit";
+
+            if (!isUnit)
+            {
+                incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
+            }
+
             // Check available resources
             GameResourceSlot resourceSlot = GameUnitsLogic.Instance.GetResourceSlotFromName(resourceName);
-            bool hasEnough = resourceSlot != null && resourceSlot.amount >= productionSlot.incrementalCost;
+            bool hasEnough = resourceSlot != null && resourceSlot.amount >= incrementalCost;
 
+            // Format the output with color coding
             string color = hasEnough ? "green" : "red";
-            formattedText += $"<color={color}> {productionSlot.incrementalCost:0.##} {resourceName}</color>\n";
+            formattedText += $"<color={color}> {incrementalCost:0.##} {resourceName}</color>\n";
         }
 
-        return formattedText;
+        return formattedText.Trim();
     }
 
 }

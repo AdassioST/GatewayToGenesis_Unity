@@ -20,6 +20,8 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
     public TMP_Text amountText, nameText, typeText;
 
     public float incrementalCost;
+    public float activeBuildingsAmount;
+
 
     // Dictionary to store ProductionUnitData by GameUnit name
     public static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
@@ -104,5 +106,20 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
             }
         }
     }
+
+    public float CalculateIncrementalCost(string resourceName, float baseAmount)
+    {
+        bool isUnit = gameUnit.type == "Unit";
+
+        float incrementalCost = baseAmount;
+
+        if (!isUnit)
+        {
+            incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * amount);
+        }
+
+        return incrementalCost;
+    }
+
 }
 

@@ -12,8 +12,6 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] public TabBuilderLogic productionTab;
     [SerializeField] public TabBuilderLogic researchTab;
 
-    private GlobalProductionManager global;
-
     private Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
 
     public GameTechnologySlot activeTechnologySlot;
@@ -35,11 +33,6 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         Instance = this;
-    }
-
-    private void Start()
-    {
-        global = GetComponent<GlobalProductionManager>();
     }
 
     public void ChangeResourceFromName(string name, float amount, bool changeFromClickPower)
@@ -97,7 +90,10 @@ public class GameUnitsLogic : MonoBehaviour
 
             if (!isUnit)
             {
-                productionSlot.incrementalCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+                productionSlot.incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
+
+                float incrementalCost = productionSlot.CalculateIncrementalCost(resourceName, productionSlot.maxAmount);
+
             }
 
             GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
@@ -129,7 +125,7 @@ public class GameUnitsLogic : MonoBehaviour
 
             if (!isUnit)
             {
-                productionSlot.incrementalCost *= Mathf.Exp((global.costBalance / global.techTier) * productionSlot.amount);
+                productionSlot.incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
             }
             ChangeResourceFromName(resourceName, -productionSlot.incrementalCost, false);
         }
