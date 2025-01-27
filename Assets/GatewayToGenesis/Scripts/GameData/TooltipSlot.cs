@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Loading;
@@ -22,6 +23,7 @@ public class TooltipSlot : MonoBehaviour
 
     private void Start()
     {
+
         rectTransform = GetComponent<RectTransform>();
         textElements = new List<TextMeshProUGUI> { title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements };
     }
@@ -101,6 +103,19 @@ public class TooltipSlot : MonoBehaviour
         effects.text = data.productionEffects;
         techRequirements.text = data.techRequirements;
 
+        //ADAPT LOGIC TO CHANGE ON SECTIONS
+        if(data.type != null)
+        {
+            if (SectionData.sectionDataDictionary != null && SectionData.sectionDataDictionary.ContainsKey(data.type))
+            {
+
+                title.alignment = TextAlignmentOptions.Center;
+                layoutElement.preferredWidth = 650f;
+
+                type.text = "";
+            }
+        }
+
         titleSection.SetActive(!string.IsNullOrEmpty(data.tooltipTitle));
         descriptionSection.SetActive(!string.IsNullOrEmpty(data.tooltipDescription));
         typeSection.SetActive(!string.IsNullOrEmpty(data.type));
@@ -112,6 +127,7 @@ public class TooltipSlot : MonoBehaviour
 
         effectsSection.SetActive(!string.IsNullOrEmpty(data.productionEffects));
         techRequirementsSection.SetActive(!string.IsNullOrEmpty(data.techRequirements));
+
     }
 
     public void Lock()

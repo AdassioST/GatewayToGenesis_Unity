@@ -37,6 +37,9 @@ public class GlobalProductionManager : MonoBehaviour
         }
 
         Instance = this;
+        
+        //MOVE EVENTUALLY FROM HERE TO THE FUTURE GAME STATE MANAGER LOAD/ SAVES
+        SectionData.InitializeSectionDataDictionary();
     }
 
     private void Start()

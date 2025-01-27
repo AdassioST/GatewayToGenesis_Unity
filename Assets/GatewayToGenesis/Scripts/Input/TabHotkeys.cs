@@ -54,11 +54,13 @@ public class TabHotkeys : MonoBehaviour
             if (!allowIndependent)
             {
                 ClearTabs();
+
             }
             display.gameObject.SetActive(true);
 
             if (updateHUD)
             {
+                TimeSystemLogic.Instance.PauseTime(true); // Pause time when opening a tab that doesn't allow independence
                 HUD.SetActive(false);
             }
 
@@ -76,6 +78,7 @@ public class TabHotkeys : MonoBehaviour
 
             if (updateHUD)
             {
+                TimeSystemLogic.Instance.PauseTime(false); // Resume time when closing the tab
                 HUD.SetActive(true);
             }
         }

@@ -1069,6 +1069,7 @@ MonoBehaviour:
   researchTab: {fileID: 668560537}
   activeTechnologySlot: {fileID: 0}
   switchedTechnologies: 0
+  HUD: {fileID: 845168990}
   expandibleHUD: {fileID: 555142226}
   buildingMaterialButton: {fileID: 1261511148}
 --- !u!114 &118059066
@@ -1692,12 +1693,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerSeventh: 1
+  secondsPerSeventh: 15
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
   seventhText: {fileID: 932212500}
   phaseImage: {fileID: 2114523555}
   expandible: {fileID: 555142226}
+  HUD: {fileID: 845168990}
   echoes:
   - {fileID: 11400000, guid: e30bd7816cedbe446af565872ace82a3, type: 2}
   - {fileID: 11400000, guid: c567d35f8518f9e43bf99a8d111601ae, type: 2}
@@ -1722,6 +1724,7 @@ MonoBehaviour:
   - Naniurka
   - Edging
   canTrackTime: 0
+  isTimePaused: 1
 --- !u!1 &182629041
 GameObject:
   m_ObjectHideFlags: 0
@@ -8120,7 +8123,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Cycle 69 \u25E6 Overture"
+  m_text: "Cycle 1 \u25E6 Overture"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
   m_sharedMaterial: {fileID: 979175463580449235, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
@@ -11166,7 +11169,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 12
+  m_text: 1
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
   m_sharedMaterial: {fileID: 979175463580449235, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
@@ -11258,8 +11261,8 @@ MonoBehaviour:
   useCustomTooltip: 1
   isBreakdownDisplay: 0
   isProductionModifiers: 0
-  customTitle: 
-  customDescription: 
+  customTitle: Seventh
+  customDescription: The minimum unit of time tracking.
   customType: 
 --- !u!1 &933602351
 GameObject:
@@ -16454,7 +16457,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000061035156}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 320, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1429569790
@@ -18304,7 +18307,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Echo of Silence
+  m_text: Echo of Resonance
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
   m_sharedMaterial: {fileID: 979175463580449235, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
@@ -18396,7 +18399,7 @@ MonoBehaviour:
   useCustomTooltip: 1
   isBreakdownDisplay: 0
   isProductionModifiers: 0
-  customTitle: 
+  customTitle: The Opening Act
   customDescription: 
   customType: 
 --- !u!1 &1585513879
@@ -23991,8 +23994,8 @@ MonoBehaviour:
   useCustomTooltip: 1
   isBreakdownDisplay: 0
   isProductionModifiers: 0
-  customTitle: 
-  customDescription: 
+  customTitle: Phase of Prelude
+  customDescription: '"The first chord of dawn."'
   customType: 
 --- !u!1 &2117258318
 GameObject:

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62ae2a2f41010334697c7baf901696bc, type: 3}
+  m_Name: Great Fields
+  m_EditorClassIdentifier: 
+  name: Great Fields
+  title: Expansive fields and workshops where resources such as Glimmerfern and Emberwhisper
+    are harvested, blending nature with arcane craftsmanship
+  description: '"In the fertile land of the Great Fields, the arcane and the natural
+    coalesce. The air smells of magic, and the fields teem with rare plants that
+    shimmer with otherworldly energy."'

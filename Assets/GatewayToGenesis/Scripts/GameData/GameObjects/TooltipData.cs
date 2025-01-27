@@ -49,6 +49,45 @@ public class TooltipData : ScriptableObject
         return formattedText.Trim();
     }
 
+    public string FormatTechnologyResourceRequirements(List<string> resourceNames,List<float> resourceAmounts,List<GameResourceSlot> availableResources,Dictionary<string, float> resourceProgress = null, bool isUnlocked = false)
+    {
+        string formattedText = "Requires:\n";
+
+        for (int i = 0; i < resourceNames.Count; i++)
+        {
+            string resourceName = resourceNames[i];
+            float requiredAmount = resourceAmounts[i];
+
+            // Calculate the remaining amount based on progress (if provided)
+            float remainingAmount = requiredAmount;
+            if (resourceProgress != null && resourceProgress.ContainsKey(resourceName))
+            {
+                remainingAmount = requiredAmount - resourceProgress[resourceName];
+            }
+
+            // If the technology is unlocked, force the color to green
+            string color = isUnlocked ? "green" : "red";
+
+            if (!isUnlocked)
+            {
+                // Check if the resource exists in the available slots
+                GameResourceSlot resourceSlot = availableResources.Find(slot => slot.gameUnit.name == resourceName);
+
+                if (resourceSlot != null)
+                {
+                    // Check if the player has enough resources for the remaining amount
+                    bool hasEnough = resourceSlot.amount >= remainingAmount;
+                    color = hasEnough ? "green" : "red";
+                }
+            }
+
+            // Display the remaining amount
+            formattedText += $"<color={color}> {remainingAmount} <sprite=2> {resourceName}</color>\n";
+        }
+
+        return formattedText.Trim();
+    }
+
     public string FormatStorageBreakdown(Dictionary<string, Dictionary<string, float>> storageBreakdown, string resourceName)
     {
         if (!storageBreakdown.ContainsKey(resourceName))

@@ -18,12 +18,8 @@ public class TabBuilderLogic : MonoBehaviour
 
     public bool hasInitializationUnit;
 
-    private GlobalProductionManager globalProductionManager;
-
     private void Start()
     {
-        globalProductionManager = FindObjectOfType<GlobalProductionManager>();
-
         if (hasInitializationUnit)
         {
             AddNewUnit(initializationUnit);
@@ -44,7 +40,36 @@ public class TabBuilderLogic : MonoBehaviour
             section = newSection;
 
             Transform name = section.transform.Find("Banner/Name");
+
             name.GetComponent<TextMeshProUGUI>().text = unit.section;
+
+            //FORMAT TOOLTIP TRIGGER
+
+            SectionData sectionData = SectionData.GetSectionData(unit.section);
+
+            if (sectionData != null)
+            {
+                Transform banner = section.transform.Find("Banner");
+
+                TooltipTrigger tooltipTrigger = banner.GetComponent<TooltipTrigger>();
+
+                if (tooltipTrigger != null)
+                {
+                    tooltipTrigger.useCustomTooltip = true;
+
+                    tooltipTrigger.customTitle = sectionData.title;
+
+                    tooltipTrigger.customDescription = sectionData.description;
+
+                    tooltipTrigger.customType = sectionData.name;
+                }
+            }
+
+            else
+            {
+                Debug.LogWarning($"No SectionData found for section: {unit.section}");
+            }
+
         }
         else
         {
@@ -116,15 +141,15 @@ public class TabBuilderLogic : MonoBehaviour
     {
         if (slotComponent is GameResourceSlot resourceSlot)
         {
-            globalProductionManager.AddResourceSlot(resourceSlot);
+            GlobalProductionManager.Instance.AddResourceSlot(resourceSlot);
         }
         else if (slotComponent is GameProductionSlot productionSlot)
         {
-            globalProductionManager.AddProductionSlot(productionSlot);
+            GlobalProductionManager.Instance.AddProductionSlot(productionSlot);
         }
         else if (slotComponent is GameTechnologySlot technologySlot)
         {
-            globalProductionManager.AddTechnologySlot(technologySlot);
+            GlobalProductionManager.Instance.AddTechnologySlot(technologySlot);
         }
         else
         {
@@ -132,4 +157,3 @@ public class TabBuilderLogic : MonoBehaviour
         }
     }
 }
-

@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Echo of Crescendo
   m_EditorClassIdentifier: 
   unitName: Echo of Crescendo
-  description: The Summit of Affinity.
+  description: The Summit of Affinity
   icon: {fileID: 0}

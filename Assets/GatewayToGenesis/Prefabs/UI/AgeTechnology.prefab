@@ -338,6 +338,8 @@ GameObject:
   - component: {fileID: 1462521106568178086}
   - component: {fileID: 6919132914290441963}
   - component: {fileID: 8866691866369591441}
+  - component: {fileID: 5386628706231700006}
+  - component: {fileID: 8960264169806297739}
   m_Layer: 5
   m_Name: Banner
   m_TagString: Untagged
@@ -404,3 +406,33 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5386628706231700006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5896269168963237032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8960264169806297739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5896269168963237032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
+  customTitle: 
+  customDescription: 
+  customType: 

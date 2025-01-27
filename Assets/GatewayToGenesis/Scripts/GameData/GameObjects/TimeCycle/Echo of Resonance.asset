@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Echo of Resonance
   m_EditorClassIdentifier: 
   unitName: Echo of Resonance
-  description: The Opening Act.
+  description: The Opening Act
   icon: {fileID: 0}

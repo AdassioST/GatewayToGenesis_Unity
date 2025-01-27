@@ -5,7 +5,6 @@ using UnityEngine.EventSystems;
 
 public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    [Header("Fallback Tooltip Settings")]
     public bool useCustomTooltip, isBreakdownDisplay, isProductionModifiers;
 
     public string customTitle, customDescription, customType;
@@ -175,7 +174,15 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             }
 
             List<GameResourceSlot> availableResources = GameUnitsLogic.Instance.GetAvailableResources();
-            dynamicData.resourceRequirements = dynamicData.FormatResourceRequirements(technologySlot.technologyData.resourceRequirements, technologySlot.technologyData.resourceAmount, availableResources);
+
+            Dictionary<string, float> resourceProgress = null;
+
+            if (GameUnitsLogic.Instance.technologyProgress.ContainsKey(technologySlot))
+            {
+                resourceProgress = GameUnitsLogic.Instance.technologyProgress[technologySlot];
+            }
+
+            dynamicData.resourceRequirements = dynamicData.FormatTechnologyResourceRequirements(technologySlot.technologyData.resourceRequirements, technologySlot.technologyData.resourceAmount, availableResources,resourceProgress, technologySlot.isUnlocked);
 
             if (technologySlot.technologyData.techRequirements.Count > 0)
             {

@@ -33,9 +33,9 @@ RectTransform:
   m_Father: {fileID: 683076410233380641}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -220, y: -162.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -220, y: 0}
   m_SizeDelta: {x: 1000, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2466350906008166984
@@ -87,6 +87,8 @@ GameObject:
   - component: {fileID: 1948578948115991387}
   - component: {fileID: 5916997502702280650}
   - component: {fileID: 7977826334950469117}
+  - component: {fileID: 2925130006374861406}
+  - component: {fileID: 7056241681616113185}
   m_Layer: 5
   m_Name: Banner
   m_TagString: Untagged
@@ -153,6 +155,36 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2925130006374861406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7953269954884775143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7056241681616113185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7953269954884775143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c59a9e6cf37c064418ed41694a9d6906, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useCustomTooltip: 1
+  isBreakdownDisplay: 0
+  isProductionModifiers: 0
+  customTitle: An industrial park where the cities heavy industries are located
+  customDescription: '"Oh ye bayern"'
+  customType: 
 --- !u!1 &8835173864385475393
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ public class TimeSystemLogic : MonoBehaviour
 
     [SerializeField] private TMP_Text cycleText, echoText, seventhText;
     [SerializeField] private Image phaseImage;
-    [SerializeField] private GameObject expandible;
+    [SerializeField] private GameObject expandible, HUD;
 
     [SerializeField] private TimeUnit[] echoes, phases;
 
@@ -32,7 +32,7 @@ public class TimeSystemLogic : MonoBehaviour
 
     private Color originalColor;
 
-    public bool canTrackTime;
+    public bool canTrackTime, isTimePaused = true;
 
     private void Awake()
     {
@@ -53,11 +53,15 @@ public class TimeSystemLogic : MonoBehaviour
         originalColor = seventhText.color;
 
         UpdateUI();
+
     }
 
     private void Update()
     {
-        timeSinceLastSeventh += Time.deltaTime;
+        if (!isTimePaused)
+        {
+            timeSinceLastSeventh += Time.deltaTime;
+        }
 
         if (timeSinceLastSeventh >= secondsPerSeventh && canTrackTime)
         {
@@ -120,9 +124,9 @@ public class TimeSystemLogic : MonoBehaviour
         OnCycleChange?.Invoke(CurrentCycle);
     }
 
-    private void UpdateUI()
+    public void UpdateUI()
     {
-        if (!expandible.activeSelf) return;
+        if (!expandible.activeSelf || !HUD.activeSelf) return;
 
         // Update Cycle Text
         cycleText.text = $"Cycle {CurrentCycle} ◦ {currentCycleName}";
@@ -151,6 +155,15 @@ public class TimeSystemLogic : MonoBehaviour
 
         seventhText.GetComponentInParent<TooltipTrigger>().customTitle = CurrentSeventh == 21 ? "Ritual Seventh" : "Seventh";
         seventhText.GetComponentInParent<TooltipTrigger>().customDescription = CurrentSeventh == 21 ? "The world has perfectly attuned!" : "The minimum unit of time tracking.";
+    }
+
+    public void PauseTime(bool pause)
+    {
+        if (!canTrackTime) return;
+
+        isTimePaused = pause;
+
+        UpdateUI();
     }
 }
 

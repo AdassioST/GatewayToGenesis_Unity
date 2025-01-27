@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62ae2a2f41010334697c7baf901696bc, type: 3}
+  m_Name: Golden Hymn Citadel
+  m_EditorClassIdentifier: 
+  name: Golden Hymn Citadel
+  title: "A fortified sanctuary of magic and song, echoing with the grandeur of Arcanoria\u2019s
+    choral might"
+  description: '"Here, where stone walls hold echoes of celestial choirs, the voice
+    is both shield and sword. Tread carefully, for in song lies unmatched power."'

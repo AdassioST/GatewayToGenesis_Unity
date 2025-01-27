@@ -12,14 +12,14 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] public TabBuilderLogic productionTab;
     [SerializeField] public TabBuilderLogic researchTab;
 
-    private Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
+    public Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
 
     public GameTechnologySlot activeTechnologySlot;
 
     public bool switchedTechnologies;
     private Coroutine activeTechnologySlotCoroutine;
 
-    [SerializeField] private GameObject expandibleHUD, buildingMaterialButton;
+    [SerializeField] private GameObject HUD, expandibleHUD, buildingMaterialButton;
 
     public Dictionary<string, Dictionary<string, float>> storageBreakdown = new Dictionary<string, Dictionary<string, float>>();
 
@@ -392,7 +392,10 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
 
             case "Horology":
+
                 TimeSystemLogic.Instance.canTrackTime = true;
+
+                if(HUD.activeSelf) TimeSystemLogic.Instance.PauseTime(false);
 
                 expandibleHUD.SetActive(true);
                 break;

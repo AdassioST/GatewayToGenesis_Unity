@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Echo of Disonance
   m_EditorClassIdentifier: 
   unitName: Echo of Disonance
-  description: The Catharsis.
+  description: The Catharsis
   icon: {fileID: 0}

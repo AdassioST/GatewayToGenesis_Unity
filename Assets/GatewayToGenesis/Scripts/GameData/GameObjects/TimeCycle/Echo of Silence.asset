@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Echo of Silence
   m_EditorClassIdentifier: 
   unitName: Echo of Silence
-  description: The Hollow Death.
+  description: The Hollow Death
   icon: {fileID: 0}
