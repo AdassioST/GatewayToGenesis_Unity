@@ -90,4 +90,9 @@ public class ClickLogic : MonoBehaviour
         bool canAfford = gameUnitsLogic.CanBuildProductionUnit(productionSlot.gameUnit.name);
         buttonImage.sprite = canAfford ? affordableSprite : unaffordableSprite;
     }
+
+    public void SetActiveResource(string resourceName)
+    {
+        activeResource = resourceName;
+    }
 }

@@ -381,6 +381,23 @@ public class GameUnitsLogic : MonoBehaviour
         return storageTab.slots.Select(slot => slot.GetComponent<GameResourceSlot>()).ToList();
     }
 
+    // Get all available GameUnit resources for selection
+    public List<GameUnit> GetAvailableGameUnits()
+    {
+        List<GameUnit> availableUnits = new List<GameUnit>();
+        
+        foreach (GameObject slot in storageTab.slots)
+        {
+            IGameUnitSlot slotComponent = slot.GetComponent<IGameUnitSlot>();
+            if (slotComponent != null && slotComponent.gameUnit != null)
+            {
+                availableUnits.Add(slotComponent.gameUnit);
+            }
+        }
+        
+        return availableUnits;
+    }
+
     private void HandleSpecialUnlockable(TechUnlockable unlockable)
     {
         switch (unlockable.name)

@@ -11,6 +11,15 @@ public class TabBuilderLogic : MonoBehaviour
     public List<GameObject> sections = new List<GameObject>(), slots = new List<GameObject>();
 
     [SerializeField] private GameObject tabContent, newSectionPrefab, newSlotPrefab;
+    
+    // Tab type identification
+    [Header("Tab Configuration")]
+    [SerializeField] public TabType tabType;
+    
+    // HUD Production Selection references (only for Storage tab)
+    [Header("HUD Production Selection (Storage Only)")]
+    [SerializeField] public GameObject productionSelectionSlotPrefab;
+    [SerializeField] public Transform hudProductionSelectionContent;
 
     private GameObject section;
 
@@ -18,11 +27,25 @@ public class TabBuilderLogic : MonoBehaviour
 
     public bool hasInitializationUnit;
 
+    // Enum to identify tab types
+    public enum TabType
+    {
+        Storage,
+        Production,
+        Technology
+    }
+
     private void Start()
     {
         if (hasInitializationUnit)
         {
             AddNewUnit(initializationUnit);
+        }
+        
+        // Only create HUD production selection slots for existing resources if this is the Storage tab
+        if (tabType == TabType.Storage)
+        {
+            CreateHUDProductionSelectionSlotsForExistingResources();
         }
     }
 
@@ -40,36 +63,22 @@ public class TabBuilderLogic : MonoBehaviour
             section = newSection;
 
             Transform name = section.transform.Find("Banner/Name");
-
             name.GetComponent<TextMeshProUGUI>().text = unit.section;
 
-            //FORMAT TOOLTIP TRIGGER
-
+            // Format tooltip trigger
             SectionData sectionData = SectionData.GetSectionData(unit.section);
-
             if (sectionData != null)
             {
                 Transform banner = section.transform.Find("Banner");
-
                 TooltipTrigger tooltipTrigger = banner.GetComponent<TooltipTrigger>();
-
                 if (tooltipTrigger != null)
                 {
                     tooltipTrigger.useCustomTooltip = true;
-
                     tooltipTrigger.customTitle = sectionData.title;
-
                     tooltipTrigger.customDescription = sectionData.description;
-
                     tooltipTrigger.customType = sectionData.name;
                 }
             }
-
-            else
-            {
-                Debug.LogWarning($"No SectionData found for section: {unit.section}");
-            }
-
         }
         else
         {
@@ -84,7 +93,6 @@ public class TabBuilderLogic : MonoBehaviour
             newSlot.name = unit.name;
 
             Transform slotsParent = section.transform.Find("Slots");
-
             if (slotsParent != null)
             {
                 newSlot.transform.SetParent(slotsParent, false);
@@ -95,22 +103,21 @@ public class TabBuilderLogic : MonoBehaviour
             }
 
             IGameUnitSlot slotComponent = newSlot.GetComponent<IGameUnitSlot>();
-
             if (slotComponent != null)
             {
                 // Initialize the slot properly based on its type
                 if (slotComponent is GameProductionSlot productionSlot)
                 {
-                    productionSlot.InitializeSlot(unit); // Initialize with the GameUnit
+                    productionSlot.InitializeSlot(unit);
                 }
                 else
                 {
-                    slotComponent.gameUnit = unit; // For other slot types
+                    slotComponent.gameUnit = unit;
                 }
 
                 AddSlotToGlobalManager(slotComponent);
 
-                // Handle resource initialization dynamically
+                // Handle resource initialization and HUD creation for Storage tab
                 if (slotComponent is GameResourceSlot resourceSlot)
                 {
                     string resourceName = resourceSlot.gameUnit.name;
@@ -118,22 +125,84 @@ public class TabBuilderLogic : MonoBehaviour
                     if (!GameUnitsLogic.Instance.storageBreakdown.ContainsKey(resourceName))
                     {
                         GameUnitsLogic.Instance.storageBreakdown[resourceName] = new Dictionary<string, float>{{ "Base", resourceSlot.maxAmount }};
-
+                    }
+                    
+                    // Create HUD Production Selection Slot for new resources (only in Storage tab)
+                    if (tabType == TabType.Storage)
+                    {
+                        CreateHUDProductionSelectionSlot(unit);
+                        RefreshVitalSelectionWindowIfOpen(unit);
                     }
                 }
-
-            }
-            else
-            {
-                Debug.LogError("The instantiated slot does not implement IGameUnitSlot");
             }
 
             units.Add(unit);
             slots.Add(newSlot);
         }
-        else
+    }
+
+    // Create ProductionSelectionSlot in HUD for new resources (Storage tab only)
+    private void CreateHUDProductionSelectionSlot(GameUnit gameUnit)
+    {
+        if (tabType != TabType.Storage || productionSelectionSlotPrefab == null || hudProductionSelectionContent == null)
         {
-            Debug.LogWarning($"Unit {unit.name} is already in section {section.name}");
+            return;
+        }
+
+        string targetButton = GetTargetButtonForResource(gameUnit);
+        if (targetButton == null) return;
+
+        // Check if slot already exists to avoid duplicates
+        Transform existingSlot = hudProductionSelectionContent.Find(gameUnit.name);
+        if (existingSlot == null)
+        {
+            CreateNewHUDSelectionSlot(gameUnit, targetButton);
+        }
+    }
+
+    private string GetTargetButtonForResource(GameUnit gameUnit)
+    {
+        if (gameUnit.type == "Building Material")
+        {
+            return "BuildingMaterial";
+        }
+        else if (gameUnit.type == "Vital Resource" || gameUnit.name == "Food")
+        {
+            return "VitalResource";
+        }
+        return null;
+    }
+
+    private void CreateNewHUDSelectionSlot(GameUnit gameUnit, string targetButton)
+    {
+        GameObject newSelectionSlot = Instantiate(productionSelectionSlotPrefab, hudProductionSelectionContent);
+        newSelectionSlot.name = gameUnit.name;
+        
+        ProductionSelectionSlot selectionSlot = newSelectionSlot.GetComponent<ProductionSelectionSlot>();
+        if (selectionSlot != null)
+        {
+            selectionSlot.InitializeSelectionSlot(gameUnit, targetButton);
+        }
+    }
+
+    // Create HUD production selection slots for all existing resources (Storage tab only)
+    private void CreateHUDProductionSelectionSlotsForExistingResources()
+    {
+        if (tabType != TabType.Storage || productionSelectionSlotPrefab == null || hudProductionSelectionContent == null)
+        {
+            return;
+        }
+
+        // Clear existing selection slots
+        foreach (Transform child in hudProductionSelectionContent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // Create selection slots for all existing resources
+        foreach (GameUnit unit in units)
+        {
+            CreateHUDProductionSelectionSlot(unit);
         }
     }
 
@@ -151,9 +220,21 @@ public class TabBuilderLogic : MonoBehaviour
         {
             GlobalProductionManager.Instance.AddTechnologySlot(technologySlot);
         }
-        else
+    }
+
+    // Public method to get HUD production selection content
+    public Transform GetHUDProductionSelectionContent()
+    {
+        return hudProductionSelectionContent;
+    }
+
+    private void RefreshVitalSelectionWindowIfOpen(GameUnit newResource)
+    {
+        VitalSelectionWindow vitalWindow = FindObjectOfType<VitalSelectionWindow>();
+        if (vitalWindow != null && vitalWindow.gameObject.activeSelf)
         {
-            Debug.LogWarning("Slot does not match any known slot types.");
+            // Directly create the new slot in the VitalSelectionWindow
+            vitalWindow.CreateSlotForNewResource(newResource);
         }
     }
 }

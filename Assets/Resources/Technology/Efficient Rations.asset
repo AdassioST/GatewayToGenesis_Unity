@@ -31,3 +31,4 @@ MonoBehaviour:
   techUnlockables:
   - {fileID: 11400000, guid: f75c3077f269847488cdf58772b4b975, type: 2}
   - {fileID: 11400000, guid: 4763752f8db730146b38adb5213f6e4b, type: 2}
+  - {fileID: 11400000, guid: 037f75edc403a574b8654961d1ba0026, type: 2}

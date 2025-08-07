@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: Duskstone
   type: Building Material
-  section: Old World Materials
+  section: Old World Relics
   description: '"A dark, rugged mineral found in ancient ruins and faded structures."'
   icon: {fileID: 21300000, guid: d5a484926d62aad4ca6ea252dad054fb, type: 3}

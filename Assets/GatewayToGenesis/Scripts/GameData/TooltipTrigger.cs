@@ -193,11 +193,12 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             return dynamicData;
         }
 
-        TechUnlockableSlot techUnlockableSlot = GetComponent<TechUnlockableSlot>();
-        if (techUnlockableSlot != null)
+        TechUnlockableSlot unlockable = GetComponent<TechUnlockableSlot>();
+
+        if (unlockable != null)
         {
             // Extract data from the associated TechUnlockable
-            TechUnlockable unlockableData = techUnlockableSlot.techUnlockableData;
+            TechUnlockable unlockableData = unlockable.techUnlockableData;
 
             if (unlockableData != null)
             {
@@ -249,8 +250,19 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
                         break;
 
                     case TechUnlockableType.Modifier:
-                        dynamicData.productionEffects = $"Boosts the efficiency of all workshops producing {unlockableData.gameUnit.name} by {unlockableData.resourceModifier}%";
-                        dynamicData.tooltipDescription = "Upping the uppies 100% upper";
+
+                        if (unlockableData.name.StartsWith("Food D"))
+                        {
+                            dynamicData.productionEffects = $"Reduces the Food Demand of Population by {unlockableData.resourceModifier}%";
+
+                            dynamicData.tooltipDescription = "Not starving anymore...";
+                        }
+                        else
+                        {
+                            dynamicData.productionEffects = $"Boosts the efficiency of all workshops producing {unlockableData.gameUnit.name} by {unlockableData.resourceModifier}%";
+
+                            dynamicData.tooltipDescription = "Upping the uppies 100% upper";
+                        }
 
                         //ADD COLORS TO TYPES "<color=green>Bonus Modifier</color>"
                         dynamicData.type = "Bonus Modifier";

@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: Old World Relics
   m_EditorClassIdentifier: 
   name: Old World Relics
-  title: The remnants of a fallen world, where ancient materials like Duskstone and
-    Elderwood hold the echoes of past glory and forgotten power
-  description: '"From the ruin of the Age of Desolation, these materials carry the
-    weight of history. Duskstone hums with a forgotten magic, while Elderwood whispers
-    the secrets of a lost time."'
+  title: The scattered remnants of a once-great civilization, imbued with the fading
+    power of primeval magical currents
+  description: '"From the ruin of a by-gone era, these materials carry the weight
+    of history."'
