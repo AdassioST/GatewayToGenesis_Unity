@@ -13,7 +13,8 @@ public class PopGrowthLogic : MonoBehaviour
 
     public float foodDemandBuffer = -2.5f, demandRateConstant = 0.03f, sustainabilityTier = 1f, demandModifier = 1.0f;
 
-    public int housing, population, vagrants, freeHousing, deaths;
+    [Header("Population Management")]
+    public int housing, population, vagrants, freeHousing, deaths, vagrantDeaths, trueDeaths;
 
     [SerializeField] private GameUnit research, food;
 
@@ -60,6 +61,10 @@ public class PopGrowthLogic : MonoBehaviour
 
     private void Update()
     {
+        // Pause population changes during active events
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
         ManagePopulationGrowth();
         UpdateFoodDemand();
 
@@ -214,8 +219,170 @@ public class PopGrowthLogic : MonoBehaviour
             Debug.LogWarning("Food slot not found.");
         }
     }
+    
+    /// <summary>
+    /// Modify population amount from events - only handles REMOVAL (registers deaths)
+    /// </summary>
+    public void ModifyPopulation(int change)
+    {
+        if (change >= 0) 
+        {
+            Debug.LogWarning($"ModifyPopulation called with non-negative value {change}. Population can only be removed. Use ModifyVagrants for adding people.");
+            return;
+        }
+        
+        int oldPopulation = population;
+        int peopleToRemove = Mathf.Min(-change, population);
+        population = Mathf.Max(0, population - peopleToRemove);
+        
+        // Always register deaths when population is removed
+        deaths += peopleToRemove;
+        trueDeaths += peopleToRemove;
+        
+        // Remove characters
+        for (int i = 0; i < peopleToRemove; i++)
+        {
+            if (globalCharacterManager.activeCharacters.Count > 0)
+            {
+                int randomIndex = Random.Range(0, globalCharacterManager.activeCharacters.Count);
+                GameCharacterLogic characterToRemove = globalCharacterManager.activeCharacters[randomIndex];
+                globalCharacterManager.RemoveCharacter(characterToRemove);
+            }
+        }
+        
+        UpdateResearchGenerationRate();
+        Debug.Log($"Event removed {peopleToRemove} population (registered as deaths). New population: {population}, total deaths: {deaths}");
+        RefreshHUD();
+    }
+    
+    /// <summary>
+    /// Modify housing amount from events - handles population conversion to vagrants if needed
+    /// </summary>
+    public void ModifyHousing(int change)
+    {
+        if (change == 0) return;
+        
+        int oldHousing = housing;
+        housing = Mathf.Max(0, housing + change);
+        int actualChange = housing - oldHousing;
+        
+        if (actualChange < 0)
+        {
+            // Housing decreased - convert excess population to vagrants
+            int housingDeficit = -actualChange;
+            int occupiedHousing = Mathf.Min(population, oldHousing);
+            int excessPopulation = Mathf.Max(0, occupiedHousing - housing);
+            
+            if (excessPopulation > 0)
+            {
+                int populationToConvert = Mathf.Min(excessPopulation, housingDeficit);
+                population -= populationToConvert;
+                vagrants += populationToConvert;
+                
+                for (int i = 0; i < populationToConvert; i++)
+                {
+                    if (globalCharacterManager.activeCharacters.Count > 0)
+                    {
+                        int randomIndex = Random.Range(0, globalCharacterManager.activeCharacters.Count);
+                        GameCharacterLogic characterToRemove = globalCharacterManager.activeCharacters[randomIndex];
+                        globalCharacterManager.RemoveCharacter(characterToRemove);
+                    }
+                }
+                
+                Debug.Log($"Event housing reduction converted {populationToConvert} population to vagrants. New housing: {housing}, population: {population}, vagrants: {vagrants}");
+            }
+        }
+        
+        RefreshHUD();
+    }
+    
+    /// <summary>
+    /// Modify vagrants amount from events - tracks vagrant deaths when removed
+    /// </summary>
+    public void ModifyVagrants(int change)
+    {
+        if (change == 0) return;
+        
+        if (change < 0)
+        {
+            // Vagrants are being removed - track as vagrant deaths
+            int vagrantsToRemove = Mathf.Min(-change, vagrants);
+            vagrants -= vagrantsToRemove;
+            vagrantDeaths += vagrantsToRemove;
+            Debug.Log($"Event removed {vagrantsToRemove} vagrants (registered as vagrant deaths). New vagrants: {vagrants}, total vagrant deaths: {vagrantDeaths}");
+        }
+        else
+        {
+            // Adding vagrants
+            vagrants += change;
+            Debug.Log($"Event added {change} vagrants. New total: {vagrants}");
+        }
+        
+        RefreshHUD();
+    }
+    
+    /// <summary>
+    /// Process deaths from events - handles character removal and death tracking
+    /// </summary>
+    public void ProcessEventDeaths(int deathCount)
+    {
+        if (deathCount <= 0) return;
+        
+        int actualDeaths = Mathf.Min(deathCount, population);
+        population -= actualDeaths;
+        deaths += actualDeaths;
+        trueDeaths += actualDeaths;
+        
+        // Remove the dead villagers
+        for (int i = 0; i < actualDeaths; i++)
+        {
+            if (globalCharacterManager.activeCharacters.Count > 0)
+            {
+                int randomIndex = Random.Range(0, globalCharacterManager.activeCharacters.Count);
+                GameCharacterLogic characterToRemove = globalCharacterManager.activeCharacters[randomIndex];
+                globalCharacterManager.RemoveCharacter(characterToRemove);
+            }
+        }
+        
+        UpdateResearchGenerationRate();
+        Debug.Log($"Event caused {actualDeaths} deaths. New population: {population}, total deaths: {deaths}");
+        RefreshHUD();
+    }
+
+    /// <summary>
+    /// Revise death records for evil empire history manipulation (deaths can be reduced, trueDeaths cannot)
+    /// </summary>
+    public void ReviseDeathRecords(int change)
+    {
+        if (change == 0) return;
+        
+        int oldDeaths = deaths;
+        deaths = Mathf.Max(0, deaths + change);
+        int actualChange = deaths - oldDeaths;
+        
+        // If we're adding deaths to public records, also add them to trueDeaths
+        // This ensures trueDeaths always represents the actual accumulated deaths
+        if (actualChange > 0)
+        {
+            trueDeaths += actualChange;
+            Debug.Log($"Death records revised: {actualChange} additional deaths added to public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+        }
+        else if (actualChange < 0)
+        {
+            // When wiping deaths from public records, trueDeaths remains unchanged
+            // This represents evil empire revisionism hiding deaths from history
+            Debug.Log($"Death records revised: {Mathf.Abs(actualChange)} deaths wiped from public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+        }
+        
+        RefreshHUD();
+    }
+
     private void ProcessPopulationChanges()
     {
+        // Pause population changes during active events
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
         float foodNetRate = GlobalProductionManager.Instance.GetNetProductionRate("Food");
 
         // Check if food demand is negative (indicating food scarcity)
@@ -226,6 +393,7 @@ public class PopGrowthLogic : MonoBehaviour
         {
             population -= 1;
             deaths += 1;
+            trueDeaths += 1;
 
             // Remove a random character (villager) when a death occurs
             if (globalCharacterManager.activeCharacters.Count > 0)

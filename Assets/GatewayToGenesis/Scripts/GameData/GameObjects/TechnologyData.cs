@@ -16,14 +16,14 @@ public class TechnologyData : ScriptableObject
     public List<string> resourceRequirements = new List<string>();
     public List<float> resourceAmount = new List<float>();
 
-    public List<EurekaCondition> eurekaConditions = new List<EurekaCondition>();
+    public List<EnlightenedCondition> enlightenedConditions = new List<EnlightenedCondition>();
 
     public List<TechUnlockable> techUnlockables = new List<TechUnlockable>(); // Unlockable items
 
 }
 
-// Eureka Condition Enum
-public enum EurekaType
+// Enlightened Condition Enum
+public enum EnlightenedType
 {
     GatherResourceFromClick,
     ConstructUnit,
@@ -33,11 +33,11 @@ public enum EurekaType
     ReachProductionRate
 }
 
-// Eureka Condition Class
+// Enlightened Condition Class
 [System.Serializable]
-public class EurekaCondition
+public class EnlightenedCondition
 {
-    public EurekaType type;
+    public EnlightenedType type;
     public string trigger; // Trigger resource, unit, or event name.
     public float requiredAmount; // Amount required for conditions like gathering or accumulating.
     public string description;

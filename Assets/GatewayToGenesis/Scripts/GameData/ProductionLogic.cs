@@ -14,13 +14,16 @@ public class ProductionLogic : MonoBehaviour
         {
             InvokeRepeating("PassiveProduction", 0.1f, 1f);
         }
-
     }
 
     void Update() { }
 
     private void PassiveProduction()
     {
+        // Pause production during active events
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
         if (unitSlot is GameResourceSlot resourceSlot)
         {
             ChangeUnitAmount(resourceSlot.productionRate);
@@ -33,15 +36,15 @@ public class ProductionLogic : MonoBehaviour
 
         if (unitSlot is GameResourceSlot resourceSlot)
         {
-            //IF RESOURCE ADD MAX STORAGE
             resourceSlot.amount = Mathf.Clamp(resourceSlot.amount + amount, 0f, resourceSlot.maxAmount);
             resourceSlot.RefreshProductionAmount();
         }
 
         if (unitSlot is GameProductionSlot productionSlot)
         {
-            unitSlot.maxAmount += amount;
-
+            float newAmount = productionSlot.maxAmount + amount;
+            productionSlot.maxAmount = Mathf.Max(0f, newAmount);
+            
             productionSlot.RefreshProductionAmount();
         }
     }

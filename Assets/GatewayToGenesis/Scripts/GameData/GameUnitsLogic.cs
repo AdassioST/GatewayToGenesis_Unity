@@ -54,7 +54,21 @@ public class GameUnitsLogic : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"Resource {name} is not in the resource storage slots");
+            // Try to find the GameUnit in the existing system (same approach as TechUnlockables)
+            GameUnit missingResource = FindGameUnitByName(name);
+            
+            if (missingResource != null)
+            {
+                // Add the new resource to the storage tab
+                storageTab.AddNewUnit(missingResource);
+                
+                // Now try to change the resource amount again
+                ChangeResourceFromName(name, amount, changeFromClickPower);
+            }
+            else
+            {
+                Debug.LogWarning($"Resource {name} is not in the resource storage slots and could not be found in the system. Make sure the GameUnit asset exists in Assets/GatewayToGenesis/Scripts/GameData/GameObjects/Resources/");
+            }
         }
     }
 
@@ -67,6 +81,8 @@ public class GameUnitsLogic : MonoBehaviour
             GameObject slot = productionTab.slots.Find((x) => x.name == name);
 
             slot.GetComponent<ProductionLogic>().ChangeUnitAmount(amount);
+
+            TooltipSystemLogic.Instance.RefreshAllTooltips();
         }
         else
         {
@@ -144,7 +160,6 @@ public class GameUnitsLogic : MonoBehaviour
 
                 GameResourceSlot resourceSlot = GetResourceSlotFromName(storageResource);
 
-                // Record base storage amount as the first entry
                 if (!storageBreakdown.ContainsKey(storageResource))
                 {
                     storageBreakdown[storageResource] = new Dictionary<string, float>{{ "Base", resourceSlot.maxAmount }};
@@ -206,10 +221,9 @@ public class GameUnitsLogic : MonoBehaviour
     {
         if (technologySlot == null || technologySlot.isUnlocked || technologySlot.technologyData == null)
         {
-            return; // Invalid or already unlocked slot
+            return;
         }
 
-        // Check if all required technologies are unlocked
         foreach (string requiredTech in technologySlot.technologyData.techRequirements)
         {
             GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
@@ -219,7 +233,6 @@ public class GameUnitsLogic : MonoBehaviour
             }
         }
 
-        // If switching from a different technology, pause the current one
         if (activeTechnologySlot != null && activeTechnologySlot != technologySlot)
         {
             activeTechnologySlot.alreadyClicked = false;
@@ -235,7 +248,6 @@ public class GameUnitsLogic : MonoBehaviour
         activeTechnologySlot = technologySlot;
         switchedTechnologies = false;
 
-        // Progress tracking
         if (!technologyProgress.ContainsKey(technologySlot))
         {
             technologyProgress[technologySlot] = technologySlot.technologyData.resourceRequirements.ToDictionary(resource => resource, _ => 0f);
@@ -243,7 +255,6 @@ public class GameUnitsLogic : MonoBehaviour
 
         technologySlot.alreadyClicked = true;
 
-        // Anti stacking check
         if (activeTechnologySlotCoroutine != null)
         {
             StopCoroutine(activeTechnologySlotCoroutine); 
@@ -258,7 +269,6 @@ public class GameUnitsLogic : MonoBehaviour
 
         while (!technologySlot.isUnlocked)
         {
-            // Exit if switching or pausing
             if (switchedTechnologies)
             {
                 yield break;
@@ -272,7 +282,6 @@ public class GameUnitsLogic : MonoBehaviour
                 var requiredAmount = technologyData.resourceAmount[i];
                 var processedAmount = resourceProgress[resourceName];
 
-                // Calculate remaining and processable amounts
                 var remainingAmount = requiredAmount - processedAmount;
 
                 if (remainingAmount > 0)
@@ -294,16 +303,15 @@ public class GameUnitsLogic : MonoBehaviour
                 }
             }
 
-            // Update progress and UI
             technologySlot.researchProgress = resourceProgress.Values.Sum() / technologyData.resourceAmount.Sum();
             technologySlot.UpdateProgressUI();
 
             if (allResourcesComplete)
             {
                 technologySlot.UnlockTechnology();
-                technologyProgress.Remove(technologySlot); // Clear progress tracking
-                activeTechnologySlot = null; // Reset active slot
-                activeTechnologySlotCoroutine = null; // Reset coroutine reference
+                technologyProgress.Remove(technologySlot);
+                activeTechnologySlot = null;
+                activeTechnologySlotCoroutine = null;
 
                 yield break;
             }
@@ -311,10 +319,8 @@ public class GameUnitsLogic : MonoBehaviour
             yield return new WaitForSeconds(1.0f);
         }
 
-        // Clean up coroutine reference when finished
         activeTechnologySlotCoroutine = null;
     }
-
 
     public void HandleTechUnlockable(TechUnlockable unlockable, GameTechnologySlot techSlot)
     {
@@ -370,10 +376,21 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
         }
     }
+    
     public GameResourceSlot GetResourceSlotFromName(string name)
     {
         GameObject resourceSlotObj = storageTab.slots.Find(slot => slot.name == name);
         return resourceSlotObj?.GetComponent<GameResourceSlot>();
+    }
+    
+    public int GetResourceAmount(string resourceName)
+    {
+        GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
+        if (resourceSlot != null)
+        {
+            return Mathf.RoundToInt(resourceSlot.amount);
+        }
+        return 0;
     }
 
     public List<GameResourceSlot> GetAvailableResources()
@@ -381,7 +398,6 @@ public class GameUnitsLogic : MonoBehaviour
         return storageTab.slots.Select(slot => slot.GetComponent<GameResourceSlot>()).ToList();
     }
 
-    // Get all available GameUnit resources for selection
     public List<GameUnit> GetAvailableGameUnits()
     {
         List<GameUnit> availableUnits = new List<GameUnit>();
@@ -429,12 +445,12 @@ public class GameUnitsLogic : MonoBehaviour
             break;
         }
     }
+    
     public string FormatValue(float value)
     {
-        string[] units = { "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "O", "N", "D", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "V", "Uv", "Dv", "Tv", "Qav", "Qiv", "Sxv", "Spv", "Ov", "Nv", "Tr", "Ut", "Dt", "G"}; // Units for Thousand, Million, Billion, Trillion, up to Googol
+        string[] units = { "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "O", "N", "D", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd", "V", "Uv", "Dv", "Tv", "Qav", "Qiv", "Sxv", "Spv", "Ov", "Nv", "Tr", "Ut", "Dt", "G"};
         int unitIndex = 0;
 
-        // Reduce the value and increment the unit index until it's in the desired range
         while (value >= 1000f && unitIndex < units.Length - 1)
         {
             value /= 1000f;
@@ -442,5 +458,37 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         return $"{value:0.##}{units[unitIndex]}";
+    }
+    
+    /// <summary>
+    /// Find a GameUnit by name from the existing system
+    /// </summary>
+    private GameUnit FindGameUnitByName(string unitName)
+    {
+        // First check if it's already in any of our tabs
+        foreach (var unit in storageTab.units)
+        {
+            if (unit.name == unitName) return unit;
+        }
+        
+        foreach (var unit in productionTab.units)
+        {
+            if (unit.name == unitName) return unit;
+        }
+        
+        foreach (var unit in researchTab.units)
+        {
+            if (unit.name == unitName) return unit;
+        }
+        
+        // If not found in tabs, try to find it in the Resources folder
+        // This is the same approach used by TechUnlockables
+        GameUnit[] allGameUnits = Resources.LoadAll<GameUnit>("");
+        foreach (var unit in allGameUnits)
+        {
+            if (unit.name == unitName) return unit;
+        }
+        
+        return null;
     }
 }

@@ -22,7 +22,7 @@ public class TimeSystemLogic : MonoBehaviour
     public int CurrentPhase { get; private set; } = 1;
     public int CurrentSeventh { get; private set; } = 1;
 
-    public event Action<int> OnPhaseChange, OnEchoChange, OnCycleChange, OnRitualSeventh;
+    public event Action<int> OnPhaseChange, OnEchoChange, OnCycleChange, OnRitualSeventh, OnSeventhChange;
 
     private int totalPhaseIndex;
 
@@ -84,6 +84,7 @@ public class TimeSystemLogic : MonoBehaviour
             OnRitualSeventh?.Invoke(CurrentSeventh);
         }
 
+        OnSeventhChange?.Invoke(CurrentSeventh);
         UpdateUI();
     }
 

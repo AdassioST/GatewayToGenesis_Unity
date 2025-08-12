@@ -103,9 +103,9 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
             technologyData = technologyDataDictionary[gameUnit.name];
             researchCost = technologyData.resourceAmount[0];
 
-            if (technologyData.eurekaConditions.Count > 0)
+            if (technologyData.enlightenedConditions.Count > 0)
             {
-                enlightenedText.text = technologyData.eurekaConditions[0].description;
+                enlightenedText.text = technologyData.enlightenedConditions[0].description;
             }
         }
         else
@@ -124,17 +124,17 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         if (gameUnit.type == "Event")
         {
-            slotImage.sprite = eventSlotSprite; // Replace with your Event slot sprite
-            progressBar.sprite = eventProgressBarSprite; // Replace with your Event progress bar sprite
+            slotImage.sprite = eventSlotSprite; 
+            progressBar.sprite = eventProgressBarSprite; 
 
-            enlightened.GetComponent<Image>().sprite = eventEnlightenedSprite; // Replace with your Event enlightened sprite
+            enlightened.GetComponent<Image>().sprite = eventEnlightenedSprite; 
         }
         else if (gameUnit.type == "Crisis")
         {
-            slotImage.sprite = crisisSlotSprite; // Replace with your Crisis slot sprite
-            progressBar.sprite = crisisProgressBarSprite; // Replace with your Crisis progress bar sprite
+            slotImage.sprite = crisisSlotSprite; 
+            progressBar.sprite = crisisProgressBarSprite; 
 
-            enlightened.GetComponent<Image>().sprite = crisisEnlightenedSprite; // Replace with your Crisis enlightened sprite
+            enlightened.GetComponent<Image>().sprite = crisisEnlightenedSprite;
         }
 
         // Initialize unlockables if any
@@ -185,6 +185,12 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         RefreshTechnologyUI();
 
+        // Check if this is an event technology and trigger the corresponding event
+        if (technologyData != null && technologyData.isEventTech)
+        {
+            TriggerEventTechnology(gameUnit.name);
+        }
+
         foreach (var unlockable in technologyData.techUnlockables)
         {
             gameUnitsLogic.HandleTechUnlockable(unlockable, this);
@@ -202,6 +208,25 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
     public void UpdateProgressUI()
     {
         progressBar.fillAmount = researchProgress; // Update the ProgressBar fill amount
+    }
+
+    /// <summary>
+    /// Trigger an event when an event technology is unlocked
+    /// </summary>
+    private void TriggerEventTechnology(string technologyName)
+    {
+        if (string.IsNullOrEmpty(technologyName)) return;
+
+        // Use the existing EventSystemLogic to trigger the event
+        if (EventSystemLogic.Instance != null)
+        {
+            EventSystemLogic.Instance.TriggerEventCheck();
+            Debug.Log($"[GameTechnologySlot] Event technology '{technologyName}' unlocked - triggering event check");
+        }
+        else
+        {
+            Debug.LogWarning($"[GameTechnologySlot] EventSystemLogic.Instance is null - cannot trigger event for '{technologyName}'");
+        }
     }
 
 }

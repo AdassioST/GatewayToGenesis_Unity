@@ -45,10 +45,23 @@ public class GlobalProductionManager : MonoBehaviour
     private void Start()
     {
         InitializeProductionRates();
+        
+        // Ensure all slots are registered after initialization
+        StartCoroutine(EnsureSlotsRegisteredAfterStart());
+    }
+    
+    private IEnumerator EnsureSlotsRegisteredAfterStart()
+    {
+        yield return null;
+        EnsureAllSlotsRegistered();
     }
 
     private void Update()
     {
+        // Pause production changes during active events
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
         CalculateGlobalProductionRates();
         DisableProductionUnitsIfResourceDepleted();
         EnableProductionUnitsIfResourcesSufficient();
@@ -202,8 +215,6 @@ public class GlobalProductionManager : MonoBehaviour
         CalculateGlobalProductionRates();
     }
 
-
-
     private void CalculateGlobalProductionRates()
     {
         foreach (var resourceSlot in resourceSlots)
@@ -215,7 +226,6 @@ public class GlobalProductionManager : MonoBehaviour
         }
 
         // Apply workshop rates
-
         foreach (var productionSlot in productionSlots)
         {
             var productionUnitData = productionSlot.productionUnitData;
@@ -238,7 +248,6 @@ public class GlobalProductionManager : MonoBehaviour
         }
 
         // Apply persistent modifiers
-
         foreach (var resourceName in persistentPositiveModifiers.Keys)
         {
             positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
@@ -249,9 +258,7 @@ public class GlobalProductionManager : MonoBehaviour
             negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
         }
 
-
         // Apply percentage modifiers
-
         foreach (var resourceSlot in resourceSlots)
         {
             string resourceName = resourceSlot.gameUnit.name;
@@ -322,5 +329,42 @@ public class GlobalProductionManager : MonoBehaviour
     public float GetNetProductionRate(string resourceName)
     {
         return netProductionRates.TryGetValue(resourceName, out var rate) ? rate : 0f;
+    }
+    
+    public void EnsureAllSlotsRegistered()
+    {
+        if (GameUnitsLogic.Instance == null) return;
+        
+        // Ensure production slots are registered
+        if (GameUnitsLogic.Instance.productionTab != null)
+        {
+            var allProductionSlots = GameUnitsLogic.Instance.productionTab.slots
+                .Select(slot => slot.GetComponent<GameProductionSlot>())
+                .Where(slot => slot != null);
+            
+            foreach (var productionSlot in allProductionSlots)
+            {
+                if (!productionSlots.Contains(productionSlot))
+                {
+                    AddProductionSlot(productionSlot);
+                }
+            }
+        }
+        
+        // Ensure resource slots are registered
+        if (GameUnitsLogic.Instance.storageTab != null)
+        {
+            var allResourceSlots = GameUnitsLogic.Instance.storageTab.slots
+                .Select(slot => slot.GetComponent<GameResourceSlot>())
+                .Where(slot => slot != null);
+            
+            foreach (var resourceSlot in allResourceSlots)
+            {
+                if (!resourceSlots.Contains(resourceSlot))
+                {
+                    AddResourceSlot(resourceSlot);
+                }
+            }
+        }
     }
 }
