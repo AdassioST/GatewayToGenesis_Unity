@@ -24,6 +24,11 @@ public class GlobalProductionManager : MonoBehaviour
 
     public Dictionary<string, List<string>> modifierSourceDict = new Dictionary<string, List<string>>();
 
+    // Per-resource percentage modifiers tracked by source (event/tech/etc.).
+    // Bonuses and maluses are tracked separately so a single source can contribute both.
+    // Values are positive magnitudes. Only ONE entry per (resource, source) is stored per polarity.
+    private Dictionary<string, Dictionary<string, float>> percentageBonusBySource = new Dictionary<string, Dictionary<string, float>>();
+    private Dictionary<string, Dictionary<string, float>> percentageMalusBySource = new Dictionary<string, Dictionary<string, float>>();
 
     public float techTier = 1f, costBalance = 0.05f;
 
@@ -82,6 +87,8 @@ public class GlobalProductionManager : MonoBehaviour
                 persistentNegativeModifiers[resourceName] = 0f;
                 percentagePositiveModifiers[resourceName] = 0f;
                 percentageNegativeModifiers[resourceName] = 0f;
+                if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
+                if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
             }
         }
     }
@@ -103,6 +110,8 @@ public class GlobalProductionManager : MonoBehaviour
                 persistentNegativeModifiers[resourceName] = 0f;
                 percentagePositiveModifiers[resourceName] = 0f;
                 percentageNegativeModifiers[resourceName] = 0f;
+                if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
+                if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
             }
         }
     }
@@ -188,31 +197,57 @@ public class GlobalProductionManager : MonoBehaviour
 
     public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
     {
-        var targetModifiers = isPositive ? percentagePositiveModifiers : percentageNegativeModifiers;
+        if (string.IsNullOrEmpty(resourceName)) return;
+        if (string.IsNullOrEmpty(modifierSource)) modifierSource = "Unknown";
 
-        if (!targetModifiers.ContainsKey(resourceName))
+        var dict = isPositive ? percentageBonusBySource : percentageMalusBySource;
+        if (!dict.ContainsKey(resourceName)) dict[resourceName] = new Dictionary<string, float>();
+        var perSource = dict[resourceName];
+        float magnitude = Mathf.Abs(modifierAmount);
+        if (isAdd)
         {
-            targetModifiers[resourceName] = 0f;
+            if (!perSource.ContainsKey(modifierSource))
+            {
+                perSource[modifierSource] = magnitude;
+            }
+            // else: do not stack for the same source
+        }
+        else
+        {
+            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
         }
 
-        targetModifiers[resourceName] += isAdd ? modifierAmount : -modifierAmount;
-
-        // Store the source for later use
-        if (!string.IsNullOrEmpty(modifierSource))
+        // Track sources for optional UI/debug
+        if (!modifierSourceDict.ContainsKey(resourceName))
         {
-            if (!modifierSourceDict.ContainsKey(resourceName))
-            {
-                modifierSourceDict[resourceName] = new List<string>();
-            }
-
-            // Ensure the source is added only once
+            modifierSourceDict[resourceName] = new List<string>();
+        }
+        if (isAdd)
+        {
             if (!modifierSourceDict[resourceName].Contains(modifierSource))
             {
                 modifierSourceDict[resourceName].Add(modifierSource);
             }
         }
+        else
+        {
+            modifierSourceDict[resourceName].Remove(modifierSource);
+        }
 
         CalculateGlobalProductionRates();
+    }
+
+    // Apply a percentage modifier (bonus/malus) to all resources belonging to a section.
+    public void AdjustPercentageModifierForSection(string sectionName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(sectionName)) return;
+        foreach (var slot in resourceSlots)
+        {
+            if (slot != null && slot.gameUnit != null && string.Equals(slot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                AdjustPercentageModifier(slot.gameUnit.name, modifierAmount, isPositive, isAdd, modifierSource);
+            }
+        }
     }
 
     private void CalculateGlobalProductionRates()
@@ -266,14 +301,25 @@ public class GlobalProductionManager : MonoBehaviour
             float basePositiveRate = positiveModifiers[resourceName];
             float baseNegativeRate = negativeModifiers[resourceName];
 
-            if (percentagePositiveModifiers.TryGetValue(resourceName, out var positivePercent) && basePositiveRate > 0)
+            // Aggregate percentage modifiers from all sources for this resource
+            float posPercent = 0f;
+            float negPercent = 0f;
+            if (percentageBonusBySource.TryGetValue(resourceName, out var posDict))
             {
-                basePositiveRate *= (1 + positivePercent / 100f);
+                foreach (var kv in posDict) posPercent += Mathf.Max(0f, kv.Value);
             }
-
-            if (percentageNegativeModifiers.TryGetValue(resourceName, out var negativePercent) && baseNegativeRate > 0)
+            if (percentageMalusBySource.TryGetValue(resourceName, out var negDict))
             {
-                baseNegativeRate *= (1 + negativePercent / 100f);
+                foreach (var kv in negDict) negPercent += Mathf.Max(0f, kv.Value);
+            }
+            // Keep legacy aggregated dictionaries up-to-date for UI/debug displays
+            percentagePositiveModifiers[resourceName] = posPercent;
+            percentageNegativeModifiers[resourceName] = negPercent;
+
+            float totalPercent = posPercent - negPercent;
+            if (Mathf.Abs(totalPercent) > 0.001f && basePositiveRate != 0f)
+            {
+                basePositiveRate *= (1 + totalPercent / 100f);
             }
 
             float netRate = basePositiveRate - baseNegativeRate;

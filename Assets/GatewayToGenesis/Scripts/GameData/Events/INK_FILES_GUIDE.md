@@ -22,7 +22,7 @@ Events progress through a structured screen flow system:
 
 1. **Splash**: Introduction with metadata-driven content and visual elements
 2. **Verse**: Narrative text with progressive reveal mechanics
-3. **Chorus**: Decision points (currently auto-advancing)
+3. **Chorus**: Decision points (token drop), metadata-only (no immediate consequence application)
 4. **Bridge**: Transition screens that advance on player input
 5. **Outro**: Results/conclusion with detailed consequences display
 
@@ -99,6 +99,46 @@ Enhance your stories with these optional fields:
 - **`# priority:`** - Event priority for selection system (default: 0)
 
 ---
+
+## 🎯 Chorus Choice Metadata (`&C`)
+
+Chorus choices embed metadata after `&C` and optional description after `&D`.
+
+Example from `hollow_caravan_chorus_1` in `StarterVolume.ink`:
+
+```ink
+* Idealism. It's Hope. Welcome the Caravan!&D We all deserve a second chance at life, don't we? We have to share the world with the survivors left.&C pillar:waltz;strength:15;requirements:population:population >= 5;requirements:cost:resource:Elderwood 40;success:consequences:resource:Aetherlight +225;resource:Food +60;score:knowledge_gained +1;failure:consequences:population:-75;score:skinwalker_attack +1;success:hollow_caravan_verse_2;failure:hollow_caravan_verse_3;crit_success:hollow_caravan_verse_12;crit_success:consequences:resource:Aetherlight +100;score:windfalls +1;crit_failure:hollow_caravan_verse_13;crit_failure:consequences:population:-150;deaths:TrueDeaths +25;score:hubris +1;rare_event:hollow_caravan_verse_14;rare_event_percent:3;rare_event:consequences:resource:Food +500;resource:Aetherlight +150;score:rare_boon +1
+```
+
+Parsing rules (no redundancy, supports multi-item groups):
+- **requirements:** Accumulates multiple entries across the same `&C` block. Supports multi-word targets and comparisons, e.g. `technology:Efficient Rations == 1`, `population:population >= 5`.
+- **requirements:cost:** Accumulates multiple entries for costs.
+- **success/failure/crit_success/crit_failure/rare_event:**
+  - `:consequences:` sections capture multiple semicolon-separated items.
+  - Paths are captured separately via `success:`, `failure:`, etc.
+
+### Consequences authoring (reworked)
+- **Chorus**: keep only routing (`success:`, `failure:`, `crit_*:`, `rare_event:`) and gating (`requirements:`) and display-only costs (`requirements:cost:`) in `&C`. Do not put consequences here.
+- **Verse/Bridge**: put `&C consequences: ...` inline on the button choice for that screen. Example:
+  - `* Accept the gifts&C consequences: resource:Aetherlight +225; production_percent:Food +10; score:knowledge_gained +1 -> hollow_caravan_outro`
+
+### Consequences application (runtime)
+- On verse/bridge continue, the system parses `&C consequences:` from the single button line and adds them to the cumulative list (no immediate application).
+- Outro applies all cumulative consequences at once.
+
+### Requirements & Costs UI
+- Each requirement spawns a `RequirementSlot` under the choice's `Requirements` container.
+- Slots show the correct icon (population, housing, vagrants, deaths, technology, resources) and met/unmet color.
+- Choices are locked if any requirement is unmet OR any cost is unaffordable: background alpha 0.15, foreground stays visible with a `Locked` overlay and layer switched to `UIBlock`.
+- Cost requirements: author with `requirements:cost:` in the chorus metadata. They display as icons, GATE availability by affordability, and are automatically converted into cumulative consequences and consumed at Outro.
+  - Supported costs: `resource:{Name} {amount}`, `population:population {amount}`, `housing:housing {amount}`.
+  - Example: `requirements:cost:resource:Elderwood 5` gates the choice unless you have ≥5 Elderwood and creates a cumulative `resource:Elderwood -5` consequence at Outro.
+  - Implicit numeric form like `resource:Elderwood 40` is parsed as `resource:Elderwood >= 40`.
+
+### Generic icons
+- `TechnologyCheck` uses a generic technology icon (assign in `RequirementSlot` prefab).
+- `ScoreCheck` uses a generic score icon (assign in `RequirementSlot` prefab).
+- `Food` has a dedicated `foodIcon` slot in `RequirementSlot` (assign in prefab). All other resources use their `GameUnit` icon.
 
 ## 🏗️ **Population Integration System**
 
@@ -353,6 +393,106 @@ The system automatically loads assets from multiple paths:
 2. **Secondary**: `Resources/UI/{assetName}`
 3. **Fallback**: `Resources/Sprites/{assetName}`
 4. **Default**: `Resources/{assetName}`
+
+---
+
+### 🧭 Decision Choices: &D and &C Inline Markers (with Crit/Rare/Time Passes)
+
+Chorus choices embed clean display text and machine-readable metadata inline:
+
+```ink
+=== sample_event_chorus_1 ===
+Context text above choices...
+* Idealism. Aid Them &D Compassion guides our hand. &C pillar:aureus;strength:15; 
+    success:event_success; failure:event_failure; 
+    success:consequences: resource:Aetherlight +10; score:mercy +1;
+    crit_success:event_crit_success; crit_success:consequences: resource:Aetherlight +40;
+    crit_failure:event_crit_failure; crit_failure:consequences: population:-20;
+    rare_event:event_rare_boon; rare_event_percent:3; rare_event:consequences: resource:Food +120
+* Realism. Refuse &D We cannot risk it now. &C pillar:regalia;strength:12; failure:event_failure
+* Pragmatism. Turn Away &D Time passes without incident.&C consequences: score:caution +1; 
+    rare_event:event_quiet_boon; rare_event_percent:3; rare_event:consequences: resource:Food +30
+```
+
+- **&D description**: Text between `&D` and `&C` appears in the choice UI.
+- **&C metadata**: `key:value` pairs separated by `;` define the outcome logic. Supported keys:
+  - Challenge: `pillar:{aureus|regalia|waltz|chorus}`, `strength:{int}` or shorthand `challenge:{pillar}:{strength}`
+  - Requirements: `requirements:{type}:{target [op value]}; ...` (gating only)
+  - Requirement costs (consumed at Outro): `requirements:cost:{type}:{target [op value]}; ...` (only resource/housing/population are consumed)
+  - Primary branches: `success:{knot}` / `failure:{knot}`
+  - Conditional consequences: `success:consequences: ...; ...` and `failure:consequences: ...; ...`
+  - Legacy consequences (always apply): `consequences: ...; ...`
+  - Criticals (optional): `crit_success:{knot}` / `crit_failure:{knot}` with `crit_success:consequences:` / `crit_failure:consequences:`
+  - Rare event (optional): `rare_event:{knot}`, `rare_event_percent:{1..100}`, `rare_event:consequences:`
+
+New: production percentage modifiers
+- Author at verse/bridge button using `production_percent:{ResourceName} +/-{int}`.
+- Example: `production_percent:Food +10` adds a +10% persistent global production bonus for Food; `-15` reduces by 15%.
+- Shown in Outro preview as: `Production +10% for Food`.
+
+Temporary effects (duration in sevenths)
+- You can make certain effects temporary by appending a `duration:sevenths:N` token on the same button line, after the effect.
+- Supported timed effects:
+  - `production_percent:{Resource}` and `production_percent_section:{Section}`
+  - `click_power:{Resource}` and `click_power_percent:{Resource}`
+  - `click_power_section:{Section}` and `click_power_percent_section:{Section}`
+- Duration is counted in sevenths (in-game time unit). Example:
+  - `* Accept&C consequences: production_percent:Food +10; duration:sevenths:6 -> next_knot`
+  - Applies +10% Food production for 6 sevenths, then automatically expires.
+- Only one timed effect with duration is expected per line (design constraint) to avoid ambiguity.
+
+Section-wide modifiers
+- Production percent: `production_percent_section:{SectionName} +/-{int}`
+- Click power (flat): `click_power_section:{SectionName} +/-{int}`
+- Click power (percent): `click_power_percent_section:{SectionName} +/-{int}`
+
+Click power modifiers
+- Resource flat: `click_power:{ResourceName} +/-{int}`
+- Resource percent: `click_power_percent:{ResourceName} +/-{int}`
+- Section flat: `click_power_section:{SectionName} +/-{int}`
+- Section percent: `click_power_percent_section:{SectionName} +/-{int}`
+
+Implementation details:
+- At startup, the system precompiles all chorus choice metadata from compiled Ink in `Resources/Events` and stores it in a global index. UI reads this cache; no runtime parsing or regex.
+- Choice description strictly uses the `&D` segment.
+- Keep choice prefix `* ChoiceType. Title` to map Idealism/Realism/Pragmatism consistently.
+
+Requirements and costs (new):
+- `requirements:` block gates availability. The choice is only pickable if all entries evaluate to true using the same format supported by event `#conditions` (e.g., `resource:Food >= 40`, `technology:Efficient Rations == 1`, `score:caravan_encountered >= 1`).
+- `requirements:cost:` block declares resources to consume when the story concludes, applied with other cumulative consequences at Outro. Only the following are consumed:
+  - `resource:{Name} {amount}` (positive amounts are removed)
+  - `population:population {amount}` (removes people; tracked as deaths)
+  - `housing:housing {amount}` (destroys housing)
+- Unconsumable types (scores, technologies, etc.) should remain in `requirements:`; they cannot be consumed.
+
+Example:
+```ink
+* Idealism. Aid &D Act with compassion. &C pillar:waltz;strength:15;
+    requirements: population:population >= 5;
+    requirements:cost: resource:Elderwood 40;
+    success: idealism_success; failure: idealism_failure
+
+* Realism. Seize &D Survival first. &C pillar:regalia;strength:20;
+    requirements: technology:Efficient Rations == 1; score:caravan_encountered >= 1;
+    success: realism_success; failure: realism_failure
+
+* Pragmatism. Turn Away &D No action needed. &C consequences: score:caution +1
+```
+
+Roll logic and thresholds:
+- The check computes success% = round((current/required)×100), clamped 0..100.
+- A single d100 roll determines the outcome:
+  - If `roll ≤ rare_event_percent`, and `rare_event` is defined, the rare path triggers.
+  - Otherwise, `success` if `roll ≤ success%`; `failure` if `roll > success%`.
+  - Criticals only apply if their paths exist:
+    - Critical Failure if `roll ≤ 10` and the baseline outcome is failure.
+    - Critical Success if `roll ≥ 91` and the baseline outcome is success.
+- For choices without challenges (e.g., Pragmatism), the system shows a confirmation card that reads "Time passes..." and immediately waits for click to proceed to the configured destination or rare event.
+
+Authoring tips:
+- Always provide `success` and `failure` targets for challenge choices; add `crit_*` only when you have dedicated content.
+- Keep `rare_event_percent` small (default 3) to maintain surprise value.
+- Use `consequences` along with the branch-specific consequences when some effects should always occur regardless of outcome.
 
 ---
 

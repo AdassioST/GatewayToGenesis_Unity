@@ -1156,7 +1156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   aureus: 10
-  regalia: 10
+  regalia: 14
   waltz: 10
   chorus: 10
   innovation: 5
@@ -1167,17 +1167,17 @@ MonoBehaviour:
   endurance: 5
   arcane: 5
   secrecy: 5
-  discoveryRate: 0
-  savingRollChance: 0
-  legendEffectiveness: 0
-  expeditionCostMod: 0
-  expeditionTimeMod: 0
-  satisfactionEffectiveness: 0
-  moraleLossMod: 0
-  moraleRecoveryMod: 0
-  clickPowerBonus: 0
-  magicEffectiveness: 0
-  communionStage: 0
+  discoveryRate: 0.5
+  savingRollChance: 0.25
+  legendEffectiveness: 0.75
+  expeditionCostMod: 0.9
+  expeditionTimeMod: 0.85
+  satisfactionEffectiveness: 0.59999996
+  moraleLossMod: 0.8
+  moraleRecoveryMod: 1.3
+  clickPowerBonus: 0.39999998
+  magicEffectiveness: 1
+  communionStage: 1
 --- !u!1 &118555721
 GameObject:
   m_ObjectHideFlags: 0
@@ -1749,8 +1749,8 @@ MonoBehaviour:
   - Guvierse
   - Naniurka
   - Edging
-  canTrackTime: 0
-  isTimePaused: 1
+  canTrackTime: 1
+  isTimePaused: 0
 --- !u!1 &182629041
 GameObject:
   m_ObjectHideFlags: 0
@@ -6982,7 +6982,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &555142227
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7458,7 +7458,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 671844795}
   m_HandleRect: {fileID: 671844794}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7763,7 +7763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64aa73079856fea4eb38418fe7529d40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spriteAsset: {fileID: 11400000, guid: 401de288b996a894c80cfca59deb3467, type: 2}
+  spriteAsset: {fileID: 0}
 --- !u!1 &626324754
 GameObject:
   m_ObjectHideFlags: 0
@@ -16660,7 +16660,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00018310547}
+  m_AnchoredPosition: {x: 0, y: 0.00030517578}
   m_SizeDelta: {x: 320, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1429569790
@@ -20656,7 +20656,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 327092354}
   m_HandleRect: {fileID: 327092353}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -22676,7 +22676,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00030517578}
+  m_AnchoredPosition: {x: 0, y: -0.00018310547}
   m_SizeDelta: {x: 1204, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2002197164
@@ -22944,6 +22944,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35fd8bd8719f03c41b4d0c5ccc16b951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableChorusDebugLogging: 0
   splashScreenPrefab: {fileID: 3494362373199277764, guid: b0ac9be827231264d9a46dc97a90edb7, type: 3}
   verseScreenPrefab: {fileID: 1507789047335668275, guid: a63783144dcf41545a45bac27d0a17b9, type: 3}
   chorusScreenPrefab: {fileID: 8996175222598961968, guid: 60f5e6421d1f4f645b12f485684268b1, type: 3}

@@ -503,6 +503,8 @@ public class EventVolumeManager : MonoBehaviour
     /// </summary>
     public void ExecuteNextScreen()
     {
+        // Dynamic overrides are deprecated; flow now navigates directly by knot. Preserve for legacy no-op.
+
         if (currentStoryNode == null || currentScreenIndex >= currentStoryNode.screenFlow.Count)
         {
             CompleteStory();
@@ -510,6 +512,8 @@ public class EventVolumeManager : MonoBehaviour
         }
         
         ScreenFlowStep step = currentStoryNode.screenFlow[currentScreenIndex];
+        
+        Debug.Log($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}");
         
         // Create EventScreen from ScreenFlowStep
         EventScreen screen = new EventScreen
@@ -521,10 +525,56 @@ public class EventVolumeManager : MonoBehaviour
             inkKnot = step.inkKnot
         };
         
+        Debug.Log($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}");
+        
         // Execute the screen
         EventSystemLogic.Instance?.ExecuteScreen(screen);
         
         currentScreenIndex++;
+    }
+
+    // Deprecated override API retained as no-ops to avoid breaking references
+    public void SetNextScreensOverride(System.Collections.Generic.IEnumerable<ScreenFlowStep> steps) {}
+
+    /// <summary>
+    /// Advance the static flow index by the specified number of steps, to avoid duplicating the just-overridden screen.
+    /// </summary>
+    public void AdvanceStaticFlow(int steps = 1)
+    {
+        // Deprecated with direct navigation; keep no-op for compatibility
+    }
+
+    /// <summary>
+    /// Navigate directly to a specific Ink knot by name and render its corresponding screen.
+    /// </summary>
+    public void NavigateToKnot(string knotName)
+    {
+        if (string.IsNullOrEmpty(knotName))
+        {
+            CompleteStory();
+            return;
+        }
+        // Normalize to top-level knot name to avoid internal path suffixes
+        string normalized = InkDrivenEventSetup.NormalizeKnotName(knotName) ?? knotName;
+        // Choose screen type based on naming convention (prefix match to avoid accidental contains)
+        var lower = normalized.ToLower();
+        ScreenType type = ScreenType.Verse;
+        if (lower.EndsWith("_chorus") || lower.Contains("_chorus_")) type = ScreenType.Chorus;
+        else if (lower.EndsWith("_outro") || lower.Contains("_outro_")) type = ScreenType.Outro;
+        else if (lower.EndsWith("_bridge") || lower.Contains("_bridge_")) type = ScreenType.Bridge;
+        // Build and execute screen
+        var screen = new EventScreen
+        {
+            screenType = type,
+            screenId = normalized + "_screen",
+            inkKnot = normalized,
+            waitForInput = true
+        };
+        if (enableDebugLogging)
+        {
+            Debug.Log($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}");
+        }
+        EventSystemLogic.Instance?.ExecuteScreen(screen);
     }
     
     /// <summary>

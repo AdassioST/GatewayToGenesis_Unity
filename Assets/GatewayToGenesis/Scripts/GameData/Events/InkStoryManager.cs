@@ -50,6 +50,22 @@ public class InkStoryManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Get precompiled choice metadata for a chorus knot (built at game start from Resources/Events)
+    /// </summary>
+    public List<ChorusChoiceData> GetPrecompiledChoicesForKnot(string knotName)
+    {
+        return InkDrivenEventSetup.GetChoicesForKnot(knotName);
+    }
+
+    /// <summary>
+    /// Static convenience to access precompiled choice metadata
+    /// </summary>
+    public static List<ChorusChoiceData> GetPrecompiledChoices(string knotName)
+    {
+        return InkDrivenEventSetup.GetChoicesForKnot(knotName);
+    }
+
     // PSEUDOCODE: Main story loading function - creates new Ink story instance
     // FLOW: Validate asset -> Create story instance -> Bind external functions -> Log success
     /// <summary>

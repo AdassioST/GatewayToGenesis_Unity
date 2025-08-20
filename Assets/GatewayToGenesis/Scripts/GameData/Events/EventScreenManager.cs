@@ -11,6 +11,8 @@ using Ink.Runtime;
 /// </summary>
 public class EventScreenManager : MonoBehaviour
 {
+    [Header("Debugging")]
+    [SerializeField] private bool enableChorusDebugLogging = false;
     [Header("Screen Prefabs")]
     [SerializeField] private GameObject splashScreenPrefab;
     [SerializeField] private GameObject verseScreenPrefab;
@@ -243,7 +245,8 @@ public class EventScreenManager : MonoBehaviour
             if (contentText != null)
             {
                 // Get content from Ink if available, otherwise use description
-                string splashContent = GetInkContentForKnot(screen.inkKnot);
+                // Prefer precompiled content
+                string splashContent = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(splashContent))
                 {
                     splashContent = screen.description ?? "Welcome to the story";
@@ -286,6 +289,19 @@ public class EventScreenManager : MonoBehaviour
             }
         }
 
+        // Add initial story consequences to cumulative list
+        StoryNode currentStory = volumeManager?.GetCurrentStoryNode();
+        if (currentStory != null && currentStory.storyConsequences != null)
+        {
+            foreach (var consequence in currentStory.storyConsequences)
+            {
+                if (eventSystem != null)
+                {
+                    eventSystem.AddConsequence(consequence);
+                }
+            }
+        }
+        
         // Setup buttons and other elements
         SetupSplashElements(screen, GetCurrentStoryUIMetadata());
 
@@ -321,7 +337,7 @@ public class EventScreenManager : MonoBehaviour
             if (contentText != null)
             {
                 // Get content from Ink if available, otherwise use description
-                string verseContent = GetInkContentForKnot(screen.inkKnot);
+                string verseContent = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(verseContent))
                 {
                     verseContent = screen.description ?? "Verse content";
@@ -342,14 +358,14 @@ public class EventScreenManager : MonoBehaviour
         }
 
         // Setup progressive reveal system with the content
-        string contentForReveal = GetInkContentForKnot(screen.inkKnot);
+        string contentForReveal = GetPrecompiledContentForKnot(screen.inkKnot);
         if (string.IsNullOrEmpty(contentForReveal))
         {
             contentForReveal = screen.description ?? "Verse content";
         }
         SetupProgressiveRevealSystem(contentForReveal);
 
-        // Setup verse button
+        // Setup verse button label (click handled by progressive reveal's continue)
         SetupVerseButton(screen);
 
         // Animate vignette for this screen type
@@ -363,9 +379,16 @@ public class EventScreenManager : MonoBehaviour
     {
         if (screenContainer == null) return;
 
+        Debug.Log($"[EventScreenManager] ShowChorusScreen called with screen: {screen?.screenId}, inkKnot: {screen?.inkKnot}");
+
+        // Clear any existing chorus screens first
+        ClearScreensExceptFade();
+
         // Create the chorus screen
         GameObject chorusScreen = Instantiate(chorusScreenPrefab, screenContainer);
         currentScreen = chorusScreen;
+
+        Debug.Log($"[EventScreenManager] Chorus screen instantiated: {chorusScreen.name}");
 
         // Ensure CanvasGroup component exists
         CanvasGroup canvasGroup = chorusScreen.GetComponent<CanvasGroup>();
@@ -374,6 +397,38 @@ public class EventScreenManager : MonoBehaviour
             canvasGroup = chorusScreen.AddComponent<CanvasGroup>();
         }
 
+        // Initialize the ChorusScreenManager if it exists
+        ChorusScreenManager chorusManager = chorusScreen.GetComponent<ChorusScreenManager>();
+        Debug.Log($"[EventScreenManager] ChorusScreenManager component found: {(chorusManager != null ? "YES" : "NO")}");
+        
+        if (chorusManager != null)
+        {
+            Debug.Log($"[EventScreenManager] Calling InitializeChorusScreen on ChorusScreenManager");
+            
+            // Wait a frame to ensure the component is fully initialized
+            // Propagate debug flag to Chorus
+            try { chorusManager.SetDebugLogging(enableChorusDebugLogging); } catch {}
+            StartCoroutine(InitializeChorusScreenDelayed(chorusManager, screen));
+        }
+        else
+        {
+            Debug.LogWarning("[EventScreenManager] No ChorusScreenManager found, using legacy setup");
+            // Fallback to old behavior if no ChorusScreenManager
+            SetupLegacyChorusScreen(chorusScreen, screen);
+        }
+
+        // Smooth fade in with proper transparency
+        FadeScreenIn(chorusScreen);
+
+        // Animate vignette for this screen type
+        AnimateVignetteForScreenType(ScreenType.Chorus);
+    }
+    
+    /// <summary>
+    /// Setup chorus screen using legacy method (fallback)
+    /// </summary>
+    private void SetupLegacyChorusScreen(GameObject chorusScreen, EventScreen screen)
+    {
         // Get UI components and populate from existing event system data
         Transform contentTransform = chorusScreen.transform.Find("Content");
         Transform titleTransform = chorusScreen.transform.Find("Title");
@@ -384,11 +439,12 @@ public class EventScreenManager : MonoBehaviour
             if (contentText != null)
             {
                 // Get content from Ink if available, otherwise use description
-                string chorusContent = GetInkContentForKnot(screen.inkKnot);
+                string chorusContent = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(chorusContent))
                 {
                     chorusContent = screen.description ?? "Make a choice";
                 }
+                // Avoid displaying the verse button text/choice label in the content; content extractor should already stop before choices
                 contentText.text = chorusContent;
             }
         }
@@ -404,16 +460,29 @@ public class EventScreenManager : MonoBehaviour
             }
         }
 
-
-
-        // Smooth fade in with proper transparency
-        FadeScreenIn(chorusScreen);
-
-        // Animate vignette for this screen type
-        AnimateVignetteForScreenType(ScreenType.Chorus);
-
-        // Start auto-advance coroutine
+        // Start auto-advance coroutine for legacy behavior
         StartCoroutine(AutoAdvanceChorus());
+    }
+    
+    /// <summary>
+    /// Initialize chorus screen with a delay to ensure component is ready
+    /// </summary>
+    private IEnumerator InitializeChorusScreenDelayed(ChorusScreenManager chorusManager, EventScreen screen)
+    {
+        // Wait a frame to ensure the component is fully initialized
+        yield return null;
+        
+        Debug.Log($"[EventScreenManager] Initializing ChorusScreenManager after delay");
+        
+        try
+        {
+            chorusManager.InitializeChorusScreen(screen);
+            Debug.Log($"[EventScreenManager] InitializeChorusScreen call completed successfully");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[EventScreenManager] Error calling InitializeChorusScreen: {ex.Message}\n{ex.StackTrace}");
+        }
     }
 
     /// <summary>
@@ -455,7 +524,7 @@ public class EventScreenManager : MonoBehaviour
             if (contentText != null)
             {
                 // Get content from Ink if available, otherwise use description
-                string bridgeContent = GetInkContentForKnot(screen.inkKnot);
+                string bridgeContent = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(bridgeContent))
                 {
                     bridgeContent = screen.description ?? "Bridge content";
@@ -512,7 +581,7 @@ public class EventScreenManager : MonoBehaviour
             if (contentText != null)
             {
                 // Get content from Ink if available, otherwise use description
-                string outroContent = GetInkContentForKnot(screen.inkKnot);
+                string outroContent = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(outroContent))
                 {
                     outroContent = screen.description ?? "Story complete";
@@ -697,7 +766,7 @@ public class EventScreenManager : MonoBehaviour
             TextMeshProUGUI contentText = contentTransform.GetComponent<TextMeshProUGUI>();
             if (contentText != null)
             {
-                string splashText = GetInkContentForKnot(screen.inkKnot);
+                string splashText = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(splashText))
                 {
                     // Fallback to description if Ink not found
@@ -776,13 +845,38 @@ public class EventScreenManager : MonoBehaviour
     private void SetupVerseButton(EventScreen screen)
     {
         Transform buttonTransform = currentScreen.transform.Find("Button");
+        Transform buttonTextTransform = currentScreen.transform.Find("ButtonText");
         if (buttonTransform != null)
         {
             Button button = buttonTransform.GetComponent<Button>();
+            TextMeshProUGUI buttonText = buttonTextTransform ? buttonTextTransform.GetComponent<TextMeshProUGUI>() : null;
+            if (buttonText == null && buttonTransform != null)
+            {
+                // Fallback: find TMP label under the button
+                buttonText = buttonTransform.GetComponentInChildren<TextMeshProUGUI>(true);
+            }
             if (button != null)
             {
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(() => OnVerseContinuePressed());
+                // Only set label here; let ProgressiveSentenceRevealLogic trigger OnVerseContinuePressed
+                string label = GetPrecompiledFirstChoiceText(screen.inkKnot);
+                label = FormatChoiceLabel(label);
+                if (buttonText != null)
+                {
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        buttonText.text = label;
+                        Debug.Log($"[EventScreenManager] Verse button label set to '{label}' for knot '{screen.inkKnot}'");
+                    }
+                    else
+                    {
+                        // Robust fallback: use runtime extraction or final default
+                        string runtimeLabel = GetRuntimeFirstChoiceText(screen.inkKnot);
+                        string finalLabel = !string.IsNullOrEmpty(runtimeLabel) ? FormatChoiceLabel(runtimeLabel) : (screen.buttonText ?? "Continue");
+                        buttonText.text = finalLabel;
+                        Debug.Log($"[EventScreenManager] Verse button label fallback to '{finalLabel}' for knot '{screen.inkKnot}'");
+                    }
+                }
+                // Do not add an extra onClick here to avoid double invocation with progressive reveal's handler
             }
         }
     }
@@ -807,19 +901,25 @@ public class EventScreenManager : MonoBehaviour
             return;
         }
 
-        // Pull first available choice from Ink
+        // Pull first available choice from precompiled index and navigate directly to its target
         string choiceText = null;
         System.Action onClick = null;
 
-        string firstChoiceText = GetFirstChoiceTextForKnot(screen.inkKnot);
+        string firstChoiceText = GetPrecompiledFirstChoiceText(screen.inkKnot);
+        string firstChoiceTarget = GetPrecompiledFirstChoiceTarget(screen.inkKnot);
+        Debug.Log($"[EventScreenManager] Splash resolve: knot='{screen.inkKnot}', precompiledLabel='{firstChoiceText}', target='{firstChoiceTarget}'");
         if (!string.IsNullOrEmpty(firstChoiceText))
         {
-            choiceText = firstChoiceText;
+            choiceText = FormatChoiceLabel(firstChoiceText);
             onClick = () =>
             {
-                // Advance to next screen in flow; actual choice branching is handled by screenFlow
-                isScreenComplete = true;
-                volumeManager?.ExecuteNextScreen();
+                string target = GetPrecompiledFirstChoiceTarget(screen.inkKnot);
+                target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
+                if (!string.IsNullOrEmpty(target))
+                {
+                    Debug.Log($"[EventScreenManager] Splash click navigating to '{target}'");
+                    volumeManager?.NavigateToKnot(target);
+                }
             };
             Debug.Log($"[EventScreenManager] Splash choice label set to '{choiceText}' from knot '{screen.inkKnot}'");
         }
@@ -833,10 +933,7 @@ public class EventScreenManager : MonoBehaviour
         }
 
         button.onClick.RemoveAllListeners();
-        if (onClick != null)
-        {
-        button.onClick.AddListener(() => onClick());
-        }
+        if (onClick != null) button.onClick.AddListener(() => onClick());
         else
         {
             button.onClick.AddListener(() => OnSplashButtonPressed());
@@ -845,32 +942,11 @@ public class EventScreenManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Get the first Ink choice text available at a given knot using a temporary Story instance
+    /// Get the first Ink choice text available at a given knot using precompiled data
     /// </summary>
     private string GetFirstChoiceTextForKnot(string knotName)
     {
-        if (string.IsNullOrEmpty(knotName)) return null;
-        EventVolume vol = volumeManager?.GetCurrentVolume();
-        if (vol == null || vol.inkMasterfile == null) return null;
-        try
-        {
-            Story tmp = new Story(vol.inkMasterfile.text);
-            tmp.ChoosePathString(knotName);
-            // Advance until choices are available or content ends
-            while (tmp.canContinue && (tmp.currentChoices == null || tmp.currentChoices.Count == 0))
-            {
-                tmp.Continue();
-            }
-            if (tmp.currentChoices != null && tmp.currentChoices.Count > 0)
-            {
-                return tmp.currentChoices[0].text;
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogWarning($"[EventScreenManager] GetFirstChoiceTextForKnot failed for '{knotName}': {ex.Message}");
-        }
-        return null;
+        return GetPrecompiledFirstChoiceText(knotName);
     }
 
     /// <summary>
@@ -879,12 +955,15 @@ public class EventScreenManager : MonoBehaviour
     private void OnSplashButtonPressed()
     {
         LogScreen("Splash button pressed - advancing to next screen");
-        isScreenComplete = true;
-        
-        // Notify volume manager to continue
-        if (volumeManager != null)
+        // Prefer navigating to first precompiled choice target, else complete
+        string target = GetPrecompiledFirstChoiceTarget(currentEventScreen?.inkKnot);
+        if (!string.IsNullOrEmpty(target))
         {
-            volumeManager.ExecuteNextScreen();
+            volumeManager?.NavigateToKnot(target);
+        }
+        else
+        {
+            volumeManager?.CompleteStory();
         }
     }
 
@@ -939,11 +1018,243 @@ public class EventScreenManager : MonoBehaviour
             progressiveRevealLogic.OnContinuePressed -= OnVerseContinuePressed;
         }
         
-        // Advance to next screen
-        isScreenComplete = true;
-        if (volumeManager != null)
+        // Navigate using edges with loop prevention and runtime fallback
+        if (volumeManager != null && !string.IsNullOrEmpty(currentEventScreen?.inkKnot))
         {
-            volumeManager.ExecuteNextScreen();
+            string source = currentEventScreen.inkKnot;
+            string target = GetPrecompiledFirstChoiceTarget(source);
+            Debug.Log($"[EventScreenManager] Verse continue: source='{source}', precompiledTarget='{target}'");
+            if (string.IsNullOrEmpty(target))
+            {
+                // If no target from edges, try runtime resolution before giving up
+                string runtimeTarget = GetRuntimeSingleChoiceTarget(source);
+                if (!string.IsNullOrEmpty(runtimeTarget))
+                {
+                    Debug.Log($"[EventScreenManager] Verse continue: runtimeTarget='{runtimeTarget}'");
+                    target = runtimeTarget;
+                }
+            }
+            if (target == source)
+            {
+                string runtimeTarget = GetRuntimeSingleChoiceTarget(source);
+                if (!string.IsNullOrEmpty(runtimeTarget) && runtimeTarget != source)
+                {
+                    Debug.Log($"[EventScreenManager] Verse continue: resolved loop with runtimeTarget='{runtimeTarget}'");
+                    target = runtimeTarget;
+                }
+                else if (InkDrivenEventSetup.TryGetKnot(source, out var knot) && !string.IsNullOrEmpty(knot.nextKnotIfNoChoices))
+                {
+                    Debug.Log($"[EventScreenManager] Verse continue: using nextKnotIfNoChoices='{knot.nextKnotIfNoChoices}'");
+                    target = knot.nextKnotIfNoChoices;
+                }
+                else
+                {
+                    target = null;
+                }
+            }
+            // Normalize before navigating
+            if (!string.IsNullOrEmpty(target))
+            {
+                target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
+                Debug.Log($"[EventScreenManager] Verse continue: normalized target='{target}'");
+            }
+            if (!string.IsNullOrEmpty(target))
+            {
+                // Accumulate verse-level consequences from the current knot's single choice (&C consequences: ...)
+                string firstChoiceText = GetPrecompiledFirstChoiceText(source);
+                var choiceConsequences = ParseVerseChoiceConsequences(firstChoiceText);
+                if (choiceConsequences != null && choiceConsequences.Count > 0 && eventSystem != null)
+                {
+                    foreach (var ec in choiceConsequences) eventSystem.AddConsequence(ec);
+                    Debug.Log($"[EventScreenManager] Accumulated {choiceConsequences.Count} consequences from verse '{source}'");
+                }
+
+                // Apply any deferred consequences for this verse before navigation
+                var deferred = InkDrivenEventSetup.GetAndClearDeferredConsequences(target);
+                if (deferred != null && deferred.Count > 0 && eventSystem != null)
+                {
+                    foreach (var ec in deferred)
+                    {
+                        eventSystem.AddConsequence(ec);
+                    }
+                    Debug.Log($"[EventScreenManager] Applied {deferred.Count} deferred consequences for verse '{target}'");
+                }
+
+                // If this is clearly a chorus knot by suffix, navigate expecting chorus
+                var lower = target.ToLower();
+                if (lower.EndsWith("_chorus") || lower.Contains("_chorus_"))
+                {
+                    Debug.Log($"[EventScreenManager] Verse continue -> navigating to Chorus knot '{target}'");
+                }
+                else
+                {
+                    Debug.Log($"[EventScreenManager] Verse continue -> navigating to knot '{target}'");
+                }
+
+                volumeManager.NavigateToKnot(target);
+                return;
+            }
+        }
+        // Complete if nothing to navigate to
+        volumeManager?.CompleteStory();
+    }
+
+    /// <summary>
+    /// If a knot yields exactly one choice, return its target path; otherwise null
+    /// </summary>
+    private string GetPrecompiledFirstChoiceText(string knotName)
+    {
+        if (string.IsNullOrEmpty(knotName)) return null;
+        if (InkDrivenEventSetup.TryGetKnot(knotName, out var knot) && knot.choices != null && knot.choices.Count > 0)
+        {
+            return knot.choices[0].text;
+        }
+        // Fallback: runtime extraction
+        return GetRuntimeFirstChoiceText(knotName);
+    }
+
+    private string GetPrecompiledFirstChoiceTarget(string knotName)
+    {
+        if (string.IsNullOrEmpty(knotName)) return null;
+        if (InkDrivenEventSetup.TryGetKnot(knotName, out var knot))
+        {
+            if (knot.choices != null && knot.choices.Count > 0)
+            {
+                var ret = knot.choices[0].targetPath;
+                return InkDrivenEventSetup.NormalizeKnotName(ret) ?? ret;
+            }
+            if (!string.IsNullOrEmpty(knot.nextKnotIfNoChoices))
+            {
+                var ret = knot.nextKnotIfNoChoices;
+                return InkDrivenEventSetup.NormalizeKnotName(ret) ?? ret;
+            }
+        }
+        // Fallback: runtime extraction
+        return GetRuntimeSingleChoiceTarget(knotName);
+    }
+
+    // Format a raw choice text for display, stripping &D and &C segments
+    private string FormatChoiceLabel(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return raw;
+        int dIdx = raw.IndexOf("&D ", System.StringComparison.Ordinal);
+        int cIdx = raw.IndexOf("&C ", System.StringComparison.Ordinal);
+        int cut = raw.Length;
+        if (dIdx >= 0) cut = Mathf.Min(cut, dIdx);
+        if (cIdx >= 0) cut = Mathf.Min(cut, cIdx);
+        string head = raw.Substring(0, cut).Trim();
+        // If author used legacy ' -> target' inline, strip it as well
+        int arrow = head.IndexOf("->", System.StringComparison.Ordinal);
+        if (arrow >= 0) head = head.Substring(0, arrow).Trim();
+        // If choice has the typical "* " prefix trimmed upstream, we just return head
+        // For safety, remove a leading '*' if present
+        if (head.StartsWith("* ")) head = head.Substring(2).Trim();
+        return head;
+    }
+
+    // Parse &C consequences from a verse/bridge single-button choice text
+    private List<EventConsequence> ParseVerseChoiceConsequences(string choiceText)
+    {
+        var list = new List<EventConsequence>();
+        if (string.IsNullOrEmpty(choiceText)) return list;
+        int cIdx = choiceText.IndexOf("&C ", System.StringComparison.Ordinal);
+        if (cIdx < 0) return list;
+        string metadata = choiceText.Substring(cIdx + 3).Trim();
+        if (string.IsNullOrEmpty(metadata)) return list;
+
+        // Find "consequences:" section within metadata
+        int consIdx = metadata.IndexOf("consequences:", System.StringComparison.OrdinalIgnoreCase);
+        if (consIdx < 0) return list;
+        string consPayload = metadata.Substring(consIdx + "consequences:".Length).Trim();
+
+        // Stop at next top-level section marker if found
+        string[] stopKeys = new [] { "success:", "failure:", "crit_success:", "crit_failure:", "rare_event:", "rare_event_percent:", "pillar:", "strength:", "challenge:" };
+        int stopAt = consPayload.Length;
+        foreach (var key in stopKeys)
+        {
+            int idx = consPayload.IndexOf(key, System.StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0 && idx < stopAt) stopAt = idx;
+        }
+        consPayload = consPayload.Substring(0, stopAt).Trim().TrimEnd(';');
+        if (string.IsNullOrEmpty(consPayload)) return list;
+
+        var items = consPayload.Split(';');
+        EventConsequence lastEc = null;
+        foreach (var raw in items)
+        {
+            string item = raw.Trim();
+            if (string.IsNullOrEmpty(item)) continue;
+            // Attach duration to last parsed eligible consequence
+            if (item.StartsWith("duration", System.StringComparison.OrdinalIgnoreCase))
+            {
+                if (lastEc != null)
+                {
+                    int idx = item.IndexOf(':');
+                    if (idx >= 0)
+                    {
+                        string tail = item.Substring(idx + 1).Trim();
+                        // support duration:sevenths:N and duration:N
+                        int lastColon = tail.LastIndexOf(':');
+                        string numStr = lastColon >= 0 ? tail.Substring(lastColon + 1).Trim() : tail;
+                        if (int.TryParse(numStr, out int dur))
+                        {
+                            lastEc.durationSevenths = Mathf.Max(0, dur);
+                        }
+                    }
+                }
+                continue;
+            }
+            var ec = ParseSingleConsequenceInline(item);
+            if (ec != null)
+            {
+                list.Add(ec);
+                lastEc = ec;
+            }
+        }
+        return list;
+    }
+
+    private EventConsequence ParseSingleConsequenceInline(string str)
+    {
+        // Format: type:TargetName +/-Value
+        int colon = str.IndexOf(':');
+        if (colon <= 0) return null;
+        string type = str.Substring(0, colon).Trim();
+        string body = str.Substring(colon + 1).Trim();
+        int lastSpace = body.LastIndexOf(' ');
+        if (lastSpace <= 0) return null;
+        string target = body.Substring(0, lastSpace).Trim();
+        string valStr = body.Substring(lastSpace + 1).Trim();
+        if (!int.TryParse(valStr, out int value)) return null;
+        return new EventConsequence
+        {
+            type = MapConsequenceType(type),
+            targetName = target,
+            value = value
+        };
+    }
+
+    private EventConsequence.ConsequenceType MapConsequenceType(string type)
+    {
+        switch ((type ?? string.Empty).ToLower())
+        {
+            case "score": return EventConsequence.ConsequenceType.ScoreChange;
+            case "resource": return EventConsequence.ConsequenceType.ResourceChange;
+            case "production": return EventConsequence.ConsequenceType.ProductionUnitChange;
+            case "stat": return EventConsequence.ConsequenceType.StatChange;
+            case "population": return EventConsequence.ConsequenceType.PopulationChange;
+            case "housing": return EventConsequence.ConsequenceType.HousingChange;
+            case "vagrants": return EventConsequence.ConsequenceType.VagrantsChange;
+            case "deaths": return EventConsequence.ConsequenceType.DeathsChange;
+            case "death_records_revision": return EventConsequence.ConsequenceType.DeathRecordsRevision;
+            case "technology": return EventConsequence.ConsequenceType.TechnologyEnlightened;
+            case "production_percent": return EventConsequence.ConsequenceType.ProductionPercentChange;
+            case "production_percent_section": return EventConsequence.ConsequenceType.ProductionPercentChangeSection;
+            case "click_power": return EventConsequence.ConsequenceType.ClickPowerChange;
+            case "click_power_percent": return EventConsequence.ConsequenceType.ClickPowerPercentChange;
+            case "click_power_section": return EventConsequence.ConsequenceType.ClickPowerChangeSection;
+            case "click_power_percent_section": return EventConsequence.ConsequenceType.ClickPowerPercentChangeSection;
+            default: return EventConsequence.ConsequenceType.ScoreChange;
         }
     }
 
@@ -952,14 +1263,15 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private string GetInkContentForScreen(EventScreen screen)
     {
-        return GetInkContentForKnot(screen.inkKnot);
+        return GetPrecompiledContentForKnot(screen.inkKnot);
     }
 
     /// <summary>
-    /// Build content text for a knot by continuing until choices appear or content ends (temporary Story)
+    /// Build content text for a knot by continuing until choices appear or content ends (fallback method)
     /// </summary>
     private string GetInkContentForKnot(string knotName)
     {
+        // Fallback-only; prefer precompiled
         if (string.IsNullOrEmpty(knotName)) return string.Empty;
         EventVolume vol = volumeManager?.GetCurrentVolume();
         if (vol == null || vol.inkMasterfile == null) return string.Empty;
@@ -971,22 +1283,102 @@ public class EventScreenManager : MonoBehaviour
             while (tmp.canContinue)
             {
                 string line = tmp.Continue();
-                if (!string.IsNullOrEmpty(line))
-                {
-                    sb.Append(line);
-                }
-                if (tmp.currentChoices != null && tmp.currentChoices.Count > 0)
-                {
-                    break;
-                }
+                if (!string.IsNullOrEmpty(line)) sb.Append(line);
+                if (tmp.currentChoices != null && tmp.currentChoices.Count > 0) break;
             }
             return sb.ToString();
         }
-        catch (System.Exception ex)
+        catch { return string.Empty; }
+    }
+
+    private string GetPrecompiledContentForKnot(string knotName)
+    {
+        if (string.IsNullOrEmpty(knotName)) return string.Empty;
+        if (InkDrivenEventSetup.TryGetKnot(knotName, out var knot))
         {
-            Debug.LogWarning($"[EventScreenManager] GetInkContentForKnot failed for '{knotName}': {ex.Message}");
+            if (!string.IsNullOrEmpty(knot.content)) return knot.content;
         }
-        return string.Empty;
+        // Fallback to runtime content extraction if precompiled missing
+        return GetInkContentForKnot(knotName);
+    }
+
+    /// <summary>
+    /// Fallback: read first choice text at runtime from compiled story
+    /// </summary>
+    private string GetRuntimeFirstChoiceText(string knotName)
+    {
+        EventVolume vol = volumeManager?.GetCurrentVolume();
+        if (string.IsNullOrEmpty(knotName) || vol == null || vol.inkMasterfile == null) return null;
+        try
+        {
+            Story tmp = new Story(vol.inkMasterfile.text);
+            tmp.ChoosePathString(knotName);
+            while (tmp.canContinue && (tmp.currentChoices == null || tmp.currentChoices.Count == 0))
+            {
+                tmp.Continue();
+            }
+            if (tmp.currentChoices != null && tmp.currentChoices.Count > 0)
+            {
+                return tmp.currentChoices[0].text;
+            }
+        }
+        catch { }
+        return null;
+    }
+
+    /// <summary>
+    /// Fallback: if exactly one choice exists at runtime, return its target
+    /// </summary>
+    private string GetRuntimeSingleChoiceTarget(string knotName)
+    {
+        EventVolume vol = volumeManager?.GetCurrentVolume();
+        if (string.IsNullOrEmpty(knotName) || vol == null || vol.inkMasterfile == null) return null;
+        try
+        {
+            Story tmp = new Story(vol.inkMasterfile.text);
+            tmp.ChoosePathString(knotName);
+            while (tmp.canContinue && (tmp.currentChoices == null || tmp.currentChoices.Count == 0))
+            {
+                tmp.Continue();
+            }
+            if (tmp.currentChoices != null && tmp.currentChoices.Count >= 1)
+            {
+                var c0 = tmp.currentChoices[0];
+                string raw = c0.targetPath != null ? c0.targetPath.ToString() : null;
+                string normalized = InkDrivenEventSetup.NormalizeKnotName(raw) ?? raw;
+                if (!string.IsNullOrEmpty(normalized) && normalized != knotName)
+                {
+                    return normalized;
+                }
+                // If targetPath is null or resolves to self, simulate the choice to discover the next knot
+                try
+                {
+                    Story sim = new Story(vol.inkMasterfile.text);
+                    sim.ChoosePathString(knotName);
+                    while (sim.canContinue && (sim.currentChoices == null || sim.currentChoices.Count == 0))
+                    {
+                        sim.Continue();
+                    }
+                    if (sim.currentChoices != null && sim.currentChoices.Count > 0)
+                    {
+                        sim.ChooseChoiceIndex(0);
+                        int guard = 0;
+                        string last = InkDrivenEventSetup.GetTopLevelKnotNameFromPath(sim.state.currentPathString);
+                        while (guard++ < 64 && sim.canContinue)
+                        {
+                            sim.Continue();
+                            string top = InkDrivenEventSetup.GetTopLevelKnotNameFromPath(sim.state.currentPathString);
+                            if (!string.IsNullOrEmpty(top) && top != knotName) return top;
+                            if (!string.IsNullOrEmpty(top)) last = top;
+                        }
+                        return last;
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
+        return null;
     }
 
 
@@ -998,9 +1390,33 @@ public class EventScreenManager : MonoBehaviour
     {
         LogScreen("Bridge continue pressed - advancing to next screen");
         isScreenComplete = true;
-        if (volumeManager != null)
+        // Navigate by Ink edges rather than static flow
+        if (volumeManager != null && currentEventScreen != null)
         {
-            volumeManager.ExecuteNextScreen();
+            string source = currentEventScreen.inkKnot;
+            string target = GetPrecompiledFirstChoiceTarget(source);
+            if (string.IsNullOrEmpty(target))
+            {
+                target = GetRuntimeSingleChoiceTarget(source);
+            }
+            if (!string.IsNullOrEmpty(target))
+            {
+                // Accumulate bridge-level consequences from the button choice (&C consequences: ...), if any
+                string firstChoiceText = GetPrecompiledFirstChoiceText(source);
+                var bridgeConsequences = ParseVerseChoiceConsequences(firstChoiceText);
+                if (bridgeConsequences != null && bridgeConsequences.Count > 0 && eventSystem != null)
+                {
+                    foreach (var ec in bridgeConsequences) eventSystem.AddConsequence(ec);
+                    LogScreen($"Accumulated {bridgeConsequences.Count} consequences from bridge '{source}'");
+                }
+                target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
+                LogScreen($"Bridge continue navigating to '{target}' from '{source}'");
+                volumeManager.NavigateToKnot(target);
+                return;
+            }
+            // If no target, complete
+            LogScreen("Bridge had no target; completing story");
+            volumeManager.CompleteStory();
         }
     }
 
@@ -1050,7 +1466,7 @@ public class EventScreenManager : MonoBehaviour
             TextMeshProUGUI contentText = contentTransform.GetComponent<TextMeshProUGUI>();
             if (contentText != null)
             {
-                string outroText = GetInkContentForKnot(screen.inkKnot);
+                string outroText = GetPrecompiledContentForKnot(screen.inkKnot);
                 if (string.IsNullOrEmpty(outroText))
                 {
                     outroText = screen.description ?? "Story complete.";
@@ -1070,15 +1486,16 @@ public class EventScreenManager : MonoBehaviour
             }
         }
 
-        // Consequences list
+        // Consequences list - now shows cumulative consequences from entire story flow
         Transform consequencesTransform = currentScreen.transform.Find("Consequences");
         if (consequencesTransform != null)
         {
             TextMeshProUGUI consequencesText = consequencesTransform.GetComponent<TextMeshProUGUI>();
             if (consequencesText != null)
             {
-                StoryNode current = volumeManager?.GetCurrentStoryNode();
-                consequencesText.text = BuildConsequencesPreviewText(current);
+                // Get cumulative consequences from EventSystemLogic instead of just the story node
+                List<EventConsequence> cumulativeConsequences = eventSystem?.GetCumulativeConsequences() ?? new List<EventConsequence>();
+                consequencesText.text = BuildConsequencesPreviewText(cumulativeConsequences);
             }
         }
 
@@ -1089,7 +1506,8 @@ public class EventScreenManager : MonoBehaviour
             TextMeshProUGUI buttonText = buttonTextTransform.GetComponent<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                string outroChoice = GetFirstChoiceTextForKnot(screen.inkKnot);
+                string outroChoice = GetPrecompiledFirstChoiceText(screen.inkKnot);
+                outroChoice = FormatChoiceLabel(outroChoice);
                 buttonText.text = !string.IsNullOrEmpty(outroChoice) ? outroChoice : (screen.buttonText ?? "Continue");
             }
         }
@@ -1310,16 +1728,16 @@ public class EventScreenManager : MonoBehaviour
     /// <summary>
     /// Build a human-readable, multi-line preview of consequences with new totals
     /// </summary>
-    private string BuildConsequencesPreviewText(StoryNode storyNode)
+    private string BuildConsequencesPreviewText(List<EventConsequence> consequences)
     {
-        if (storyNode == null || storyNode.storyConsequences == null || storyNode.storyConsequences.Count == 0)
+        if (consequences == null || consequences.Count == 0)
         {
             return "";
         }
 
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-        foreach (EventConsequence c in storyNode.storyConsequences)
+        foreach (EventConsequence c in consequences)
         {
             switch (c.type)
             {
@@ -1517,6 +1935,48 @@ public class EventScreenManager : MonoBehaviour
                             sb.AppendLine($"- {c.value} additional deaths have been added to the public records");
                         }
                     }
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ProductionPercentChange:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ClickPowerChange:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ClickPowerPercentChange:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ClickPowerChangeSection:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for section {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
+                {
+                    string sign = c.value >= 0 ? "+" : "-";
+                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
                     break;
                 }
                 default:

@@ -354,13 +354,8 @@ public class EventSystemLogic : MonoBehaviour
     /// </summary>
     public void ExecuteScreen(EventScreen screen)
     {
-        LogEvent($"Executing screen: {screen.screenType}"); // Boss announces which page they're showing
-        
-        // Show the screen
-        screenManager.ShowScreen(screen); // Tell the story teller to show this page
-        
-        // For now, we'll handle completion through the volume manager
-        // The volume manager will call ExecuteNextScreen when ready
+        LogEvent($"Executing screen: {screen.screenType}");
+        screenManager.ShowScreen(screen);
     }
     
     // ===== THE BOSS'S SCOREBOARD =====
@@ -395,6 +390,46 @@ public class EventSystemLogic : MonoBehaviour
         return eventScores.Find(s => s.name == scoreName); // Find score by name
     }
     
+    // ===== THE BOSS'S CONSEQUENCE TRACKER =====
+    // The boss keeps track of all consequences that happen during a story
+    private List<EventConsequence> cumulativeConsequences = new List<EventConsequence>();
+    // Timed consequences tracked with remaining sevenths
+    private class TimedConsequence
+    {
+        public EventConsequence consequence;
+        public int remainingSevenths;
+    }
+    private List<TimedConsequence> activeTimed = new List<TimedConsequence>();
+    
+    /// <summary>
+    /// Add a consequence to the cumulative list (called during story flow)
+    /// </summary>
+    public void AddConsequence(EventConsequence consequence)
+    {
+        if (consequence != null)
+        {
+            cumulativeConsequences.Add(consequence);
+            LogEvent($"Added consequence: {consequence.type} {consequence.targetName} {consequence.value}");
+        }
+    }
+    
+    /// <summary>
+    /// Get all cumulative consequences for display
+    /// </summary>
+    public List<EventConsequence> GetCumulativeConsequences()
+    {
+        return new List<EventConsequence>(cumulativeConsequences);
+    }
+    
+    /// <summary>
+    /// Clear all cumulative consequences (called when story ends)
+    /// </summary>
+    public void ClearCumulativeConsequences()
+    {
+        cumulativeConsequences.Clear();
+        LogEvent("Cleared cumulative consequences");
+    }
+    
     // ===== THE BOSS'S PUBLIC OFFICE =====
     // Other parts of the game can ask the boss questions or give them new stories
     
@@ -413,42 +448,14 @@ public class EventSystemLogic : MonoBehaviour
         return isEventActive; // Tell others if the boss is currently telling a story
     }
     
-    public StoryNode GetCurrentStoryNode()
-    {
-        return currentStoryNode; // Tell others which story the boss is currently telling
-    }
+    public StoryNode GetCurrentStoryNode() => currentStoryNode;
     
-    // PSEUDOCODE: Public accessors for system references
-    public StatManager GetStatManager()
-    {
-        return statManager; // Return the stats manager reference
-    }
-    
-    public GameUnitsLogic GetGameUnitsLogic()
-    {
-        return gameUnitsLogic; // Return the resource manager reference
-    }
-    
-    public TimeSystemLogic GetTimeSystem()
-    {
-        return timeSystem; // Return the time system reference
-    }
-    
-    /// <summary>
-    /// Get the volume manager for external access
-    /// </summary>
-    public EventVolumeManager GetVolumeManager()
-    {
-        return volumeManager;
-    }
-    
-    /// <summary>
-    /// Get the screen manager for external access
-    /// </summary>
-    public EventScreenManager GetScreenManager()
-    {
-        return screenManager;
-    }
+    // Public accessors for system references
+    public StatManager GetStatManager() => statManager;
+    public GameUnitsLogic GetGameUnitsLogic() => gameUnitsLogic;
+    public TimeSystemLogic GetTimeSystem() => timeSystem;
+    public EventVolumeManager GetVolumeManager() => volumeManager;
+    public EventScreenManager GetScreenManager() => screenManager;
     
     /// <summary>
     /// Public method to manually trigger event checking (for testing and debugging)
@@ -491,28 +498,43 @@ public class EventSystemLogic : MonoBehaviour
             LogEvent("Event screen hidden");
         }
         
-        // Apply story consequences if we have a current story node
-        if (currentStoryNode != null)
+        // Apply cumulative consequences from the entire story flow
+        if (cumulativeConsequences.Count > 0)
         {
             if (AreSystemsReady())
             {
-                LogEvent($"Applying consequences for story: {currentStoryNode.storyTitle}");
-                foreach (EventConsequence consequence in currentStoryNode.storyConsequences)
+                LogEvent($"Applying {cumulativeConsequences.Count} cumulative consequences from story flow");
+                foreach (EventConsequence consequence in cumulativeConsequences)
                 {
-                    ApplyConsequence(consequence);
+                    if (IsTimedEligible(consequence) && consequence.durationSevenths > 0)
+                    {
+                        // Apply once and register for expiration
+                        ApplyConsequence(consequence);
+                        activeTimed.Add(new TimedConsequence { consequence = consequence, remainingSevenths = consequence.durationSevenths });
+                    }
+                    else
+                    {
+                        ApplyConsequence(consequence);
+                    }
                 }
             }
             else
             {
-                LogEvent($"Cannot apply consequences for story {currentStoryNode.storyTitle}: systems not ready");
+                LogEvent($"Cannot apply cumulative consequences: systems not ready");
             }
         }
+        
+        // Clear the cumulative consequences for the next story
+        ClearCumulativeConsequences();
         
         // Resume time when event ends
         if (timeSystem != null)
         {
             timeSystem.PauseTime(false);
             LogEvent("Time resumed after event");
+            // Ensure we are subscribed to seventh changes for timed expirations
+            timeSystem.OnSeventhChange -= OnTimedSeventh; // avoid dup
+            timeSystem.OnSeventhChange += OnTimedSeventh;
         }
         
         // Restore previous tab states and HUD visibility
@@ -530,6 +552,90 @@ public class EventSystemLogic : MonoBehaviour
         // Reset event state
         isEventActive = false;
         currentStoryNode = null;
+    }
+
+    private bool IsTimedEligible(EventConsequence c)
+    {
+        switch (c.type)
+        {
+            case EventConsequence.ConsequenceType.ProductionPercentChange:
+            case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
+            case EventConsequence.ConsequenceType.ClickPowerChange:
+            case EventConsequence.ConsequenceType.ClickPowerPercentChange:
+            case EventConsequence.ConsequenceType.ClickPowerChangeSection:
+            case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void OnTimedSeventh(int currentSeventh)
+    {
+        if (activeTimed.Count == 0) return;
+        // Decrement and expire any that hit 0; for expiration we remove the same effect
+        for (int i = activeTimed.Count - 1; i >= 0; i--)
+        {
+            var t = activeTimed[i];
+            t.remainingSevenths = Mathf.Max(0, t.remainingSevenths - 1);
+            if (t.remainingSevenths == 0)
+            {
+                RevertTimedConsequence(t.consequence);
+                activeTimed.RemoveAt(i);
+            }
+        }
+    }
+
+    private void RevertTimedConsequence(EventConsequence c)
+    {
+        // Revert by removing the source entry used when applying (story title)
+        string source = currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence";
+        switch (c.type)
+        {
+            case EventConsequence.ConsequenceType.ProductionPercentChange:
+                if (GlobalProductionManager.Instance != null)
+                {
+                    bool isPositive = c.value >= 0;
+                    GlobalProductionManager.Instance.AdjustPercentageModifier(c.targetName, Mathf.Abs(c.value), isPositive, false, source);
+                }
+                break;
+            case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
+                if (GlobalProductionManager.Instance != null)
+                {
+                    bool isPositive = c.value >= 0;
+                    GlobalProductionManager.Instance.AdjustPercentageModifierForSection(c.targetName, Mathf.Abs(c.value), isPositive, false, source);
+                }
+                break;
+            case EventConsequence.ConsequenceType.ClickPowerChange:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPower(c.targetName, -c.value);
+                }
+                break;
+            case EventConsequence.ConsequenceType.ClickPowerPercentChange:
+                if (gameUnitsLogic != null)
+                {
+                    // Revert percentage by inverse factor
+                    float revertPercent = -c.value;
+                    gameUnitsLogic.AdjustClickPowerPercent(c.targetName, revertPercent);
+                }
+                break;
+            case EventConsequence.ConsequenceType.ClickPowerChangeSection:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPowerForSection(c.targetName, -c.value);
+                }
+                break;
+            case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
+                if (gameUnitsLogic != null)
+                {
+                    float revertSectionPercent = -c.value;
+                    gameUnitsLogic.AdjustClickPowerPercentForSection(c.targetName, revertSectionPercent);
+                }
+                break;
+            default:
+                break;
+        }
     }
     
     /// <summary>
@@ -580,6 +686,90 @@ public class EventSystemLogic : MonoBehaviour
                 else
                 {
                     LogEvent($"Cannot apply ProductionUnitChange consequence: GameUnitsLogic is null");
+                }
+                break;
+            
+            case EventConsequence.ConsequenceType.ProductionPercentChange:
+                if (GlobalProductionManager.Instance != null)
+                {
+                    // Positive value increases production; negative decreases
+                    bool isPositive = consequence.value >= 0;
+                    float amount = Mathf.Abs(consequence.value);
+                    // Add a persistent percentage modifier, tracked by event name for source
+                    GlobalProductionManager.Instance.AdjustPercentageModifier(
+                        consequence.targetName,
+                        amount,
+                        isPositive,
+                        true,
+                        currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence"
+                    );
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ProductionPercentChange consequence: GlobalProductionManager.Instance is null");
+                }
+                break;
+
+            case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
+                if (GlobalProductionManager.Instance != null)
+                {
+                    bool isPositive = consequence.value >= 0;
+                    float amount = Mathf.Abs(consequence.value);
+                    GlobalProductionManager.Instance.AdjustPercentageModifierForSection(
+                        consequence.targetName,
+                        amount,
+                        isPositive,
+                        true,
+                        currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence"
+                    );
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ProductionPercentChangeSection consequence: GlobalProductionManager.Instance is null");
+                }
+                break;
+
+            case EventConsequence.ConsequenceType.ClickPowerChange:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPower(consequence.targetName, consequence.value);
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ClickPowerChange consequence: GameUnitsLogic is null");
+                }
+                break;
+
+            case EventConsequence.ConsequenceType.ClickPowerPercentChange:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPowerPercent(consequence.targetName, consequence.value);
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ClickPowerPercentChange consequence: GameUnitsLogic is null");
+                }
+                break;
+
+            case EventConsequence.ConsequenceType.ClickPowerChangeSection:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPowerForSection(consequence.targetName, consequence.value);
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ClickPowerChangeSection consequence: GameUnitsLogic is null");
+                }
+                break;
+
+            case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.AdjustClickPowerPercentForSection(consequence.targetName, consequence.value);
+                }
+                else
+                {
+                    LogEvent($"Cannot apply ClickPowerPercentChangeSection consequence: GameUnitsLogic is null");
                 }
                 break;
                 

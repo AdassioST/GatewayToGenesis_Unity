@@ -302,12 +302,19 @@ public class EventConsequence
         HousingChange,        // Modify housing amount
         VagrantsChange,       // Modify vagrants amount (can become population)
         DeathsChange,         // Process event deaths (kill population, track deaths)
-        DeathRecordsRevision  // Revise death records for evil empire history manipulation
+        DeathRecordsRevision,  // Revise death records for evil empire history manipulation
+        ProductionPercentChange, // Adjust global production percentage modifier for a resource
+        ProductionPercentChangeSection, // Adjust production percent for all resources in a section
+        ClickPowerChange, // Static click power change for a single resource
+        ClickPowerPercentChange, // Percent click power change for a single resource
+        ClickPowerChangeSection, // Static click power change for all resources in a section
+        ClickPowerPercentChangeSection // Percent click power change for all resources in a section
     }
     
     public ConsequenceType type;
-    public string targetName; // Score name, stat name, resource name, etc.
-    public int value; // Amount to change
+    public string targetName; // Name of resource or section, depending on type
+    public int value; // Signed amount (absolute for percents; +/- for static)
+    public int durationSevenths; // 0 => permanent; >0 => expires after N sevenths
 }
 
 /// <summary>

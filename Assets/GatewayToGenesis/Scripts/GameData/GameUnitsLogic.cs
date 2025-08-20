@@ -67,7 +67,7 @@ public class GameUnitsLogic : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"Resource {name} is not in the resource storage slots and could not be found in the system. Make sure the GameUnit asset exists in Assets/GatewayToGenesis/Scripts/GameData/GameObjects/Resources/");
+                 Debug.LogWarning($"Resource {name} is not in the resource storage slots and could not be found in the system. Make sure the GameUnit asset exists in Assets/GatewayToGenesis/Scripts/GameData/GameObjects/Resources/");
             }
         }
     }
@@ -398,6 +398,53 @@ public class GameUnitsLogic : MonoBehaviour
         return storageTab.slots.Select(slot => slot.GetComponent<GameResourceSlot>()).ToList();
     }
 
+    // Adjust click power of a single resource by flat amount
+    public void AdjustClickPower(string resourceName, float delta)
+    {
+        var slotObj = storageTab.slots.Find(slot => slot.name == resourceName);
+        var resourceSlot = slotObj != null ? slotObj.GetComponent<GameResourceSlot>() : null;
+        if (resourceSlot != null)
+        {
+            resourceSlot.clickPower += delta;
+        }
+    }
+
+    // Adjust click power of a single resource by percent (positive or negative)
+    public void AdjustClickPowerPercent(string resourceName, float percent)
+    {
+        var slotObj = storageTab.slots.Find(slot => slot.name == resourceName);
+        var resourceSlot = slotObj != null ? slotObj.GetComponent<GameResourceSlot>() : null;
+        if (resourceSlot != null)
+        {
+            resourceSlot.clickPower *= (1f + percent / 100f);
+        }
+    }
+
+    // Adjust click power for all resources within a section by flat amount
+    public void AdjustClickPowerForSection(string sectionName, float delta)
+    {
+        foreach (var slotGO in storageTab.slots)
+        {
+            var resSlot = slotGO.GetComponent<GameResourceSlot>();
+            if (resSlot != null && resSlot.gameUnit != null && string.Equals(resSlot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                resSlot.clickPower += delta;
+            }
+        }
+    }
+
+    // Adjust click power for all resources within a section by percent
+    public void AdjustClickPowerPercentForSection(string sectionName, float percent)
+    {
+        foreach (var slotGO in storageTab.slots)
+        {
+            var resSlot = slotGO.GetComponent<GameResourceSlot>();
+            if (resSlot != null && resSlot.gameUnit != null && string.Equals(resSlot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                resSlot.clickPower *= (1f + percent / 100f);
+            }
+        }
+    }
     public List<GameUnit> GetAvailableGameUnits()
     {
         List<GameUnit> availableUnits = new List<GameUnit>();
@@ -412,6 +459,24 @@ public class GameUnitsLogic : MonoBehaviour
         }
         
         return availableUnits;
+    }
+
+    /// <summary>
+    /// Public accessor that reuses the internal discovery logic to find a GameUnit by name.
+    /// Prefer this over duplicating Resources.LoadAll logic elsewhere.
+    /// </summary>
+    public GameUnit GetGameUnitByName(string unitName)
+    {
+        return FindGameUnitByName(unitName);
+    }
+
+    /// <summary>
+    /// Convenience helper to retrieve a GameUnit icon by name (returns null if not found).
+    /// </summary>
+    public Sprite GetGameUnitIconByName(string unitName)
+    {
+        var unit = GetGameUnitByName(unitName);
+        return unit != null ? unit.icon : null;
     }
 
     private void HandleSpecialUnlockable(TechUnlockable unlockable)

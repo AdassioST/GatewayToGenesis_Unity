@@ -60,6 +60,48 @@ public class StatManager : MonoBehaviour
         CalculateDerivedStats();
     }
 
+    private void OnValidate()
+    {
+        // Keep internal dictionaries in sync with serialized fields when values are edited in the Inspector.
+        // Also broadcast changes at runtime so listeners (e.g., ChorusScreen) can refresh UI/logic.
+        // Ensure base dictionaries exist before comparing
+        if (pillars == null) pillars = new Dictionary<string, int>();
+        if (substats == null) substats = new Dictionary<string, int>();
+
+        int oldAureus = pillars.ContainsKey("aureus") ? pillars["aureus"] : aureus;
+        int oldRegalia = pillars.ContainsKey("regalia") ? pillars["regalia"] : regalia;
+        int oldWaltz = pillars.ContainsKey("waltz") ? pillars["waltz"] : waltz;
+        int oldChorus = pillars.ContainsKey("chorus") ? pillars["chorus"] : chorus;
+
+        // Initialize dictionaries from current serialized values
+        InitializeStats();
+        CalculateDerivedStats();
+
+        if (!Application.isPlaying)
+        {
+            // In edit mode (not playing), don't emit events
+            return;
+        }
+
+        // During play, notify listeners for only the pillars that changed, and update dependent substats
+        if (oldAureus != aureus)
+        {
+            UpdatePillar("aureus", aureus);
+        }
+        if (oldRegalia != regalia)
+        {
+            UpdatePillar("regalia", regalia);
+        }
+        if (oldWaltz != waltz)
+        {
+            UpdatePillar("waltz", waltz);
+        }
+        if (oldChorus != chorus)
+        {
+            UpdatePillar("chorus", chorus);
+        }
+    }
+
     private void InitializeStats()
     {
         // Initialize pillars
