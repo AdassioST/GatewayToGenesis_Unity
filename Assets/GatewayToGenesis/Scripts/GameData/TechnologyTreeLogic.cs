@@ -107,7 +107,7 @@ public class TechnologyTreeLogic : MonoBehaviour
             if (requiredTechSlot.techState == TechnologyState.CurrentResearchOption) anyPrerequisiteCurrentlyResearching = true;
         }
 
-        // Reveal early when enlightened
+        // Reveal early when enlightened (always visible regardless of prerequisites)
         if (techSlot.enlightenedCompleted)
         {
             techSlot.techState = TechnologyState.NextResearchOption;
@@ -127,7 +127,7 @@ public class TechnologyTreeLogic : MonoBehaviour
             techSlot.techState = TechnologyState.CurrentResearchOption;
         }
 
-        // Transition Enlightened tech back to CurrentResearchOption
+        // Transition Enlightened tech to CurrentResearchOption if prerequisites become met later
         if (allPrerequisitesUnlocked && techSlot.techState == TechnologyState.NextResearchOption)
         {
             techSlot.techState = TechnologyState.CurrentResearchOption;

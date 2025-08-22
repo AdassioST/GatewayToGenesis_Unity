@@ -30,6 +30,10 @@ public class GlobalProductionManager : MonoBehaviour
     private Dictionary<string, Dictionary<string, float>> percentageBonusBySource = new Dictionary<string, Dictionary<string, float>>();
     private Dictionary<string, Dictionary<string, float>> percentageMalusBySource = new Dictionary<string, Dictionary<string, float>>();
 
+    // Persistent flat modifiers tracked by source
+    private Dictionary<string, Dictionary<string, float>> persistentBonusBySource = new Dictionary<string, Dictionary<string, float>>();
+    private Dictionary<string, Dictionary<string, float>> persistentMalusBySource = new Dictionary<string, Dictionary<string, float>>();
+
     public float techTier = 1f, costBalance = 0.05f;
 
     private void Awake()
@@ -89,6 +93,8 @@ public class GlobalProductionManager : MonoBehaviour
                 percentageNegativeModifiers[resourceName] = 0f;
                 if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
                 if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
+                if (!persistentBonusBySource.ContainsKey(resourceName)) persistentBonusBySource[resourceName] = new Dictionary<string, float>();
+                if (!persistentMalusBySource.ContainsKey(resourceName)) persistentMalusBySource[resourceName] = new Dictionary<string, float>();
             }
         }
     }
@@ -112,6 +118,8 @@ public class GlobalProductionManager : MonoBehaviour
                 percentageNegativeModifiers[resourceName] = 0f;
                 if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
                 if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
+                if (!persistentBonusBySource.ContainsKey(resourceName)) persistentBonusBySource[resourceName] = new Dictionary<string, float>();
+                if (!persistentMalusBySource.ContainsKey(resourceName)) persistentMalusBySource[resourceName] = new Dictionary<string, float>();
             }
         }
     }
@@ -177,6 +185,16 @@ public class GlobalProductionManager : MonoBehaviour
 
         targetModifiers[resourceName] += isAdd ? modifierAmount : -modifierAmount;
 
+        // Track per-source magnitudes for persistent modifiers
+        var perSourceMap = isPositive ? persistentBonusBySource : persistentMalusBySource;
+        if (!perSourceMap.ContainsKey(resourceName)) perSourceMap[resourceName] = new Dictionary<string, float>();
+        var map = perSourceMap[resourceName];
+        float current = 0f;
+        map.TryGetValue(modifierSource ?? "Unknown", out current);
+        float next = isAdd ? current + modifierAmount : current - modifierAmount;
+        if (next <= 0.0001f) { if (map.ContainsKey(modifierSource)) map.Remove(modifierSource); }
+        else map[modifierSource] = next;
+
         // Store the source for later use
         if (!string.IsNullOrEmpty(modifierSource))
         {
@@ -193,6 +211,31 @@ public class GlobalProductionManager : MonoBehaviour
         }
 
         CalculateGlobalProductionRates();
+    }
+
+    // Expose per-source maps for tooltips/UI
+    public IReadOnlyDictionary<string, float> GetPercentageBonusBySource(string resourceName)
+    {
+        if (percentageBonusBySource.TryGetValue(resourceName, out var dict)) return dict;
+        return new Dictionary<string, float>();
+    }
+
+    public IReadOnlyDictionary<string, float> GetPercentageMalusBySource(string resourceName)
+    {
+        if (percentageMalusBySource.TryGetValue(resourceName, out var dict)) return dict;
+        return new Dictionary<string, float>();
+    }
+
+    public IReadOnlyDictionary<string, float> GetPersistentBonusBySource(string resourceName)
+    {
+        if (persistentBonusBySource.TryGetValue(resourceName, out var dict)) return dict;
+        return new Dictionary<string, float>();
+    }
+
+    public IReadOnlyDictionary<string, float> GetPersistentMalusBySource(string resourceName)
+    {
+        if (persistentMalusBySource.TryGetValue(resourceName, out var dict)) return dict;
+        return new Dictionary<string, float>();
     }
 
     public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
@@ -317,6 +360,13 @@ public class GlobalProductionManager : MonoBehaviour
             percentageNegativeModifiers[resourceName] = negPercent;
 
             float totalPercent = posPercent - negPercent;
+            // Apply morale-based global production modifier (difference from balance)
+            int moraleDelta = 0;
+            if (StatManager.Instance != null)
+            {
+                moraleDelta = Mathf.RoundToInt(StatManager.Instance.GetMoraleDeltaPercent());
+            }
+            totalPercent += moraleDelta;
             if (Mathf.Abs(totalPercent) > 0.001f && basePositiveRate != 0f)
             {
                 basePositiveRate *= (1 + totalPercent / 100f);

@@ -8,6 +8,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public bool useCustomTooltip, isBreakdownDisplay, isProductionModifiers;
 
     public string customTitle, customDescription, customType;
+    public string customStorageBreakdown;
 
     private void Update()
     {
@@ -96,6 +97,11 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             if (!string.IsNullOrEmpty(customType))
             {
                 dynamicData.type = customType;
+            }
+
+            if (isBreakdownDisplay && !string.IsNullOrEmpty(customStorageBreakdown))
+            {
+                dynamicData.storageBreakdown = customStorageBreakdown;
             }
 
             return dynamicData;

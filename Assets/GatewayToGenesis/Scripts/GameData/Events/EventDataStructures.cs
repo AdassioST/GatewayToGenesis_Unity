@@ -38,6 +38,9 @@ public class StoryNode
     [Header("Story Consequences")]
     public List<EventConsequence> storyConsequences = new List<EventConsequence>(); // What happens when story completes
     
+    [Header("Story Cooldown")]
+    public int cooldownSevenths = 0; // How many sevenths must pass before this event can trigger again
+    
     [Header("Screen Flow")]
     public List<ScreenFlowStep> screenFlow = new List<ScreenFlowStep>(); // How screens progress through this story
     
@@ -100,7 +103,8 @@ public class EventCondition
         VagrantsCheck,      // Check vagrants amount
         DeathsCheck,        // Check deaths amount
         VagrantDeathsCheck,  // Check vagrant deaths amount
-        TrueDeathsCheck      // Check true deaths amount (cannot be revised)
+        TrueDeathsCheck,     // Check true deaths amount (cannot be revised)
+        NoEventInSeventhsCheck // Check if no events happened in X sevenths
     }
     
     public ConditionType type;
@@ -246,6 +250,21 @@ public class EventCondition
                 else
                 {
                     Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate TrueDeathsCheck condition");
+                    return false;
+                }
+                
+            case ConditionType.NoEventInSeventhsCheck:
+                // Check if no events have happened in the specified number of sevenths
+                if (EventSystemLogic.Instance != null)
+                {
+                    int seventhsSinceLastEvent = EventSystemLogic.Instance.GetSeventhsSinceLastEvent();
+                    // For this condition, we want to check if the time since last event is >= required value
+                    // This means "no event in X sevenths" is true when seventhsSinceLastEvent >= requiredValue
+                    return seventhsSinceLastEvent >= requiredValue;
+                }
+                else
+                {
+                    Debug.LogWarning("[EventDataStructures] EventSystemLogic.Instance is null - cannot evaluate NoEventInSeventhsCheck condition");
                     return false;
                 }
                 

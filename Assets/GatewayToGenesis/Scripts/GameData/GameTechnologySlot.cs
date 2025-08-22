@@ -50,6 +50,10 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
     public TechnologyState techState;
 
+    [Header("Enlightened Settings")]
+    [SerializeField] public float enlightenedBonusPercent = 0.3f; // 30% default
+    [System.NonSerialized] public bool enlightenedBonusApplied = false; // applied once per tech
+
     private void Start()
     {
         gameUnitsLogic = GameUnitsLogic.Instance;

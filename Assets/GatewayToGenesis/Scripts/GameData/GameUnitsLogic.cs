@@ -269,6 +269,12 @@ public class GameUnitsLogic : MonoBehaviour
 
         while (!technologySlot.isUnlocked)
         {
+            // Gate research ticks by time system state
+            if (TimeSystemLogic.Instance != null && TimeSystemLogic.Instance.isTimePaused)
+            {
+                yield return null;
+                continue;
+            }
             if (switchedTechnologies)
             {
                 yield break;
@@ -300,6 +306,25 @@ public class GameUnitsLogic : MonoBehaviour
                 if (resourceProgress[resourceName] < requiredAmount)
                 {
                     allResourcesComplete = false;
+                }
+            }
+
+            // Apply Enlightened bonus once, as a proportion of total cost
+            if (technologySlot.enlightenedCompleted && !technologySlot.enlightenedBonusApplied && technologySlot.enlightenedBonusPercent > 0f)
+            {
+                float totalRequired = technologyData.resourceAmount.Sum();
+                if (totalRequired > 0f)
+                {
+                    float bonusAmount = totalRequired * Mathf.Clamp01(technologySlot.enlightenedBonusPercent);
+                    // Distribute the bonus across resources proportionally to their requirements
+                    for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
+                    {
+                        var required = technologyData.resourceAmount[i];
+                        if (required <= 0f) continue;
+                        float share = bonusAmount * (required / totalRequired);
+                        resourceProgress[technologyData.resourceRequirements[i]] = Mathf.Min(required, resourceProgress[technologyData.resourceRequirements[i]] + share);
+                    }
+                    technologySlot.enlightenedBonusApplied = true;
                 }
             }
 

@@ -75,13 +75,27 @@ public class PopGrowthLogic : MonoBehaviour
     {
         freeHousing = housing - population;
 
+        // Morale-adjusted threshold: base threshold scaled by morale delta percent
+        float adjustedThreshold = GetMoraleAdjustedFoodThreshold();
+
         // Consume food and grow population or vagrants based on the allowVagrants flag
-        if (GetResourceSlotAmount("Food") >= foodThreshold)
+        float currentFood = GetResourceSlotAmount("Food");
+        if (currentFood + 1e-3f >= adjustedThreshold) // epsilon guard for float precision
         {
             // Only remove food threshold if population is growing or vagrants are allowed
             if (freeHousing > 0 || allowVagrants)
             {
-                unitsLogic.ChangeResourceFromName("Food", -foodThreshold, false);
+                // Withdraw directly from slot to avoid clamping against Food.maxAmount and ensure exact subtraction
+                GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+                if (foodSlot != null)
+                {
+                    foodSlot.amount = Mathf.Max(0f, foodSlot.amount - adjustedThreshold);
+                    foodSlot.RefreshProductionAmount();
+                }
+                else
+                {
+                    unitsLogic.ChangeResourceFromName("Food", -adjustedThreshold, false);
+                }
 
                 if (freeHousing > 0)
                 {
@@ -211,13 +225,32 @@ public class PopGrowthLogic : MonoBehaviour
 
         if (foodSlot != null)
         {
+            // Growth threshold is a logical requirement, not a storage cap.
+            // Do NOT tie storage max to the growth threshold to avoid blocking growth when threshold > max.
             foodThreshold = newFoodThreshold;
-            foodSlot.maxAmount = newFoodThreshold;
         }
         else
         {
             Debug.LogWarning("Food slot not found.");
         }
+    }
+
+    private float GetMoraleAdjustedFoodThreshold()
+    {
+        // Future: support tiered thresholds by population milestones; for now use current foodThreshold base
+        float baseThreshold = foodThreshold;
+        int moraleDelta = 0;
+        if (StatManager.Instance != null)
+        {
+            moraleDelta = Mathf.RoundToInt(StatManager.Instance.GetMoraleDeltaPercent());
+        }
+        // Positive morale lowers threshold, negative morale raises it
+        float factor = 1f - (moraleDelta / 100f);
+        // Clamp to a reasonable range to avoid zero/negative
+        factor = Mathf.Clamp(factor, 0.25f, 2.0f);
+        float scaled = baseThreshold * factor;
+        // If population size intended to influence base (e.g., after 100 pop, base -> 20), keep layout for future
+        return Mathf.Max(1f, scaled);
     }
     
     /// <summary>

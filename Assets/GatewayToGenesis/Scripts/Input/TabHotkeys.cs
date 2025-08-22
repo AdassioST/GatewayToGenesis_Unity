@@ -214,7 +214,11 @@ public class TabHotkeys : MonoBehaviour
                 
                 if (updateHUD)
                 {
-                    TimeSystemLogic.Instance.PauseTime(true);
+                    // Do not pause time when opening Research/Technology tab to allow research progression
+                    if (tab != researchTab)
+                    {
+                        TimeSystemLogic.Instance.PauseTime(true);
+                    }
                     SetHUDVisibility(false);
                 }
             });
@@ -532,5 +536,44 @@ public class TabHotkeys : MonoBehaviour
     public (float tabDuration, float hudDuration, Ease tabEase, Ease hudEase) GetAnimationSettings()
     {
         return (tabFadeDuration, hudFadeDuration, tabFadeEase, hudFadeEase);
+    }
+    
+    /// <summary>
+    /// Switch to event tab (called when starting event from notification)
+    /// </summary>
+    public void SwitchToEventTab()
+    {
+        if (eventTab == null) return;
+        
+        // Hide all other tabs first
+        foreach (GameObject tab in tabs)
+        {
+            if (tab != null && tab != eventTab)
+            {
+                Transform display = tab.transform.Find("Display");
+                if (display != null)
+                {
+                    CanvasGroup canvasGroup = display.GetComponent<CanvasGroup>();
+                    if (canvasGroup != null)
+                    {
+                        FadeTabOut(tab, canvasGroup, false);
+                    }
+                }
+            }
+        }
+        
+        // Show event tab
+        Transform eventDisplay = eventTab.transform.Find("Display");
+        if (eventDisplay != null)
+        {
+            CanvasGroup eventCanvasGroup = eventDisplay.GetComponent<CanvasGroup>();
+            if (eventCanvasGroup != null)
+            {
+                FadeTabIn(eventTab, eventCanvasGroup, true);
+            }
+        }
+        
+        // Hide HUD during event
+        SetHUDVisibility(false);
     }
 }

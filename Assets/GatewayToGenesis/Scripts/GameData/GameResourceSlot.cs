@@ -42,7 +42,16 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
         amountText.text = GameUnitsLogic.Instance.FormatValue(amount);
         productionRateText.text = GameUnitsLogic.Instance.FormatValue(productionRate) + "/s";
 
-        fill.fillAmount = amount / maxAmount;
+        // For Food, visualize progress toward growth threshold rather than storage cap
+        if (string.Equals(gameUnit.name, "Food", System.StringComparison.OrdinalIgnoreCase) && PopGrowthLogic.Instance != null)
+        {
+            float threshold = Mathf.Max(1f, PopGrowthLogic.Instance.foodThreshold);
+            fill.fillAmount = Mathf.Clamp01(amount / threshold);
+        }
+        else
+        {
+            fill.fillAmount = amount / maxAmount;
+        }
 
         if (productionRate < 0)
         {

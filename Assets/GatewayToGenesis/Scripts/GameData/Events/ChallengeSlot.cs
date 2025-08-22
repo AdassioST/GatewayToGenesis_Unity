@@ -65,6 +65,28 @@ public class ChallengeSlot : MonoBehaviour
         
         // Update chance image
         UpdateChanceImage();
+
+        // Attach/update tooltip triggers for pillar and chance icons
+        var pillarGo = pillarIcon != null ? pillarIcon.gameObject : null;
+        if (pillarGo != null)
+        {
+            var t = pillarGo.GetComponent<TooltipTrigger>();
+            if (t == null) t = pillarGo.AddComponent<TooltipTrigger>();
+            t.useCustomTooltip = true;
+            t.customTitle = $"{FormatPillarName(pillarType)} Challenge";
+            t.customDescription = $"Needs {requiredStrength} {FormatPillarName(pillarType)} for 100%";
+            t.customType = string.Empty;
+        }
+        var chanceGo = chanceImage != null ? chanceImage.gameObject : null;
+        if (chanceGo != null)
+        {
+            var t2 = chanceGo.GetComponent<TooltipTrigger>();
+            if (t2 == null) t2 = chanceGo.AddComponent<TooltipTrigger>();
+            t2.useCustomTooltip = true;
+            t2.customTitle = GetLuckTitle(successChance);
+            t2.customDescription = $"{successChance:F0}% Chance";
+            t2.customType = string.Empty;
+        }
     }
     
     /// <summary>
@@ -105,6 +127,15 @@ public class ChallengeSlot : MonoBehaviour
         if (chance >= 40f) return chanceIconGamble;    // 40-60% - Gamble
         if (chance >= 10f) return chanceIconCursed;    // 10-40% - Cursed
         return chanceIconForsaken;                      // Below 10% - Forsaken
+    }
+
+    private string GetLuckTitle(float chance)
+    {
+        if (chance > 90f) return "It's Fated Luck!";
+        if (chance >= 60f) return "It's Blessed Luck!";
+        if (chance >= 40f) return "It's Gamble Luck!";
+        if (chance >= 10f) return "It's Cursed Luck!";
+        return "It's Forsaken Luck!";
     }
     
     /// <summary>

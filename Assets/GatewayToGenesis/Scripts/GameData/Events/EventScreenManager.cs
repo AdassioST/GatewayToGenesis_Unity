@@ -305,6 +305,21 @@ public class EventScreenManager : MonoBehaviour
         // Setup buttons and other elements
         SetupSplashElements(screen, GetCurrentStoryUIMetadata());
 
+        // Hook tooltip for splash image: show event description in tooltip title
+        Transform imgTransform = splashScreen.transform.Find("Image");
+        var tooltipGo = imgTransform != null ? imgTransform.gameObject : (backgroundTransform != null ? backgroundTransform.gameObject : null);
+        if (tooltipGo != null)
+        {
+            var trigger = tooltipGo.GetComponent<TooltipTrigger>();
+            if (trigger == null) trigger = tooltipGo.AddComponent<TooltipTrigger>();
+            trigger.useCustomTooltip = true;
+            // Use story description from current node
+            StoryNode current = volumeManager?.GetCurrentStoryNode();
+            trigger.customTitle = current != null && !string.IsNullOrEmpty(current.storyDescription) ? current.storyDescription : (screen.description ?? string.Empty);
+            trigger.customDescription = string.Empty;
+            trigger.customType = string.Empty;
+        }
+
         // Animate vignette for this screen type
         AnimateVignetteForScreenType(ScreenType.Splash);
 
@@ -367,6 +382,37 @@ public class EventScreenManager : MonoBehaviour
 
         // Setup verse button label (click handled by progressive reveal's continue)
         SetupVerseButton(screen);
+
+        // Add tooltip to show consequences for this verse only
+        Transform buttonTransform = currentScreen.transform.Find("Button");
+        if (buttonTransform != null)
+        {
+            var btnGo = buttonTransform.gameObject;
+            // Build preview text for this verse only (no cumulative)
+            string preview = BuildVerseTooltipConsequencesText(screen.inkKnot);
+            
+            // Only add tooltip if there are actual consequences to show
+            if (!string.IsNullOrEmpty(preview))
+            {
+                var trigger = btnGo.GetComponent<TooltipTrigger>();
+                if (trigger == null) trigger = btnGo.AddComponent<TooltipTrigger>();
+                trigger.useCustomTooltip = true;
+                trigger.isBreakdownDisplay = true; // reuse storageBreakdown area in tooltip
+                trigger.customTitle = "Has Happened...";
+                trigger.customDescription = string.Empty;
+                trigger.customType = string.Empty;
+                trigger.customStorageBreakdown = preview;
+            }
+            else
+            {
+                // Remove tooltip trigger if no consequences (prevents empty tooltip box)
+                var existingTrigger = btnGo.GetComponent<TooltipTrigger>();
+                if (existingTrigger != null)
+                {
+                    DestroyImmediate(existingTrigger);
+                }
+            }
+        }
 
         // Animate vignette for this screen type
         AnimateVignetteForScreenType(ScreenType.Verse);
@@ -1216,11 +1262,27 @@ public class EventScreenManager : MonoBehaviour
 
     private EventConsequence ParseSingleConsequenceInline(string str)
     {
-        // Format: type:TargetName +/-Value
+        // Supported formats:
+        //  - type:TargetName +/-Value
+        //  - technology:Tech Name enlightened
         int colon = str.IndexOf(':');
         if (colon <= 0) return null;
         string type = str.Substring(0, colon).Trim();
         string body = str.Substring(colon + 1).Trim();
+
+        // Special case for technology enlightened (no numeric value)
+        if (type.Equals("technology", System.StringComparison.OrdinalIgnoreCase) &&
+            body.IndexOf("enlightened", System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            string targetTech = body.Replace("enlightened", "", System.StringComparison.OrdinalIgnoreCase).Trim();
+            return new EventConsequence
+            {
+                type = MapConsequenceType(type),
+                targetName = targetTech,
+                value = 0
+            };
+        }
+
         int lastSpace = body.LastIndexOf(' ');
         if (lastSpace <= 0) return null;
         string target = body.Substring(0, lastSpace).Trim();
@@ -1482,7 +1544,7 @@ public class EventScreenManager : MonoBehaviour
             TextMeshProUGUI happenedText = happenedTransform.GetComponent<TextMeshProUGUI>();
             if (happenedText != null)
             {
-                happenedText.text = "The following has happened:";
+                happenedText.text = "Has Happened...";
             }
         }
 
@@ -1582,6 +1644,25 @@ public class EventScreenManager : MonoBehaviour
                 button.interactable = false;
                 LogScreen("Button disabled to prevent multiple presses");
             }
+        }
+        
+        // Kill any DOTween tweens running on the current screen to prevent "missing target" errors
+        if (currentScreen != null)
+        {
+            // Kill all tweens on this screen's components
+            DOTween.Kill(currentScreen);
+            
+            // Also kill any tweens on child objects that might have tweens
+            CanvasGroup[] canvasGroups = currentScreen.GetComponentsInChildren<CanvasGroup>();
+            foreach (var cg in canvasGroups)
+            {
+                if (cg != null) DOTween.Kill(cg);
+            }
+            
+            // Kill any tweens on the screen's transform
+            DOTween.Kill(currentScreen.transform);
+            
+            LogScreen("Killed all DOTween tweens on current screen to prevent errors");
         }
         
         // Complete the story through the event system
@@ -1717,6 +1798,24 @@ public class EventScreenManager : MonoBehaviour
                 progressiveRevealLogic = null;
             }
             
+            // Kill all DOTween tweens before destroying the screen to prevent errors
+            DOTween.Kill(currentScreen);
+            DOTween.Kill(currentScreen.transform);
+            
+            // Kill tweens on all child components that might have tweens
+            CanvasGroup[] canvasGroups = currentScreen.GetComponentsInChildren<CanvasGroup>();
+            foreach (var cg in canvasGroups)
+            {
+                if (cg != null) DOTween.Kill(cg);
+            }
+            
+            // Also kill any tweens on child transforms
+            Transform[] children = currentScreen.GetComponentsInChildren<Transform>();
+            foreach (var child in children)
+            {
+                if (child != null) DOTween.Kill(child);
+            }
+            
             Destroy(currentScreen);
             currentScreen = null;
         }
@@ -1754,7 +1853,8 @@ public class EventScreenManager : MonoBehaviour
                     int current = EventSystemLogic.Instance?.GetEventScore(c.targetName) ?? 0;
                     int next = current + c.value;
                     string verb = c.value >= 0 ? "Gained" : "Lost";
-                    sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} x {c.targetName} (New Total {next})");
+                    string display = FormatScoreDisplayName(c.targetName);
+                    sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} x {display} (New Total {next})");
                     break;
                 }
                 case EventConsequence.ConsequenceType.StatChange:
@@ -1763,7 +1863,11 @@ public class EventScreenManager : MonoBehaviour
                     int current = sm != null ? sm.GetStatValue(c.targetName) : 0;
                     int next = current + c.value;
                     string verb = c.value >= 0 ? "Gained" : "Lost";
-                    sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} {c.targetName} (New Total {next})");
+                    // Capitalize the first letter of the stat name for better readability
+                    string capitalizedStatName = !string.IsNullOrEmpty(c.targetName) ? 
+                        char.ToUpper(c.targetName[0]) + c.targetName.Substring(1).ToLower() : 
+                        c.targetName;
+                    sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} {capitalizedStatName} (New Total {next})");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ProductionUnitChange:
@@ -1794,7 +1898,7 @@ public class EventScreenManager : MonoBehaviour
                 }
                 case EventConsequence.ConsequenceType.UnlockEvent:
                 {
-                    sb.AppendLine($"- You've Unlocked event {c.targetName}");
+                    sb.AppendLine($"- You've Unlocked Event {c.targetName}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.PopulationChange:
@@ -1805,11 +1909,11 @@ public class EventScreenManager : MonoBehaviour
                         int next = current + c.value;
                         
                         // Population can only be lost through events (deaths)
-                        sb.AppendLine($"- {Mathf.Abs(c.value)} population have been killed (New Total {Mathf.Max(next, 0)})");
+                        sb.AppendLine($"- {Mathf.Abs(c.value)} Population Have Been Killed (New Total {Mathf.Max(next, 0)})");
                     }
                     else
                     {
-                        sb.AppendLine($"- {Mathf.Abs(c.value)} population have been killed");
+                        sb.AppendLine($"- {Mathf.Abs(c.value)} Population Have Been Killed");
                     }
                     break;
                 }
@@ -1823,23 +1927,23 @@ public class EventScreenManager : MonoBehaviour
                         if (c.value > 0)
                         {
                             // New housing was built
-                            sb.AppendLine($"- {c.value} new housing units have been gained (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {c.value} New Housing Units Have Been Gained (New Total {Mathf.Max(next, 0)})");
                         }
                         else
                         {
                             // Housing was destroyed or lost
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} housing units have been lost (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Housing Units Have Been Lost (New Total {Mathf.Max(next, 0)})");
                         }
                     }
                     else
                     {
                         if (c.value > 0)
                         {
-                            sb.AppendLine($"- {c.value} new housing units have been gained");
+                            sb.AppendLine($"- {c.value} New Housing Units Have Been Gained");
                         }
                         else
                         {
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} housing units have been lost");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Housing Units Have Been Lost");
                         }
                     }
                     break;
@@ -1854,23 +1958,23 @@ public class EventScreenManager : MonoBehaviour
                         if (c.value > 0)
                         {
                             // New vagrants arrived
-                            sb.AppendLine($"- {c.value} new vagrants have arrived (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {c.value} New Vagrants Have Arrived (New Total {Mathf.Max(next, 0)})");
                         }
                         else
                         {
                             // Vagrants were killed
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} vagrants have been killed (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Vagrants Have Been Killed (New Total {Mathf.Max(next, 0)})");
                         }
                     }
                     else
                     {
                         if (c.value > 0)
                         {
-                            sb.AppendLine($"- {c.value} new vagrants have arrived");
+                            sb.AppendLine($"- {c.value} New Vagrants Have Arrived");
                         }
                         else
                         {
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} vagrants have been killed");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Vagrants Have Been Killed");
                         }
                     }
                     break;
@@ -1885,23 +1989,23 @@ public class EventScreenManager : MonoBehaviour
                         if (c.value > 0)
                         {
                             // Additional deaths occurred
-                            sb.AppendLine($"- {c.value} additional deaths have been recorded (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {c.value} Additional Deaths Have Been Recorded (New Total {Mathf.Max(next, 0)})");
                         }
                         else
                         {
                             // Deaths were reduced (unusual but handle gracefully)
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the historical records (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Deaths Have Been Wiped From The Historical Records (New Total {Mathf.Max(next, 0)})");
                         }
                     }
                     else
                     {
                         if (c.value > 0)
                         {
-                            sb.AppendLine($"- {c.value} additional deaths have been recorded");
+                            sb.AppendLine($"- {c.value} Additional Deaths Have Been Recorded");
                         }
                         else
                         {
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the historical records");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Deaths Have Been Wiped From The Historical Records");
                         }
                     }
                     break;
@@ -1916,23 +2020,23 @@ public class EventScreenManager : MonoBehaviour
                         if (c.value < 0)
                         {
                             // Death records were wiped (evil empire revisionism)
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the public records (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Deaths Have Been Wiped From The Public Records (New Total {Mathf.Max(next, 0)})");
                         }
                         else
                         {
                             // Additional deaths added to public records
-                            sb.AppendLine($"- {c.value} additional deaths have been added to the public records (New Total {Mathf.Max(next, 0)})");
+                            sb.AppendLine($"- {c.value} Additional Deaths Have Been Added To The Public Records (New Total {Mathf.Max(next, 0)})");
                         }
                     }
                     else
                     {
                         if (c.value < 0)
                         {
-                            sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the public records");
+                            sb.AppendLine($"- {Mathf.Abs(c.value)} Deaths Have Been Wiped From The Public Records");
                         }
                         else
                         {
-                            sb.AppendLine($"- {c.value} additional deaths have been added to the public records");
+                            sb.AppendLine($"- {c.value} Additional Deaths Have Been Added To The Public Records");
                         }
                     }
                     break;
@@ -1940,54 +2044,65 @@ public class EventScreenManager : MonoBehaviour
                 case EventConsequence.ConsequenceType.ProductionPercentChange:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% For {c.targetName}{dur}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% For Section {c.targetName}{dur}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ClickPowerChange:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} For {c.targetName}{dur}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ClickPowerPercentChange:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% For {c.targetName}{dur}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ClickPowerChangeSection:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for section {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} For Section {c.targetName}{dur}");
                     break;
                 }
                 case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
                 {
                     string sign = c.value >= 0 ? "+" : "-";
-                    string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
+                    string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
+                    sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% For Section {c.targetName}{dur}");
                     break;
                 }
                 default:
                 {
-                    sb.AppendLine($"- Unknown consequence type: {c.type} for {c.targetName} (value: {c.value})");
+                    sb.AppendLine($"- Unknown Consequence Type: {c.type} For {c.targetName} (Value: {c.value})");
                     break;
                 }
             }
         }
 
         return sb.ToString();
+    }
+
+    
+
+    // Centralized formatter for Event Score display names
+    private string FormatScoreDisplayName(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+        string spaced = raw.Replace('_', ' ');
+        string lower = spaced.ToLower();
+        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(lower);
     }
 
     /// <summary>
@@ -2052,5 +2167,18 @@ public class EventScreenManager : MonoBehaviour
         // Immediately destroy the current screen
         Destroy(currentScreen);
         currentScreen = null;
+    }
+
+    /// <summary>
+    /// Build the verse tooltip consequences text for a given knot's first choice.
+    /// Parses the choice's &C consequences and formats them into a human-readable preview.
+    /// Returns an empty string if none are found.
+    /// </summary>
+    private string BuildVerseTooltipConsequencesText(string knotName)
+    {
+        if (string.IsNullOrEmpty(knotName)) return string.Empty;
+        string firstChoiceText = GetPrecompiledFirstChoiceText(knotName);
+        var verseConsequences = ParseVerseChoiceConsequences(firstChoiceText);
+        return BuildConsequencesPreviewText(verseConsequences);
     }
 }

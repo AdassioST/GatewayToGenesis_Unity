@@ -403,7 +403,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3494362373199277764}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -418,6 +418,7 @@ GameObject:
   - component: {fileID: 3353229751944146398}
   - component: {fileID: 5490892062730161975}
   - component: {fileID: 5574682974792559753}
+  - component: {fileID: 3764486115081856076}
   m_Layer: 5
   m_Name: EventColor
   m_TagString: Untagged
@@ -483,6 +484,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3764486115081856076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3536668591342674620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4641569182446119165
 GameObject:
   m_ObjectHideFlags: 0
@@ -763,6 +776,7 @@ GameObject:
   - component: {fileID: 7696757709499438973}
   - component: {fileID: 3216608584387436500}
   - component: {fileID: 8750584121101647979}
+  - component: {fileID: 6424927883318499594}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -828,6 +842,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6424927883318499594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7123400047580161503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 115777729c0bc314aa701909ae4362ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7673798909676926253
 GameObject:
   m_ObjectHideFlags: 0

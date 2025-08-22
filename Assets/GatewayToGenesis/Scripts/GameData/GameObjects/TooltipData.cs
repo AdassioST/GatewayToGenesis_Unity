@@ -159,27 +159,57 @@ public class TooltipData : ScriptableObject
             }
         }
 
-        if (GlobalProductionManager.Instance.persistentPositiveModifiers.TryGetValue(resourceName, out var persistentPositive) && persistentPositive != 0)
+        // Show persistent flat modifiers per source to avoid collapsing into one line and duplications
+        var flatBonusBySource = GlobalProductionManager.Instance.GetPersistentBonusBySource(resourceName);
+        foreach (var kv in flatBonusBySource)
         {
-            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{persistentPositive:0.##}</color>\n";
-            hasModifiers = true;
+            if (kv.Value != 0)
+            {
+                breakdownText += $" - {kv.Key}: <color=green>+{kv.Value:0.##}</color>\n";
+                hasModifiers = true;
+            }
+        }
+        var flatMalusBySource = GlobalProductionManager.Instance.GetPersistentMalusBySource(resourceName);
+        foreach (var kv in flatMalusBySource)
+        {
+            if (kv.Value != 0)
+            {
+                breakdownText += $" - {kv.Key}: <color=red>{kv.Value:0.##}</color>\n";
+                hasModifiers = true;
+            }
         }
 
-        if (GlobalProductionManager.Instance.persistentNegativeModifiers.TryGetValue(resourceName, out var persistentNegative) && persistentNegative != 0)
+        // Show percentage modifiers per source (bonuses and maluses separately)
+        var pctBonusBySource = GlobalProductionManager.Instance.GetPercentageBonusBySource(resourceName);
+        foreach (var kv in pctBonusBySource)
         {
-            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{persistentNegative:0.##}</color>\n";
-            hasModifiers = true;
+            if (kv.Value != 0)
+            {
+                breakdownText += $" - {kv.Key}: <color=green>+{kv.Value:0.##}%</color>\n";
+                hasModifiers = true;
+            }
+        }
+        var pctMalusBySource = GlobalProductionManager.Instance.GetPercentageMalusBySource(resourceName);
+        foreach (var kv in pctMalusBySource)
+        {
+            if (kv.Value != 0)
+            {
+                breakdownText += $" - {kv.Key}: <color=red>{kv.Value:0.##}%</color>\n";
+                hasModifiers = true;
+            }
         }
 
-        if (GlobalProductionManager.Instance.percentagePositiveModifiers.TryGetValue(resourceName, out var percentagePositive) && percentagePositive != 0)
+        // Morale global modifier (display even if not tracked per-source)
+        int moraleDelta = 0;
+        if (StatManager.Instance != null)
         {
-            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=green>+{percentagePositive:0.##}%</color>\n";
-            hasModifiers = true;
+            moraleDelta = Mathf.RoundToInt(StatManager.Instance.GetMoraleDeltaPercent());
         }
-
-        if (GlobalProductionManager.Instance.percentageNegativeModifiers.TryGetValue(resourceName, out var percentageNegative) && percentageNegative != 0)
+        if (moraleDelta != 0)
         {
-            breakdownText += $" - {string.Join(", ", GlobalProductionManager.Instance.modifierSourceDict.ContainsKey(resourceName) ? GlobalProductionManager.Instance.modifierSourceDict[resourceName] : new List<string>())}: <color=red>{percentageNegative:0.##}%</color>\n";
+            string color = moraleDelta > 0 ? "green" : "red";
+            string sign = moraleDelta > 0 ? "+" : "";
+            breakdownText += $" - Morale: <color={color}>{sign}{moraleDelta}%</color>\n";
             hasModifiers = true;
         }
 

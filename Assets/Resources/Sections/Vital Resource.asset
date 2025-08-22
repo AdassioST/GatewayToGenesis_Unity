@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62ae2a2f41010334697c7baf901696bc, type: 3}
-  m_Name: Vital Resources
+  m_Name: Vital Resource
   m_EditorClassIdentifier: 
-  name: Vital Resources
+  name: Vital Resource
   title: The lifeblood of Arcanoria, where essential resources such as food, moonshine,
     and aetherlight are harvested to sustain the populace
   description: '"Without these vital treasures, the world would crumble into chaos.

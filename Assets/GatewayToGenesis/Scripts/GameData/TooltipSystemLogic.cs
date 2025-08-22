@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using DG.Tweening;
 
 public class TooltipSystemLogic : MonoBehaviour
 {
@@ -41,12 +42,29 @@ public class TooltipSystemLogic : MonoBehaviour
     {
         if (currentTooltipSlot != null)
         {
-            Destroy(currentTooltipSlot.gameObject);
+            // Smooth fade out old tooltip before destroying (guard against race conditions)
+            var oldSlot = currentTooltipSlot;
+            CanvasGroup oldCg = oldSlot.GetComponent<CanvasGroup>();
+            if (oldCg == null) oldCg = oldSlot.gameObject.AddComponent<CanvasGroup>();
+            // Kill any existing tweens on this target to avoid operating on destroyed refs
+            DOTween.Kill(oldCg, complete: false);
+            oldCg.DOFade(0f, 0.075f).SetEase(Ease.OutQuad).OnComplete(() => {
+                if (oldSlot != null)
+                {
+                    Destroy(oldSlot.gameObject);
+                }
+            });
         }
 
         currentTooltipSlot = Instantiate(tooltipSlotPrefab);
         currentTooltipSlot.InitializeTooltipData(data);
         currentTooltipSlot.transform.SetParent(transform);
+        // Smooth fade in
+        CanvasGroup cg = currentTooltipSlot.GetComponent<CanvasGroup>();
+        if (cg == null) cg = currentTooltipSlot.gameObject.AddComponent<CanvasGroup>();
+        DOTween.Kill(cg, complete: false);
+        cg.alpha = 0f;
+        cg.DOFade(1f, 0.095f).SetEase(Ease.OutQuad);
 
         currentTooltipData = data; // Store the active tooltip data
 
@@ -61,7 +79,16 @@ public class TooltipSystemLogic : MonoBehaviour
     {
         if (currentTooltipSlot != null)
         {
-            Destroy(currentTooltipSlot.gameObject);
+            var oldSlot = currentTooltipSlot;
+            CanvasGroup cg = oldSlot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = oldSlot.gameObject.AddComponent<CanvasGroup>();
+            DOTween.Kill(cg, complete: false);
+            cg.DOFade(0f, 0.075f).SetEase(Ease.OutQuad).OnComplete(() => {
+                if (oldSlot != null)
+                {
+                    Destroy(oldSlot.gameObject);
+                }
+            });
         }
 
         // Prevent null reference by ensuring we only invoke when necessary

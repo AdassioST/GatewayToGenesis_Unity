@@ -350,6 +350,17 @@ public class InkStoryManager : MonoBehaviour
             }
         });
         
+        // PSEUDOCODE: Morale modification helper - mirrors ModifyStat but explicit for clarity in Ink
+        currentStory.BindExternalFunction("ModifyMorale", (int change) =>
+        {
+            if (statManager != null)
+            {
+                int currentValue = statManager.GetStatValue("morale");
+                statManager.UpdateStat("morale", currentValue + change);
+                LogStory($"Modified morale by {change}");
+            }
+        });
+        
         // PSEUDOCODE: Resource modification functions - allow Ink to change player resources using existing system
         currentStory.BindExternalFunction("ModifyResource", (string resourceName, int change) => 
         {

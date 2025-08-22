@@ -254,6 +254,107 @@ public bool isEventTech = true;  // This makes it an event technology
 
 ---
 
+## 🧾 Authoring Reference: Conditions, Requirements, Costs, Consequences, Functions
+
+Use these snippets to compose `# conditions:` blocks, `&C requirements:` blocks, and `consequences:` lists inside verse/bridge button lines.
+
+### Conditions (and `&C requirements:`)
+- Format: `{type}:{target [op value]}`; separate multiple with `;`
+- Supported types:
+  - `score:{name} {op} {int}`
+  - `resource:{Name} {op} {int}`
+  - `technology:{Tech Name}` (unlocked check, no operator or value)
+  - `stat:{Stat Name} {op} {int}`
+  - Time: `seventh {op} {int}`, `phase {op} {int}`, `echo {op} {int}`, `cycle {op} {int}`, `ritual_seventh == 1`
+  - Population: `population:population {op} {int}`, `housing:housing {op} {int}`, `vagrants:vagrants {op} {int}`
+  - Deaths: `deaths:deaths {op} {int}`, `vagrant_deaths:vagrant_deaths {op} {int}`, `true_deaths:true_deaths {op} {int}`
+  - Event Spacing: `no_event_in_sevenths:{int}` (checks if no events happened in X sevenths)
+  
+### Event Cooldown
+- **Syntax**: `# cooldown:{int}`
+- **Purpose**: Prevents the same event from triggering again for X sevenths
+- **Example**: `# cooldown:8` (event cannot trigger again for 8 sevenths after completion)
+- **Note**: This is different from `no_event_in_sevenths` - cooldown is per-event, not global
+
+## **📚 Authoring Examples**
+
+### **Complete Event Example: The Weeping Princess**
+```ink
+=== weeping_princess ===
+# title: The Weeping Princess
+# description: A mystical encounter with a sorrowful spirit who seeks redemption through the offering of sustenance and compassion.
+# conditions: resource:Food >= 8
+# consequences: score:weeping_princess_encounter +1
+# cooldown: 3
+# event_type:Mystical
+# priority: 5
+
+The forest grows darker as you venture deeper into its heart...
+
+* Follow the sound
+-> weeping_princess_verse_1
+
+=== weeping_princess_chorus_1 ===
+* Idealism. Accept the penance...&D We all need something to leave behind us.&C pillar:aureus;strength:15;requirements:resource:Food >= 5;success:weeping_princess_verse_2;failure:weeping_princess_verse_3;crit_success:weeping_princess_verse_12;crit_failure:weeping_princess_verse_13;rare_event:weeping_princess_verse_14;rare_event_percent:5 -> weeping_princess_verse_2
+```
+
+**Key Features Demonstrated:**
+- **Cooldown**: `# cooldown:3` (3 sevenths before repeat)
+- **Requirements**: `resource:Food >= 8` (needs 8+ Food to trigger)
+- **Challenges**: `pillar:aureus;strength:15` (Aureus pillar challenge)
+- **Extended Outcomes**: Critical success/failure, rare events with percentages
+- **Complex Consequences**: Multiple resource types, production modifiers, durations
+- Operators: `==`, `!=`, `>=`, `<=`, `>`, `<`
+- Implicit numeric shorthand supported for resources: `resource:Food 40` → `>= 40`
+
+### Requirement costs (displayed and consumed at Outro)
+- Put inside `requirements:cost:` group under `&C`
+- Supported consumables:
+  - `resource:{Name} {amount}` (removes resources)
+  - `population:population {amount}` (removes people; registers deaths)
+  - `housing:housing {amount}` (destroys housing)
+
+### Consequences (applied at Outro)
+- Put inline on verse/bridge button: `&C consequences: ...; ...`
+- Supported entries:
+  - `score:{name} +/-{int}`
+  - `resource:{Name} +/-{int}`
+  - `production:{Unit Name} +/-{int}` (changes production units)
+  - `stat:{Stat Name} +/-{int}` (e.g., `stat:morale +10`)
+  - Population: `population:population -{int}`, `housing:housing +/-{int}`, `vagrants:vagrants +/-{int}`
+  - Deaths: `deaths:{label} +/-{int}` (use dedicated types below as preferred), `death_records_revision:deaths +/-{int}`
+  - Technology enlightened: `technology:{Tech Name} enlightened`
+  - Percentage modifiers: `production_percent:{Resource} +/-{int}`
+  - Section-wide: `production_percent_section:{Section} +/-{int}`
+  - Click power: `click_power:{Resource} +/-{int}`, `click_power_percent:{Resource} +/-{int}`
+  - Section click power: `click_power_section:{Section} +/-{int}`, `click_power_percent_section:{Section} +/-{int}`
+- Optional durations: append `duration:sevenths:{N}` after a supported effect on the same line
+
+### Chorus metadata (under `&C`)
+- Challenges: `pillar:{aureus|regalia|waltz|chorus}; strength:{int}` or `challenge:{pillar}:{strength}`
+- Branches: `success:{knot}`, `failure:{knot}`, `crit_success:{knot}`, `crit_failure:{knot}`
+- Rare: `rare_event:{knot}`, `rare_event_percent:{1..100}`
+
+### External Ink functions
+- Query:
+  - `{GetPopulation()}`, `{GetHousing()}`, `{GetVagrants()}`
+  - `{GetDeaths()}`, `{GetTrueDeaths()}`, `{GetVagrantDeaths()}`
+  - `{GetResourceAmount("Food")}`
+  - `{GetEventScore("some_score")}`
+  - `{CheckTechnology("Tech Name")}`
+- Modify:
+  - `{ModifyPopulation(-3)}`, `{ModifyHousing(5)}`, `{ModifyVagrants(10)}`
+  - `{ProcessEventDeaths(5)}`
+  - `{ModifyResource("Aetherlight", 30)}`
+  - `{ModifyEventScore("ancient_knowledge", 5)}`
+  - `{ModifyStat("morale", +10)}`, `{ModifyMorale(+5)}`
+  - `{TriggerTechnologyEnlightened("Tech Name")}` (alternatively, use consequence `technology:{Tech Name} enlightened`)
+
+Notes:
+- Consequences are applied at Outro (after the story flow). If you need an effect earlier, place it on an earlier verse’s button and advance immediately.
+- Enlightened technologies are revealed in the tech tree even without prerequisites (shown as NextResearchOption); once prerequisites are met, they become CurrentResearchOption.
+
+
 ## 🚫 **Event Trigger Protection System**
 
 ### **🎯 How Initialization Protection Works**

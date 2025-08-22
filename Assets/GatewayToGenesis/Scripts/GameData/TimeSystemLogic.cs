@@ -9,7 +9,15 @@ public class TimeSystemLogic : MonoBehaviour
     public static TimeSystemLogic Instance { get; private set; }
 
     [SerializeField] private float secondsPerSeventh = 180f; // 1 Seventh = 3 minutes
+    [SerializeField] private float slowMotionFactor = 3f; // Time slows down by this factor when events are pending
+    
+    // Public accessor for the base time value
+    public float BaseSecondsPerSeventh => secondsPerSeventh;
     private float timeSinceLastSeventh = 0f;
+    
+    // Track slow motion periods to properly scale accumulated time
+    private float slowMotionTimeAccumulated = 0f;
+    private bool wasInSlowMotion = false;
 
     [SerializeField] private TMP_Text cycleText, echoText, seventhText;
     [SerializeField] private Image phaseImage;
@@ -33,6 +41,7 @@ public class TimeSystemLogic : MonoBehaviour
     private Color originalColor;
 
     public bool canTrackTime, isTimePaused = true;
+    private bool isSlowMotionActive = false;
 
     private void Awake()
     {
@@ -60,9 +69,36 @@ public class TimeSystemLogic : MonoBehaviour
     {
         if (!isTimePaused)
         {
-            timeSinceLastSeventh += Time.deltaTime;
+            // Handle time accumulation with proper slow motion scaling
+            if (isSlowMotionActive)
+            {
+                // In slow motion: accumulate time at reduced rate
+                slowMotionTimeAccumulated += Time.deltaTime / slowMotionFactor;
+                timeSinceLastSeventh += Time.deltaTime / slowMotionFactor;
+                wasInSlowMotion = true;
+            }
+            else
+            {
+                // Normal time: accumulate normally
+                if (wasInSlowMotion)
+                {
+                    // Transitioning from slow motion: convert accumulated slow motion time back to normal time
+                    // The accumulated time was scaled down by slowMotionFactor, so we need to scale it back up
+                    float convertedTime = slowMotionTimeAccumulated * slowMotionFactor;
+                    timeSinceLastSeventh += convertedTime;
+                    LogTimeSystem($"Slow motion ended: converted {slowMotionTimeAccumulated:F2}s slow motion → {convertedTime:F2}s normal time, total time: {timeSinceLastSeventh:F2}s");
+                    slowMotionTimeAccumulated = 0f;
+                    wasInSlowMotion = false;
+                }
+                else
+                {
+                    // Always normal time
+                    timeSinceLastSeventh += Time.deltaTime;
+                }
+            }
         }
 
+        // Check if we've reached the threshold for the next seventh
         if (timeSinceLastSeventh >= secondsPerSeventh && canTrackTime)
         {
             timeSinceLastSeventh = 0f;
@@ -85,6 +121,10 @@ public class TimeSystemLogic : MonoBehaviour
         }
 
         OnSeventhChange?.Invoke(CurrentSeventh);
+        
+        // Reset slow motion tracking when seventh changes to prevent accumulation across boundaries
+        ResetSlowMotionTracking($"Seventh {CurrentSeventh}");
+        
         UpdateUI();
     }
 
@@ -102,6 +142,9 @@ public class TimeSystemLogic : MonoBehaviour
         if (totalPhaseIndex >= phases.Length) // Reset the totalPhaseIndex at the end of the cycle
             totalPhaseIndex = 0;
 
+        // Reset slow motion tracking when phase changes to prevent accumulation across boundaries
+        ResetSlowMotionTracking($"Phase {CurrentPhase}");
+
         OnPhaseChange?.Invoke(CurrentPhase);
     }
 
@@ -115,6 +158,9 @@ public class TimeSystemLogic : MonoBehaviour
             IncrementCycle();
         }
 
+        // Reset slow motion tracking when echo changes to prevent accumulation across boundaries
+        ResetSlowMotionTracking($"Echo {CurrentEcho}");
+
         OnEchoChange?.Invoke(CurrentEcho);
     }
 
@@ -122,6 +168,10 @@ public class TimeSystemLogic : MonoBehaviour
     {
         CurrentCycle++;
         currentCycleName = CurrentCycle == 1 ? "Overture" : cycleNames[UnityEngine.Random.Range(0, cycleNames.Count)];
+        
+        // Reset slow motion tracking when cycle changes to prevent accumulation across boundaries
+        ResetSlowMotionTracking($"Cycle {CurrentCycle} ({currentCycleName})");
+        
         OnCycleChange?.Invoke(CurrentCycle);
     }
 
@@ -165,6 +215,86 @@ public class TimeSystemLogic : MonoBehaviour
         isTimePaused = pause;
 
         UpdateUI();
+    }
+    
+    /// <summary>
+    /// Enable slow motion time (when events are pending)
+    /// </summary>
+    public void EnableSlowMotion()
+    {
+        if (!isSlowMotionActive)
+        {
+            isSlowMotionActive = true;
+            wasInSlowMotion = true;
+            LogTimeSystem($"Slow motion enabled - time will pass {slowMotionFactor}x slower");
+        }
+    }
+    
+    /// <summary>
+    /// Disable slow motion time (when events are handled)
+    /// </summary>
+    public void DisableSlowMotion()
+    {
+        if (isSlowMotionActive)
+        {
+            isSlowMotionActive = false;
+            LogTimeSystem("Slow motion disabled - time returns to normal speed");
+        }
+    }
+    
+    /// <summary>
+    /// Get the effective seconds per seventh (considering slow motion)
+    /// </summary>
+    public float GetEffectiveSecondsPerSeventh()
+    {
+        if (isSlowMotionActive)
+        {
+            return secondsPerSeventh * slowMotionFactor;
+        }
+        return secondsPerSeventh;
+    }
+    
+    /// <summary>
+    /// Get current time progress towards next seventh (0.0 to 1.0)
+    /// </summary>
+    public float GetSeventhProgress()
+    {
+        return timeSinceLastSeventh / secondsPerSeventh;
+    }
+    
+    /// <summary>
+    /// Get remaining seconds until next seventh
+    /// </summary>
+    public float GetRemainingSecondsToSeventh()
+    {
+        if (isSlowMotionActive)
+        {
+            // In slow motion, calculate remaining time considering the slowdown
+            float remainingNormalTime = secondsPerSeventh - timeSinceLastSeventh;
+            return remainingNormalTime * slowMotionFactor;
+        }
+        return secondsPerSeventh - timeSinceLastSeventh;
+    }
+    
+    /// <summary>
+    /// Reset slow motion tracking to prevent accumulation across time boundaries
+    /// </summary>
+    private void ResetSlowMotionTracking(string boundaryName)
+    {
+        if (wasInSlowMotion)
+        {
+            LogTimeSystem($"{boundaryName} changed - resetting slow motion tracking");
+            slowMotionTimeAccumulated = 0f;
+            wasInSlowMotion = false;
+        }
+    }
+    
+    /// <summary>
+    /// Log time system messages
+    /// </summary>
+    private void LogTimeSystem(string message)
+    {
+        Debug.Log($"[TimeSystemLogic] {message}");
     }
 }
 

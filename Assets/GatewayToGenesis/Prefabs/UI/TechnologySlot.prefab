@@ -447,6 +447,7 @@ MonoBehaviour:
   displayComponent: {fileID: 393085265450812179}
   technologyTreeLogic: {fileID: 0}
   techState: 0
+  enlightenedBonusPercent: 0.3
 --- !u!114 &5534880100735388201
 MonoBehaviour:
   m_ObjectHideFlags: 0

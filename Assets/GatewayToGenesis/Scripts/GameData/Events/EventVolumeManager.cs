@@ -423,6 +423,20 @@ public class EventVolumeManager : MonoBehaviour
     /// </summary>
     private bool AreStoryConditionsMet(StoryNode storyNode)
     {
+        // Check cooldown FIRST before evaluating other conditions
+        if (storyNode.cooldownSevenths > 0)
+        {
+            EventSystemLogic eventSystem = EventSystemLogic.Instance;
+            if (eventSystem != null && eventSystem.IsEventOnCooldown(storyNode.nodeName, storyNode.cooldownSevenths))
+            {
+                if (enableDebugLogging)
+                {
+                    Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping");
+                }
+                return false; // Event is on cooldown, don't allow it to trigger
+            }
+        }
+        
         if (enableDebugLogging)
         {
             Debug.Log($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate");

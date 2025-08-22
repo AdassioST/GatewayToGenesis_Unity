@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Ink.Runtime;
+using DG.Tweening;
 
 /// <summary>
 /// Core event system for managing narrative events with Ink integration
@@ -22,6 +23,13 @@ public class EventSystemLogic : MonoBehaviour
     [SerializeField] private StatManager statManager; // Direct reference to stats manager
     [SerializeField] private TimeSystemLogic timeSystem; // Direct reference to time system
     [SerializeField] private EventVolumeManager volumeManager; // Direct reference to volume manager
+    
+    [Header("Event Notification System")]
+    [SerializeField] private Transform eventsContainer; // Container for event notifications in HUD
+    [SerializeField] private GameObject eventNotificationPrefab; // Prefab for event notifications
+    
+    // Track current notification to prevent stacking
+    private GameObject currentNotification;
     
     // ===== THE BOSS'S ID CARD =====
     // Singleton pattern - makes sure there's only ONE boss in the whole game
@@ -52,6 +60,14 @@ public class EventSystemLogic : MonoBehaviour
     // Track if this is the very first time the system has processed time changes
     // Start with 0 so first change makes it 1, allowing events on the second seventh change
     private int seventhChangeCount = 0; // Count of seventh changes, 0 = no events, 1+ = events allowed
+    
+    // ===== THE BOSS'S EVENT SPACING TRACKER =====
+    // Track how many sevenths have passed since the last event completed
+    private int seventhsSinceLastEvent = 0; // Count of sevenths since last event completion
+    
+    // ===== THE BOSS'S EVENT COOLDOWN TRACKER =====
+    // Track when each specific event was last completed (for individual cooldowns)
+    private Dictionary<string, int> eventCooldowns = new Dictionary<string, int>(); // Key: event name, Value: sevenths since that event
     
     // ===== THE BOSS'S HELPERS =====
     // The boss has two helpers: the story teller and the magic book keeper
@@ -95,6 +111,24 @@ public class EventSystemLogic : MonoBehaviour
     {
         // Increment the seventh change count
         seventhChangeCount++;
+        
+        // Increment the sevenths since last event counter (if no event is currently active)
+        if (!isEventActive)
+        {
+            seventhsSinceLastEvent++;
+            LogEvent($"Seventh {newSeventh} - sevenths since last event: {seventhsSinceLastEvent}");
+        }
+        else
+        {
+            LogEvent($"Seventh {newSeventh} - event active, sevenths counter frozen at: {seventhsSinceLastEvent}");
+        }
+        
+        // Increment all individual event cooldowns
+        var cooldownKeys = new List<string>(eventCooldowns.Keys);
+        foreach (string eventName in cooldownKeys)
+        {
+            eventCooldowns[eventName]++;
+        }
         
         // Events are only allowed after the first seventh change (when count reaches 1)
         if (seventhChangeCount < 1)
@@ -294,11 +328,18 @@ public class EventSystemLogic : MonoBehaviour
             return;
         }
         
+        // Prevent new events if there's already a notification pending (anti-stacking)
+        if (currentNotification != null)
+        {
+            LogEvent("Event notification already pending - skipping new event check");
+            return;
+        }
+        
         StoryNode bestStory = volumeManager.FindBestAvailableStory(); // Find the best story to tell
         
         if (bestStory != null) // Did we find a story to tell?
         {
-            TriggerStory(bestStory); // Start telling the best story!
+            CreateEventNotification(bestStory); // Create notification instead of instantly triggering
         }
     }
     
@@ -433,6 +474,144 @@ public class EventSystemLogic : MonoBehaviour
     // ===== THE BOSS'S PUBLIC OFFICE =====
     // Other parts of the game can ask the boss questions or give them new stories
     
+    /// <summary>
+    /// Create an event notification instead of instantly triggering the event
+    /// </summary>
+    private void CreateEventNotification(StoryNode storyNode)
+    {
+        if (eventsContainer == null || eventNotificationPrefab == null)
+        {
+            LogEvent("Cannot create event notification: missing container or prefab reference");
+            return;
+        }
+        
+        // Check if we already have a notification - prevent stacking
+        if (currentNotification != null)
+        {
+            LogEvent($"Event notification already exists for: {currentNotification.name}, skipping new event: {storyNode.storyTitle}");
+            return;
+        }
+        
+        // Create the notification GameObject
+        GameObject notification = Instantiate(eventNotificationPrefab, eventsContainer);
+        currentNotification = notification; // Track the current notification
+        
+        // Set up the notification with story data
+        SetupEventNotification(notification, storyNode);
+        
+        // Enable slow motion time while event is pending
+        if (TimeSystemLogic.Instance != null)
+        {
+            TimeSystemLogic.Instance.EnableSlowMotion();
+        }
+        
+        LogEvent($"Created event notification for: {storyNode.storyTitle}");
+    }
+    
+    /// <summary>
+    /// Setup the event notification with story data and fade-in animation
+    /// </summary>
+    private void SetupEventNotification(GameObject notification, StoryNode storyNode)
+    {
+        // Store the story node reference for when notification is clicked
+        notification.name = $"EventNotification_{storyNode.storyTitle}";
+        
+        // Set up fade-in animation
+        CanvasGroup canvasGroup = notification.GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = notification.AddComponent<CanvasGroup>();
+        }
+        
+        // Start at 0 alpha and fade in over 1 second
+        canvasGroup.alpha = 0f;
+        canvasGroup.DOFade(1f, 1f).SetEase(DG.Tweening.Ease.OutQuad);
+        
+        // Store story reference for the button click
+        var storyReference = notification.AddComponent<EventNotificationData>();
+        storyReference.storyNode = storyNode;
+        
+        // Automatically set up the button click handler
+        SetupNotificationButton(notification);
+    }
+    
+    /// <summary>
+    /// Automatically set up the notification button click handler
+    /// </summary>
+    private void SetupNotificationButton(GameObject notification)
+    {
+        // Find the button component in the notification
+        UnityEngine.UI.Button button = notification.GetComponentInChildren<UnityEngine.UI.Button>();
+        if (button == null)
+        {
+            LogEvent("EventNotification prefab must have a Button component for click handling");
+            return;
+        }
+        
+        // Clear any existing listeners and add our handler
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(() => StartEventFromNotification(notification));
+        
+        LogEvent("EventNotification button click handler configured automatically");
+    }
+    
+    /// <summary>
+    /// Start the event from notification (called by notification button click)
+    /// </summary>
+    public void StartEventFromNotification(GameObject notification)
+    {
+        var storyReference = notification.GetComponent<EventNotificationData>();
+        if (storyReference?.storyNode == null)
+        {
+            LogEvent("Cannot start event: notification has no story reference");
+            return;
+        }
+        
+        // Fade out the notification
+        CanvasGroup canvasGroup = notification.GetComponent<CanvasGroup>();
+        if (canvasGroup != null)
+        {
+            canvasGroup.DOFade(0f, 0.5f).SetEase(DG.Tweening.Ease.InQuad)
+                .OnComplete(() => {
+                    if (notification != null)
+                    {
+                        Destroy(notification);
+                    }
+                    // Clear the current notification reference
+                    if (currentNotification == notification)
+                    {
+                        currentNotification = null;
+                        // Note: Slow motion remains active during the event
+                    }
+                });
+        }
+        else
+        {
+            Destroy(notification);
+            // Clear the current notification reference
+            if (currentNotification == notification)
+            {
+                currentNotification = null;
+                // Note: Slow motion remains active during the event
+            }
+        }
+        
+        // Start the actual event
+        TriggerStory(storyReference.storyNode);
+        
+        // Keep slow motion active during the event (will be disabled when event completes)
+        LogEvent($"Event started - slow motion remains active until completion");
+        
+        // Switch to event tab
+        TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
+        if (hotkeys != null)
+        {
+            hotkeys.SwitchToEventTab();
+        }
+        
+        LogEvent($"Started event from notification: {storyReference.storyNode.storyTitle}");
+    }
+    
     // Public API
     public void AddVolume(EventVolume volume)
     {
@@ -449,6 +628,44 @@ public class EventSystemLogic : MonoBehaviour
     }
     
     public StoryNode GetCurrentStoryNode() => currentStoryNode;
+    
+    /// <summary>
+    /// Get the number of sevenths since the last event completed
+    /// </summary>
+    public int GetSeventhsSinceLastEvent() => seventhsSinceLastEvent;
+    
+    /// <summary>
+    /// Check if a specific event is on cooldown
+    /// </summary>
+    public bool IsEventOnCooldown(string eventName, int requiredCooldown)
+    {
+        if (requiredCooldown <= 0) return false; // No cooldown required
+        
+        if (!eventCooldowns.ContainsKey(eventName))
+        {
+            // Event has never been completed, not on cooldown
+            return false;
+        }
+        
+        int seventhsSinceEvent = eventCooldowns[eventName];
+        bool onCooldown = seventhsSinceEvent < requiredCooldown;
+        
+        if (onCooldown)
+        {
+            LogEvent($"Event '{eventName}' is on cooldown: {seventhsSinceEvent}/{requiredCooldown} sevenths");
+        }
+        
+        return onCooldown;
+    }
+    
+    /// <summary>
+    /// Reset the cooldown for a specific event (called when event completes)
+    /// </summary>
+    private void ResetEventCooldown(string eventName)
+    {
+        eventCooldowns[eventName] = 0;
+        LogEvent($"Event '{eventName}' cooldown reset to 0");
+    }
     
     // Public accessors for system references
     public StatManager GetStatManager() => statManager;
@@ -482,6 +699,51 @@ public class EventSystemLogic : MonoBehaviour
         
         // Check for available events
         CheckForAvailableEvents();
+        
+        // Log current time state for debugging
+        if (TimeSystemLogic.Instance != null)
+        {
+            float effectiveTime = TimeSystemLogic.Instance.GetEffectiveSecondsPerSeventh();
+            float baseTime = TimeSystemLogic.Instance.BaseSecondsPerSeventh;
+            float progress = TimeSystemLogic.Instance.GetSeventhProgress();
+            float remaining = TimeSystemLogic.Instance.GetRemainingSecondsToSeventh();
+            
+            if (effectiveTime > baseTime)
+            {
+                LogEvent($"Time is in SLOW MOTION: {baseTime}s → {effectiveTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s");
+            }
+            else
+            {
+                LogEvent($"Time is NORMAL: {baseTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s");
+            }
+        }
+        
+        // Ensure slow motion state is consistent with event state
+        EnsureSlowMotionConsistency();
+    }
+    
+    /// <summary>
+    /// Ensure slow motion state is consistent with current event state
+    /// </summary>
+    private void EnsureSlowMotionConsistency()
+    {
+        if (TimeSystemLogic.Instance == null) return;
+        
+        bool shouldHaveSlowMotion = currentNotification != null && !isEventActive;
+        bool currentlyHasSlowMotion = TimeSystemLogic.Instance.GetEffectiveSecondsPerSeventh() > TimeSystemLogic.Instance.BaseSecondsPerSeventh;
+        
+        if (shouldHaveSlowMotion && !currentlyHasSlowMotion)
+        {
+            // Should have slow motion but doesn't - enable it
+            TimeSystemLogic.Instance.EnableSlowMotion();
+            LogEvent("Slow motion consistency check: re-enabled slow motion for pending notification");
+        }
+        else if (!shouldHaveSlowMotion && currentlyHasSlowMotion)
+        {
+            // Shouldn't have slow motion but does - disable it
+            TimeSystemLogic.Instance.DisableSlowMotion();
+            LogEvent("Slow motion consistency check: disabled slow motion (no pending notifications)");
+        }
     }
     
     /// <summary>
@@ -537,6 +799,13 @@ public class EventSystemLogic : MonoBehaviour
             timeSystem.OnSeventhChange += OnTimedSeventh;
         }
         
+        // Disable slow motion time when event completes
+        if (TimeSystemLogic.Instance != null)
+        {
+            TimeSystemLogic.Instance.DisableSlowMotion();
+            LogEvent("Slow motion disabled - event completed");
+        }
+        
         // Restore previous tab states and HUD visibility
         TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
         if (hotkeys != null)
@@ -551,7 +820,17 @@ public class EventSystemLogic : MonoBehaviour
         
         // Reset event state
         isEventActive = false;
+        
+        // Reset the cooldown for this specific event
+        if (currentStoryNode != null)
+        {
+            ResetEventCooldown(currentStoryNode.nodeName);
+        }
+        
         currentStoryNode = null;
+        
+        // Set the sevenths counter to -1 to avoid issues in logic
+        seventhsSinceLastEvent = -1;
     }
 
     private bool IsTimedEligible(EventConsequence c)
@@ -783,7 +1062,15 @@ public class EventSystemLogic : MonoBehaviour
                         if (techSlot != null)
                         {
                             techSlot.enlightenedCompleted = true;
+                            // Visually reflect enlightened progress immediately
+                            techSlot.researchProgress = Mathf.Max(techSlot.researchProgress, Mathf.Clamp01(techSlot.enlightenedBonusPercent));
                             techSlot.RefreshTechnologyUI();
+                            techSlot.UpdateProgressUI();
+                            // Ensure enlightened technologies become visible regardless of prerequisites
+                            if (techSlot.technologyTreeLogic != null)
+                            {
+                                techSlot.technologyTreeLogic.DetermineTechnologyVisibility(techSlot);
+                            }
                         }
                     }
                 }
@@ -887,4 +1174,12 @@ public class EventSystemLogic : MonoBehaviour
             Debug.Log($"[EventSystem] {message}"); // Boss makes an announcement
         }
     }
+}
+
+/// <summary>
+/// Simple component to store story reference in event notification
+/// </summary>
+public class EventNotificationData : MonoBehaviour
+{
+    public StoryNode storyNode;
 } 

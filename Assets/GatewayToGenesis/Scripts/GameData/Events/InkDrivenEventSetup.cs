@@ -1031,6 +1031,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             case "deaths": return EventCondition.ConditionType.DeathsCheck;
             case "vagrant_deaths": return EventCondition.ConditionType.VagrantDeathsCheck;
             case "true_deaths": return EventCondition.ConditionType.TrueDeathsCheck;
+            case "no_event_in_sevenths": return EventCondition.ConditionType.NoEventInSeventhsCheck;
             default: return EventCondition.ConditionType.ScoreCheck;
         }
     }
@@ -1191,6 +1192,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             }
 
             string title = null, description = null, conditions = null, consequences = null, screenFlow = null;
+            int cooldown = 0;
             Dictionary<string, string> uiMetadata = new Dictionary<string, string>();
 
             foreach (string tag in tags)
@@ -1200,6 +1202,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 else if (t.StartsWith("description:")) description = t.Substring(12).Trim();
                 else if (t.StartsWith("conditions:")) conditions = t.Substring(11).Trim();
                 else if (t.StartsWith("consequences:")) consequences = t.Substring(13).Trim();
+                else if (t.StartsWith("cooldown:")) int.TryParse(t.Substring(9).Trim(), out cooldown);
                 // Ignore deprecated screen_flow metadata (dynamic flow now)
                 else if (t.StartsWith("screen_flow:")) { /* deprecated */ }
                 else if (t.StartsWith("splash_art:")) uiMetadata["splash_art"] = t.Substring(11).Trim();
@@ -1229,7 +1232,8 @@ public class InkDrivenEventSetup : MonoBehaviour
                     conditions,
                     consequences,
                     screenFlow,
-                    uiMetadata
+                    uiMetadata,
+                    cooldown
                 );
 
                 volume.storyNodes.Add(node);
@@ -1268,6 +1272,7 @@ public class InkDrivenEventSetup : MonoBehaviour
         string currentConditions = "";
         string currentConsequences = "";
         string currentScreenFlow = "";
+        int currentCooldown = 0;
         Dictionary<string, string> currentUIMetadata = new Dictionary<string, string>();
 
         foreach (string line in lines)
@@ -1291,7 +1296,8 @@ public class InkDrivenEventSetup : MonoBehaviour
                             currentConditions, 
                             currentConsequences, 
                             currentScreenFlow, 
-                            currentUIMetadata
+                            currentUIMetadata,
+                            currentCooldown
                         );
                         volume.storyNodes.Add(storyNode);
                         
@@ -1321,6 +1327,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 currentConditions = "";
                 currentConsequences = "";
                 currentScreenFlow = "";
+                currentCooldown = 0;
                 currentUIMetadata = new Dictionary<string, string>();
 
                 if (enableDebugLogging)
@@ -1332,7 +1339,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             else if (trimmedLine.StartsWith("#"))
             {
                 ParseMetadataLine(trimmedLine, ref currentTitle, ref currentDescription, 
-                    ref currentConditions, ref currentConsequences, ref currentScreenFlow, ref currentUIMetadata);
+                    ref currentConditions, ref currentConsequences, ref currentScreenFlow, ref currentUIMetadata, ref currentCooldown);
             }
         }
 
@@ -1350,7 +1357,8 @@ public class InkDrivenEventSetup : MonoBehaviour
                     currentConditions, 
                     currentConsequences, 
                     currentScreenFlow, 
-                    currentUIMetadata
+                    currentUIMetadata,
+                    currentCooldown
                 );
                 volume.storyNodes.Add(storyNode);
                 
@@ -1385,7 +1393,7 @@ public class InkDrivenEventSetup : MonoBehaviour
     /// <summary>
     /// Parse metadata line and extract information
     /// </summary>
-    private void ParseMetadataLine(string line, ref string title, ref string description, ref string conditions, ref string consequences, ref string screenFlow, ref Dictionary<string, string> uiMetadata)
+    private void ParseMetadataLine(string line, ref string title, ref string description, ref string conditions, ref string consequences, ref string screenFlow, ref Dictionary<string, string> uiMetadata, ref int cooldown)
     {
         line = line.Trim();
         
@@ -1408,6 +1416,10 @@ public class InkDrivenEventSetup : MonoBehaviour
         else if (line.StartsWith("# screen_flow:"))
         {
             screenFlow = line.Substring(15).Trim();
+        }
+        else if (line.StartsWith("# cooldown:"))
+        {
+            int.TryParse(line.Substring(11).Trim(), out cooldown);
         }
         // New UI metadata parsing
         else if (line.StartsWith("# splash_art:"))
@@ -1451,13 +1463,14 @@ public class InkDrivenEventSetup : MonoBehaviour
     /// <summary>
     /// Create a story node from parsed data
     /// </summary>
-    private StoryNode CreateStoryNodeFromParsedData(string nodeName, string title, string description, string conditions, string consequences, string screenFlow, Dictionary<string, string> uiMetadata)
+    private StoryNode CreateStoryNodeFromParsedData(string nodeName, string title, string description, string conditions, string consequences, string screenFlow, Dictionary<string, string> uiMetadata, int cooldown = 0)
     {
         StoryNode storyNode = new StoryNode();
         storyNode.nodeName = nodeName;
         storyNode.storyTitle = title ?? nodeName;
         storyNode.storyDescription = description ?? "";
         storyNode.isUnlocked = true;
+        storyNode.cooldownSevenths = cooldown;
         
         // Parse priority from metadata, default to 0 if not specified
         if (uiMetadata.ContainsKey("priority") && int.TryParse(uiMetadata["priority"], out int parsedPriority))
@@ -1557,12 +1570,34 @@ public class InkDrivenEventSetup : MonoBehaviour
         // "resource:gold >= 100"
         // "technology:agriculture == 1"
         // "ritual_seventh == 1"
+        // "no_event_in_sevenths:2" (special case - no comparison operator)
         
         string[] parts = conditionStr.Split(':');
         if (parts.Length != 2) return null;
         
         string type = parts[0].Trim();
         string condition = parts[1].Trim();
+        
+        // Special handling for no_event_in_sevenths condition (no comparison operator needed)
+        if (type.ToLower() == "no_event_in_sevenths")
+        {
+            if (int.TryParse(condition, out int sevenths))
+            {
+                EventCondition noEventCondition = new EventCondition
+                {
+                    type = EventCondition.ConditionType.NoEventInSeventhsCheck,
+                    targetName = "sevenths", // Not used for this condition type
+                    requiredValue = sevenths,
+                    comparison = ComparisonOperator.GreaterThanOrEqual // Default to >= for time-based checks
+                };
+                return noEventCondition;
+            }
+            else
+            {
+                Debug.LogWarning($"[InkDrivenEventSetup] Failed to parse sevenths value '{condition}' from condition string: '{conditionStr}'");
+                return null;
+            }
+        }
         
         // Parse the condition part (e.g., "quest_progress >= 1")
         string[] conditionParts = condition.Split(' ');
