@@ -135,7 +135,7 @@ public class TooltipSlot : MonoBehaviour
         // Lock the tooltip (e.g., allow hover over keywords inside the tooltip)
         // This can be customized as per your requirement
 
-        Debug.Log("Tooltip locked");
+        //Debug.Log("Tooltip locked");
     }
 
     public void UpdateTooltipData(TooltipData data)

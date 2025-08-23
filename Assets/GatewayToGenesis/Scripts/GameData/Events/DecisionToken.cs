@@ -103,17 +103,17 @@ public class DecisionToken : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         // Check if we dropped on a valid choice
         bool droppedOnChoice = CheckIfDroppedOnChoice(eventData);
         
-        Debug.Log($"[DecisionToken] OnEndDrag - droppedOnChoice: {droppedOnChoice}");
+        EventSystemLogic.Instance.LogEvent($"[DecisionToken] OnEndDrag - droppedOnChoice: {droppedOnChoice}", "DecisionToken");
         
         if (!droppedOnChoice)
         {
-            Debug.Log("[DecisionToken] Not dropped on choice, returning to start position");
+            EventSystemLogic.Instance.LogEvent("[DecisionToken] Not dropped on choice, returning to start position", "DecisionToken");
             // Return to start position if not dropped on a choice
             ReturnToStartPosition();
         }
         else
         {
-            Debug.Log("[DecisionToken] Dropped on choice, staying in place");
+            EventSystemLogic.Instance.LogEvent("[DecisionToken] Dropped on choice, staying in place", "DecisionToken");
         }
         
         // Notify ChorusScreenManager that dragging has ended
@@ -174,11 +174,11 @@ public class DecisionToken : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         var results = new System.Collections.Generic.List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
         
-        Debug.Log($"[DecisionToken] Raycast found {results.Count} objects under pointer");
+        EventSystemLogic.Instance.LogEvent($"[DecisionToken] Raycast found {results.Count} objects under pointer", "DecisionToken");
         
         foreach (var result in results)
         {
-            Debug.Log($"[DecisionToken] Checking GameObject: {result.gameObject.name} at layer {result.gameObject.layer}");
+            EventSystemLogic.Instance.LogEvent($"[DecisionToken] Checking GameObject: {result.gameObject.name} at layer {result.gameObject.layer}", "DecisionToken");
             
             // Skip self
             if (result.gameObject == gameObject) continue;
@@ -186,7 +186,7 @@ public class DecisionToken : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             // If a blocking UI element is above any choices, cancel drop
             if (((1 << result.gameObject.layer) & uiBlockMask) != 0)
             {
-                Debug.Log("[DecisionToken] Drop blocked by UI block layer");
+                EventSystemLogic.Instance.LogEvent("[DecisionToken] Drop blocked by UI block layer", "DecisionToken");
                 return false;
             }
             
@@ -194,18 +194,18 @@ public class DecisionToken : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             ChorusChoiceBackground backgroundChoice = result.gameObject.GetComponent<ChorusChoiceBackground>();
             if (backgroundChoice != null)
             {
-                Debug.Log($"[DecisionToken] SUCCESS: Found ChorusChoiceBackground on {result.gameObject.name}");
+                EventSystemLogic.Instance.LogEvent($"[DecisionToken] SUCCESS: Found ChorusChoiceBackground on {result.gameObject.name}", "DecisionToken");
                 // Trigger the background's drop handling to execute the choice logic
                 backgroundChoice.OnDrop(eventData);
                 return true;
             }
             else
             {
-                Debug.Log($"[DecisionToken] No ChorusChoiceBackground component found on {result.gameObject.name}");
+                EventSystemLogic.Instance.LogEvent($"[DecisionToken] No ChorusChoiceBackground component found on {result.gameObject.name}", "DecisionToken");
             }
         }
         
-        Debug.Log("[DecisionToken] No valid drop target found");
+        EventSystemLogic.Instance.LogEvent("[DecisionToken] No valid drop target found", "DecisionToken");
         return false;
     }
     

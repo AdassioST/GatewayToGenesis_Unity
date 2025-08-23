@@ -70,8 +70,6 @@ public class ChorusChoiceData
 /// </summary>
 public class ChorusScreenManager : MonoBehaviour
 {
-    [Header("Debugging")]
-    [SerializeField] private bool enableDebugLogging = false;
     [Header("Screen Variants")]
     [SerializeField] private GameObject fullOutcomesVariant; // 3 choices: Idealism, Realism, Pragmatism
     [SerializeField] private GameObject twoChoicesVariant;   // 2 choices: Idealism, Realism
@@ -180,11 +178,6 @@ public class ChorusScreenManager : MonoBehaviour
         }
     }
 
-    public void SetDebugLogging(bool enabled)
-    {
-        enableDebugLogging = enabled;
-    }
-    
     /// <summary>
     /// Initialize the chorus screen with event data
     /// </summary>
@@ -283,14 +276,14 @@ public class ChorusScreenManager : MonoBehaviour
         
         try
         {
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Parsing chorus knot '{currentEventScreen.inkKnot}'");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsing chorus knot '{currentEventScreen.inkKnot}'", "ChorusScreenManager");
             // PRIMARY: use precompiled metadata built at startup (fast and reliable)
             var precompiled = inkManager != null
                 ? inkManager.GetPrecompiledChoicesForKnot(currentEventScreen.inkKnot)
                 : InkStoryManager.GetPrecompiledChoices(currentEventScreen.inkKnot);
 
             availableChoices.AddRange(precompiled);
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Precompiled choices found: {availableChoices.Count}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Precompiled choices found: {availableChoices.Count}", "ChorusScreenManager");
 
             // If for some reason precompiled is empty, do a minimal UI-only fallback using current story choices
             if (availableChoices.Count == 0 && currentStory != null)
@@ -313,19 +306,18 @@ public class ChorusScreenManager : MonoBehaviour
             // Pragmatism availability drives which variant we show
             isPragmatismAvailable = availableChoices.Exists(c => c.ChoiceId.ToLower().Contains("pragmatism"));
             
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Using precompiled choices for '{currentEventScreen.inkKnot}': {availableChoices.Count}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Using precompiled choices for '{currentEventScreen.inkKnot}': {availableChoices.Count}", "ChorusScreenManager");
 
-            if (enableDebugLogging)
             {
                 foreach (var c in availableChoices)
                 {
-                    Debug.Log($"[ChorusScreenManager] Choice summary -> id={c.ChoiceId}, title='{c.Title}', hasReqs={c.HasRequirements} (count={c.Requirements?.Count ?? 0}), hasChallenge={c.HasChallenge}, validation={c.ValidationType}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice summary -> id={c.ChoiceId}, title='{c.Title}', hasReqs={c.HasRequirements} (count={c.Requirements?.Count ?? 0}), hasChallenge={c.HasChallenge}, validation={c.ValidationType}", "ChorusScreenManager");
                     if (c.HasRequirements && c.Requirements != null)
                     {
                         for (int i = 0; i < c.Requirements.Count; i++)
                         {
                             var r = c.Requirements[i];
-                            Debug.Log($"[ChorusScreenManager]   - req[{i}] type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}");
+                            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - req[{i}] type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}", "ChorusScreenManager");
                         }
                     }
                 }
@@ -479,10 +471,7 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 string metadata = choiceText.Substring(cIdx + 3).Trim();
                 var metadataDict = ParseMetadata(metadata);
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[ChorusScreenManager] (Compiled Choice) Parsed metadata keys: {string.Join(",", metadataDict.Keys)}");
-                }
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] (Compiled Choice) Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
 
                 // Requirements
                 if (metadataDict.ContainsKey("requirements"))
@@ -602,11 +591,8 @@ public class ChorusScreenManager : MonoBehaviour
             // Parse metadata for requirements, pillar, strength, success/failure paths
             Dictionary<string, string> metadataDict = ParseMetadata(metadata);
             // Debug: show raw metadata string and parsed keys
-            if (enableDebugLogging && !string.IsNullOrEmpty(metadata))
-            {
-                Debug.Log($"[ChorusScreenManager] Raw metadata for '{choiceText}': {metadata}");
-            }
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Parsed metadata keys: {string.Join(",", metadataDict.Keys)}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Raw metadata for '{choiceText}': {metadata}", "ChorusScreenManager");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
             
             // Create the choice data
             ChorusChoiceData choiceData = new ChorusChoiceData();
@@ -621,12 +607,12 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 choiceData.requirements = ParseRequirementsFromString(metadataDict["requirements"]);
                 choiceData.hasRequirements = true;
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Requirements count for '{title}': {choiceData.requirements.Count}");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Requirements count for '{title}': {choiceData.requirements.Count}", "ChorusScreenManager");
             }
             else
             {
                 choiceData.hasRequirements = false;
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] No requirements for '{title}'");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No requirements for '{title}'", "ChorusScreenManager");
             }
 
             // Parse requirement costs if specified (resources/housing/population to consume later)
@@ -640,19 +626,13 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 choiceData.successPath = metadataDict["success"];
             }
-            else if (enableDebugLogging)
-            {
-                Debug.Log($"[ChorusScreenManager] Missing 'success' in metadata for '{choiceText}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Missing 'success' in metadata for '{choiceText}'", "ChorusScreenManager");
             
             if (metadataDict.ContainsKey("failure"))
             {
                 choiceData.failurePath = metadataDict["failure"];
             }
-            else if (enableDebugLogging)
-            {
-                Debug.Log($"[ChorusScreenManager] Missing 'failure' in metadata for '{choiceText}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Missing 'failure' in metadata for '{choiceText}'", "ChorusScreenManager");
             
             // Extended: critical success/failure and rare event
             if (metadataDict.ContainsKey("crit_success")) choiceData.critSuccessPath = metadataDict["crit_success"];
@@ -694,14 +674,11 @@ public class ChorusScreenManager : MonoBehaviour
                 choiceData.challengeStrength = strength;
                 choiceData.hasChallenge = true;
             }
-            else if (enableDebugLogging)
-            {
-                Debug.Log($"[ChorusScreenManager] No 'pillar' found in metadata for '{choiceText}' (no challenge)");
-            }
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No 'pillar' found in metadata for '{choiceText}' (no challenge)", "ChorusScreenManager");
             
             // Determine validation type based on what's present
             choiceData.validationType = DetermineValidationType(choiceData);
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice '{title}' validation type: {choiceData.validationType}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice '{title}' validation type: {choiceData.validationType}", "ChorusScreenManager");
             
             return choiceData;
         }
@@ -900,7 +877,7 @@ public class ChorusScreenManager : MonoBehaviour
         List<EventCondition> conditions = new List<EventCondition>();
         
         if (string.IsNullOrEmpty(requirementsString)) return conditions;
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Parsing requirements string: '{requirementsString}'");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsing requirements string: '{requirementsString}'", "ChorusScreenManager");
         
         // Split by semicolon for multiple requirements
         string[] requirements = requirementsString.Split(';');
@@ -909,7 +886,7 @@ public class ChorusScreenManager : MonoBehaviour
         {
             string trimmedReq = req.Trim();
             if (string.IsNullOrEmpty(trimmedReq)) continue;
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Requirement token: '{trimmedReq}'");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Requirement token: '{trimmedReq}'", "ChorusScreenManager");
             
             EventCondition condition = ParseRequirementString(trimmedReq);
             if (condition != null)
@@ -1165,7 +1142,7 @@ public class ChorusScreenManager : MonoBehaviour
     {
         // Since ChallengeSlot is now assigned directly on ChorusChoice,
         // we just return null and let the existing component handle initialization
-        Debug.Log($"[ChorusScreenManager] ChallengeSlot should be assigned directly on ChorusChoice for {pillarType}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] ChallengeSlot should be assigned directly on ChorusChoice for {pillarType}", "ChorusScreenManager");
         return null;
     }
     
@@ -1218,7 +1195,7 @@ public class ChorusScreenManager : MonoBehaviour
             twoChoicesVariant.SetActive(!isPragmatismAvailable);
         }
         
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Selected {(isPragmatismAvailable ? "FullOutcomes" : "TwoChoices")} variant");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Selected {(isPragmatismAvailable ? "FullOutcomes" : "TwoChoices")} variant", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -1258,45 +1235,45 @@ public class ChorusScreenManager : MonoBehaviour
         }
         
         // Find corresponding background elements
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Looking for background elements in container: {(backgroundsContainer != null ? backgroundsContainer.name : "NULL")}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Looking for background elements in container: {(backgroundsContainer != null ? backgroundsContainer.name : "NULL")}", "ChorusScreenManager");
         
         // Debug: List all children in backgrounds container
         if (backgroundsContainer != null)
         {
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Background container children:");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Background container children:", "ChorusScreenManager");
             for (int i = 0; i < backgroundsContainer.childCount; i++)
             {
                 Transform child = backgroundsContainer.GetChild(i);
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager]   - {child.name}");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name}", "ChorusScreenManager");
                 
                 // Check if this child has ChorusChoiceBackground component
                 ChorusChoiceBackground existingComponent = child.GetComponent<ChorusChoiceBackground>();
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager]   - {child.name} has ChorusChoiceBackground: {(existingComponent != null ? "YES" : "NO")}");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has ChorusChoiceBackground: {(existingComponent != null ? "YES" : "NO")}", "ChorusScreenManager");
                 
                 // Check if this child has Image component
                 Image existingImage = child.GetComponent<Image>();
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager]   - {child.name} has Image: {(existingImage != null ? "YES" : "NO")}");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has Image: {(existingImage != null ? "YES" : "NO")}", "ChorusScreenManager");
             }
         }
         
         foreach (var choiceData in availableChoices)
         {
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Processing choice: {choiceData.ChoiceId}");
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice data - Title: '{choiceData.Title}', HasChallenge: {choiceData.HasChallenge}, ValidationType: {choiceData.ValidationType}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Processing choice: {choiceData.ChoiceId}", "ChorusScreenManager");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice data - Title: '{choiceData.Title}', HasChallenge: {choiceData.HasChallenge}, ValidationType: {choiceData.ValidationType}", "ChorusScreenManager");
             
             // Try to find background element by choice ID first
             Transform backgroundElement = backgroundsContainer?.Find(choiceData.ChoiceId);
-            if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Direct search for '{choiceData.ChoiceId}': {(backgroundElement != null ? "Found" : "Not found")}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Direct search for '{choiceData.ChoiceId}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
             
             // If not found, try to find by matching the choice type in the name
             if (backgroundElement == null)
             {
                 string choiceType = GetChoiceTypeFromId(choiceData.ChoiceId);
-                if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Trying to find by choice type: '{choiceType}'");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Trying to find by choice type: '{choiceType}'", "ChorusScreenManager");
                 if (!string.IsNullOrEmpty(choiceType))
                 {
                     backgroundElement = backgroundsContainer?.Find(choiceType);
-                    if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Search by type '{choiceType}': {(backgroundElement != null ? "Found" : "Not found")}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Search by type '{choiceType}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
                 }
             }
             
@@ -1308,16 +1285,16 @@ public class ChorusScreenManager : MonoBehaviour
                     // Initialize the background with choice data
                     backgroundChoice.InitializeChoice(choiceData.ChoiceId, choiceData);
                     backgroundChoices.Add(backgroundChoice);
-                    if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Found and initialized background element for {choiceData.ChoiceId}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Found and initialized background element for {choiceData.ChoiceId}", "ChorusScreenManager");
                 }
                 else
                 {
-                    if (enableDebugLogging) Debug.LogWarning($"[ChorusScreenManager] Background element {backgroundElement.name} missing ChorusChoiceBackground component! Please add it manually in the inspector.");
+                    Debug.LogWarning($"[ChorusScreenManager] Background element {backgroundElement.name} missing ChorusChoiceBackground component! Please add it manually in the inspector.");
                 }
             }
             else
             {
-                if (enableDebugLogging) Debug.LogWarning($"[ChorusScreenManager] Could not find background element for choice {choiceData.ChoiceId}");
+                Debug.LogWarning($"[ChorusScreenManager] Could not find background element for choice {choiceData.ChoiceId}");
             }
         }
     }
@@ -1329,8 +1306,8 @@ public class ChorusScreenManager : MonoBehaviour
     {
         if (choiceObject == null || choiceData == null) return;
         
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Updating choice object {choiceObject.name} with data: {choiceData.ChoiceId}");
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice validation type: {choiceData.ValidationType}, has challenge: {choiceData.HasChallenge}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Updating choice object {choiceObject.name} with data: {choiceData.ChoiceId}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choiceData.ValidationType}, has challenge: {choiceData.HasChallenge}", "ChorusScreenManager");
         
         // Combine gating requirements with cost-display requirements to show all icons in UI
         List<EventCondition> combinedRequirements = new List<EventCondition>();
@@ -1373,7 +1350,7 @@ public class ChorusScreenManager : MonoBehaviour
             bg.InitializeChoice(choiceData.ChoiceId, choiceData);
         }
         
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice object {choiceObject.name} updated successfully");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice object {choiceObject.name} updated successfully", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -1664,9 +1641,9 @@ public class ChorusScreenManager : MonoBehaviour
     {
         if (choice == null) return;
         
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] OnChoiceSelected called for choice: {choice.ChoiceId}");
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice validation type: {choice.ValidationType}, has challenge: {choice.HasChallenge}");
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Choice destination path: {choice.DestinationPath}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] OnChoiceSelected called for choice: {choice.ChoiceId}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choice.ValidationType}, has challenge: {choice.HasChallenge}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice destination path: {choice.DestinationPath}", "ChorusScreenManager");
         
         // Find the corresponding choice data
         ChorusChoiceData choiceData = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
@@ -1676,7 +1653,7 @@ public class ChorusScreenManager : MonoBehaviour
             return;
         }
         
-        if (enableDebugLogging) Debug.Log($"[ChorusScreenManager] Found choice data, resolving choice: {choice.ChoiceId} with validation type: {choice.ValidationType}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Found choice data, resolving choice: {choice.ChoiceId} with validation type: {choice.ValidationType}", "ChorusScreenManager");
         
         // Before handling navigation/roll, accumulate requirement costs as consequences for Outro application
         // Costs do not gate availability; they are consumed at the end
@@ -1806,7 +1783,7 @@ public class ChorusScreenManager : MonoBehaviour
             int rareThreshold = Mathf.Clamp(100 - choiceData.rareEventPercent, 1, 100); // top X% triggers
             if (roll >= rareThreshold)
             {
-                Debug.Log($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: roll={roll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: roll={roll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)", "ChorusScreenManager");
                 ApplyConsequences(choiceData.rareEventConsequences);
                 overrideNextPath = choiceData.rareEventPath;
                 ShowChallengeResult(choice, true);
@@ -1819,12 +1796,9 @@ public class ChorusScreenManager : MonoBehaviour
         int successPercent = Mathf.Clamp(Mathf.RoundToInt((currentStrength / (float)Mathf.Max(1, choiceData.ChallengeStrength)) * 100f), 0, 100);
         int requiredRoll = Mathf.Clamp(100 - successPercent, 0, 100);
         bool successBaseline = roll > requiredRoll;
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} roll={roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > requiredRoll)");
-        }
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} roll={roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > requiredRoll)", "ChorusScreenManager");
         
-        Debug.Log($"[ChorusScreenManager] Challenge roll: {choiceData.ChallengePillar} pillar. Current: {currentStrength}, Required: {choiceData.ChallengeStrength}, Success%: {successPercent}, RequiredRoll: {requiredRoll}, Roll: {roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > Success%)");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {choiceData.ChallengePillar} pillar. Current: {currentStrength}, Required: {choiceData.ChallengeStrength}, Success%: {successPercent}, RequiredRoll: {requiredRoll}, Roll: {roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > Success%)", "ChorusScreenManager");
 
         // Critical tiers: bottom 10 => critical failure if failure; top 10 => critical success if success
         bool isCritFail = (roll <= 10) && !successBaseline && !string.IsNullOrEmpty(choiceData.critFailurePath);
@@ -1832,7 +1806,7 @@ public class ChorusScreenManager : MonoBehaviour
 
         if (isCritSuccess)
         {
-            Debug.Log($"[ChorusScreenManager] CRITICAL SUCCESS! roll={roll}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL SUCCESS! roll={roll}", "ChorusScreenManager");
             ApplyConsequences(choiceData.critSuccessConsequences);
             overrideNextPath = choiceData.critSuccessPath;
             ShowChallengeResult(choice, true);
@@ -1840,7 +1814,7 @@ public class ChorusScreenManager : MonoBehaviour
         }
         if (isCritFail)
         {
-            Debug.Log($"[ChorusScreenManager] CRITICAL FAILURE! roll={roll}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL FAILURE! roll={roll}", "ChorusScreenManager");
             ApplyConsequences(choiceData.critFailureConsequences);
             overrideNextPath = choiceData.critFailurePath;
             ShowChallengeResult(choice, false);
@@ -1848,7 +1822,7 @@ public class ChorusScreenManager : MonoBehaviour
         }
 
         // Normal success/failure
-        Debug.Log($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (roll={roll})");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (roll={roll})", "ChorusScreenManager");
         ShowChallengeResult(choice, successBaseline);
     }
 
@@ -1875,7 +1849,7 @@ public class ChorusScreenManager : MonoBehaviour
             int roll = UnityEngine.Random.Range(1, 101); // 1..100
             // New rule: numbers ABOVE the threshold succeed, numbers BELOW OR EQUAL fail
             bool success = roll > successPercent;
-            Debug.Log($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, Roll: {roll} -> {(success ? "Success" : "Failure")} (success if roll > Success%)");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, Roll: {roll} -> {(success ? "Success" : "Failure")} (success if roll > Success%)", "ChorusScreenManager");
             return success;
         }
         catch (System.Exception ex)
@@ -1981,24 +1955,24 @@ public class ChorusScreenManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(overrideNextPath))
                 {
                     targetPath = overrideNextPath;
-                    Debug.Log($"[ChorusScreenManager] Using override next path: {targetPath}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Using override next path: {targetPath}", "ChorusScreenManager");
                     overrideNextPath = null;
                 }
                 else if (success && !string.IsNullOrEmpty(choice.SuccessPath))
                 {
                     targetPath = choice.SuccessPath;
-                    Debug.Log($"[ChorusScreenManager] Navigating to success path: {targetPath}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Navigating to success path: {targetPath}", "ChorusScreenManager");
                 }
                 else if (!success && !string.IsNullOrEmpty(choice.FailurePath))
                 {
                     targetPath = choice.FailurePath;
-                    Debug.Log($"[ChorusScreenManager] Navigating to failure path: {targetPath}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Navigating to failure path: {targetPath}", "ChorusScreenManager");
                 }
                 else
                 {
                     // Fallback to destination path if no success/failure paths specified
                     targetPath = choice.DestinationPath;
-                    Debug.Log($"[ChorusScreenManager] No success/failure path specified, using destination: {targetPath}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No success/failure path specified, using destination: {targetPath}", "ChorusScreenManager");
                 }
                 
                 // Navigate directly by knot without overrides/static flow
@@ -2019,13 +1993,13 @@ public class ChorusScreenManager : MonoBehaviour
         {
             // Navigate to the specified path
             currentStory.ChoosePathString(path);
-            Debug.Log($"[ChorusScreenManager] Successfully navigated to path: {path}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Successfully navigated to path: {path}", "ChorusScreenManager");
             var vm = eventSystem != null ? eventSystem.GetVolumeManager() : null;
             if (vm != null)
             {
                 // Prevent accidental self-navigation loops and normalize
                 var targetTop = InkDrivenEventSetup.NormalizeKnotName(path) ?? path;
-                Debug.Log($"[ChorusScreenManager] NavigateToPath normalized '{path}' -> '{targetTop}'");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] NavigateToPath normalized '{path}' -> '{targetTop}'", "ChorusScreenManager");
                 if (!string.IsNullOrEmpty(targetTop)) vm.NavigateToKnot(targetTop);
             }
         }
@@ -2061,7 +2035,7 @@ public class ChorusScreenManager : MonoBehaviour
     /// </summary>
     public void OnChoiceMade(string choiceId)
     {
-        Debug.Log($"[ChorusScreenManager] Choice made: {choiceId}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice made: {choiceId}", "ChorusScreenManager");
         
         // Mark that a choice was made to prevent choices from fading back in
         choiceWasMade = true;

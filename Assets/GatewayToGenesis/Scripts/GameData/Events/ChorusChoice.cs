@@ -106,11 +106,11 @@ public class ChorusChoice : MonoBehaviour
 
 		if (requirements != null && requirements.Count > 0)
 		{
-			Debug.Log($"[ChorusChoice] {name} building {requirements.Count} requirement slots for choiceId='{this.choiceId}'");
+			EventSystemLogic.Instance.LogEvent($"[ChorusChoice] {name} building {requirements.Count} requirement slots for choiceId='{this.choiceId}'", "ChorusScreenManager");
 		}
 		else
 		{
-			Debug.Log($"[ChorusChoice] {name} has no requirements for choiceId='{this.choiceId}'");
+			EventSystemLogic.Instance.LogEvent($"[ChorusChoice] {name} has no requirements for choiceId='{this.choiceId}'", "ChorusScreenManager");
 		}
 		BuildRequirementSlots();
 		AttachOrUpdateConsequencesTooltip();

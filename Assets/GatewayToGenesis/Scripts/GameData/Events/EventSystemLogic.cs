@@ -13,8 +13,14 @@ public class EventSystemLogic : MonoBehaviour
     // This is where the boss (EventSystem) keeps track of everything
     
     [Header("Event System Settings")]
-    [SerializeField] private bool enableEventLogging = true; // Whether to log what the boss is doing
-    
+    [SerializeField] public bool enableEventSystemLogicLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableEventVolumeManagerLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableEventScreenManagerLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableInkStoryManagerLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableInkDrivenEventSetupLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableChorusScreenManagerLogging; // Whether to log what the boss is doing
+    [SerializeField] private bool enableDecisionTokenLogging; // Whether to log what the boss is doing
+
     [Header("Event Data")]
     [SerializeField] private List<EventScore> eventScores = new List<EventScore>(); // The scoreboard tracking player progress
     
@@ -116,11 +122,11 @@ public class EventSystemLogic : MonoBehaviour
         if (!isEventActive)
         {
             seventhsSinceLastEvent++;
-            LogEvent($"Seventh {newSeventh} - sevenths since last event: {seventhsSinceLastEvent}");
+            LogEvent($"Seventh {newSeventh} - sevenths since last event: {seventhsSinceLastEvent}", "EventSystemLogic");
         }
         else
         {
-            LogEvent($"Seventh {newSeventh} - event active, sevenths counter frozen at: {seventhsSinceLastEvent}");
+            LogEvent($"Seventh {newSeventh} - event active, sevenths counter frozen at: {seventhsSinceLastEvent}", "EventSystemLogic");
         }
         
         // Increment all individual event cooldowns
@@ -133,13 +139,13 @@ public class EventSystemLogic : MonoBehaviour
         // Events are only allowed after the first seventh change (when count reaches 1)
         if (seventhChangeCount < 1)
         {
-            LogEvent($"Seventh {newSeventh} - change count {seventhChangeCount}, skipping event check (system initialization protection)");
+            LogEvent($"Seventh {newSeventh} - change count {seventhChangeCount}, skipping event check (system initialization protection)", "EventSystemLogic");
             return;
         }
         
         if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
         {
-            LogEvent($"Seventh changed to {newSeventh} - change count {seventhChangeCount}, checking for events"); // Boss announces time change
+            LogEvent($"Seventh changed to {newSeventh} - change count {seventhChangeCount}, checking for events", "EventSystemLogic"); // Boss announces time change
             CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
         }
     }
@@ -149,7 +155,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
         {
-            LogEvent($"Phase changed to {newPhase} - checking for events"); // Boss announces time change
+            LogEvent($"Phase changed to {newPhase} - checking for events", "EventSystemLogic"); // Boss announces time change
             CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
         }
     }
@@ -159,7 +165,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
         {
-            LogEvent($"Echo changed to {newEcho} - checking for events"); // Boss announces time change
+            LogEvent($"Echo changed to {newEcho} - checking for events", "EventSystemLogic"); // Boss announces time change
             CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
         }
     }
@@ -169,7 +175,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
         {
-            LogEvent($"Cycle changed to {newCycle} - checking for events"); // Boss announces time change
+            LogEvent($"Cycle changed to {newCycle} - checking for events", "EventSystemLogic"); // Boss announces time change
             CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
         }
     }
@@ -179,7 +185,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
         {
-            LogEvent($"Ritual Seventh {ritualSeventh} - checking for special events"); // Boss announces ritual
+            LogEvent($"Ritual Seventh {ritualSeventh} - checking for special events", "EventSystemLogic"); // Boss announces ritual
             CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
         }
     }
@@ -208,7 +214,7 @@ public class EventSystemLogic : MonoBehaviour
             gameUnitsLogic = FindObjectOfType<GameUnitsLogic>(); // Find resource manager if not assigned
             if (gameUnitsLogic != null)
             {
-                LogEvent("Auto-assigned GameUnitsLogic reference"); // Boss announces the assignment
+                LogEvent("Auto-assigned GameUnitsLogic reference", "EventSystemLogic"); // Boss announces the assignment
             }
         }
         
@@ -217,7 +223,7 @@ public class EventSystemLogic : MonoBehaviour
             statManager = FindObjectOfType<StatManager>(); // Find stats manager if not assigned
             if (statManager != null)
             {
-                LogEvent("Auto-assigned StatManager reference"); // Boss announces the assignment
+                LogEvent("Auto-assigned StatManager reference", "EventSystemLogic"); // Boss announces the assignment
             }
         }
         
@@ -227,7 +233,7 @@ public class EventSystemLogic : MonoBehaviour
             timeSystem = FindObjectOfType<TimeSystemLogic>(); // Find time system if not assigned
             if (timeSystem != null)
             {
-                LogEvent("Auto-assigned TimeSystemLogic reference"); // Boss announces the assignment
+                LogEvent("Auto-assigned TimeSystemLogic reference", "EventSystemLogic"); // Boss announces the assignment
             }
         }
         
@@ -237,7 +243,7 @@ public class EventSystemLogic : MonoBehaviour
             volumeManager = FindObjectOfType<EventVolumeManager>(); // Find volume manager if not assigned
             if (volumeManager != null)
             {
-                LogEvent("Auto-assigned EventVolumeManager reference"); // Boss announces the assignment
+                LogEvent("Auto-assigned EventVolumeManager reference", "EventSystemLogic"); // Boss announces the assignment
             }
         }
         
@@ -246,14 +252,14 @@ public class EventSystemLogic : MonoBehaviour
         {
             // Wait for all systems to be ready before subscribing to time events
             StartCoroutine(WaitForSystemsAndSubscribeToTimeEvents());
-            LogEvent("Started coroutine to wait for systems and subscribe to time events");
+            LogEvent("Started coroutine to wait for systems and subscribe to time events", "EventSystemLogic");
         }
         else
         {
-            LogEvent("Time system not found - cannot subscribe to time events");
+            LogEvent("Time system not found - cannot subscribe to time events", "EventSystemLogic");
         }
         
-        LogEvent("Event System Logic initialized"); // Boss announces they're ready for work
+        LogEvent("Event System Logic initialized", "EventSystemLogic"); // Boss announces they're ready for work
     }
     
     /// <summary>
@@ -264,11 +270,11 @@ public class EventSystemLogic : MonoBehaviour
         // Wait for all systems to be ready
         while (!AreSystemsReady())
         {
-            LogEvent("Waiting for systems to be ready...");
+            LogEvent("Waiting for systems to be ready...", "EventSystemLogic");
             yield return new WaitForSeconds(0.1f); // Check every 0.1 seconds
         }
         
-        LogEvent("All systems ready - subscribing to time system events");
+        LogEvent("All systems ready - subscribing to time system events", "EventSystemLogic");
         
         // Now subscribe to time system events
         timeSystem.OnPhaseChange += OnPhaseChanged; // PSEUDOCODE: Check events when phase changes
@@ -276,7 +282,7 @@ public class EventSystemLogic : MonoBehaviour
         timeSystem.OnCycleChange += OnCycleChanged; // PSEUDOCODE: Check events when cycle changes
         timeSystem.OnRitualSeventh += OnRitualSeventh; // PSEUDOCODE: Check events on ritual sevenths
         timeSystem.OnSeventhChange += OnSeventhChanged; // Check events when seventh changes
-        LogEvent("Subscribed to time system events");
+        LogEvent("Subscribed to time system events", "EventSystemLogic");
     }
     
     /// <summary>
@@ -286,31 +292,31 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (PopGrowthLogic.Instance == null)
         {
-            LogEvent("PopGrowthLogic.Instance is null - population system not ready");
+            LogEvent("PopGrowthLogic.Instance is null - population system not ready", "EventSystemLogic");
             return false;
         }
         
         if (gameUnitsLogic == null)
         {
-            LogEvent("GameUnitsLogic is null - resource system not ready");
+            LogEvent("GameUnitsLogic is null - resource system not ready", "EventSystemLogic");
             return false;
         }
         
         if (statManager == null)
         {
-            LogEvent("StatManager is null - stats system not ready");
+            LogEvent("StatManager is null - stats system not ready", "EventSystemLogic");
             return false;
         }
         
         if (timeSystem == null)
         {
-            LogEvent("TimeSystemLogic is null - time system not ready");
+            LogEvent("TimeSystemLogic is null - time system not ready", "EventSystemLogic");
             return false;
         }
         
         if (volumeManager == null)
         {
-            LogEvent("EventVolumeManager is null - event system not ready");
+            LogEvent("EventVolumeManager is null - event system not ready", "EventSystemLogic");
             return false;
         }
         
@@ -324,14 +330,14 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!AreSystemsReady())
         {
-            LogEvent("Systems not ready - cannot check for events");
+            LogEvent("Systems not ready - cannot check for events", "EventSystemLogic");
             return;
         }
         
         // Prevent new events if there's already a notification pending (anti-stacking)
         if (currentNotification != null)
         {
-            LogEvent("Event notification already pending - skipping new event check");
+            LogEvent("Event notification already pending - skipping new event check", "EventSystemLogic");
             return;
         }
         
@@ -352,26 +358,26 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (isEventActive) // Is the boss already telling a story?
         {
-            LogEvent($"Cannot trigger story {storyNode.storyTitle}: another event is active");
+            LogEvent($"Cannot trigger story {storyNode.storyTitle}: another event is active", "EventSystemLogic");
             return; // Boss is busy, can't start another story
         }
         
         if (!AreSystemsReady())
         {
-            LogEvent($"Cannot trigger story {storyNode.storyTitle}: systems not ready");
+            LogEvent($"Cannot trigger story {storyNode.storyTitle}: systems not ready", "EventSystemLogic");
             return;
         }
         
         currentStoryNode = storyNode; // Remember which story we're telling
         isEventActive = true; // Mark that boss is now busy
         
-        LogEvent($"Triggering story: {storyNode.storyTitle}"); // Boss announces they're starting
+        LogEvent($"Triggering story: {storyNode.storyTitle}", "EventSystemLogic"); // Boss announces they're starting
         
         // Pause time when event starts
         if (timeSystem != null)
         {
             timeSystem.PauseTime(true);
-            LogEvent("Time paused for event");
+            LogEvent("Time paused for event", "EventSystemLogic");
         }
         
         // Remember tab states and hide all tabs for the event
@@ -395,7 +401,7 @@ public class EventSystemLogic : MonoBehaviour
     /// </summary>
     public void ExecuteScreen(EventScreen screen)
     {
-        LogEvent($"Executing screen: {screen.screenType}");
+        LogEvent($"Executing screen: {screen.screenType}", "EventSystemLogic");
         screenManager.ShowScreen(screen);
     }
     
@@ -406,7 +412,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         EventScore score = GetOrCreateEventScore(scoreName); // Find or create the score
         score.value += change; // Add or subtract from the score
-        LogEvent($"Event score '{scoreName}' changed by {change} (new value: {score.value})"); // Boss announces the change
+        LogEvent($"Event score '{scoreName}' changed by {change} (new value: {score.value})", "EventSystemLogic"); // Boss announces the change
     }
     
     public int GetEventScore(string scoreName)
@@ -450,7 +456,7 @@ public class EventSystemLogic : MonoBehaviour
         if (consequence != null)
         {
             cumulativeConsequences.Add(consequence);
-            LogEvent($"Added consequence: {consequence.type} {consequence.targetName} {consequence.value}");
+            LogEvent($"Added consequence: {consequence.type} {consequence.targetName} {consequence.value}", "EventSystemLogic");
         }
     }
     
@@ -468,7 +474,7 @@ public class EventSystemLogic : MonoBehaviour
     public void ClearCumulativeConsequences()
     {
         cumulativeConsequences.Clear();
-        LogEvent("Cleared cumulative consequences");
+        LogEvent("Cleared cumulative consequences", "EventSystemLogic");
     }
     
     // ===== THE BOSS'S PUBLIC OFFICE =====
@@ -481,14 +487,14 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (eventsContainer == null || eventNotificationPrefab == null)
         {
-            LogEvent("Cannot create event notification: missing container or prefab reference");
+            LogEvent("Cannot create event notification: missing container or prefab reference", "EventSystemLogic");
             return;
         }
         
         // Check if we already have a notification - prevent stacking
         if (currentNotification != null)
         {
-            LogEvent($"Event notification already exists for: {currentNotification.name}, skipping new event: {storyNode.storyTitle}");
+            LogEvent($"Event notification already exists for: {currentNotification.name}, skipping new event: {storyNode.storyTitle}", "EventSystemLogic");
             return;
         }
         
@@ -505,7 +511,7 @@ public class EventSystemLogic : MonoBehaviour
             TimeSystemLogic.Instance.EnableSlowMotion();
         }
         
-        LogEvent($"Created event notification for: {storyNode.storyTitle}");
+        LogEvent($"Created event notification for: {storyNode.storyTitle}", "EventSystemLogic");
     }
     
     /// <summary>
@@ -544,7 +550,7 @@ public class EventSystemLogic : MonoBehaviour
         UnityEngine.UI.Button button = notification.GetComponentInChildren<UnityEngine.UI.Button>();
         if (button == null)
         {
-            LogEvent("EventNotification prefab must have a Button component for click handling");
+            LogEvent("EventNotification prefab must have a Button component for click handling", "EventSystemLogic");
             return;
         }
         
@@ -552,7 +558,7 @@ public class EventSystemLogic : MonoBehaviour
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => StartEventFromNotification(notification));
         
-        LogEvent("EventNotification button click handler configured automatically");
+        LogEvent("EventNotification button click handler configured automatically", "EventSystemLogic");
     }
     
     /// <summary>
@@ -563,7 +569,7 @@ public class EventSystemLogic : MonoBehaviour
         var storyReference = notification.GetComponent<EventNotificationData>();
         if (storyReference?.storyNode == null)
         {
-            LogEvent("Cannot start event: notification has no story reference");
+            LogEvent("Cannot start event: notification has no story reference", "EventSystemLogic");
             return;
         }
         
@@ -600,7 +606,7 @@ public class EventSystemLogic : MonoBehaviour
         TriggerStory(storyReference.storyNode);
         
         // Keep slow motion active during the event (will be disabled when event completes)
-        LogEvent($"Event started - slow motion remains active until completion");
+        LogEvent($"Event started - slow motion remains active until completion", "EventSystemLogic");
         
         // Switch to event tab
         TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
@@ -609,7 +615,7 @@ public class EventSystemLogic : MonoBehaviour
             hotkeys.SwitchToEventTab();
         }
         
-        LogEvent($"Started event from notification: {storyReference.storyNode.storyTitle}");
+        LogEvent($"Started event from notification: {storyReference.storyNode.storyTitle}", "EventSystemLogic");
     }
     
     // Public API
@@ -618,7 +624,7 @@ public class EventSystemLogic : MonoBehaviour
         if (volumeManager != null)
         {
             volumeManager.AddVolume(volume); // Add the new volume to the manager
-            LogEvent($"Added volume: {volume.volumeName}"); // Boss announces the new volume
+            LogEvent($"Added volume: {volume.volumeName}", "EventSystemLogic"); // Boss announces the new volume
         }
     }
     
@@ -652,7 +658,7 @@ public class EventSystemLogic : MonoBehaviour
         
         if (onCooldown)
         {
-            LogEvent($"Event '{eventName}' is on cooldown: {seventhsSinceEvent}/{requiredCooldown} sevenths");
+            LogEvent($"Event '{eventName}' is on cooldown: {seventhsSinceEvent}/{requiredCooldown} sevenths", "EventSystemLogic");
         }
         
         return onCooldown;
@@ -664,7 +670,7 @@ public class EventSystemLogic : MonoBehaviour
     private void ResetEventCooldown(string eventName)
     {
         eventCooldowns[eventName] = 0;
-        LogEvent($"Event '{eventName}' cooldown reset to 0");
+        LogEvent($"Event '{eventName}' cooldown reset to 0", "EventSystemLogic");
     }
     
     // Public accessors for system references
@@ -686,14 +692,14 @@ public class EventSystemLogic : MonoBehaviour
         
         if (!AreSystemsReady())
         {
-            LogEvent("Systems not ready - cannot check for events");
+            LogEvent("Systems not ready - cannot check for events", "EventSystemLogic");
             return;
         }
         
         // Respect system initialization - don't trigger events until first seventh change has passed
         if (seventhChangeCount < 1)
         {
-            LogEvent($"System not yet initialized (change count: {seventhChangeCount}) - skipping event check until first seventh change passes");
+            LogEvent($"System not yet initialized (change count: {seventhChangeCount}) - skipping event check until first seventh change passes", "EventSystemLogic");
             return;
         }
         
@@ -710,11 +716,11 @@ public class EventSystemLogic : MonoBehaviour
             
             if (effectiveTime > baseTime)
             {
-                LogEvent($"Time is in SLOW MOTION: {baseTime}s → {effectiveTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s");
+                LogEvent($"Time is in SLOW MOTION: {baseTime}s → {effectiveTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s", "EventSystemLogic");
             }
             else
             {
-                LogEvent($"Time is NORMAL: {baseTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s");
+                LogEvent($"Time is NORMAL: {baseTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s", "EventSystemLogic");
             }
         }
         
@@ -736,13 +742,13 @@ public class EventSystemLogic : MonoBehaviour
         {
             // Should have slow motion but doesn't - enable it
             TimeSystemLogic.Instance.EnableSlowMotion();
-            LogEvent("Slow motion consistency check: re-enabled slow motion for pending notification");
+            LogEvent("Slow motion consistency check: re-enabled slow motion for pending notification", "EventSystemLogic");
         }
         else if (!shouldHaveSlowMotion && currentlyHasSlowMotion)
         {
             // Shouldn't have slow motion but does - disable it
             TimeSystemLogic.Instance.DisableSlowMotion();
-            LogEvent("Slow motion consistency check: disabled slow motion (no pending notifications)");
+            LogEvent("Slow motion consistency check: disabled slow motion (no pending notifications)", "EventSystemLogic");
         }
     }
     
@@ -751,13 +757,13 @@ public class EventSystemLogic : MonoBehaviour
     /// </summary>
     public void OnStoryCompleted()
     {
-        LogEvent("Story completed - resuming time and cleaning up");
+        LogEvent("Story completed - resuming time and cleaning up", "EventSystemLogic");
         
         // Hide the current event screen first
         if (screenManager != null)
         {
             screenManager.HideCurrentScreen();
-            LogEvent("Event screen hidden");
+            LogEvent("Event screen hidden", "EventSystemLogic");
         }
         
         // Apply cumulative consequences from the entire story flow
@@ -765,7 +771,7 @@ public class EventSystemLogic : MonoBehaviour
         {
             if (AreSystemsReady())
             {
-                LogEvent($"Applying {cumulativeConsequences.Count} cumulative consequences from story flow");
+                LogEvent($"Applying {cumulativeConsequences.Count} cumulative consequences from story flow", "EventSystemLogic");
                 foreach (EventConsequence consequence in cumulativeConsequences)
                 {
                     if (IsTimedEligible(consequence) && consequence.durationSevenths > 0)
@@ -782,7 +788,7 @@ public class EventSystemLogic : MonoBehaviour
             }
             else
             {
-                LogEvent($"Cannot apply cumulative consequences: systems not ready");
+                LogEvent($"Cannot apply cumulative consequences: systems not ready", "EventSystemLogic");
             }
         }
         
@@ -793,7 +799,7 @@ public class EventSystemLogic : MonoBehaviour
         if (timeSystem != null)
         {
             timeSystem.PauseTime(false);
-            LogEvent("Time resumed after event");
+            LogEvent("Time resumed after event", "EventSystemLogic");
             // Ensure we are subscribed to seventh changes for timed expirations
             timeSystem.OnSeventhChange -= OnTimedSeventh; // avoid dup
             timeSystem.OnSeventhChange += OnTimedSeventh;
@@ -803,7 +809,7 @@ public class EventSystemLogic : MonoBehaviour
         if (TimeSystemLogic.Instance != null)
         {
             TimeSystemLogic.Instance.DisableSlowMotion();
-            LogEvent("Slow motion disabled - event completed");
+            LogEvent("Slow motion disabled - event completed", "EventSystemLogic");
         }
         
         // Restore previous tab states and HUD visibility
@@ -811,11 +817,11 @@ public class EventSystemLogic : MonoBehaviour
         if (hotkeys != null)
         {
             hotkeys.RestoreTabStatesAfterEvent();
-            LogEvent("Tab states and HUD restored");
+            LogEvent("Tab states and HUD restored", "EventSystemLogic");
         }
         else
         {
-            LogEvent("ERROR: TabHotkeys not found for restoration");
+            LogEvent("ERROR: TabHotkeys not found for restoration", "EventSystemLogic");
         }
         
         // Reset event state
@@ -924,7 +930,7 @@ public class EventSystemLogic : MonoBehaviour
     {
         if (!AreSystemsReady())
         {
-            LogEvent($"Cannot apply consequence {consequence.type}: systems not ready");
+            LogEvent($"Cannot apply consequence {consequence.type}: systems not ready", "EventSystemLogic");
             return;
         }
         
@@ -942,7 +948,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply StatChange consequence: StatManager is null");
+                    LogEvent($"Cannot apply StatChange consequence: StatManager is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -953,7 +959,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ResourceChange consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ResourceChange consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -964,7 +970,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ProductionUnitChange consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ProductionUnitChange consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
             
@@ -985,7 +991,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ProductionPercentChange consequence: GlobalProductionManager.Instance is null");
+                    LogEvent($"Cannot apply ProductionPercentChange consequence: GlobalProductionManager.Instance is null", "EventSystemLogic");
                 }
                 break;
 
@@ -1004,7 +1010,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ProductionPercentChangeSection consequence: GlobalProductionManager.Instance is null");
+                    LogEvent($"Cannot apply ProductionPercentChangeSection consequence: GlobalProductionManager.Instance is null", "EventSystemLogic");
                 }
                 break;
 
@@ -1015,7 +1021,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ClickPowerChange consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ClickPowerChange consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
 
@@ -1026,7 +1032,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ClickPowerPercentChange consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ClickPowerPercentChange consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
 
@@ -1037,7 +1043,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ClickPowerChangeSection consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ClickPowerChangeSection consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
 
@@ -1048,7 +1054,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply ClickPowerPercentChangeSection consequence: GameUnitsLogic is null");
+                    LogEvent($"Cannot apply ClickPowerPercentChangeSection consequence: GameUnitsLogic is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1076,7 +1082,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply TechnologyEnlightened consequence: GameUnitsLogic or researchTab is null");
+                    LogEvent($"Cannot apply TechnologyEnlightened consequence: GameUnitsLogic or researchTab is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1091,12 +1097,12 @@ public class EventSystemLogic : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning($"PopulationChange consequence with positive value {consequence.value} is not allowed. Use VagrantsChange instead.");
+                        LogEvent($"PopulationChange consequence with positive value {consequence.value} is not allowed. Use VagrantsChange instead.", "EventSystemLogic");
                     }
                 }
                 else
                 {
-                    LogEvent($"Cannot apply PopulationChange consequence: PopGrowthLogic.Instance is null");
+                    LogEvent($"Cannot apply PopulationChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1107,7 +1113,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply HousingChange consequence: PopGrowthLogic.Instance is null");
+                    LogEvent($"Cannot apply HousingChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1118,7 +1124,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply VagrantsChange consequence: PopGrowthLogic.Instance is null");
+                    LogEvent($"Cannot apply VagrantsChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1129,7 +1135,7 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply DeathsChange consequence: PopGrowthLogic.Instance is null");
+                    LogEvent($"Cannot apply DeathsChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
                 }
                 break;
                 
@@ -1140,12 +1146,12 @@ public class EventSystemLogic : MonoBehaviour
                 }
                 else
                 {
-                    LogEvent($"Cannot apply DeathRecordsRevision consequence: PopGrowthLogic.Instance is null");
+                    LogEvent($"Cannot apply DeathRecordsRevision consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
                 }
                 break;
                 
             case EventConsequence.ConsequenceType.UnlockEvent:
-                LogEvent($"UnlockEvent consequence for '{consequence.targetName}' - this would need to be implemented");
+                LogEvent($"UnlockEvent consequence for '{consequence.targetName}' - this would need to be implemented", "EventSystemLogic");
                 break;
         }
     }
@@ -1160,18 +1166,62 @@ public class EventSystemLogic : MonoBehaviour
             timeSystem.OnCycleChange -= OnCycleChanged; // PSEUDOCODE: Unsubscribe from cycle changes
             timeSystem.OnRitualSeventh -= OnRitualSeventh; // PSEUDOCODE: Unsubscribe from ritual sevenths
             timeSystem.OnSeventhChange -= OnSeventhChanged; // Unsubscribe from seventh changes
-            LogEvent("Unsubscribed from time system events"); // Boss announces the cleanup
+            LogEvent("Unsubscribed from time system events", "EventSystemLogic"); // Boss announces the cleanup
         }
     }
     
     // ===== THE BOSS'S ANNOUNCEMENT SYSTEM =====
     // The boss announces what they're doing so others can keep track
     // Logging
-    private void LogEvent(string message)
+    public void LogEvent(string message, string type)
     {
-        if (enableEventLogging) // Only announce if logging is turned on
+        switch (type)
         {
-            Debug.Log($"[EventSystem] {message}"); // Boss makes an announcement
+            case "EventSystemLogic":
+                if (enableEventSystemLogicLogging)
+                {
+                    Debug.Log($"[EventSystemLogic] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "EventVolumeManager":
+                if (enableEventVolumeManagerLogging)
+                {
+                    Debug.Log($"[EventVolumeManager] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "EventScreenManager":
+                if (enableEventScreenManagerLogging)
+                {
+                    Debug.Log($"[EventScreenManager] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "InkStoryManager":
+                if (enableInkStoryManagerLogging)
+                {
+                    Debug.Log($"[InkStoryManager] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "InkDrivenEventSetup":
+                if (enableInkDrivenEventSetupLogging)
+                {
+                    Debug.Log($"[InkDrivenEventSetup] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "ChorusScreenManager":
+                if (enableChorusScreenManagerLogging)
+                {
+                    Debug.Log($"[ChorusScreenManager] {message}"); // Boss makes an announcement
+                }
+                break;
+            case "DecisionToken":
+                if (enableDecisionTokenLogging)
+                {
+                    Debug.Log($"[DecisionToken] {message}"); // Boss makes an announcement
+                }
+                break;
+            default:
+                Debug.Log($"[EventSystem] {message}"); // Boss makes an announcement
+                break;
         }
     }
 }

@@ -125,7 +125,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
             // Check if we have enough consecutive inputs to trigger skip
             if (inputTimes.Count >= skipTriggerCount && !skipTriggered)
             {
-                Debug.Log($"Skip triggered! {inputTimes.Count} inputs detected within {skipDetectionWindow}s window.");
+                EventSystemLogic.Instance.LogEvent($"Skip triggered! {inputTimes.Count} inputs detected within {skipDetectionWindow}s window.", "ChorusScreenManager");
                 skipTriggered = true;
                 SkipToEnd();
             }
@@ -930,7 +930,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
         
         OnRevealComplete?.Invoke();
         
-        Debug.Log("ProgressiveSentenceRevealLogic: Skipped to end - all text visible with last sentence active");
+        EventSystemLogic.Instance.LogEvent("ProgressiveSentenceRevealLogic: Skipped to end - all text visible with last sentence active", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -1004,7 +1004,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
         }
         
         sentencesPerGroup = newGroupSize;
-        Debug.Log($"ProgressiveSentenceRevealLogic: Changed to {sentencesPerGroup} sentences per group");
+        EventSystemLogic.Instance.LogEvent($"ProgressiveSentenceRevealLogic: Changed to {sentencesPerGroup} sentences per group", "ChorusScreenManager");
         
         // If currently revealing, restart with new settings
         if (revealCoroutine != null && !string.IsNullOrEmpty(originalText))
@@ -1067,7 +1067,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
     {
         skipDetectionWindow = Mathf.Max(0.1f, window);
         skipTriggerCount = Mathf.Max(1, count);
-        Debug.Log($"ProgressiveSentenceRevealLogic: Skip settings updated - Window: {skipDetectionWindow}s, Count: {skipTriggerCount}");
+        EventSystemLogic.Instance.LogEvent($"ProgressiveSentenceRevealLogic: Skip settings updated - Window: {skipDetectionWindow}s, Count: {skipTriggerCount}", "ChorusScreenManager");
     }
     
     /// <summary>

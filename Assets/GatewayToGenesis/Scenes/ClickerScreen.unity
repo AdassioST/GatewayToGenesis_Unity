@@ -1065,6 +1065,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 193c8ac429910304d9b3c65e097be532, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableGameUnitsLogicLogging: 0
   storageTab: {fileID: 1465858056}
   productionTab: {fileID: 989069526}
   researchTab: {fileID: 668560537}
@@ -1102,6 +1103,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaa643587ce2037458451a69ac8f90e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enablePopGrowthLogicLogging: 0
   foodThreshold: 12
   vagrantToPopulationRate: 4
   researchPerPopulation: 100
@@ -1727,7 +1729,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerSeventh: 30
+  enableTimeSystemLogicLogging: 0
+  secondsPerSeventh: 5
   slowMotionFactor: 3
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
@@ -22943,7 +22946,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ab4de3903589014395dd151659c9296, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableDebugLogging: 1
   autoSetupOnStart: 1
   eventsFolderPath: Events
 --- !u!114 &2013945153
@@ -22958,7 +22960,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aca6aa693ccf7174782c8ccde10823e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableDebugLogging: 1
   eventVolumes: []
   currentVolume:
     volumeName: 
@@ -23005,7 +23006,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 35fd8bd8719f03c41b4d0c5ccc16b951, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableChorusDebugLogging: 0
   splashScreenPrefab: {fileID: 3494362373199277764, guid: b0ac9be827231264d9a46dc97a90edb7, type: 3}
   verseScreenPrefab: {fileID: 1507789047335668275, guid: a63783144dcf41545a45bac27d0a17b9, type: 3}
   chorusScreenPrefab: {fileID: 8996175222598961968, guid: 60f5e6421d1f4f645b12f485684268b1, type: 3}
@@ -23035,7 +23035,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de631632960c9cd4798bc98198a36c6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableEventLogging: 1
+  enableEventSystemLogicLogging: 0
+  enableEventVolumeManagerLogging: 0
+  enableEventScreenManagerLogging: 0
+  enableInkStoryManagerLogging: 0
+  enableInkDrivenEventSetupLogging: 0
+  enableChorusScreenManagerLogging: 0
+  enableDecisionTokenLogging: 0
   eventScores: []
   gameUnitsLogic: {fileID: 118059065}
   statManager: {fileID: 118059069}

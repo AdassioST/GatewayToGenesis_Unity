@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public class TimeSystemLogic : MonoBehaviour
 {
+    [Header("Time System Settings")]
+    [SerializeField] private bool enableTimeSystemLogicLogging; // Whether to log what the boss is doing
+
     public static TimeSystemLogic Instance { get; private set; }
 
     [SerializeField] private float secondsPerSeventh = 180f; // 1 Seventh = 3 minutes
@@ -294,7 +297,10 @@ public class TimeSystemLogic : MonoBehaviour
     /// </summary>
     private void LogTimeSystem(string message)
     {
-        Debug.Log($"[TimeSystemLogic] {message}");
+        if (enableTimeSystemLogicLogging)
+        {
+            Debug.Log($"[TimeSystemLogic] {message}");
+        }
     }
 }
 

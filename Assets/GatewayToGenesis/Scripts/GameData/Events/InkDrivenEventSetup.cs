@@ -10,8 +10,6 @@ using System.Linq;
 /// </summary>
 public class InkDrivenEventSetup : MonoBehaviour
 {
-    [Header("Debugging")]
-    [SerializeField] private bool enableDebugLogging = true;
     [Header("Auto Setup Settings")]
     [SerializeField] private bool autoSetupOnStart = true;
     [SerializeField] private string eventsFolderPath = "Events";
@@ -70,7 +68,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             created++;
         }
 
-        Debug.Log($"[InkDrivenEventSetup] Created {created} volumes from Events folder");
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Created {created} volumes from Events folder", "InkDrivenEventSetup");
     }
 
     // ===== CHOICE METADATA INDEX =====
@@ -140,10 +138,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                     // Continue until choices appear or content ends
                     while (s.canContinue) s.Continue();
                     var ch = s.currentChoices;
-                    if (enableDebugLogging)
-                    {
-                        Debug.Log($"[InkDrivenEventSetup] Choice scan: knot='{knotName}', choices={(ch!=null?ch.Count:0)}");
-                    }
+                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Choice scan: knot='{knotName}', choices={(ch!=null?ch.Count:0)}", "InkDrivenEventSetup");
                     if (ch != null && ch.Count > 0)
                     {
                         var list = new List<ChorusChoiceData>();
@@ -195,20 +190,14 @@ public class InkDrivenEventSetup : MonoBehaviour
                         {
                             ChoiceMetadataByKnot[knotName] = list;
                             compiledChorusKnots++;
-                            if (enableDebugLogging)
-                            {
-                                Debug.Log($"[InkDrivenEventSetup] Stored {list.Count} choices for '{knotName}'");
-                            }
+                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Stored {list.Count} choices for '{knotName}'", "InkDrivenEventSetup");
                         }
                     }
                 }
                 catch { /* skip invalid knots */ }
             }
         }
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[InkDrivenEventSetup] Built choice metadata index for {ChoiceMetadataByKnot.Count} knot(s) (compiled knots {compiledChorusKnots})");
-        }
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Built choice metadata index for {ChoiceMetadataByKnot.Count} knot(s) (compiled knots {compiledChorusKnots})", "InkDrivenEventSetup");
     }
 
     // ===== PRECOMPILED KNOT CONTENT/CHOICES INDEX =====
@@ -281,10 +270,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (s.currentChoices != null && s.currentChoices.Count > 0) break;
                     }
                     var pk = new PrecompiledKnot { knotName = knotName, content = sb.ToString() };
-                    if (enableDebugLogging)
-                    {
-                        Debug.Log($"[InkDrivenEventSetup] KnotIndex: '{knotName}': contentLen={pk.content?.Length ?? 0}, hasChoices={(s.currentChoices!=null ? s.currentChoices.Count:0)}, fallthrough={(leftStartKnot ? nextKnot:"-")}");
-                    }
+                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] KnotIndex: '{knotName}': contentLen={pk.content?.Length ?? 0}, hasChoices={(s.currentChoices!=null ? s.currentChoices.Count:0)}, fallthrough={(leftStartKnot ? nextKnot:"-")}", "InkDrivenEventSetup");
                     if (leftStartKnot)
                     {
                         pk.nextKnotIfNoChoices = nextKnot;
@@ -303,10 +289,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                                 resolvedTop = ResolveChoiceTargetTopLevel(json.text, knotName, i);
                             }
                             pk.choices.Add(new PrecompiledChoice { text = choiceText, targetPath = resolvedTop });
-                            if (enableDebugLogging)
-                            {
-                                Debug.Log($"[InkDrivenEventSetup]   Choice[{i}] '{choiceText}' -> '{(resolvedTop ?? "-")}'");
-                            }
+                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup]   Choice[{i}] '{choiceText}' -> '{(resolvedTop ?? "-")}'", "InkDrivenEventSetup");
                         }
                     }
                     else
@@ -316,10 +299,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (!string.IsNullOrEmpty(currentTop) && currentTop != knotName)
                         {
                             pk.nextKnotIfNoChoices = currentTop;
-                            if (enableDebugLogging)
-                            {
-                                Debug.Log($"[InkDrivenEventSetup]   Next-if-no-choices='{pk.nextKnotIfNoChoices}' for '{knotName}'");
-                            }
+                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup]   Next-if-no-choices='{pk.nextKnotIfNoChoices}' for '{knotName}'", "InkDrivenEventSetup");
                         }
                     }
                     KnotIndexByKnot[knotName] = pk;
@@ -327,10 +307,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 catch { /* skip invalid knot */ }
             }
         }
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[InkDrivenEventSetup] Built knot content index for {KnotIndexByKnot.Count} knot(s)");
-        }
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Built knot content index for {KnotIndexByKnot.Count} knot(s)", "InkDrivenEventSetup");
     }
 
     public static string GetTopLevelKnotNameFromPath(string path)
@@ -429,11 +406,8 @@ public class InkDrivenEventSetup : MonoBehaviour
                 // Flush previous knot log if it had choices
                 if (!string.IsNullOrEmpty(currentKnot) && currentKnotChoices != null && currentKnotChoices.Count > 0)
                 {
-                    if (enableDebugLogging)
-                    {
-                        string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
-                        Debug.Log($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]");
-                    }
+                    string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
+                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
                 }
                 currentKnot = end > start ? l.Substring(start, end - start).Trim() : l.Trim('=', ' ').Trim();
                 currentKnotChoices = new List<ChorusChoiceData>();
@@ -482,11 +456,8 @@ public class InkDrivenEventSetup : MonoBehaviour
         // Flush last knot's summary
         if (!string.IsNullOrEmpty(currentKnot) && currentKnotChoices != null && currentKnotChoices.Count > 0)
         {
-            if (enableDebugLogging)
-            {
-                string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
-                Debug.Log($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]");
-            }
+            string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
         }
     }
 
@@ -1170,26 +1141,20 @@ public class InkDrivenEventSetup : MonoBehaviour
         var named = story.mainContentContainer?.namedContent;
         if (named == null || named.Count == 0)
         {
-            if (enableDebugLogging) Debug.Log("[InkDrivenEventSetup] Compiled story has no named content");
+            EventSystemLogic.Instance.LogEvent("[InkDrivenEventSetup] Compiled story has no named content", "InkDrivenEventSetup");
             return;
         }
 
         foreach (var kv in named)
         {
             string knotName = kv.Key;
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[InkDrivenEventSetup] Processing knot: '{knotName}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Processing knot: '{knotName}'", "InkDrivenEventSetup");
             
             // Get tags for this knot (metadata lines imported as tags)
             List<string> tags = story.TagsForContentAtPath(knotName) ?? new List<string>();
-            if (enableDebugLogging)
-            {
-                // Hide deprecated screen_flow from debug output to reduce confusion
-                var filtered = tags.FindAll(t => !t.TrimStart().StartsWith("screen_flow:"));
-                Debug.Log($"[InkDrivenEventSetup] Found {filtered.Count} tags for knot '{knotName}': {string.Join(", ", filtered)}");
-            }
+            // Hide deprecated screen_flow from debug output to reduce confusion
+            var filtered = tags.FindAll(t => !t.TrimStart().StartsWith("screen_flow:"));
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Found {filtered.Count} tags for knot '{knotName}': {string.Join(", ", filtered)}", "InkDrivenEventSetup");
 
             string title = null, description = null, conditions = null, consequences = null, screenFlow = null;
             int cooldown = 0;
@@ -1216,10 +1181,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 else if (t.StartsWith("layout:")) uiMetadata["layout"] = t.Substring(8).Trim();
             }
             
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[InkDrivenEventSetup] Extracted metadata for '{knotName}': title='{title}', conditions='{conditions}', event_type='{uiMetadata.GetValueOrDefault("event_type")}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted metadata for '{knotName}': title='{title}', conditions='{conditions}', event_type='{uiMetadata.GetValueOrDefault("event_type")}'", "InkDrivenEventSetup");
 
             // Only create story nodes for knots that have the essential metadata (title and conditions)
             // This prevents internal story flow knots from being treated as separate events
@@ -1237,12 +1199,9 @@ public class InkDrivenEventSetup : MonoBehaviour
                 );
 
                 volume.storyNodes.Add(node);
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[InkDrivenEventSetup] (Compiled) Added story node '{knotName}' with title '{node.storyTitle}' and {node.storyConditions.Count} conditions");
-                }
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Added story node '{knotName}' with title '{node.storyTitle}' and {node.storyConditions.Count} conditions", "InkDrivenEventSetup");
             }
-            else if (enableDebugLogging)
+            else
             {
                 string missingFields = "";
                 if (string.IsNullOrEmpty(title)) missingFields += "title, ";
@@ -1250,14 +1209,11 @@ public class InkDrivenEventSetup : MonoBehaviour
                 if (string.IsNullOrEmpty(uiMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                 missingFields = missingFields.TrimEnd(',', ' ');
                 
-                Debug.Log($"[InkDrivenEventSetup] (Compiled) Skipped internal knot '{knotName}' - missing: {missingFields}");
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Skipped internal knot '{knotName}' - missing: {missingFields}", "InkDrivenEventSetup");
             }
         }
 
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[InkDrivenEventSetup] (Compiled) Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'");
-        }
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
     }
     
     /// <summary>
@@ -1301,12 +1257,9 @@ public class InkDrivenEventSetup : MonoBehaviour
                         );
                         volume.storyNodes.Add(storyNode);
                         
-                        if (enableDebugLogging)
-                        {
-                            Debug.Log($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions");
-                        }
+                        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
                     }
-                    else if (enableDebugLogging)
+                    else
                     {
                         string missingFields = "";
                         if (string.IsNullOrEmpty(currentTitle)) missingFields += "title, ";
@@ -1314,7 +1267,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (string.IsNullOrEmpty(currentUIMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                         missingFields = missingFields.TrimEnd(',', ' ');
                         
-                        Debug.Log($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}");
+                        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
                     }
                 }
 
@@ -1330,10 +1283,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 currentCooldown = 0;
                 currentUIMetadata = new Dictionary<string, string>();
 
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[InkDrivenEventSetup] Found knot: '{currentNodeName}'");
-                }
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Found knot: '{currentNodeName}'", "InkDrivenEventSetup");
             }
             // Check for metadata lines
             else if (trimmedLine.StartsWith("#"))
@@ -1362,12 +1312,9 @@ public class InkDrivenEventSetup : MonoBehaviour
                 );
                 volume.storyNodes.Add(storyNode);
                 
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions");
-                }
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
             }
-            else if (enableDebugLogging)
+            else
             {
                 string missingFields = "";
                 if (string.IsNullOrEmpty(currentTitle)) missingFields += "title, ";
@@ -1375,18 +1322,15 @@ public class InkDrivenEventSetup : MonoBehaviour
                 if (string.IsNullOrEmpty(currentUIMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                 missingFields = missingFields.TrimEnd(',', ' ');
                 
-                Debug.Log($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}");
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
             }
         }
 
-        if (enableDebugLogging)
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
+        for (int i = 0; i < volume.storyNodes.Count; i++)
         {
-            Debug.Log($"[InkDrivenEventSetup] Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'");
-            for (int i = 0; i < volume.storyNodes.Count; i++)
-            {
-                var sn = volume.storyNodes[i];
-                Debug.Log($"[InkDrivenEventSetup] Node[{i}]: name='{sn.nodeName}', title='{sn.storyTitle}', conditions={sn.storyConditions.Count}, flowSteps={sn.screenFlow.Count}");
-            }
+            var sn = volume.storyNodes[i];
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node[{i}]: name='{sn.nodeName}', title='{sn.storyTitle}', conditions={sn.storyConditions.Count}, flowSteps={sn.screenFlow.Count}", "InkDrivenEventSetup");
         }
     }
     
@@ -1486,19 +1430,13 @@ public class InkDrivenEventSetup : MonoBehaviour
         if (!string.IsNullOrEmpty(conditions))
         {
             storyNode.storyConditions = ParseConditions(conditions);
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConditions.Count} condition(s): '{conditions}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConditions.Count} condition(s): '{conditions}'", "InkDrivenEventSetup");
         }
 
         if (!string.IsNullOrEmpty(consequences))
         {
             storyNode.storyConsequences = ParseConsequences(consequences);
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConsequences.Count} consequence(s): '{consequences}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConsequences.Count} consequence(s): '{consequences}'", "InkDrivenEventSetup");
         }
 
         // Generate screen flow (ignore deprecated custom screen_flow metadata)
@@ -1520,10 +1458,7 @@ public class InkDrivenEventSetup : MonoBehaviour
         if (string.IsNullOrEmpty(conditionString))
             return conditions;
         
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[InkDrivenEventSetup] Parsing conditions: '{conditionString}'");
-        }
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsing conditions: '{conditionString}'", "InkDrivenEventSetup");
         
         // Support multiple conditions separated by ';'
         string[] parts = conditionString.Split(';');
@@ -1532,19 +1467,13 @@ public class InkDrivenEventSetup : MonoBehaviour
             string trimmed = part.Trim();
             if (string.IsNullOrEmpty(trimmed)) continue;
             
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[InkDrivenEventSetup] Processing condition part: '{trimmed}'");
-            }
+            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Processing condition part: '{trimmed}'", "InkDrivenEventSetup");
             
             EventCondition condition = ParseConditionString(trimmed);
             if (condition != null)
             {
                 conditions.Add(condition);
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[InkDrivenEventSetup] Successfully parsed condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}");
-                }
+                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Successfully parsed condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "InkDrivenEventSetup");
             }
             else
             {
@@ -1552,10 +1481,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             }
         }
         
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[InkDrivenEventSetup] Parsed {conditions.Count} conditions successfully");
-        }
+        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {conditions.Count} conditions successfully", "InkDrivenEventSetup");
         
         return conditions;
     }

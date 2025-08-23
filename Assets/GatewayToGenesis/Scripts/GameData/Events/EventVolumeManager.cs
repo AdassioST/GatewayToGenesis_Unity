@@ -8,8 +8,6 @@ using System.Linq; // Added for .Any()
 /// </summary>
 public class EventVolumeManager : MonoBehaviour
 {
-    [Header("Debugging")]
-    [SerializeField] private bool enableDebugLogging = true;
     [Header("Event Volumes")]
     [SerializeField] private List<EventVolume> eventVolumes = new List<EventVolume>();
     
@@ -47,10 +45,7 @@ public class EventVolumeManager : MonoBehaviour
             }
         }
 
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[EventVolumeManager] Initialized lookups: volumes={eventVolumes.Count}, storyNodes={storyNodeLookup.Count}");
-        }
+        Debug.Log($"[EventVolumeManager] Initialized lookups: volumes={eventVolumes.Count}, storyNodes={storyNodeLookup.Count}");
     }
     
     /// <summary>
@@ -70,15 +65,13 @@ public class EventVolumeManager : MonoBehaviour
                 // Bind external functions for this story
                 BindExternalFunctions(story);
 
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] Loaded story for volume '{volume.volumeName}' (text starts with '{(volume.inkMasterfile.text.Length>1?volume.inkMasterfile.text[0]:'?')}')");
-                }
+                Debug.Log($"[EventVolumeManager] Loaded story for volume '{volume.volumeName}' (text starts with '{(volume.inkMasterfile.text.Length>1?volume.inkMasterfile.text[0]:'?')}')");
             }
-            else if (enableDebugLogging)
+            else
             {
                 Debug.LogWarning($"[EventVolumeManager] Volume '{volume.volumeName}' has no masterfile assigned");
             }
+
         }
     }
     
@@ -269,19 +262,13 @@ public class EventVolumeManager : MonoBehaviour
     /// </summary>
     public StoryNode FindBestAvailableStory()
     {
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[EventVolumeManager] Finding best available story from {eventVolumes.Count} volumes");
-        }
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Finding best available story from {eventVolumes.Count} volumes", "EventVolumeManager");
         
         // Check if there are any story nodes at all
         int totalStoryNodes = eventVolumes.Sum(v => v.storyNodes.Count);
         if (totalStoryNodes == 0)
         {
-            if (enableDebugLogging)
-            {
-                Debug.Log("[EventVolumeManager] No story nodes found in any volume - no events available");
-            }
+            EventSystemLogic.Instance.LogEvent("[EventVolumeManager] No story nodes found in any volume - no events available", "EventVolumeManager");
             return null;
         }
         
@@ -296,10 +283,7 @@ public class EventVolumeManager : MonoBehaviour
                 
         if (hasPopulationConditions && PopGrowthLogic.Instance == null)
         {
-            if (enableDebugLogging)
-            {
-                Debug.Log("[EventVolumeManager] Some stories have population conditions but PopGrowthLogic.Instance is null - waiting for system to be ready");
-            }
+            EventSystemLogic.Instance.LogEvent("[EventVolumeManager] Some stories have population conditions but PopGrowthLogic.Instance is null - waiting for system to be ready", "EventVolumeManager");
             return null;
         }
         
@@ -310,47 +294,29 @@ public class EventVolumeManager : MonoBehaviour
         
         foreach (EventVolume volume in eventVolumes)
         {
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Checking volume '{volume.volumeName}' (unlocked: {volume.isUnlocked})");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking volume '{volume.volumeName}' (unlocked: {volume.isUnlocked})", "EventVolumeManager");
             
             if (!IsVolumeAvailable(volume)) 
             {
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] Volume '{volume.volumeName}' is not available");
-                }
+                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is not available", "EventVolumeManager");
                 continue;
             }
             
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Volume '{volume.volumeName}' is available, checking {volume.storyNodes.Count} story nodes");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is available, checking {volume.storyNodes.Count} story nodes", "EventVolumeManager");
             
             foreach (StoryNode storyNode in volume.storyNodes)
             {
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] Checking story node '{storyNode.nodeName}' (unlocked: {storyNode.isUnlocked}, priority: {storyNode.priority})");
-                }
+                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking story node '{storyNode.nodeName}' (unlocked: {storyNode.isUnlocked}, priority: {storyNode.priority})", "EventVolumeManager");
                 
                 if (!storyNode.isUnlocked) 
                 {
-                    if (enableDebugLogging)
-                    {
-                        Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' is locked");
-                    }
+                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is locked", "EventVolumeManager");
                     continue;
                 }
                 
                 if (AreStoryConditionsMet(storyNode))
                 {
-                    if (enableDebugLogging)
-                    {
-                        Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' meets conditions with priority {storyNode.priority}");
-                    }
+                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' meets conditions with priority {storyNode.priority}", "EventVolumeManager");
                     
                     if (storyNode.priority > highestPriority)
                     {
@@ -359,24 +325,19 @@ public class EventVolumeManager : MonoBehaviour
                         samePriorityCandidates.Clear();
                         samePriorityCandidates.Add(storyNode);
                         bestVolume = volume;
-                        if (enableDebugLogging)
-                        {
-                            Debug.Log($"[EventVolumeManager] New highest priority: '{storyNode.nodeName}' (priority {storyNode.priority})");
-                        }
+                        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] New highest priority: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
                     }
                     else if (storyNode.priority == highestPriority)
                     {
                         // Same priority - add to candidates for random selection
                         samePriorityCandidates.Add(storyNode);
-                        if (enableDebugLogging)
-                        {
-                            Debug.Log($"[EventVolumeManager] Added to same priority candidates: '{storyNode.nodeName}' (priority {storyNode.priority})");
-                        }
+                        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Added to same priority candidates: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
                     }
                 }
-                else if (enableDebugLogging)
+                else
                 {
-                    Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' did not meet conditions");
+                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' did not meet conditions", "EventVolumeManager");
+
                 }
             }
         }
@@ -388,18 +349,14 @@ public class EventVolumeManager : MonoBehaviour
             bestStory = samePriorityCandidates[randomIndex];
             currentVolume = bestVolume;
             
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Randomly selected from {samePriorityCandidates.Count} candidates: '{bestStory.nodeName}' (priority {highestPriority})");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Randomly selected from {samePriorityCandidates.Count} candidates: '{bestStory.nodeName}' (priority {highestPriority})", "EventVolumeManager");
+
         }
         
-        if (enableDebugLogging)
-        {
-            Debug.Log(bestStory != null
-                ? $"[EventVolumeManager] Selected best story '{bestStory.nodeName}' (priority {highestPriority})"
-                : "[EventVolumeManager] No available story found");
-        }
+        EventSystemLogic.Instance.LogEvent(bestStory != null
+            ? $"[EventVolumeManager] Selected best story '{bestStory.nodeName}' (priority {highestPriority})"
+            : "[EventVolumeManager] No available story found", "EventVolumeManager");
+
         return bestStory;
     }
     
@@ -429,25 +386,18 @@ public class EventVolumeManager : MonoBehaviour
             EventSystemLogic eventSystem = EventSystemLogic.Instance;
             if (eventSystem != null && eventSystem.IsEventOnCooldown(storyNode.nodeName, storyNode.cooldownSevenths))
             {
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping");
-                }
+                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping", "EventVolumeManager");
+
                 return false; // Event is on cooldown, don't allow it to trigger
             }
         }
         
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate");
-        }
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate", "EventVolumeManager");
         
         if (storyNode.storyConditions.Count == 0)
         {
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' has no conditions - allowing trigger");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has no conditions - allowing trigger", "EventVolumeManager");
+
             return true;
         }
         
@@ -461,34 +411,26 @@ public class EventVolumeManager : MonoBehaviour
             
         if (hasPopulationConditions && PopGrowthLogic.Instance == null)
         {
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' has population conditions but PopGrowthLogic.Instance is null - blocking trigger");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has population conditions but PopGrowthLogic.Instance is null - blocking trigger", "EventVolumeManager");
+
             return false;
         }
         
         foreach (EventCondition condition in storyNode.storyConditions)
         {
             bool result = condition.Evaluate();
-            if (enableDebugLogging)
-            {
-                Debug.Log($"[EventVolumeManager] Condition check for '{storyNode.nodeName}': {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue} => {result}");
-            }
+            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Condition check for '{storyNode.nodeName}': {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue} => {result}", "EventVolumeManager");
+
             if (!result) 
             {
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] Story '{storyNode.nodeName}' blocked by condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}");
-                }
+                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' blocked by condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "EventVolumeManager");
+
                 return false;
             }
         }
         
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[EventVolumeManager] All conditions met for story '{storyNode.nodeName}' - allowing trigger");
-        }
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] All conditions met for story '{storyNode.nodeName}' - allowing trigger", "EventVolumeManager");
+
         return true;
     }
     
@@ -527,7 +469,7 @@ public class EventVolumeManager : MonoBehaviour
         
         ScreenFlowStep step = currentStoryNode.screenFlow[currentScreenIndex];
         
-        Debug.Log($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}");
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}", "EventVolumeManager");
         
         // Create EventScreen from ScreenFlowStep
         EventScreen screen = new EventScreen
@@ -539,7 +481,7 @@ public class EventVolumeManager : MonoBehaviour
             inkKnot = step.inkKnot
         };
         
-        Debug.Log($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}");
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}", "EventVolumeManager");
         
         // Execute the screen
         EventSystemLogic.Instance?.ExecuteScreen(screen);
@@ -584,10 +526,8 @@ public class EventVolumeManager : MonoBehaviour
             inkKnot = normalized,
             waitForInput = true
         };
-        if (enableDebugLogging)
-        {
-            Debug.Log($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}");
-        }
+        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}", "EventVolumeManager");
+
         EventSystemLogic.Instance?.ExecuteScreen(screen);
     }
     
@@ -630,7 +570,7 @@ public class EventVolumeManager : MonoBehaviour
             Debug.LogError("[EventVolumeManager] EventSystemLogic.Instance is null!");
         }
 
-        Debug.Log("[EventVolumeManager] Story completion delegated to EventSystemLogic");
+        EventSystemLogic.Instance.LogEvent("[EventVolumeManager] Story completion delegated to EventSystemLogic", "EventVolumeManager");
     }
     
 
@@ -650,14 +590,13 @@ public class EventVolumeManager : MonoBehaviour
                 Story story = new Story(volume.inkMasterfile.text);
                 volumeStories[volume.volumeName] = story;
                 BindExternalFunctions(story);
-                if (enableDebugLogging)
-                {
-                    Debug.Log($"[EventVolumeManager] AddVolume loaded story for '{volume.volumeName}'");
-                }
+
+                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] AddVolume loaded story for '{volume.volumeName}'", "EventVolumeManager");
             }
-            else if (enableDebugLogging)
+            else
             {
                 Debug.LogWarning($"[EventVolumeManager] AddVolume: '{volume.volumeName}' has null masterfile");
+
             }
         }
     }

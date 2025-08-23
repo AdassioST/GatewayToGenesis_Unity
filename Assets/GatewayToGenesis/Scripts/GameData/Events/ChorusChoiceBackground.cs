@@ -59,7 +59,7 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
         if (!backgroundImage.raycastTarget)
         {
             backgroundImage.raycastTarget = true;
-            Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: Enabled raycastTarget on assigned Image component");
+            EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: Enabled raycastTarget on assigned Image component", "ChorusScreenManager");
         }
         
         // Ensure Image component is on this GameObject for Event System registration
@@ -69,12 +69,12 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
             localImage = gameObject.AddComponent<Image>();
             localImage.color = new Color(1f, 1f, 1f, 0.1f); // Nearly transparent
             localImage.raycastTarget = true;
-            Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: Added local Image component for Event System registration");
+            EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: Added local Image component for Event System registration", "ChorusScreenManager");
         }
         else if (!localImage.raycastTarget)
         {
             localImage.raycastTarget = true;
-            Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: Enabled raycastTarget on local Image component");
+            EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: Enabled raycastTarget on local Image component", "ChorusScreenManager");
         }
         
         // Set initial alpha
@@ -84,10 +84,10 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
         // Defer fetching choice object until choices are initialized
         originalChoiceLayer = LayerMask.NameToLayer("UI");
         
-        Debug.Log($"[ChorusChoiceBackground] {gameObject.name} initialized for choice: {choiceId}");
-        Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: IDropHandler interface check - {(this is IDropHandler ? "IMPLEMENTED" : "NOT IMPLEMENTED")}");
-        Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: Local Image component - {(GetComponent<Image>() != null ? "EXISTS" : "MISSING")}");
-        Debug.Log($"[ChorusChoiceBackground] {gameObject.name}: Local Image raycastTarget - {(GetComponent<Image>()?.raycastTarget == true ? "ENABLED" : "DISABLED")}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name} initialized for choice: {choiceId}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: IDropHandler interface check - {(this is IDropHandler ? "IMPLEMENTED" : "NOT IMPLEMENTED")}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: Local Image component - {(GetComponent<Image>() != null ? "EXISTS" : "MISSING")}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name}: Local Image raycastTarget - {(GetComponent<Image>()?.raycastTarget == true ? "ENABLED" : "DISABLED")}", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -97,8 +97,8 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
     {
         choiceId = id;
         choiceData = data;
-        Debug.Log($"[ChorusChoiceBackground] {gameObject.name} initialized with choice: {choiceId}");
-        Debug.Log($"[ChorusChoiceBackground] choice hasRequirements={choiceData?.HasRequirements}, reqCount={choiceData?.Requirements?.Count ?? 0}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] {gameObject.name} initialized with choice: {choiceId}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] choice hasRequirements={choiceData?.HasRequirements}, reqCount={choiceData?.Requirements?.Count ?? 0}", "ChorusScreenManager");
 
         // Set hover description to quoted title for immersion
         if (hoverDescriptionText != null && choiceData != null && !string.IsNullOrEmpty(choiceData.Title))
@@ -109,7 +109,7 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
         // Availability visuals: dim unavailable choices based on requirements
         bool available = IsChoiceAvailable();
         isAvailable = available;
-        Debug.Log($"[ChorusChoiceBackground] availability for {choiceId}: {available}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] availability for {choiceId}: {available}", "ChorusScreenManager");
         ApplyAvailabilityVisuals(available);
     }
 
@@ -124,7 +124,7 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
         foreach (var r in gating)
         {
             bool met = r.Evaluate();
-            Debug.Log($"[ChorusChoiceBackground] req check for {choiceId}: type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}, met={met}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] req check for {choiceId}: type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}, met={met}", "ChorusScreenManager");
             if (!met) return false;
         }
         return true;
@@ -173,20 +173,20 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
     /// </summary>
     public void OnDrop(PointerEventData eventData)
     {
-        Debug.Log($"[ChorusChoiceBackground] OnDrop called on {gameObject.name} for choice: {choiceId}");
-        Debug.Log($"[ChorusChoiceBackground] Event data: pointerDrag={(eventData.pointerDrag != null ? eventData.pointerDrag.name : "NULL")}");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] OnDrop called on {gameObject.name} for choice: {choiceId}", "ChorusScreenManager");
+        EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] Event data: pointerDrag={(eventData.pointerDrag != null ? eventData.pointerDrag.name : "NULL")}", "ChorusScreenManager");
         
         // Check if dropped object is the decision token
         if (eventData.pointerDrag != null && eventData.pointerDrag.GetComponent<DecisionToken>() != null)
         {
-            Debug.Log($"[ChorusChoiceBackground] DecisionToken detected on drop for {choiceId}");
+            EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] DecisionToken detected on drop for {choiceId}", "ChorusScreenManager");
             
             if (choiceData != null && chorusManager != null)
             {
                 // Block unavailable choices based on requirements
                 if (!IsChoiceAvailable())
                 {
-                    Debug.Log($"[ChorusChoiceBackground] Choice {choiceId} unavailable due to requirements. Ignoring drop.");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] Choice {choiceId} unavailable due to requirements. Ignoring drop.", "ChorusScreenManager");
                     // Snap token back (DecisionToken will handle return when not dropped on a valid target)
                     return;
                 }
@@ -194,7 +194,7 @@ public class ChorusChoiceBackground : MonoBehaviour, IDropHandler, IPointerEnter
                 ChorusChoice choiceObject = GetCorrespondingChoiceObject();
                 if (choiceObject != null)
                 {
-                    Debug.Log($"[ChorusChoiceBackground] Triggering choice selection for {choiceId}");
+                    EventSystemLogic.Instance.LogEvent($"[ChorusChoiceBackground] Triggering choice selection for {choiceId}", "ChorusScreenManager");
                     choiceObject.SelectChoice();
                     
                     // Fade out the token

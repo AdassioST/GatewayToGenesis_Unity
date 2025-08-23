@@ -6,6 +6,10 @@ using UnityEngine;
 
 public class GameUnitsLogic : MonoBehaviour
 {
+
+    [Header("Game Units Logic Settings")]
+    [SerializeField] private bool enableGameUnitsLogicLogging; // Whether to log what the boss is doing
+
     public static GameUnitsLogic Instance { get; private set; }
 
     [SerializeField] public TabBuilderLogic storageTab;
@@ -369,7 +373,10 @@ public class GameUnitsLogic : MonoBehaviour
             case TechUnlockableType.Building:
             case TechUnlockableType.Unit:
                 productionTab.AddNewUnit(unlockable.gameUnit);
-                Debug.Log($"Unit/Building {unlockable.gameUnit.name} has been added to Production.");
+                if (enableGameUnitsLogicLogging)
+                {
+                    Debug.Log($"Unit/Building {unlockable.gameUnit.name} has been added to Production.");
+                }
                 break;
 
             case TechUnlockableType.Modifier:
@@ -385,14 +392,20 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
 
             case TechUnlockableType.Arts:
-                Debug.Log($"Arts unit {unlockable.gameUnit.name} has been unlocked.");
+                if (enableGameUnitsLogicLogging)
+                {
+                    Debug.Log($"Arts unit {unlockable.gameUnit.name} has been unlocked.");
+                }
                 break;
 
             case TechUnlockableType.Special:
 
                 HandleSpecialUnlockable(unlockable);
 
-                Debug.Log($"Special unit {unlockable.name} has been unlocked.");
+                if (enableGameUnitsLogicLogging)
+                {
+                    Debug.Log($"Special unit {unlockable.name} has been unlocked.");
+                }
 
                 break;
 

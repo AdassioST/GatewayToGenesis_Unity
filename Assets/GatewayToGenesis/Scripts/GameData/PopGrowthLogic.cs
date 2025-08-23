@@ -7,6 +7,9 @@ using UnityEngine.UIElements;
 
 public class PopGrowthLogic : MonoBehaviour
 {
+    [Header("Pop Growth Logic Settings")]
+    [SerializeField] private bool enablePopGrowthLogicLogging; // Whether to log what the boss is doing
+
     public static PopGrowthLogic Instance { get; private set; }
 
     public float foodThreshold = 12f, vagrantToPopulationRate = 1f, researchPerPopulation = 1f, starvationRecoveryRate = 0.05f;
@@ -284,7 +287,12 @@ public class PopGrowthLogic : MonoBehaviour
         }
         
         UpdateResearchGenerationRate();
-        Debug.Log($"Event removed {peopleToRemove} population (registered as deaths). New population: {population}, total deaths: {deaths}");
+
+        if (enablePopGrowthLogicLogging)
+        {
+            Debug.Log($"Event removed {peopleToRemove} population (registered as deaths). New population: {population}, total deaths: {deaths}");
+        }
+
         RefreshHUD();
     }
     
@@ -322,7 +330,10 @@ public class PopGrowthLogic : MonoBehaviour
                     }
                 }
                 
-                Debug.Log($"Event housing reduction converted {populationToConvert} population to vagrants. New housing: {housing}, population: {population}, vagrants: {vagrants}");
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.Log($"Event housing reduction converted {populationToConvert} population to vagrants. New housing: {housing}, population: {population}, vagrants: {vagrants}");
+                }
             }
         }
         
@@ -342,13 +353,20 @@ public class PopGrowthLogic : MonoBehaviour
             int vagrantsToRemove = Mathf.Min(-change, vagrants);
             vagrants -= vagrantsToRemove;
             vagrantDeaths += vagrantsToRemove;
-            Debug.Log($"Event removed {vagrantsToRemove} vagrants (registered as vagrant deaths). New vagrants: {vagrants}, total vagrant deaths: {vagrantDeaths}");
+
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"Event removed {vagrantsToRemove} vagrants (registered as vagrant deaths). New vagrants: {vagrants}, total vagrant deaths: {vagrantDeaths}");
+            }
         }
         else
         {
             // Adding vagrants
             vagrants += change;
-            Debug.Log($"Event added {change} vagrants. New total: {vagrants}");
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"Event added {change} vagrants. New total: {vagrants}");
+            }
         }
         
         RefreshHUD();
@@ -378,7 +396,10 @@ public class PopGrowthLogic : MonoBehaviour
         }
         
         UpdateResearchGenerationRate();
-        Debug.Log($"Event caused {actualDeaths} deaths. New population: {population}, total deaths: {deaths}");
+        if (enablePopGrowthLogicLogging)
+        {
+            Debug.Log($"Event caused {actualDeaths} deaths. New population: {population}, total deaths: {deaths}");
+        }
         RefreshHUD();
     }
 
@@ -398,13 +419,19 @@ public class PopGrowthLogic : MonoBehaviour
         if (actualChange > 0)
         {
             trueDeaths += actualChange;
-            Debug.Log($"Death records revised: {actualChange} additional deaths added to public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"Death records revised: {actualChange} additional deaths added to public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+            }
         }
         else if (actualChange < 0)
         {
             // When wiping deaths from public records, trueDeaths remains unchanged
             // This represents evil empire revisionism hiding deaths from history
-            Debug.Log($"Death records revised: {Mathf.Abs(actualChange)} deaths wiped from public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"Death records revised: {Mathf.Abs(actualChange)} deaths wiped from public records. Public deaths: {deaths}, True deaths: {trueDeaths}");
+            }
         }
         
         RefreshHUD();
@@ -446,7 +473,10 @@ public class PopGrowthLogic : MonoBehaviour
 
             unitsLogic.ChangeResourceFromName("Food", foodThreshold * starvationRecoveryRate, false);
 
-            Debug.Log($"A population member has died of starvation. Total deaths: {deaths}");
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"A population member has died of starvation. Total deaths: {deaths}");
+            }
 
             //LOWER MORALE DUE TO PEOPLE DYING HERE
         }
@@ -466,7 +496,10 @@ public class PopGrowthLogic : MonoBehaviour
             population += conversionAmount;
             UpdateResearchGenerationRate();
 
-            Debug.Log($"Converting {conversionAmount} vagrants to population.");
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"Converting {conversionAmount} vagrants to population.");
+            }
 
             // Spawn new villagers if vagrants convert to population
             for (int i = 0; i < conversionAmount; i++)
