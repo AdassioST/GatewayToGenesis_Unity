@@ -785,6 +785,13 @@ public class EventSystemLogic : MonoBehaviour
                         ApplyConsequence(consequence);
                     }
                 }
+                
+                // Ensure all resources maintain their minimum click power after applying consequences
+                if (gameUnitsLogic != null)
+                {
+                    gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
+                    LogEvent("Validated all resource click power minimums after applying consequences", "EventSystemLogic");
+                }
             }
             else
             {
@@ -868,6 +875,12 @@ public class EventSystemLogic : MonoBehaviour
                 RevertTimedConsequence(t.consequence);
                 activeTimed.RemoveAt(i);
             }
+        }
+        
+        // Ensure all resources maintain their minimum click power after processing timed consequences
+        if (gameUnitsLogic != null)
+        {
+            gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
         }
     }
 

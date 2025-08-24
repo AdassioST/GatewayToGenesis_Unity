@@ -39,6 +39,10 @@ public class ChorusChoiceData
     public List<EventConsequence> critSuccessConsequences = new List<EventConsequence>();
     public List<EventConsequence> critFailureConsequences = new List<EventConsequence>();
     
+    // Roll tracking for saving roll system
+    public int naturalRoll;
+    public int enhancedRoll;
+    
     // Public properties for easy access
     public string ChoiceId => choiceId;
     public string Title => title;
@@ -1695,26 +1699,33 @@ public class ChorusScreenManager : MonoBehaviour
                 // Non-challenge: show confirmation card (Time passes...) or Rare Event
                 {
                     var cd = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
-                    int roll = UnityEngine.Random.Range(1, 101);
+                    int naturalRoll = UnityEngine.Random.Range(1, 101);
+                    int enhancedRoll = GetEnhancedRoll(naturalRoll);
+                    
+                    // Store roll information for result display
+                    cd.naturalRoll = naturalRoll;
+                    cd.enhancedRoll = enhancedRoll;
+                    
                     if (cd != null && cd.rareEventPercent > 0 && !string.IsNullOrEmpty(cd.rareEventPath))
                     {
                         int rareThreshold = Mathf.Clamp(100 - cd.rareEventPercent, 1, 100);
-                        bool isRare = roll >= rareThreshold;
+                        bool isRare = enhancedRoll >= rareThreshold;
+                        bool savedByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, rareThreshold, "rare_event");
                         if (isRare)
                         {
                             overrideNextPath = cd.rareEventPath;
-                            ShowChallengeResult(choice, true);
+                            ShowChallengeResult(choice, true, savedByRoll, "rare_event");
                         }
                         else
                         {
                             overrideNextPath = choice.DestinationPath;
-                            ShowChallengeResult(choice, true);
+                            ShowChallengeResult(choice, true, false, "time_passes");
                         }
                     }
                     else
                     {
                         overrideNextPath = choice.DestinationPath;
-                        ShowChallengeResult(choice, true);
+                        ShowChallengeResult(choice, true, false, "time_passes");
                     }
                 }
                 return;
@@ -1723,26 +1734,33 @@ public class ChorusScreenManager : MonoBehaviour
                 // Requirements-only: treat like non-challenge, show confirmation card and continue
                 {
                     var cd = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
-                    int roll = UnityEngine.Random.Range(1, 101);
+                    int naturalRoll = UnityEngine.Random.Range(1, 101);
+                    int enhancedRoll = GetEnhancedRoll(naturalRoll);
+                    
+                    // Store roll information for result display
+                    cd.naturalRoll = naturalRoll;
+                    cd.enhancedRoll = enhancedRoll;
+                    
                     if (cd != null && cd.rareEventPercent > 0 && !string.IsNullOrEmpty(cd.rareEventPath))
                     {
                         int rareThreshold = Mathf.Clamp(100 - cd.rareEventPercent, 1, 100);
-                        bool isRare = roll >= rareThreshold;
+                        bool isRare = enhancedRoll >= rareThreshold;
+                        bool savedByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, rareThreshold, "rare_event");
                         if (isRare)
                         {
                             overrideNextPath = cd.rareEventPath;
-                            ShowChallengeResult(choice, true);
+                            ShowChallengeResult(choice, true, savedByRoll, "rare_event");
                         }
                         else
                         {
                             overrideNextPath = choice.DestinationPath;
-                            ShowChallengeResult(choice, true);
+                            ShowChallengeResult(choice, true, false, "time_passes");
                         }
                     }
                     else
                     {
                         overrideNextPath = choice.DestinationPath;
-                        ShowChallengeResult(choice, true);
+                        ShowChallengeResult(choice, true, false, "time_passes");
                     }
                 }
                 return;
@@ -1775,55 +1793,62 @@ public class ChorusScreenManager : MonoBehaviour
             return;
         }
         
-        // Single roll governs everything
-        int roll = UnityEngine.Random.Range(1, 101);
+        // Single roll governs everything - get both natural and enhanced versions
+        int naturalRoll = UnityEngine.Random.Range(1, 101);
+        int enhancedRoll = GetEnhancedRoll(naturalRoll);
+        
+        // Store roll information for result display
+        choiceData.naturalRoll = naturalRoll;
+        choiceData.enhancedRoll = enhancedRoll;
+        
         // If rare event is defined, it exclusively takes precedence and disables criticals by design
         if (choiceData.rareEventPercent > 0 && !string.IsNullOrEmpty(choiceData.rareEventPath))
         {
             int rareThreshold = Mathf.Clamp(100 - choiceData.rareEventPercent, 1, 100); // top X% triggers
-            if (roll >= rareThreshold)
+            if (enhancedRoll >= rareThreshold)
             {
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: roll={roll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)", "ChorusScreenManager");
+                bool rareSavedByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, rareThreshold, "rare_event");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: enhancedRoll={enhancedRoll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)", "ChorusScreenManager");
                 ApplyConsequences(choiceData.rareEventConsequences);
                 overrideNextPath = choiceData.rareEventPath;
-                ShowChallengeResult(choice, true);
+                ShowChallengeResult(choice, true, rareSavedByRoll, "rare_event");
                 return;
             }
         }
 
-        // Resolve success baseline using the same roll: success if roll > requiredRoll
+        // Resolve success baseline using enhanced roll: success if enhancedRoll > requiredRoll
         int currentStrength = statManager != null ? statManager.GetPillarValue(choiceData.ChallengePillar) : 0;
         int successPercent = Mathf.Clamp(Mathf.RoundToInt((currentStrength / (float)Mathf.Max(1, choiceData.ChallengeStrength)) * 100f), 0, 100);
         int requiredRoll = Mathf.Clamp(100 - successPercent, 0, 100);
-        bool successBaseline = roll > requiredRoll;
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} roll={roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > requiredRoll)", "ChorusScreenManager");
-        
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {choiceData.ChallengePillar} pillar. Current: {currentStrength}, Required: {choiceData.ChallengeStrength}, Success%: {successPercent}, RequiredRoll: {requiredRoll}, Roll: {roll} -> {(successBaseline ? "Success" : "Failure")} (success if roll > Success%)", "ChorusScreenManager");
+        bool successBaseline = enhancedRoll > requiredRoll;
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} enhancedRoll={enhancedRoll} -> {(successBaseline ? "Success" : "Failure")} (success if enhancedRoll > requiredRoll)", "ChorusScreenManager");
 
         // Critical tiers: bottom 10 => critical failure if failure; top 10 => critical success if success
-        bool isCritFail = (roll <= 10) && !successBaseline && !string.IsNullOrEmpty(choiceData.critFailurePath);
-        bool isCritSuccess = (roll >= 91) && successBaseline && !string.IsNullOrEmpty(choiceData.critSuccessPath);
+        bool isCritFail = (enhancedRoll <= 10) && !successBaseline && !string.IsNullOrEmpty(choiceData.critFailurePath);
+        bool isCritSuccess = (enhancedRoll >= 91) && successBaseline && !string.IsNullOrEmpty(choiceData.critSuccessPath);
 
         if (isCritSuccess)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL SUCCESS! roll={roll}", "ChorusScreenManager");
-            ApplyConsequences(choiceData.critSuccessConsequences);
-            overrideNextPath = choiceData.critSuccessPath;
-            ShowChallengeResult(choice, true);
-            return;
+                            bool critTriggeredByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, 90, "critical_success");
+                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL SUCCESS! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
+                ApplyConsequences(choiceData.critSuccessConsequences);
+                overrideNextPath = choiceData.critSuccessPath;
+                ShowChallengeResult(choice, true, critTriggeredByRoll, "critical_success");
+                return;
         }
         if (isCritFail)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL FAILURE! roll={roll}", "ChorusScreenManager");
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL FAILURE! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
             ApplyConsequences(choiceData.critFailureConsequences);
             overrideNextPath = choiceData.critFailurePath;
-            ShowChallengeResult(choice, false);
+            ShowChallengeResult(choice, false, false, "critical_failure");
             return;
         }
 
         // Normal success/failure
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (roll={roll})", "ChorusScreenManager");
-        ShowChallengeResult(choice, successBaseline);
+        bool normalSavedByRoll = successBaseline && DidSavingRollMakeDifference(naturalRoll, enhancedRoll, requiredRoll, "success");
+        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (enhancedRoll={enhancedRoll})", "ChorusScreenManager");
+        ShowChallengeResult(choice, successBaseline, normalSavedByRoll, successBaseline ? "success" : "failure");
     }
 
     private void ApplyConsequences(List<EventConsequence> list)
@@ -1846,10 +1871,11 @@ public class ChorusScreenManager : MonoBehaviour
         {
             int currentStrength = statManager.GetPillarValue(pillarType);
             int successPercent = Mathf.Clamp(Mathf.RoundToInt((currentStrength / (float)Mathf.Max(1, requiredStrength)) * 100f), 0, 100);
-            int roll = UnityEngine.Random.Range(1, 101); // 1..100
+            int naturalRoll = UnityEngine.Random.Range(1, 101); // 1..100
+            int enhancedRoll = GetEnhancedRoll(naturalRoll);
             // New rule: numbers ABOVE the threshold succeed, numbers BELOW OR EQUAL fail
-            bool success = roll > successPercent;
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, Roll: {roll} -> {(success ? "Success" : "Failure")} (success if roll > Success%)", "ChorusScreenManager");
+            bool success = enhancedRoll > successPercent;
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, EnhancedRoll: {enhancedRoll} -> {(success ? "Success" : "Failure")} (success if enhancedRoll > Success%)", "ChorusScreenManager");
             return success;
         }
         catch (System.Exception ex)
@@ -1862,7 +1888,7 @@ public class ChorusScreenManager : MonoBehaviour
     /// <summary>
     /// Show the challenge result prefab and handle the result flow
     /// </summary>
-    private void ShowChallengeResult(ChorusChoice choice, bool success)
+    private void ShowChallengeResult(ChorusChoice choice, bool success, bool savedByRoll = false, string outcomeType = "")
     {
         if (challengeResultPrefab == null || choice == null) return;
         
@@ -1881,46 +1907,109 @@ public class ChorusScreenManager : MonoBehaviour
         
         // Set the result text and color
         TMP_Text resultText = resultObj.transform.Find("Result")?.GetComponent<TMP_Text>();
+        TMP_Text rollChanceText = resultObj.transform.Find("RollChance")?.GetComponent<TMP_Text>();
+        
         if (resultText != null)
         {
-            // Determine display based on validation type and extended outcomes
-            var cd = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
-            if (cd != null && !cd.HasChallenge)
+            // Use the outcomeType parameter to determine the main result text
+            switch (outcomeType.ToLower())
             {
-                // Non-challenge choice: show Rare Event or Time passes
-                bool isRare = !string.IsNullOrEmpty(overrideNextPath) && overrideNextPath == cd.rareEventPath;
-                if (isRare)
-                {
+                case "rare_event":
                     resultText.text = "RARE EVENT!";
                     resultText.color = new Color(1f, 0.84f, 0f); // Golden yellow
-                }
-                else
-                {
-                    resultText.text = "TIME PASSES...";
-                    resultText.color = Color.gray;
-                }
-            }
-            else
-            {
-                // Challenge choice: show critical tiers or normal success/failure
-                bool isCritSuccess = success && cd != null && !string.IsNullOrEmpty(cd.critSuccessPath) && overrideNextPath == cd.critSuccessPath;
-                bool isCritFailure = !success && cd != null && !string.IsNullOrEmpty(cd.critFailurePath) && overrideNextPath == cd.critFailurePath;
-                if (isCritSuccess)
-                {
+                    break;
+                case "critical_success":
                     resultText.text = "CRITICAL SUCCESS!";
-                    resultText.color = new Color(1f, 0.84f, 0f); // Golden yellow
-                }
-                else if (isCritFailure)
-                {
+                    resultText.color = Color.green; // Green for critical success
+                    break;
+                case "critical_failure":
                     resultText.text = "CRITICAL FAILURE!";
                     resultText.color = new Color(0.6f, 0f, 0f); // Deep red
-                }
-                else
-        {
-            resultText.text = success ? "SUCCESS!" : "FAILURE...";
-            resultText.color = success ? Color.green : Color.red;
-                }
+                    break;
+                case "success":
+                    resultText.text = "SUCCESS!";
+                    resultText.color = Color.green;
+                    break;
+                case "failure":
+                    resultText.text = "FAILURE...";
+                    resultText.color = Color.red;
+                    break;
+                case "time_passes":
+                    resultText.text = "TIME PASSES...";
+                    resultText.color = Color.gray;
+                    break;
+                default:
+                    // Fallback to old logic for backward compatibility
+                    var cd = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
+                    if (cd != null && !cd.HasChallenge)
+                    {
+                        // Non-challenge choice: show Rare Event or Time passes
+                        bool isRare = !string.IsNullOrEmpty(overrideNextPath) && overrideNextPath == cd.rareEventPath;
+                        if (isRare)
+                        {
+                            resultText.text = "RARE EVENT!";
+                            resultText.color = new Color(1f, 0.84f, 0f); // Golden yellow
+                        }
+                        else
+                        {
+                            resultText.text = "TIME PASSES...";
+                            resultText.color = Color.gray;
+                        }
+                    }
+                    else
+                    {
+                        // Challenge choice: show critical tiers or normal success/failure
+                        bool isCritSuccess = success && cd != null && !string.IsNullOrEmpty(cd.critSuccessPath) && overrideNextPath == cd.critSuccessPath;
+                        bool isCritFailure = !success && cd != null && !string.IsNullOrEmpty(cd.critFailurePath) && overrideNextPath == cd.critFailurePath;
+                        if (isCritSuccess)
+                        {
+                            resultText.text = "CRITICAL SUCCESS!";
+                            resultText.color = Color.green; // Green for critical success
+                        }
+                        else if (isCritFailure)
+                        {
+                            resultText.text = "CRITICAL FAILURE!";
+                            resultText.color = new Color(0.6f, 0f, 0f); // Deep red
+                        }
+                        else
+                        {
+                            resultText.text = success ? "SUCCESS!" : "FAILURE...";
+                            resultText.color = success ? Color.green : Color.red;
+                        }
+                    }
+                    break;
             }
+        }
+        
+        // Show saving roll message if applicable
+        if (rollChanceText != null && savedByRoll)
+        {
+            // Use the outcomeType parameter to determine the appropriate message
+            switch (outcomeType.ToLower())
+            {
+                case "rare_event":
+                    rollChanceText.text = "TRIGGERED BY ENHANCED ROLL CHANCE!";
+                    rollChanceText.color = new Color(1f, 0.84f, 0f); // Golden yellow
+                    break;
+                case "critical_success":
+                    rollChanceText.text = "TRIGGERED BY ENHANCED ROLL CHANCE!";
+                    rollChanceText.color = Color.green;
+                    break;
+                case "success":
+                    rollChanceText.text = "SAVED BY ENHANCED ROLL CHANCE!";
+                    rollChanceText.color = Color.green;
+                    break;
+                default:
+                    rollChanceText.text = "SAVED BY ENHANCED ROLL CHANCE!";
+                    rollChanceText.color = Color.green;
+                    break;
+            }
+            
+            rollChanceText.gameObject.SetActive(true);
+        }
+        else if (rollChanceText != null)
+        {
+            rollChanceText.gameObject.SetActive(false);
         }
         
         // Fade in the result
@@ -2063,5 +2152,57 @@ public class ChorusScreenManager : MonoBehaviour
         }
         
         UpdatePillarDisplay();
+    }
+
+    /// <summary>
+    /// Get an enhanced roll that includes saving roll chance bonus
+    /// </summary>
+    /// <param name="naturalRoll">The natural 1-100 roll</param>
+    /// <returns>Enhanced roll value capped at 100 (best possible roll)</returns>
+    private int GetEnhancedRoll(int naturalRoll)
+    {
+        if (statManager == null) return naturalRoll;
+        
+        float savingRollBonus = statManager.GetSavingRollChancePercentCapped();
+        int enhancedRoll = naturalRoll + Mathf.RoundToInt(savingRollBonus);
+        
+        // Cap the enhanced roll to 100 (best possible roll)
+        enhancedRoll = Mathf.Min(enhancedRoll, 100);
+        
+        // Log the enhancement for debugging
+        if (savingRollBonus > 0f)
+        {
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Roll enhanced: {naturalRoll} + {savingRollBonus:F1}% = {enhancedRoll} (capped at 100)", "ChorusScreenManager");
+        }
+        
+        return enhancedRoll;
+    }
+    
+    /// <summary>
+    /// Check if saving roll made the difference for a given outcome
+    /// </summary>
+    /// <param name="naturalRoll">The natural roll before enhancement</param>
+    /// <param name="enhancedRoll">The enhanced roll after saving roll bonus</param>
+    /// <param name="threshold">The threshold that needed to be met</param>
+    /// <param name="outcomeType">Type of outcome (success, critical, rare)</param>
+    /// <returns>True if saving roll made the difference</returns>
+    private bool DidSavingRollMakeDifference(int naturalRoll, int enhancedRoll, int threshold, string outcomeType)
+    {
+        if (statManager == null) return false;
+        
+        float savingRollBonus = statManager.GetSavingRollChancePercentCapped();
+        if (savingRollBonus <= 0f) return false;
+        
+        // Check if natural roll would have failed but enhanced roll succeeded
+        bool naturalWouldFail = naturalRoll <= threshold;
+        bool enhancedSucceeds = enhancedRoll > threshold;
+        
+        if (naturalWouldFail && enhancedSucceeds)
+        {
+            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Saving roll made difference: natural {naturalRoll} <= {threshold} but enhanced {enhancedRoll} > {threshold} for {outcomeType}", "ChorusScreenManager");
+            return true;
+        }
+        
+        return false;
     }
 } 

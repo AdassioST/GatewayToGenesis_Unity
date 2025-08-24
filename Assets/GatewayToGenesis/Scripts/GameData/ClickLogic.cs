@@ -80,6 +80,16 @@ public class ClickLogic : MonoBehaviour
                 Debug.LogWarning("Unhandled ClickMode: " + currentMode);
                 break;
         }
+        
+        // Ensure click power is maintained at minimum values after processing clicks
+        if (currentMode == ClickMode.AddResource && !string.IsNullOrEmpty(activeResource))
+        {
+            var resourceSlot = gameUnitsLogic.GetResourceSlotFromName(activeResource);
+            if (resourceSlot != null)
+            {
+                resourceSlot.EnsureMinimumClickPower();
+            }
+        }
     }
 
     private void RefreshButtonAppearance()

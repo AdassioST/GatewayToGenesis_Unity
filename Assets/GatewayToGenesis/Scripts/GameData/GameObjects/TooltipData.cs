@@ -17,6 +17,19 @@ public class TooltipData : ScriptableObject
 
     public string techRequirements;
 
+    // Format a float to at most 3 decimals, without trailing zeros, truncating beyond 3 decimals
+    private static string FormatUpTo3Decimals(float value)
+    {
+        float clamped = Mathf.Max(0f, value);
+        // Truncate to 3 decimals for stable display, but avoid showing 0 for small positive remainders
+        float truncated = Mathf.Floor(clamped * 1000f) / 1000f; // truncate to 3 decimals
+        if (clamped > 0f && truncated <= 0f)
+        {
+            truncated = 0.001f; // show a minimal non-zero to avoid premature 0 display
+        }
+        return truncated.ToString("0.###");
+    }
+
     public string FormatResourceRequirements(List<string> resourceNames, List<float> resourceAmounts, List<GameResourceSlot> availableResources)
     {
         string formattedText = "Requires:\n";
@@ -34,7 +47,6 @@ public class TooltipData : ScriptableObject
                 bool hasEnough = resourceSlot.amount >= requiredAmount;
                 string color = hasEnough ? "green" : "red";
 
-
                 formattedText += $"<color={color}> {requiredAmount} <sprite=2> {resourceName}</color>\n";
             }
 
@@ -49,7 +61,7 @@ public class TooltipData : ScriptableObject
         return formattedText.Trim();
     }
 
-    public string FormatTechnologyResourceRequirements(List<string> resourceNames,List<float> resourceAmounts,List<GameResourceSlot> availableResources,Dictionary<string, float> resourceProgress = null, bool isUnlocked = false)
+    public string FormatTechnologyResourceRequirements(List<string> resourceNames, List<float> resourceAmounts, List<GameResourceSlot> availableResources, Dictionary<string, float> resourceProgress = null, bool isUnlocked = false)
     {
         string formattedText = "Requires:\n";
 
@@ -64,9 +76,15 @@ public class TooltipData : ScriptableObject
             {
                 remainingAmount = requiredAmount - resourceProgress[resourceName];
             }
+            // Clamp to avoid negative due to float drift
+            remainingAmount = Mathf.Max(0f, remainingAmount);
 
             // If the technology is unlocked, force the color to green
             string color = isUnlocked ? "green" : "red";
+            if (isUnlocked)
+            {
+                remainingAmount = 0f; // show 0 required when unlocked
+            }
 
             if (!isUnlocked)
             {
@@ -81,8 +99,9 @@ public class TooltipData : ScriptableObject
                 }
             }
 
-            // Display the remaining amount
-            formattedText += $"<color={color}> {remainingAmount} <sprite=2> {resourceName}</color>\n";
+            // Display the remaining amount with up to 3 decimals, trimmed
+            string amountStr = FormatUpTo3Decimals(remainingAmount);
+            formattedText += $"<color={color}> {amountStr} <sprite=2> {resourceName}</color>\n";
         }
 
         return formattedText.Trim();

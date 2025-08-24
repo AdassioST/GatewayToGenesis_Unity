@@ -17,6 +17,8 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] public TabBuilderLogic researchTab;
 
     public Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
+    // Cache of adjusted base costs per technology slot (after Discovery Efficiency integer-rounded reduction)
+    private Dictionary<GameTechnologySlot, List<float>> adjustedTechCosts = new();
 
     public GameTechnologySlot activeTechnologySlot;
 
@@ -39,6 +41,29 @@ public class GameUnitsLogic : MonoBehaviour
         Instance = this;
     }
 
+    private void Start()
+    {
+        // Ensure all resource slots have proper click power values
+        StartCoroutine(ValidateClickPowerOnStart());
+    }
+    
+    /// <summary>
+    /// Validates all resource click power values after system initialization
+    /// </summary>
+    private IEnumerator ValidateClickPowerOnStart()
+    {
+        // Wait for all systems to be ready
+        yield return new WaitForSeconds(0.1f);
+        
+        // Ensure all resources have at least their base click power
+        EnsureAllResourceClickPowerMinimums();
+        
+        if (enableGameUnitsLogicLogging)
+        {
+            Debug.Log("[GameUnitsLogic] Validated all resource click power minimums on startup");
+        }
+    }
+
     public void ChangeResourceFromName(string name, float amount, bool changeFromClickPower)
     {
         bool isUnitPresent = storageTab.slots.Any(r => r.name == name);
@@ -52,7 +77,22 @@ public class GameUnitsLogic : MonoBehaviour
                 amount = slot.GetComponent<GameResourceSlot>().clickPower;
             }
 
+            // Store old amount for food change notification
+            float oldAmount = 0f;
+            bool isFoodResource = string.Equals(name, "Food", System.StringComparison.OrdinalIgnoreCase);
+            if (isFoodResource)
+            {
+                oldAmount = slot.GetComponent<GameResourceSlot>().amount;
+            }
+
             slot.GetComponent<ProductionLogic>().ChangeUnitAmount(amount);
+
+            // Notify PopGrowthLogic of food changes for immediate population processing
+            if (isFoodResource && PopGrowthLogic.Instance != null)
+            {
+                float newAmount = slot.GetComponent<GameResourceSlot>().amount;
+                PopGrowthLogic.Instance.HandleExternalFoodChange(oldAmount, newAmount);
+            }
 
             TooltipSystemLogic.Instance.RefreshAllTooltips();
         }
@@ -196,6 +236,9 @@ public class GameUnitsLogic : MonoBehaviour
 
         if (technologyData == null) return false;
 
+        // Use adjusted base costs once, with integer-rounded DE reduction
+        var adjustedRequired = GetAdjustedTechCosts(technologySlot);
+
         foreach (string requiredTech in technologyData.techRequirements)
         {
             GameObject requiredTechObj = researchTab.slots.Find(slot => slot.name == requiredTech);
@@ -208,7 +251,7 @@ public class GameUnitsLogic : MonoBehaviour
         for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
         {
             string resourceName = technologyData.resourceRequirements[i];
-            float requiredAmount = technologyData.resourceAmount[i];
+            float requiredAmount = adjustedRequired.Count > i ? adjustedRequired[i] : technologyData.resourceAmount[i];
 
             GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
@@ -257,6 +300,9 @@ public class GameUnitsLogic : MonoBehaviour
             technologyProgress[technologySlot] = technologySlot.technologyData.resourceRequirements.ToDictionary(resource => resource, _ => 0f);
         }
 
+        // Prime adjusted costs cache for this slot
+        GetAdjustedTechCosts(technologySlot);
+
         technologySlot.alreadyClicked = true;
 
         if (activeTechnologySlotCoroutine != null)
@@ -270,6 +316,7 @@ public class GameUnitsLogic : MonoBehaviour
     {
         var technologyData = technologySlot.technologyData;
         var resourceProgress = technologyProgress[technologySlot];
+        var adjustedRequired = GetAdjustedTechCosts(technologySlot);
 
         while (!technologySlot.isUnlocked)
         {
@@ -289,7 +336,7 @@ public class GameUnitsLogic : MonoBehaviour
             for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
             {
                 var resourceName = technologyData.resourceRequirements[i];
-                var requiredAmount = technologyData.resourceAmount[i];
+                var requiredAmount = adjustedRequired.Count > i ? adjustedRequired[i] : technologyData.resourceAmount[i];
                 var processedAmount = resourceProgress[resourceName];
 
                 var remainingAmount = requiredAmount - processedAmount;
@@ -316,14 +363,14 @@ public class GameUnitsLogic : MonoBehaviour
             // Apply Enlightened bonus once, as a proportion of total cost
             if (technologySlot.enlightenedCompleted && !technologySlot.enlightenedBonusApplied && technologySlot.enlightenedBonusPercent > 0f)
             {
-                float totalRequired = technologyData.resourceAmount.Sum();
+                float totalRequired = adjustedRequired.Sum();
                 if (totalRequired > 0f)
                 {
                     float bonusAmount = totalRequired * Mathf.Clamp01(technologySlot.enlightenedBonusPercent);
                     // Distribute the bonus across resources proportionally to their requirements
                     for (int i = 0; i < technologyData.resourceRequirements.Count; i++)
                     {
-                        var required = technologyData.resourceAmount[i];
+                        var required = adjustedRequired.Count > i ? adjustedRequired[i] : technologyData.resourceAmount[i];
                         if (required <= 0f) continue;
                         float share = bonusAmount * (required / totalRequired);
                         resourceProgress[technologyData.resourceRequirements[i]] = Mathf.Min(required, resourceProgress[technologyData.resourceRequirements[i]] + share);
@@ -332,15 +379,24 @@ public class GameUnitsLogic : MonoBehaviour
                 }
             }
 
-            technologySlot.researchProgress = resourceProgress.Values.Sum() / technologyData.resourceAmount.Sum();
+            // Use adjusted total cost for progress to match tooltip and unlock thresholds
+            float adjustedTotal = Mathf.Max(0.0001f, adjustedRequired.Sum());
+            technologySlot.researchProgress = Mathf.Clamp01(resourceProgress.Values.Sum() / adjustedTotal);
             technologySlot.UpdateProgressUI();
 
             if (allResourcesComplete)
             {
                 technologySlot.UnlockTechnology();
                 technologyProgress.Remove(technologySlot);
+                adjustedTechCosts.Remove(technologySlot);
                 activeTechnologySlot = null;
                 activeTechnologySlotCoroutine = null;
+
+                // Ensure any visible tooltips refresh to show 0 remaining and green text post-unlock
+                if (TooltipSystemLogic.Instance != null)
+                {
+                    TooltipSystemLogic.Instance.RefreshAllTooltips();
+                }
 
                 yield break;
             }
@@ -349,6 +405,42 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         activeTechnologySlotCoroutine = null;
+    }
+
+    // Compute adjusted base costs for a technology slot once, applying Discovery Efficiency
+    // Reduction is rounded to an integer, and capped via StatManager (centralized)
+    public List<float> GetAdjustedTechCosts(GameTechnologySlot techSlot)
+    {
+        if (techSlot == null || techSlot.technologyData == null)
+        {
+            return new List<float>();
+        }
+        if (adjustedTechCosts.TryGetValue(techSlot, out var cached))
+        {
+            return cached;
+        }
+
+        var data = techSlot.technologyData;
+        float eff01 = 0f;
+        if (StatManager.Instance != null)
+        {
+            eff01 = StatManager.Instance.GetDiscoveryEfficiency01Capped();
+        }
+
+        var adjusted = new List<float>(data.resourceAmount.Count);
+        for (int i = 0; i < data.resourceAmount.Count; i++)
+        {
+            float baseCost = data.resourceAmount[i];
+            int reductionInt = Mathf.RoundToInt(baseCost * eff01);
+            float newCost = Mathf.Max(0f, baseCost - reductionInt);
+            adjusted.Add(newCost);
+        }
+        // Cache only once research has started for this slot to avoid freezing values from tooltip previews
+        if (technologyProgress.ContainsKey(techSlot))
+        {
+            adjustedTechCosts[techSlot] = adjusted;
+        }
+        return adjusted;
     }
 
     public void HandleTechUnlockable(TechUnlockable unlockable, GameTechnologySlot techSlot)
@@ -444,6 +536,8 @@ public class GameUnitsLogic : MonoBehaviour
         if (resourceSlot != null)
         {
             resourceSlot.clickPower += delta;
+            // Ensure minimum click power is maintained
+            resourceSlot.EnsureMinimumClickPower();
         }
     }
 
@@ -455,6 +549,8 @@ public class GameUnitsLogic : MonoBehaviour
         if (resourceSlot != null)
         {
             resourceSlot.clickPower *= (1f + percent / 100f);
+            // Ensure minimum click power is maintained
+            resourceSlot.EnsureMinimumClickPower();
         }
     }
 
@@ -467,6 +563,8 @@ public class GameUnitsLogic : MonoBehaviour
             if (resSlot != null && resSlot.gameUnit != null && string.Equals(resSlot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
             {
                 resSlot.clickPower += delta;
+                // Ensure minimum click power is maintained
+                resSlot.EnsureMinimumClickPower();
             }
         }
     }
@@ -480,6 +578,8 @@ public class GameUnitsLogic : MonoBehaviour
             if (resSlot != null && resSlot.gameUnit != null && string.Equals(resSlot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
             {
                 resSlot.clickPower *= (1f + percent / 100f);
+                // Ensure minimum click power is maintained
+                resSlot.EnsureMinimumClickPower();
             }
         }
     }
@@ -515,6 +615,36 @@ public class GameUnitsLogic : MonoBehaviour
     {
         var unit = GetGameUnitByName(unitName);
         return unit != null ? unit.icon : null;
+    }
+
+    /// <summary>
+    /// Ensures all resource slots have at least their base click power
+    /// </summary>
+    public void EnsureAllResourceClickPowerMinimums()
+    {
+        foreach (var slotGO in storageTab.slots)
+        {
+            var resSlot = slotGO.GetComponent<GameResourceSlot>();
+            if (resSlot != null)
+            {
+                resSlot.EnsureMinimumClickPower();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Resets all resource slots' click power to their base values
+    /// </summary>
+    public void ResetAllResourceClickPowerToBase()
+    {
+        foreach (var slotGO in storageTab.slots)
+        {
+            var resSlot = slotGO.GetComponent<GameResourceSlot>();
+            if (resSlot != null)
+            {
+                resSlot.ResetClickPowerToBase();
+            }
+        }
     }
 
     private void HandleSpecialUnlockable(TechUnlockable unlockable)

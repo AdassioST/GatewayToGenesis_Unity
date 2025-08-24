@@ -8,12 +8,19 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
 {
     //INTERFACES
     public GameUnit gameUnit { get; set; }
-    public float clickPower { get; set; } = 1.0f;
+    
+    // Click power with validation - cannot go below base value
+    private float _clickPower = 1.0f;
+    public float clickPower 
+    { 
+        get => _clickPower;
+        set => _clickPower = ValidateClickPower(value);
+    }
+    
     public float amount { get; set; }
     public float maxAmount { get; set; } = 200f;
 
     //VARIABLES
-
     public float productionRate = 0, baseClickPower = 1f;
 
     public Image icon, fill;
@@ -22,15 +29,45 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
 
     private Color originalProductionRateColor;
 
+    /// <summary>
+    /// Validates click power to ensure it never goes below base value
+    /// </summary>
+    private float ValidateClickPower(float newValue)
+    {
+        // Ensure click power never goes below base value
+        float minAllowed = Mathf.Max(0.001f, baseClickPower); // Prevent 0 click power
+        return Mathf.Max(minAllowed, newValue);
+    }
+
+    /// <summary>
+    /// Ensures current click power is at least at base value
+    /// </summary>
+    public void EnsureMinimumClickPower()
+    {
+        if (_clickPower < baseClickPower)
+        {
+            _clickPower = ValidateClickPower(baseClickPower);
+        }
+    }
+
+    /// <summary>
+    /// Resets click power to base value
+    /// </summary>
+    public void ResetClickPowerToBase()
+    {
+        _clickPower = ValidateClickPower(baseClickPower);
+    }
+
     public void Start()
     {
         InitialiseResource(gameUnit);
     }
+    
     public void InitialiseResource(GameUnit newResource)
     {
         gameUnit = newResource;
         icon.sprite = newResource.icon;
-        clickPower = baseClickPower;
+        clickPower = baseClickPower; // This will now use the validated setter
 
         originalProductionRateColor = productionRateText.color;
 

@@ -44,6 +44,15 @@ public class PopGrowthLogic : MonoBehaviour
         Instance = this;
     }
 
+    private void OnDestroy()
+    {
+        // Clean up singleton reference if this is the instance
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     private void Start()
     {
         unitsLogic = GameUnitsLogic.Instance;
@@ -60,6 +69,172 @@ public class PopGrowthLogic : MonoBehaviour
 
         InvokeRepeating("ProcessPopulationChanges", 1f, 1f); // Repeats every 1 second
 
+        // Subscribe to food changes to process population growth immediately
+        StartCoroutine(SubscribeToFoodChanges());
+    }
+
+    /// <summary>
+    /// Subscribe to food changes to process population growth immediately when threshold is crossed
+    /// </summary>
+    private IEnumerator SubscribeToFoodChanges()
+    {
+        // Wait for systems to be ready
+        while (unitsLogic == null || unitsLogic.storageTab == null)
+        {
+            yield return null;
+        }
+        
+        // Find the food slot and add our change listener
+        GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+        if (foodSlot != null)
+        {
+            // Store reference to monitor changes
+            StartCoroutine(MonitorFoodChanges(foodSlot));
+        }
+    }
+
+    /// <summary>
+    /// Monitor food changes and process population growth when threshold is crossed
+    /// </summary>
+    private IEnumerator MonitorFoodChanges(GameResourceSlot foodSlot)
+    {
+        float lastFoodAmount = foodSlot.amount;
+        float lastThreshold = foodThreshold;
+        int consecutiveProcesses = 0;
+        const int maxConsecutiveProcesses = 10; // Prevent infinite loops
+        
+        while (foodSlot != null)
+        {
+            float currentFood = foodSlot.amount;
+            float currentThreshold = foodThreshold;
+            
+            // Check if food amount or threshold changed
+            if (Mathf.Abs(currentFood - lastFoodAmount) > 0.001f || Mathf.Abs(currentThreshold - lastThreshold) > 0.001f)
+            {
+                // Safety check to prevent infinite loops
+                if (consecutiveProcesses < maxConsecutiveProcesses)
+                {
+                    ProcessFoodChanges(currentFood, lastFoodAmount, currentThreshold, lastThreshold);
+                    consecutiveProcesses++;
+                }
+                else
+                {
+                    if (enablePopGrowthLogicLogging)
+                    {
+                        Debug.LogWarning($"[PopGrowthLogic] Food processing loop detected, skipping to prevent infinite loop. Food: {currentFood}, Threshold: {currentThreshold}");
+                    }
+                    consecutiveProcesses = 0; // Reset counter
+                }
+                
+                lastFoodAmount = currentFood;
+                lastThreshold = currentThreshold;
+            }
+            else
+            {
+                // Reset consecutive counter if no changes
+                consecutiveProcesses = 0;
+            }
+            
+            yield return null;
+        }
+    }
+
+    /// <summary>
+    /// Centralized food processing that handles population growth when food crosses threshold
+    /// </summary>
+    private void ProcessFoodChanges(float currentFood, float previousFood, float currentThreshold, float previousThreshold)
+    {
+        // Skip if event system is active
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
+        // Calculate how many thresholds worth of food we can process
+        float availableThresholds = Mathf.Floor(currentFood / currentThreshold);
+        float previousThresholds = Mathf.Floor(previousFood / previousThreshold);
+        
+        // If we have more thresholds available now than before, process growth
+        if (availableThresholds > previousThresholds)
+        {
+            int thresholdsToProcess = Mathf.FloorToInt(availableThresholds - previousThresholds);
+            ProcessPopulationGrowthFromThresholds(thresholdsToProcess, currentThreshold);
+        }
+        // If we dropped below threshold, ensure we don't have negative food
+        else if (currentFood < 0)
+        {
+            // Safety check: prevent negative food
+            GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+            if (foodSlot != null && foodSlot.amount < 0)
+            {
+                foodSlot.amount = 0f;
+                foodSlot.RefreshProductionAmount();
+                
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.LogWarning($"[PopGrowthLogic] Food amount was negative, corrected to 0");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Process population growth based on available food thresholds
+    /// </summary>
+    private void ProcessPopulationGrowthFromThresholds(int thresholdsToProcess, float thresholdAmount)
+    {
+        if (thresholdsToProcess <= 0) return;
+        
+        // Calculate total food needed for all thresholds
+        float totalFoodNeeded = thresholdsToProcess * thresholdAmount;
+        
+        // Check if we actually have enough food (safety check)
+        float availableFood = GetResourceSlotAmount("Food");
+        if (availableFood < totalFoodNeeded)
+        {
+            thresholdsToProcess = Mathf.FloorToInt(availableFood / thresholdAmount);
+            if (thresholdsToProcess <= 0) return;
+            totalFoodNeeded = thresholdsToProcess * thresholdAmount;
+        }
+        
+        // Consume the food first
+        GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+        if (foodSlot != null)
+        {
+            foodSlot.amount = Mathf.Max(0f, foodSlot.amount - totalFoodNeeded);
+            foodSlot.RefreshProductionAmount();
+        }
+        
+        // Process population growth for each threshold
+        for (int i = 0; i < thresholdsToProcess; i++)
+        {
+            if (freeHousing > 0)
+            {
+                population += 1;
+                UpdateResearchGenerationRate();
+                
+                // Spawn new villager when population increases
+                if (globalCharacterManager != null)
+                {
+                    globalCharacterManager.SpawnCharacterFromName("Villager");
+                }
+                
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.Log($"[PopGrowthLogic] Food threshold met: population increased to {population}");
+                }
+            }
+            else if (allowVagrants)
+            {
+                vagrants += 1;
+                
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.Log($"[PopGrowthLogic] Food threshold met: vagrant increased to {vagrants}");
+                }
+            }
+        }
+        
+        // Update HUD
+        RefreshHUD();
     }
 
     private void Update()
@@ -81,37 +256,45 @@ public class PopGrowthLogic : MonoBehaviour
         // Morale-adjusted threshold: base threshold scaled by morale delta percent
         float adjustedThreshold = GetMoraleAdjustedFoodThreshold();
 
-        // Consume food and grow population or vagrants based on the allowVagrants flag
+        // The centralized food processing system now handles threshold-based population growth
+        // This method only handles the base population growth logic for when food is naturally above threshold
+        
+        // Check if we have enough food for at least one population growth
         float currentFood = GetResourceSlotAmount("Food");
         if (currentFood + 1e-3f >= adjustedThreshold) // epsilon guard for float precision
         {
-            // Only remove food threshold if population is growing or vagrants are allowed
+            // Only process if we have free housing or allow vagrants
             if (freeHousing > 0 || allowVagrants)
             {
-                // Withdraw directly from slot to avoid clamping against Food.maxAmount and ensure exact subtraction
-                GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
-                if (foodSlot != null)
+                // Check if we have enough food for exactly one threshold (not multiple)
+                float availableThresholds = Mathf.Floor(currentFood / adjustedThreshold);
+                if (availableThresholds >= 1f)
                 {
-                    foodSlot.amount = Mathf.Max(0f, foodSlot.amount - adjustedThreshold);
-                    foodSlot.RefreshProductionAmount();
-                }
-                else
-                {
-                    unitsLogic.ChangeResourceFromName("Food", -adjustedThreshold, false);
-                }
+                    // Withdraw exactly one threshold worth of food
+                    GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+                    if (foodSlot != null)
+                    {
+                        foodSlot.amount = Mathf.Max(0f, foodSlot.amount - adjustedThreshold);
+                        foodSlot.RefreshProductionAmount();
+                    }
+                    else
+                    {
+                        unitsLogic.ChangeResourceFromName("Food", -adjustedThreshold, false);
+                    }
 
-                if (freeHousing > 0)
-                {
-                    population += 1;
-                    UpdateResearchGenerationRate();
+                    if (freeHousing > 0)
+                    {
+                        population += 1;
+                        UpdateResearchGenerationRate();
 
-                    // Spawn new villager when population increases
-                    Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
-                    globalCharacterManager.SpawnCharacterFromName("Villager");
-                }
-                else if (allowVagrants)
-                {
-                    vagrants += 1;
+                        // Spawn new villager when population increases
+                        Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
+                        globalCharacterManager.SpawnCharacterFromName("Villager");
+                    }
+                    else if (allowVagrants)
+                    {
+                        vagrants += 1;
+                    }
                 }
             }
         }
@@ -435,6 +618,27 @@ public class PopGrowthLogic : MonoBehaviour
         }
         
         RefreshHUD();
+    }
+
+    /// <summary>
+    /// Handle food changes from external sources (events, etc.) and process population growth immediately
+    /// </summary>
+    public void HandleExternalFoodChange(float oldAmount, float newAmount)
+    {
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
+            return;
+            
+        // Calculate how many thresholds worth of food we can process
+        float adjustedThreshold = GetMoraleAdjustedFoodThreshold();
+        float oldThresholds = Mathf.Floor(oldAmount / adjustedThreshold);
+        float newThresholds = Mathf.Floor(newAmount / adjustedThreshold);
+        
+        // If we have more thresholds available now than before, process growth
+        if (newThresholds > oldThresholds)
+        {
+            int thresholdsToProcess = Mathf.FloorToInt(newThresholds - oldThresholds);
+            ProcessPopulationGrowthFromThresholds(thresholdsToProcess, adjustedThreshold);
+        }
     }
 
     private void ProcessPopulationChanges()

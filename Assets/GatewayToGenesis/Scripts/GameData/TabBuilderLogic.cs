@@ -127,6 +127,9 @@ public class TabBuilderLogic : MonoBehaviour
                         GameUnitsLogic.Instance.storageBreakdown[resourceName] = new Dictionary<string, float>{{ "Base", resourceSlot.maxAmount }};
                     }
                     
+                    // Ensure click power is at minimum value for new resources
+                    resourceSlot.EnsureMinimumClickPower();
+                    
                     // Create HUD Production Selection Slot for new resources (only in Storage tab)
                     if (tabType == TabType.Storage)
                     {

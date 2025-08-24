@@ -15,6 +15,7 @@ public class ChallengeSlot : MonoBehaviour
     [SerializeField] private string pillarType; // "aureus", "regalia", "waltz", "chorus"
     [SerializeField] private int requiredStrength = 10;
     [SerializeField] private float successChance = 0f;
+    [SerializeField] private float enhancedSuccessChance = 0f; // Includes saving roll bonus
     
     [Header("Chance Sprites")]
     [SerializeField] private Sprite chanceIconFated;     // Above 90% - Blessed by fate
@@ -27,6 +28,7 @@ public class ChallengeSlot : MonoBehaviour
     public string PillarType => pillarType;
     public int RequiredStrength => requiredStrength;
     public float SuccessChance => successChance;
+    public float EnhancedSuccessChance => enhancedSuccessChance;
     public Sprite PillarIcon => pillarIcon != null ? pillarIcon.sprite : null;
     
     private StatManager statManager;
@@ -83,8 +85,8 @@ public class ChallengeSlot : MonoBehaviour
             var t2 = chanceGo.GetComponent<TooltipTrigger>();
             if (t2 == null) t2 = chanceGo.AddComponent<TooltipTrigger>();
             t2.useCustomTooltip = true;
-            t2.customTitle = GetLuckTitle(successChance);
-            t2.customDescription = $"{successChance:F0}% Chance";
+            t2.customTitle = GetLuckTitle(enhancedSuccessChance);
+            t2.customDescription = GetEnhancedChanceDescription();
             t2.customType = string.Empty;
         }
     }
@@ -98,19 +100,23 @@ public class ChallengeSlot : MonoBehaviour
         
         int currentStrength = statManager.GetPillarValue(pillarType);
         
-        // Calculate success chance: (Current / Required) * 100, capped at 100%
+        // Calculate natural success chance: (Current / Required) * 100, capped at 100%
         successChance = Mathf.Clamp((float)currentStrength / requiredStrength * 100f, 0f, 100f);
+        
+        // Calculate enhanced success chance including saving roll bonus
+        float savingRollBonus = statManager.GetSavingRollChancePercentCapped();
+        enhancedSuccessChance = Mathf.Clamp(successChance + savingRollBonus, 0f, 100f);
     }
     
     /// <summary>
-    /// Update the chance image based on success chance
+    /// Update the chance image based on enhanced success chance
     /// </summary>
     private void UpdateChanceImage()
     {
         if (chanceImage == null) return;
         
-        // Select appropriate sprite based on chance percentage
-        Sprite targetSprite = GetChanceSprite(successChance);
+        // Select appropriate sprite based on ENHANCED chance percentage (includes saving roll bonus)
+        Sprite targetSprite = GetChanceSprite(enhancedSuccessChance);
         if (targetSprite != null)
         {
             chanceImage.sprite = targetSprite;
@@ -136,6 +142,24 @@ public class ChallengeSlot : MonoBehaviour
         if (chance >= 40f) return "It's Gamble Luck!";
         if (chance >= 10f) return "It's Cursed Luck!";
         return "It's Forsaken Luck!";
+    }
+    
+    /// <summary>
+    /// Get the enhanced chance description including saving roll bonus
+    /// </summary>
+    private string GetEnhancedChanceDescription()
+    {
+        if (statManager == null) return $"{successChance:F0}% Chance";
+        
+        float savingRollBonus = statManager.GetSavingRollChancePercentCapped();
+        if (savingRollBonus <= 0f)
+        {
+            return $"{successChance:F0}% Chance";
+        }
+        
+        // Calculate enhanced chance (natural + saving roll bonus)
+        float enhancedChance = successChance + savingRollBonus;
+        return $"{successChance:F0}% Chance\n+{savingRollBonus:F1}% Increased by Piety";
     }
     
     /// <summary>
@@ -167,9 +191,9 @@ public class ChallengeSlot : MonoBehaviour
     /// </summary>
     public bool IsChallengeSuccessful()
     {
-        // Generate a random number and check if it's within the success chance
+        // Generate a random number and check if it's within the ENHANCED success chance (includes saving roll bonus)
         float randomRoll = Random.Range(0f, 100f);
-        return randomRoll <= successChance;
+        return randomRoll <= enhancedSuccessChance;
     }
     
     /// <summary>
@@ -197,7 +221,8 @@ public class ChallengeSlot : MonoBehaviour
     public string GetTooltipText()
     {
         string pillarName = FormatPillarName(pillarType);
-        return $"{pillarName} Challenge\nRequired: {requiredStrength}\nSuccess Chance: {successChance:F0}%";
+        string chanceDesc = GetEnhancedChanceDescription();
+        return $"{pillarName} Challenge\nRequired: {requiredStrength}\n{chanceDesc}";
     }
     
     /// <summary>

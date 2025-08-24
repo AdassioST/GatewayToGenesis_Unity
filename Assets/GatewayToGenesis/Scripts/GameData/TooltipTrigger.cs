@@ -188,7 +188,15 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
                 resourceProgress = GameUnitsLogic.Instance.technologyProgress[technologySlot];
             }
 
-            dynamicData.resourceRequirements = dynamicData.FormatTechnologyResourceRequirements(technologySlot.technologyData.resourceRequirements, technologySlot.technologyData.resourceAmount, availableResources,resourceProgress, technologySlot.isUnlocked);
+            // Calculate effective costs using Discovery Efficiency (capped, integer-rounded) from GameUnitsLogic
+            List<float> effectiveCosts = GameUnitsLogic.Instance.GetAdjustedTechCosts(technologySlot);
+
+            dynamicData.resourceRequirements = dynamicData.FormatTechnologyResourceRequirements(
+                technologySlot.technologyData.resourceRequirements,
+                effectiveCosts,
+                availableResources,
+                resourceProgress,
+                technologySlot.isUnlocked);
 
             if (technologySlot.technologyData.techRequirements.Count > 0)
             {

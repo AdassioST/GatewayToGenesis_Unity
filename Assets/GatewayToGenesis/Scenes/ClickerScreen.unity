@@ -1157,29 +1157,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cdde45bdf3b70749a1a510d05b8db1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  aureus: 10
-  regalia: 14
+  aureus: 60
+  regalia: 10
   waltz: 10
   chorus: 10
+  aureusMultiplier: 0.5
+  regaliaMultiplier: 0.5
+  waltzMultiplier: 0.5
+  chorusMultiplier: 0.5
   innovation: 5
   piety: 5
   authority: 5
   ambition: 5
   symphony: 5
-  endurance: 5
+  euphony: 5
   arcane: 5
   secrecy: 5
-  discoveryRate: 0.5
+  discoveryEfficiency: 0.5
   savingRollChance: 0.25
-  legendEffectiveness: 0.75
+  legendEffectiveness: 100.75
   expeditionCostMod: 0.9
   expeditionTimeMod: 0.85
   satisfactionEffectiveness: 0.59999996
-  moraleLossMod: 0.8
+  moraleLossMod: 0.19999999
   moraleRecoveryMod: 1.3
   clickPowerBonus: 0.39999998
   magicEffectiveness: 1
   communionStage: 1
+  discoveryEfficiencyCap01: 0.45
+  savingRollChanceCap01: 0.25
+  tier1Boundary: 42
+  tier2Boundary: 86
+  tier3Boundary: 150
+  tier4Boundary: 220
+  globalBalanceMultiplier: 1
   morale: 100
   moraleBalance: 100
   minMorale: 0
@@ -1187,6 +1198,7 @@ MonoBehaviour:
   aboveBalanceRecoveryFactor: 0.5
   darkMoraleIncreaseFactor: 0.2
   darkMoraleDecreaseFactor: 0.1
+  moraleGainBalanceFactor: 0.8
 --- !u!1 &118555721
 GameObject:
   m_ObjectHideFlags: 0
@@ -1730,7 +1742,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableTimeSystemLogicLogging: 0
-  secondsPerSeventh: 5
+  secondsPerSeventh: 10
   slowMotionFactor: 3
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
