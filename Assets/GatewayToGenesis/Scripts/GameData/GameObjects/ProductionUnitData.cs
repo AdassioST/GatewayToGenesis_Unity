@@ -11,6 +11,8 @@ public class ProductionUnitData : ScriptableObject
 
     public int housing;
 
+    public int satisfactionPoints = 0;
+
     public List<string> buildResourceRequirements = new List<string>();
     public List<float> buildRequirementsAmount = new List<float>();
 
@@ -22,4 +24,6 @@ public class ProductionUnitData : ScriptableObject
 
     public List<string> storageResources = new List<string>();
     public List<float> storageAmount = new List<float>();
+    
+
 }

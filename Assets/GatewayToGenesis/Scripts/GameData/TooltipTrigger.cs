@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Linq;
 
 public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
@@ -81,6 +83,8 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         TooltipData dynamicData = ScriptableObject.CreateInstance<TooltipData>();
 
         dynamicData.sourceObject = gameObject; // Associate TooltipData with the GameObject
+        
+
 
         if (useCustomTooltip)
         {
@@ -105,6 +109,122 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             }
 
             return dynamicData;
+        }
+
+        // Check for government display components first
+        LeaderSlotDisplay leaderSlot = GetComponent<LeaderSlotDisplay>();
+        if (leaderSlot != null)
+        {
+            return CreateLegendTooltipData(leaderSlot.GetLegendData());
+        }
+
+        // Check for HeadOfState container FIRST (structure: HeadOfState -> Name/Sprite/Title)
+        // Need to traverse up the hierarchy to find HeadOfState container
+        Transform currentParent = transform.parent;
+        bool isInHeadOfStateHierarchy = false;
+        
+        // Also check if this GameObject itself is part of Head of State
+        if (gameObject.name.Contains("HeadOfState"))
+        {
+            isInHeadOfStateHierarchy = true;
+        }
+        
+        // Traverse up to 3 levels to find HeadOfState container
+        for (int i = 0; i < 3 && currentParent != null; i++)
+        {
+            if (currentParent.name.Contains("HeadOfState"))
+            {
+                isInHeadOfStateHierarchy = true;
+                break;
+            }
+            currentParent = currentParent.parent;
+        }
+        
+        if (isInHeadOfStateHierarchy)
+        {
+            // Check if GovernmentLogic is available
+            if (GovernmentLogic.Instance == null)
+            {
+                return dynamicData;
+            }
+            
+            // Get HeadOfState seat data (index -1)
+            var headOfStateSeat = GovernmentLogic.Instance.GetCouncilSeat(-1);
+            if (headOfStateSeat != null)
+            {
+                // Check if this is the sprite element (legend tooltip)
+                if (gameObject.name.Contains("Sprite") || gameObject.GetComponent<Image>() != null)
+                {
+                    if (headOfStateSeat.assignedLegend != null)
+                    {
+                        return CreateLegendTooltipData(headOfStateSeat.assignedLegend);
+                    }
+                    // If no legend, show assignment prompt
+                    dynamicData.tooltipTitle = "Click to assign a Legend";
+                    return dynamicData;
+                }
+                
+                // For title/text elements: ALWAYS show seat info (like regular seats do)
+                // Title should show seat information, not legend information
+                var (title, description, type, effects) = CreateHeadOfStateSeatTooltipData(headOfStateSeat);
+                if (!string.IsNullOrEmpty(title))
+                {
+                    dynamicData.tooltipTitle = title;
+                    dynamicData.tooltipDescription = description;
+                    dynamicData.type = type;
+                    dynamicData.productionEffects = effects;
+                    return dynamicData;
+                }
+            }
+        }
+
+        // Check for SeatPositionDisplay in parent (for sprite/title child tooltips)
+        // ONLY if we're NOT in Head of State hierarchy
+        if (!isInHeadOfStateHierarchy)
+        {
+            SeatPositionDisplay seatDisplay = GetComponentInParent<SeatPositionDisplay>();
+            if (seatDisplay != null)
+            {
+                // Check if this is the sprite element (legend tooltip)
+                if (gameObject.name.Contains("Sprite") || gameObject.GetComponent<Image>() != null)
+                {
+                    LegendData legend = seatDisplay.GetLegendData();
+                    if (legend != null)
+                    {
+                        return CreateLegendTooltipData(legend);
+                    }
+                    // If no legend, show assignment prompt
+                    dynamicData.tooltipTitle = "Click to assign a Legend";
+                    return dynamicData;
+                }
+                
+                // For title/text elements: show seat info
+                var (title, description, type, effects) = seatDisplay.GetSeatTooltipData();
+                if (!string.IsNullOrEmpty(title))
+                {
+                    dynamicData.tooltipTitle = title;
+                    dynamicData.tooltipDescription = description;
+                    dynamicData.type = type;
+                    dynamicData.productionEffects = effects;
+                    return dynamicData;
+                }
+            }
+        }
+
+
+
+        CivicDisplay civicDisplay = GetComponent<CivicDisplay>();
+        if (civicDisplay != null)
+        {
+            return CreateCivicTooltipData(civicDisplay.GetCivicData());
+        }
+
+        CivicDetailedDisplay civicDetailedDisplay = GetComponent<CivicDetailedDisplay>();
+        if (civicDetailedDisplay != null)
+        {
+            // For CivicDetailedDisplay, we need to get the civic data from the seat title
+            // This requires a lookup through GovernmentLogic
+            return CreateCivicDetailedTooltipData(civicDetailedDisplay);
         }
 
         // Check for GameResourceSlot
@@ -160,6 +280,16 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
             dynamicData.productionEffects = dynamicData.FormatProductionUnitEffects(productionSlot.productionUnitData);
 
+            // Add production and construction cost modifier information
+            if (GameUnitsLogic.Instance != null)
+            {
+                string modifierInfo = FormatProductionAndConstructionModifiers(productionSlot);
+                if (!string.IsNullOrEmpty(modifierInfo))
+                {
+                    dynamicData.productionEffects += "\n\n" + modifierInfo;
+                }
+            }
+
             return dynamicData;
         }
 
@@ -188,15 +318,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
                 resourceProgress = GameUnitsLogic.Instance.technologyProgress[technologySlot];
             }
 
-            // Calculate effective costs using Discovery Efficiency (capped, integer-rounded) from GameUnitsLogic
-            List<float> effectiveCosts = GameUnitsLogic.Instance.GetAdjustedTechCosts(technologySlot);
-
-            dynamicData.resourceRequirements = dynamicData.FormatTechnologyResourceRequirements(
-                technologySlot.technologyData.resourceRequirements,
-                effectiveCosts,
-                availableResources,
-                resourceProgress,
-                technologySlot.isUnlocked);
+            dynamicData.resourceRequirements = dynamicData.FormatTechnologyResourceRequirements(technologySlot.technologyData.resourceRequirements, technologySlot.technologyData.resourceAmount, availableResources, resourceProgress, technologySlot.isUnlocked);
 
             if (technologySlot.technologyData.techRequirements.Count > 0)
             {
@@ -316,6 +438,390 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
 
         return dynamicData;
+    }
+
+    /// <summary>
+    /// Format production and construction cost modifier information for tooltips
+    /// </summary>
+    /// <param name="productionSlot">The production slot to get modifier info for</param>
+    /// <returns>Formatted string showing active modifiers</returns>
+    private string FormatProductionAndConstructionModifiers(GameProductionSlot productionSlot)
+    {
+        if (GameUnitsLogic.Instance == null || productionSlot?.gameUnit == null) return "";
+
+        var modifierInfo = new List<string>();
+        
+        // Get production efficiency modifiers
+        float productionModifier = GameUnitsLogic.Instance.GetProductionEfficiencyModifier(
+            productionSlot.gameUnit.type, 
+            productionSlot.gameUnit.section
+        );
+        
+        if (productionModifier != 0f)
+        {
+            string sign = productionModifier > 0 ? "+" : "";
+            string color = productionModifier > 0 ? "green" : "red";
+            modifierInfo.Add($"<color={color}>Production Efficiency: {sign}{productionModifier:F1}%</color>");
+        }
+        
+        // Get construction cost modifiers
+        float costModifier = GameUnitsLogic.Instance.GetConstructionCostModifier(
+            productionSlot.gameUnit.type, 
+            productionSlot.gameUnit.section
+        );
+        
+        if (costModifier != 0f)
+        {
+            string effect = costModifier > 0 ? "increases" : "reduces";
+            string color = costModifier > 0 ? "red" : "green";
+            modifierInfo.Add($"<color={color}>Construction Cost: {effect} by {Mathf.Abs(costModifier):F1}%</color>");
+        }
+        
+        // Get detailed modifier breakdown
+        var productionModifiers = GameUnitsLogic.Instance.GetAllProductionModifiers();
+        var constructionModifiers = GameUnitsLogic.Instance.GetAllConstructionCostModifiers();
+        
+        var detailedModifiers = new List<string>();
+        
+        // Add production modifier details
+        foreach (var category in productionModifiers)
+        {
+            if (category.Key.Contains(productionSlot.gameUnit.type) || 
+                category.Key.Contains(productionSlot.gameUnit.section))
+            {
+                foreach (var modifier in category.Value)
+                {
+                    string sign = modifier.Value >= 0 ? "+" : "";
+                    string color = modifier.Value >= 0 ? "green" : "red";
+                    detailedModifiers.Add($"<color={color}>• {category.Key}: {sign}{modifier.Value:F1}% from {modifier.Key}</color>");
+                }
+            }
+        }
+        
+        // Add construction cost modifier details
+        foreach (var category in constructionModifiers)
+        {
+            if (category.Key.Contains(productionSlot.gameUnit.type) || 
+                category.Key.Contains(productionSlot.gameUnit.section))
+            {
+                foreach (var modifier in category.Value)
+                {
+                    string effect = modifier.Value > 0 ? "increases" : "reduces";
+                    string color = modifier.Value > 0 ? "red" : "green";
+                    detailedModifiers.Add($"<color={color}>• {category.Key}: {effect} cost by {Mathf.Abs(modifier.Value):F1}% from {modifier.Key}</color>");
+                }
+            }
+        }
+        
+        // Build the final modifier info string
+        if (modifierInfo.Count > 0 || detailedModifiers.Count > 0)
+        {
+            var result = new List<string>();
+            
+            if (modifierInfo.Count > 0)
+            {
+                result.Add("<b>Active Modifiers:</b>");
+                result.AddRange(modifierInfo);
+            }
+            
+            if (detailedModifiers.Count > 0)
+            {
+                result.Add("");
+                result.Add("<b>Modifier Sources:</b>");
+                result.AddRange(detailedModifiers);
+            }
+            
+            return string.Join("\n", result);
+        }
+        
+        return "";
+    }
+
+    /// <summary>
+    /// Create tooltip data for a legend (from LeaderSlotDisplay or SeatPositionDisplay)
+    /// </summary>
+    private TooltipData CreateLegendTooltipData(LegendData legend)
+    {
+        if (legend == null) return null;
+        
+        TooltipData tooltipData = ScriptableObject.CreateInstance<TooltipData>();
+        tooltipData.sourceObject = gameObject;
+        
+        // Title: Legend name
+        tooltipData.tooltipTitle = legend.legendName;
+        
+        // Description: Personal quote
+        tooltipData.tooltipDescription = legend.personalQuote;
+        
+        // Type: Rarity and class information (e.g., "Mythic Vanguard") - bold
+        tooltipData.type = $"<b>{legend.rarity} {legend.legendClass}</b>";
+        
+        // Check if this legend is assigned to Head of State for multiplier display
+        // For tooltip purposes, show doubled bonuses if legend is assigned to Head of State, regardless of activation status
+        bool isHeadOfState = false;
+        if (GovernmentLogic.Instance != null)
+        {
+            var headOfStateSeat = GovernmentLogic.Instance.GetCouncilSeat(-1);
+            isHeadOfState = headOfStateSeat?.assignedLegend == legend; // Remove IsActive() check for tooltip display
+        }
+        
+        // Effects: Auto-generated descriptions of all bonuses with bold header
+        if (legend.bonuses != null && legend.bonuses.Count > 0)
+        {
+            var effectDescriptions = new List<string>();
+            foreach (var bonus in legend.bonuses)
+            {
+                string effectText = bonus.GetAutoDescription();
+                
+                // If this is Head of State, show the doubled effect
+                if (isHeadOfState)
+                {
+                    // Calculate the doubled value based on modifier type
+                    float doubledValue = bonus.modifierValue * 2f; // Head of State multiplier
+                    string originalText = bonus.GetAutoDescription();
+                    
+                    // Replace the value in the description with the doubled value
+                    if (bonus.modifierType == ModifierType.Percentage)
+                    {
+                        // For percentage bonuses, show both original and doubled
+                        effectText = $"{originalText} (Doubled: +{doubledValue}%)";
+                    }
+                    else if (bonus.modifierType == ModifierType.Add)
+                    {
+                        // For additive bonuses, show both original and doubled
+                        effectText = $"{originalText} (Doubled: +{doubledValue})";
+                    }
+                    else
+                    {
+                        // For other types, just indicate it's doubled
+                        effectText = $"{originalText} (Doubled)";
+                    }
+                }
+                
+                effectDescriptions.Add("- " + effectText);
+            }
+            
+            string effectsHeader = isHeadOfState ? "Assignment Effects (Doubled):" : "Assignment Effects:";
+            tooltipData.productionEffects = "\n<b>" + effectsHeader + "</b>\n" + string.Join("\n", effectDescriptions);
+        }
+        
+        // If this is Head of State, also show seat bonuses
+        if (isHeadOfState && GovernmentLogic.Instance != null)
+        {
+            var headOfStateSeat = GovernmentLogic.Instance.GetCouncilSeat(-1);
+            if (headOfStateSeat?.seatBonuses != null && headOfStateSeat.seatBonuses.Count > 0)
+            {
+                var seatEffectDescriptions = new List<string>();
+                foreach (var bonus in headOfStateSeat.seatBonuses)
+                {
+                    seatEffectDescriptions.Add("- " + bonus.GetAutoDescription());
+                }
+                
+                // Add seat effects to the existing effects
+                if (tooltipData.productionEffects != null)
+                {
+                    tooltipData.productionEffects += "\n<b>Seat Effects:</b>\n" + string.Join("\n", seatEffectDescriptions);
+                }
+                else
+                {
+                    tooltipData.productionEffects = "\n<b>Seat Effects:</b>\n" + string.Join("\n", seatEffectDescriptions);
+                }
+            }
+        }
+        
+        // Resource Requirements: Flavor text (council assignment description)
+        if (!string.IsNullOrEmpty(legend.councilAssignmentDescription))
+        {
+            tooltipData.resourceRequirements = legend.councilAssignmentDescription;
+        }
+        
+        return tooltipData;
+    }
+    
+    /// <summary>
+    /// Create tooltip data for a council seat (from SeatPositionDisplay)
+    /// </summary>
+    private TooltipData CreateSeatTooltipData(CouncilSeat seat)
+    {
+        if (seat == null) return null;
+        
+        // If seat has a legend, show legend info, otherwise show seat info
+        if (seat.assignedLegend != null)
+        {
+            return CreateLegendTooltipData(seat.assignedLegend);
+        }
+        
+        // Show seat information when no legend is assigned
+        TooltipData tooltipData = ScriptableObject.CreateInstance<TooltipData>();
+        tooltipData.sourceObject = gameObject;
+        
+        // Title: Seat title
+        tooltipData.tooltipTitle = seat.GetEffectiveTitle();
+        
+        // Description: Seat description
+        tooltipData.tooltipDescription = seat.roleplayDescription;
+        
+        // Type: Allowed classes with bold header and dash separation
+        if (seat.allowedLegendClasses != null && seat.allowedLegendClasses.Count > 0)
+        {
+            tooltipData.type = "<b>Allowed Classes:</b>\n" + string.Join(" - ", seat.allowedLegendClasses);
+        }
+        else
+        {
+            tooltipData.type = "<b>Allowed Classes:</b>\nAny/All Classes";
+        }
+        
+        // Effects: Seat bonuses with bold header
+        if (seat.seatBonuses != null && seat.seatBonuses.Count > 0)
+        {
+            var effectDescriptions = new List<string>();
+            foreach (var bonus in seat.seatBonuses)
+            {
+                effectDescriptions.Add("- " + bonus.GetAutoDescription());
+            }
+            tooltipData.productionEffects = "\n<b>Assignment Effects:</b>\n" + string.Join("\n", effectDescriptions);
+        }
+        
+        return tooltipData;
+    }
+    
+    /// <summary>
+    /// Create tooltip data for a civic (from CivicDisplay)
+    /// </summary>
+    private TooltipData CreateCivicTooltipData(CivicData civic)
+    {
+        if (civic == null) return null;
+        
+        TooltipData tooltipData = ScriptableObject.CreateInstance<TooltipData>();
+        tooltipData.sourceObject = gameObject;
+        
+        // Title: Civic name
+        tooltipData.tooltipTitle = civic.civicName;
+        
+        // Description: Flavor description
+        tooltipData.tooltipDescription = civic.description;
+        
+        // Type: Rarity, tier, and civic type (e.g., "Mythic Aeonic Civic") - bold
+        tooltipData.type = $"<b>{civic.rarity} {civic.tier} Civic</b>";
+        
+        // Effects: Auto-generated descriptions of all effects with bold header
+        if (civic.effects != null && civic.effects.Count > 0)
+        {
+            var effectDescriptions = new List<string>();
+            foreach (var effect in civic.effects)
+            {
+                effectDescriptions.Add("- " + effect.GetAutoDescription());
+            }
+            tooltipData.productionEffects = "\n<b>Assignment Effects:</b>\n" + string.Join("\n", effectDescriptions);
+        }
+        
+        // Resource Requirements: Council position info (if grants one)
+        if (civic.grantsCouncilPosition && civic.councilPosition != null && !string.IsNullOrEmpty(civic.councilPosition.title))
+        {
+            tooltipData.resourceRequirements = $"Grants {civic.councilPosition.title} Council Position";
+        }
+        
+        return tooltipData;
+    }
+    
+    /// <summary>
+    /// Create tooltip data for a civic detailed display (from CivicDetailedDisplay)
+    /// </summary>
+    private TooltipData CreateCivicDetailedTooltipData(CivicDetailedDisplay civicDetailed)
+    {
+        if (civicDetailed == null) return null;
+        
+        string seatTitle = civicDetailed.GetSeatTitle();
+        if (string.IsNullOrEmpty(seatTitle)) return null;
+        
+        // Get seat information from GovernmentLogic
+        if (GovernmentLogic.Instance != null)
+        {
+            var (title, effects, leaderClasses, icon) = GovernmentLogic.Instance.GetSeatDisplayInfo(seatTitle);
+            
+            TooltipData tooltipData = ScriptableObject.CreateInstance<TooltipData>();
+            tooltipData.sourceObject = gameObject;
+            
+            // Title: Seat title
+            tooltipData.tooltipTitle = title;
+            
+            // Try to get civic data if this is a civic seat
+            var civicData = GovernmentLogic.Instance.GetCivicDataForSeatTitle(seatTitle);
+            if (civicData != null)
+            {
+                // This is a civic seat, use civic data
+                tooltipData.tooltipDescription = civicData.description;
+                tooltipData.type = $"<b>{civicData.rarity} {civicData.tier} Civic</b>";
+                
+                if (civicData.grantsCouncilPosition && civicData.councilPosition != null && !string.IsNullOrEmpty(civicData.councilPosition.title))
+                {
+                    tooltipData.resourceRequirements = $"Grants {civicData.councilPosition.title} Council Position";
+                }
+            }
+            else
+            {
+                // This is a default seat
+                tooltipData.tooltipDescription = "Default council position";
+                tooltipData.type = "Default Seat";
+            }
+            
+            // Effects: Use the formatted effects from GetSeatDisplayInfo
+            if (!string.IsNullOrEmpty(effects) && effects != "N/A")
+            {
+                tooltipData.productionEffects = effects;
+            }
+            
+            // Tech Requirements: Show leader class restrictions
+            if (!string.IsNullOrEmpty(leaderClasses) && leaderClasses != "N/A")
+            {
+                tooltipData.techRequirements = $"Allowed Classes: {leaderClasses}";
+            }
+            else
+            {
+                tooltipData.techRequirements = "Any/All Classes";
+            }
+            
+            return tooltipData;
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Create tooltip data for HeadOfState seat (similar to SeatPositionDisplay)
+    /// </summary>
+    private (string title, string description, string type, string effects) CreateHeadOfStateSeatTooltipData(CouncilSeat headOfStateSeat)
+    {
+        if (headOfStateSeat == null) return ("", "", "", "");
+        
+        // Always show seat information for title hover
+        string allowedClasses;
+        if (headOfStateSeat.allowedLegendClasses == null || headOfStateSeat.allowedLegendClasses.Count == 0)
+        {
+            allowedClasses = "Any/All Classes";
+        }
+        else if (headOfStateSeat.allowedLegendClasses.Count == 6) // All 6 classes
+        {
+            allowedClasses = "Any/All Classes";
+        }
+        else
+        {
+            allowedClasses = string.Join(" - ", headOfStateSeat.allowedLegendClasses);
+        }
+        
+        // Add seat bonuses as Assignment Effects
+        string assignmentEffects = "";
+        if (headOfStateSeat.seatBonuses != null && headOfStateSeat.seatBonuses.Count > 0)
+        {
+            var effectDescriptions = new List<string>();
+            foreach (var bonus in headOfStateSeat.seatBonuses)
+            {
+                effectDescriptions.Add("- " + bonus.GetAutoDescription());
+            }
+            assignmentEffects = "\n<b>Assignment Effects:</b>\n" + string.Join("\n", effectDescriptions);
+        }
+        
+        return (headOfStateSeat.GetEffectiveTitle(), headOfStateSeat.roleplayDescription, $"<b>Allowed Classes:</b>\n{allowedClasses}", assignmentEffects);
     }
 
 }

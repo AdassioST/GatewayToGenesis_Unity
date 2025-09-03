@@ -4,16 +4,17 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Linq; // Added for .Sum()
 
 public class PopGrowthLogic : MonoBehaviour
 {
     [Header("Pop Growth Logic Settings")]
-    [SerializeField] private bool enablePopGrowthLogicLogging; // Whether to log what the boss is doing
+    [SerializeField] public bool enablePopGrowthLogicLogging; // Whether to log what the boss is doing
 
     public static PopGrowthLogic Instance { get; private set; }
 
     public float foodThreshold = 12f, vagrantToPopulationRate = 1f, researchPerPopulation = 1f, starvationRecoveryRate = 0.05f;
-
+    
     public float foodDemandBuffer = -2.5f, demandRateConstant = 0.03f, sustainabilityTier = 1f, demandModifier = 1.0f;
 
     [Header("Population Management")]
@@ -25,13 +26,18 @@ public class PopGrowthLogic : MonoBehaviour
 
     private GlobalCharacterManager globalCharacterManager;
 
+    // Persistent housing bonus system (cannot be destroyed by normal housing changes)
+    private Dictionary<string, int> housingBonuses = new Dictionary<string, int>();
+    private int baseHousing = 0; // Base housing value without bonuses
 
     public TMP_Text foodText, freeHousingText, populationText, vagrantsText, foodStateText;
 
     private float lastResearchModifier, lastFoodModifier, foodDemand;
 
     public bool allowVagrants, isFoodScarce;
-
+    
+    // Note: When allowVagrants is false and no free housing exists, food thresholds won't trigger population growth
+    // This prevents food consumption when no growth is possible, maintaining visual consistency
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -64,6 +70,9 @@ public class PopGrowthLogic : MonoBehaviour
             Debug.LogError("GameUnitsLogic or storageTab not found! Ensure dependencies are set up correctly.");
             enabled = false;
         }
+
+        // Initialize base housing with current housing value
+        baseHousing = housing;
 
         StartCoroutine(InitializePopulationResources());
 
@@ -195,18 +204,27 @@ public class PopGrowthLogic : MonoBehaviour
             totalFoodNeeded = thresholdsToProcess * thresholdAmount;
         }
         
-        // Consume the food first
-        GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
-        if (foodSlot != null)
-        {
-            foodSlot.amount = Mathf.Max(0f, foodSlot.amount - totalFoodNeeded);
-            foodSlot.RefreshProductionAmount();
-        }
+        // CRITICAL FIX: Process each threshold individually to check housing availability
+        int actualThresholdsProcessed = 0;
+        float actualFoodConsumed = 0f;
         
-        // Process population growth for each threshold
         for (int i = 0; i < thresholdsToProcess; i++)
         {
-            if (freeHousing > 0)
+            // Check if population growth is possible for this specific threshold
+            int currentFreeHousing = housing - population;
+            bool canGrowPopulation = currentFreeHousing > 0 || allowVagrants;
+            
+            if (!canGrowPopulation)
+            {
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.Log($"[PopGrowthLogic] Stopping threshold processing at threshold {i + 1}/{thresholdsToProcess} - no more growth possible (housing: {housing}, population: {population}, allowVagrants: {allowVagrants})");
+                }
+                break; // Stop processing more thresholds
+            }
+            
+            // Process this threshold
+            if (currentFreeHousing > 0)
             {
                 population += 1;
                 UpdateResearchGenerationRate();
@@ -219,7 +237,7 @@ public class PopGrowthLogic : MonoBehaviour
                 
                 if (enablePopGrowthLogicLogging)
                 {
-                    Debug.Log($"[PopGrowthLogic] Food threshold met: population increased to {population}");
+                    Debug.Log($"[PopGrowthLogic] Food threshold {i + 1}/{thresholdsToProcess} met: population increased to {population}");
                 }
             }
             else if (allowVagrants)
@@ -228,7 +246,26 @@ public class PopGrowthLogic : MonoBehaviour
                 
                 if (enablePopGrowthLogicLogging)
                 {
-                    Debug.Log($"[PopGrowthLogic] Food threshold met: vagrant increased to {vagrants}");
+                    Debug.Log($"[PopGrowthLogic] Food threshold {i + 1}/{thresholdsToProcess} met: vagrant increased to {vagrants}");
+                }
+            }
+            
+            actualThresholdsProcessed++;
+            actualFoodConsumed += thresholdAmount;
+        }
+        
+        // Only consume the food we actually processed
+        if (actualFoodConsumed > 0f)
+        {
+            GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+            if (foodSlot != null)
+            {
+                foodSlot.amount = Mathf.Max(0f, foodSlot.amount - actualFoodConsumed);
+                foodSlot.RefreshProductionAmount();
+                
+                if (enablePopGrowthLogicLogging)
+                {
+                    Debug.Log($"[PopGrowthLogic] Consumed {actualFoodConsumed:F1} food for {actualThresholdsProcessed} thresholds (requested: {totalFoodNeeded:F1} for {thresholdsToProcess})");
                 }
             }
         }
@@ -263,38 +300,47 @@ public class PopGrowthLogic : MonoBehaviour
         float currentFood = GetResourceSlotAmount("Food");
         if (currentFood + 1e-3f >= adjustedThreshold) // epsilon guard for float precision
         {
-            // Only process if we have free housing or allow vagrants
-            if (freeHousing > 0 || allowVagrants)
+            // Check if we have enough food for exactly one threshold (not multiple)
+            float availableThresholds = Mathf.Floor(currentFood / adjustedThreshold);
+            if (availableThresholds >= 1f)
             {
-                // Check if we have enough food for exactly one threshold (not multiple)
-                float availableThresholds = Mathf.Floor(currentFood / adjustedThreshold);
-                if (availableThresholds >= 1f)
+                // CRITICAL FIX: Check if population growth is actually possible for this specific threshold
+                int currentFreeHousing = housing - population;
+                bool canGrowPopulation = currentFreeHousing > 0 || allowVagrants;
+                
+                if (!canGrowPopulation)
                 {
-                    // Withdraw exactly one threshold worth of food
-                    GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
-                    if (foodSlot != null)
+                    if (enablePopGrowthLogicLogging)
                     {
-                        foodSlot.amount = Mathf.Max(0f, foodSlot.amount - adjustedThreshold);
-                        foodSlot.RefreshProductionAmount();
+                        Debug.Log($"[PopGrowthLogic] Food above threshold but no population growth possible (housing: {housing}, population: {population}, allowVagrants: {allowVagrants}) - skipping food consumption");
                     }
-                    else
-                    {
-                        unitsLogic.ChangeResourceFromName("Food", -adjustedThreshold, false);
-                    }
+                    return; // Don't consume food if we can't grow population
+                }
+                
+                // Withdraw exactly one threshold worth of food
+                GameResourceSlot foodSlot = unitsLogic.GetResourceSlotFromName("Food");
+                if (foodSlot != null)
+                {
+                    foodSlot.amount = Mathf.Max(0f, foodSlot.amount - adjustedThreshold);
+                    foodSlot.RefreshProductionAmount();
+                }
+                else
+                {
+                    unitsLogic.ChangeResourceFromName("Food", -adjustedThreshold, false);
+                }
 
-                    if (freeHousing > 0)
-                    {
-                        population += 1;
-                        UpdateResearchGenerationRate();
+                if (currentFreeHousing > 0)
+                {
+                    population += 1;
+                    UpdateResearchGenerationRate();
 
-                        // Spawn new villager when population increases
-                        Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
-                        globalCharacterManager.SpawnCharacterFromName("Villager");
-                    }
-                    else if (allowVagrants)
-                    {
-                        vagrants += 1;
-                    }
+                    // Spawn new villager when population increases
+                    Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust spawn position as needed
+                    globalCharacterManager.SpawnCharacterFromName("Villager");
+                }
+                else if (allowVagrants)
+                {
+                    vagrants += 1;
                 }
             }
         }
@@ -487,7 +533,13 @@ public class PopGrowthLogic : MonoBehaviour
         if (change == 0) return;
         
         int oldHousing = housing;
-        housing = Mathf.Max(0, housing + change);
+        
+        // Modify base housing (bonuses are preserved)
+        baseHousing = Mathf.Max(0, baseHousing + change);
+        
+        // Recalculate total housing with bonuses
+        RecalculateHousingWithBonuses();
+        
         int actualChange = housing - oldHousing;
         
         if (actualChange < 0)
@@ -515,7 +567,7 @@ public class PopGrowthLogic : MonoBehaviour
                 
                 if (enablePopGrowthLogicLogging)
                 {
-                    Debug.Log($"Event housing reduction converted {populationToConvert} population to vagrants. New housing: {housing}, population: {population}, vagrants: {vagrants}");
+                    Debug.Log($"Event housing reduction converted {populationToConvert} population to vagrants. New housing: {housing} (base: {baseHousing} + bonus: {GetTotalHousingBonus()}), population: {population}, vagrants: {vagrants}");
                 }
             }
         }
@@ -712,6 +764,165 @@ public class PopGrowthLogic : MonoBehaviour
                 globalCharacterManager.SpawnCharacterFromName("Villager");
             }
         }
+    }
+
+    /// <summary>
+    /// Get the current housing value including all bonuses
+    /// </summary>
+    public int GetHousing()
+    {
+        return housing;
+    }
+    
+    /// <summary>
+    /// Get the base housing value without bonuses
+    /// </summary>
+    public int GetBaseHousing()
+    {
+        return baseHousing;
+    }
+    
+    /// <summary>
+    /// Get the total housing bonus from all sources
+    /// </summary>
+    public int GetTotalHousingBonus()
+    {
+        return housingBonuses.Values.Sum();
+    }
+    
+    /// <summary>
+    /// Add a housing bonus from a specific source (civic, legend, etc.)
+    /// </summary>
+    public void AddHousingBonus(int bonusValue, string source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            Debug.LogWarning("[PopGrowthLogic] Cannot add housing bonus with empty source");
+            return;
+        }
+        
+        housingBonuses[source] = bonusValue;
+        RecalculateHousingWithBonuses();
+        
+        if (enablePopGrowthLogicLogging)
+        {
+            Debug.Log($"[PopGrowthLogic] Added housing bonus: +{bonusValue} from {source} (Total bonus: {GetTotalHousingBonus()})");
+        }
+    }
+    
+    /// <summary>
+    /// Remove a housing bonus from a specific source
+    /// </summary>
+    public void RemoveHousingBonus(string source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            Debug.LogWarning("[PopGrowthLogic] Cannot remove housing bonus with empty source");
+            return;
+        }
+        
+        if (housingBonuses.ContainsKey(source))
+        {
+            int removedBonus = housingBonuses[source];
+            housingBonuses.Remove(source);
+            RecalculateHousingWithBonuses();
+            
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"[PopGrowthLogic] Removed housing bonus: -{removedBonus} from {source} (Total bonus: {GetTotalHousingBonus()})");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Clear all housing bonuses from a specific source
+    /// </summary>
+    public void ClearHousingBonusesFromSource(string source)
+    {
+        if (string.IsNullOrEmpty(source))
+        {
+            Debug.LogWarning("[PopGrowthLogic] Cannot clear housing bonuses with empty source");
+            return;
+        }
+        
+        var sourcesToRemove = housingBonuses.Keys.Where(key => key.StartsWith(source)).ToList();
+        int totalRemoved = 0;
+        
+        foreach (var key in sourcesToRemove)
+        {
+            totalRemoved += housingBonuses[key];
+            housingBonuses.Remove(key);
+        }
+        
+        if (totalRemoved > 0)
+        {
+            RecalculateHousingWithBonuses();
+            
+            if (enablePopGrowthLogicLogging)
+            {
+                Debug.Log($"[PopGrowthLogic] Cleared {totalRemoved} housing bonus from source: {source} (Total bonus: {GetTotalHousingBonus()})");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get all housing bonus sources and their values
+    /// </summary>
+    public Dictionary<string, int> GetHousingBonusSources()
+    {
+        return new Dictionary<string, int>(housingBonuses);
+    }
+    
+    /// <summary>
+    /// Recalculate housing with all active bonuses
+    /// </summary>
+    private void RecalculateHousingWithBonuses()
+    {
+        int totalBonus = GetTotalHousingBonus();
+        housing = Mathf.Max(0, baseHousing + totalBonus);
+        
+        // Update free housing calculation
+        freeHousing = Mathf.Max(0, housing - population);
+        
+        if (enablePopGrowthLogicLogging)
+        {
+            Debug.Log($"[PopGrowthLogic] Recalculated housing: {baseHousing} base + {totalBonus} bonus = {housing} total");
+        }
+    }
+
+    [ContextMenu("Print Population Info")]
+    public void PrintPopulationInfo()
+    {
+        if (!enablePopGrowthLogicLogging) return;
+        
+        Debug.Log("=== POPULATION SYSTEM INFO ===");
+        Debug.Log($"Population: {population}");
+        Debug.Log($"Housing: {housing} (Base: {baseHousing} + Bonus: {GetTotalHousingBonus()})");
+        Debug.Log($"Free Housing: {freeHousing}");
+        Debug.Log($"Vagrants: {vagrants}");
+        Debug.Log($"Food Threshold: {foodThreshold}");
+        Debug.Log($"Food Demand: {foodDemand}");
+        Debug.Log($"Allow Vagrants: {allowVagrants}");
+        
+        // Show housing bonus breakdown
+        var housingSources = GetHousingBonusSources();
+        if (housingSources.Count > 0)
+        {
+            Debug.Log("=== HOUSING BONUSES ===");
+            foreach (var kvp in housingSources)
+            {
+                Debug.Log($"  +{kvp.Value} housing from {kvp.Key}");
+            }
+            Debug.Log($"  Total Bonus: +{GetTotalHousingBonus()}");
+        }
+        else
+        {
+            Debug.Log("  No housing bonuses active");
+        }
+        
+        Debug.Log($"Deaths: {deaths}");
+        Debug.Log($"Vagrant Deaths: {vagrantDeaths}");
+        Debug.Log($"True Deaths: {trueDeaths}");
     }
 
 }

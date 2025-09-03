@@ -215,7 +215,8 @@ public class TabHotkeys : MonoBehaviour
                 if (updateHUD)
                 {
                     // Do not pause time when opening Research/Technology tab to allow research progression
-                    if (tab != researchTab)
+                    // Also do not pause time for Government tab as it's a management interface
+                    if (tab != researchTab && tab != governmentTab)
                     {
                         TimeSystemLogic.Instance.PauseTime(true);
                     }

@@ -15,17 +15,14 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: d2143c4d05e5cd9479e7bccd40186243, type: 2}
   isEventTech: 0
   tier: 1
+  satisfactionPoints: 0
   techRequirements:
   - Reconstruction
   resourceRequirements:
   - Research
   resourceAmount:
   - 25
-  eurekaConditions:
-  - type: 1
-    trigger: Decaying Hut
-    requiredAmount: 2
-    description: Build 2 Decaying Hut
+  enlightenedConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: d17450aef6e9d2746ab07af3580450f9, type: 2}
   - {fileID: 11400000, guid: ed4a4e0598c0c1e42a80536fd47a8b2f, type: 2}

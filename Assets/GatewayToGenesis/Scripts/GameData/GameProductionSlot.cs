@@ -121,5 +121,79 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
         return incrementalCost;
     }
 
+    /// <summary>
+    /// Get the effective production rate for this unit considering all modifiers
+    /// </summary>
+    /// <param name="resourceIndex">Index of the resource in producedResources list</param>
+    /// <returns>Effective production rate with modifiers applied</returns>
+    public float GetEffectiveProductionRate(int resourceIndex)
+    {
+        if (productionUnitData == null || resourceIndex < 0 || resourceIndex >= productionUnitData.productionRates.Count)
+            return 0f;
+        
+        float baseRate = productionUnitData.productionRates[resourceIndex];
+        
+        if (GameUnitsLogic.Instance != null)
+        {
+            return GameUnitsLogic.Instance.GetEffectiveProductionRate(productionUnitData, baseRate);
+        }
+        
+        return baseRate;
+    }
+    
+    /// <summary>
+    /// Get the effective construction cost for this unit considering all modifiers
+    /// </summary>
+    /// <param name="resourceIndex">Index of the resource in buildResourceRequirements list</param>
+    /// <returns>Effective construction cost with modifiers applied</returns>
+    public float GetEffectiveConstructionCost(int resourceIndex)
+    {
+        if (productionUnitData == null || resourceIndex < 0 || resourceIndex >= productionUnitData.buildRequirementsAmount.Count)
+            return 0f;
+        
+        float baseCost = productionUnitData.buildRequirementsAmount[resourceIndex];
+        
+        if (GameUnitsLogic.Instance != null)
+        {
+            return GameUnitsLogic.Instance.GetEffectiveConstructionCost(productionUnitData, baseCost);
+        }
+        
+        return baseCost;
+    }
+    
+    /// <summary>
+    /// Get a summary of all active modifiers affecting this production unit
+    /// </summary>
+    /// <returns>Formatted string showing active modifiers</returns>
+    public string GetModifierSummary()
+    {
+        if (GameUnitsLogic.Instance == null || gameUnit == null) return "";
+        
+        var summary = new List<string>();
+        
+        // Production efficiency modifiers
+        float productionModifier = GameUnitsLogic.Instance.GetProductionEfficiencyModifier(gameUnit.type, gameUnit.section);
+        if (productionModifier != 0f)
+        {
+            string sign = productionModifier > 0 ? "+" : "";
+            summary.Add($"Production: {sign}{productionModifier:F1}%");
+        }
+        
+        // Construction cost modifiers
+        float costModifier = GameUnitsLogic.Instance.GetConstructionCostModifier(gameUnit.type, gameUnit.section);
+        if (costModifier != 0f)
+        {
+            string effect = costModifier > 0 ? "Cost +" : "Cost -";
+            summary.Add($"{effect}{Mathf.Abs(costModifier):F1}%");
+        }
+        
+        if (summary.Count > 0)
+        {
+            return string.Join(", ", summary);
+        }
+        
+        return "";
+    }
+
 }
 

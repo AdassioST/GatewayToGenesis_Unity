@@ -37,6 +37,9 @@ public class EventSystemLogic : MonoBehaviour
     // Track current notification to prevent stacking
     private GameObject currentNotification;
     
+    // Track how the current event was triggered
+    private string currentEventTriggerSource = "unknown";
+    
     // ===== THE BOSS'S ID CARD =====
     // Singleton pattern - makes sure there's only ONE boss in the whole game
     private static EventSystemLogic instance;
@@ -345,6 +348,11 @@ public class EventSystemLogic : MonoBehaviour
         
         if (bestStory != null) // Did we find a story to tell?
         {
+            // Determine the trigger source for this event
+            currentEventTriggerSource = DetermineEventTriggerSource(bestStory);
+            
+            LogEvent($"Event '{bestStory.storyTitle}' triggered by: {currentEventTriggerSource}", "EventSystemLogic");
+            
             CreateEventNotification(bestStory); // Create notification instead of instantly triggering
         }
     }
@@ -636,6 +644,11 @@ public class EventSystemLogic : MonoBehaviour
     public StoryNode GetCurrentStoryNode() => currentStoryNode;
     
     /// <summary>
+    /// Get the trigger source of the current event
+    /// </summary>
+    public string GetCurrentEventTriggerSource() => currentEventTriggerSource;
+    
+    /// <summary>
     /// Get the number of sevenths since the last event completed
     /// </summary>
     public int GetSeventhsSinceLastEvent() => seventhsSinceLastEvent;
@@ -729,6 +742,35 @@ public class EventSystemLogic : MonoBehaviour
     }
     
     /// <summary>
+    /// Manually trigger a specific event with a custom trigger source
+    /// Useful for testing, special events, or scripted sequences
+    /// </summary>
+    /// <param name="storyNode">The story node to trigger</param>
+    /// <param name="triggerSource">Custom trigger source description</param>
+    public void TriggerSpecificEvent(StoryNode storyNode, string triggerSource = "manual")
+    {
+        if (isEventActive)
+        {
+            LogEvent($"Cannot trigger specific event: another event is active", "EventSystemLogic");
+            return;
+        }
+        
+        if (!AreSystemsReady())
+        {
+            LogEvent($"Cannot trigger specific event: systems not ready", "EventSystemLogic");
+            return;
+        }
+        
+        // Set the trigger source for this manually triggered event
+        currentEventTriggerSource = triggerSource;
+        
+        LogEvent($"Manually triggering event '{storyNode.storyTitle}' with source: {triggerSource}", "EventSystemLogic");
+        
+        // Start the event directly
+        TriggerStory(storyNode);
+    }
+    
+    /// <summary>
     /// Ensure slow motion state is consistent with current event state
     /// </summary>
     private void EnsureSlowMotionConsistency()
@@ -758,6 +800,15 @@ public class EventSystemLogic : MonoBehaviour
     public void OnStoryCompleted()
     {
         LogEvent("Story completed - resuming time and cleaning up", "EventSystemLogic");
+        
+        // Apply satisfaction penalty only for events triggered by dark_morale conditions
+        if (currentStoryNode != null && IsEventTriggeredByDarkMorale(currentStoryNode))
+        {
+            if (StatManager.Instance != null)
+            {
+                StatManager.Instance.ChangeSatisfactionPoints(-15, $"Dark Morale Event: {currentStoryNode.storyTitle}");
+            }
+        }
         
         // Hide the current event screen first
         if (screenManager != null)
@@ -791,6 +842,13 @@ public class EventSystemLogic : MonoBehaviour
                 {
                     gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
                     LogEvent("Validated all resource click power minimums after applying consequences", "EventSystemLogic");
+                }
+                
+                // Trigger immediate council recalculation to reflect event consequence effects
+                if (GovernmentLogic.Instance != null)
+                {
+                    GovernmentLogic.Instance.ProcessAllSeatBonuses();
+                    LogEvent("Triggered immediate council recalculation after applying event consequences", "EventSystemLogic");
                 }
             }
             else
@@ -846,6 +904,113 @@ public class EventSystemLogic : MonoBehaviour
         seventhsSinceLastEvent = -1;
     }
 
+    /// <summary>
+    /// Determine what triggered this event by analyzing its conditions
+    /// </summary>
+    /// <param name="storyNode">The story node to analyze</param>
+    /// <returns>String describing the trigger source</returns>
+    private string DetermineEventTriggerSource(StoryNode storyNode)
+    {
+        if (storyNode == null) return "unknown";
+        
+        // Check for dark_morale score conditions first (highest priority)
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.ScoreCheck && 
+                string.Equals(condition.targetName, "dark_morale", System.StringComparison.OrdinalIgnoreCase))
+            {
+                return $"dark_morale_score_{condition.requiredValue}";
+            }
+        }
+        
+        // Check for time-based triggers
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.SeventhCheck ||
+                condition.type == EventCondition.ConditionType.PhaseCheck ||
+                condition.type == EventCondition.ConditionType.EchoCheck ||
+                condition.type == EventCondition.ConditionType.CycleCheck ||
+                condition.type == EventCondition.ConditionType.RitualSeventhCheck)
+            {
+                return $"time_based_{condition.type}";
+            }
+        }
+        
+        // Check for resource-based triggers
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.ResourceCheck)
+            {
+                return $"resource_{condition.targetName}_{condition.comparison}_{condition.requiredValue}";
+            }
+        }
+        
+        // Check for technology-based triggers
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.TechnologyCheck)
+            {
+                return $"technology_{condition.targetName}";
+            }
+        }
+        
+        // Check for stat-based triggers
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.StatCheck)
+            {
+                return $"stat_{condition.targetName}_{condition.comparison}_{condition.requiredValue}";
+            }
+        }
+        
+        // Check for population-based triggers
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.PopulationCheck ||
+                condition.type == EventCondition.ConditionType.HousingCheck ||
+                condition.type == EventCondition.ConditionType.VagrantsCheck ||
+                condition.type == EventCondition.ConditionType.DeathsCheck)
+            {
+                return $"population_{condition.type}_{condition.comparison}_{condition.requiredValue}";
+            }
+        }
+        
+        // Check for no-event-in-sevenths conditions
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.NoEventInSeventhsCheck)
+            {
+                return $"no_events_{condition.requiredValue}_sevenths";
+            }
+        }
+        
+        return "unknown_trigger";
+    }
+
+    /// <summary>
+    /// Check if an event was triggered by dark_morale conditions
+    /// </summary>
+    /// <param name="storyNode">The story node to check</param>
+    /// <returns>True if the event was triggered by dark_morale conditions</returns>
+    private bool IsEventTriggeredByDarkMorale(StoryNode storyNode)
+    {
+        if (storyNode == null) return false;
+        
+        // Check if this event has conditions that depend on dark_morale score
+        foreach (var condition in storyNode.storyConditions)
+        {
+            if (condition.type == EventCondition.ConditionType.ScoreCheck && 
+                string.Equals(condition.targetName, "dark_morale", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // This event requires a certain dark_morale score to trigger
+                // If it's triggering, it means dark_morale conditions were met
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
     private bool IsTimedEligible(EventConsequence c)
     {
         switch (c.type)
@@ -865,6 +1030,9 @@ public class EventSystemLogic : MonoBehaviour
     private void OnTimedSeventh(int currentSeventh)
     {
         if (activeTimed.Count == 0) return;
+        
+        bool anyConsequencesReverted = false;
+        
         // Decrement and expire any that hit 0; for expiration we remove the same effect
         for (int i = activeTimed.Count - 1; i >= 0; i--)
         {
@@ -874,6 +1042,7 @@ public class EventSystemLogic : MonoBehaviour
             {
                 RevertTimedConsequence(t.consequence);
                 activeTimed.RemoveAt(i);
+                anyConsequencesReverted = true;
             }
         }
         
@@ -881,6 +1050,12 @@ public class EventSystemLogic : MonoBehaviour
         if (gameUnitsLogic != null)
         {
             gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
+        }
+        
+        // Trigger immediate council recalculation if any timed consequences were reverted
+        if (anyConsequencesReverted && GovernmentLogic.Instance != null)
+        {
+            GovernmentLogic.Instance.ProcessAllSeatBonuses();
         }
     }
 

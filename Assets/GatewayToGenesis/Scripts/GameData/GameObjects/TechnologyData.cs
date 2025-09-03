@@ -11,6 +11,8 @@ public class TechnologyData : ScriptableObject
 
     public int tier;
 
+    public int satisfactionPoints = 0;
+
     public List<string> techRequirements = new List<string>(); // List of prerequisite technologies.
 
     public List<string> resourceRequirements = new List<string>();
@@ -19,6 +21,7 @@ public class TechnologyData : ScriptableObject
     public List<EnlightenedCondition> enlightenedConditions = new List<EnlightenedCondition>();
 
     public List<TechUnlockable> techUnlockables = new List<TechUnlockable>(); // Unlockable items
+    
 
 }
 

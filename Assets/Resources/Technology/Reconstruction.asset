@@ -15,6 +15,7 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: a30558c3c59df134f818543c4210c399, type: 2}
   isEventTech: 0
   tier: 0
+  satisfactionPoints: 0
   techRequirements: []
   resourceRequirements:
   - Research
@@ -22,7 +23,7 @@ MonoBehaviour:
   resourceAmount:
   - 10
   - 5
-  eurekaConditions: []
+  enlightenedConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: 52262f0b4f668834d8a0c4083af8da6d, type: 2}
   - {fileID: 11400000, guid: 6cd52abc6a66967469663540e33cc797, type: 2}

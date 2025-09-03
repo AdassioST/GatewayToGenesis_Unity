@@ -15,6 +15,7 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: bb75dda441e78374890496085d3c7802, type: 2}
   isEventTech: 0
   tier: 2
+  satisfactionPoints: 0
   techRequirements:
   - Woodcraft Mastery
   - Efficient Rations
@@ -22,11 +23,7 @@ MonoBehaviour:
   - Research
   resourceAmount:
   - 35
-  eurekaConditions:
-  - type: 0
-    trigger: Food
-    requiredAmount: 350
-    description: Collect 350 Resources from Clicks
+  enlightenedConditions: []
   techUnlockables:
   - {fileID: 11400000, guid: 7972761754dd3dd4a92d2059e4e94daa, type: 2}
   - {fileID: 11400000, guid: 21c3bacde34ecf04a83f3f43eb5710af, type: 2}

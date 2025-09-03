@@ -29,6 +29,21 @@ public class GameUnitsLogic : MonoBehaviour
 
     public Dictionary<string, Dictionary<string, float>> storageBreakdown = new Dictionary<string, Dictionary<string, float>>();
 
+    // Production and Construction Modifier Systems
+    [Header("Production & Construction Modifiers")]
+    [SerializeField] private bool enableProductionModifierLogging = true;
+    
+    // Production efficiency modifiers by building type and section
+    private Dictionary<string, Dictionary<string, float>> productionModifiersByType = new Dictionary<string, Dictionary<string, float>>();
+    private Dictionary<string, Dictionary<string, float>> productionModifiersBySection = new Dictionary<string, Dictionary<string, float>>();
+    
+    // Construction cost modifiers by building type and section
+    private Dictionary<string, Dictionary<string, float>> constructionCostModifiersByType = new Dictionary<string, Dictionary<string, float>>();
+    private Dictionary<string, Dictionary<string, float>> constructionCostModifiersBySection = new Dictionary<string, Dictionary<string, float>>();
+    
+    // Production scaling bonuses (bonus resources per production unit)
+    private Dictionary<string, Dictionary<string, float>> productionScalingBonuses = new Dictionary<string, Dictionary<string, float>>();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -46,6 +61,17 @@ public class GameUnitsLogic : MonoBehaviour
         // Ensure all resource slots have proper click power values
         StartCoroutine(ValidateClickPowerOnStart());
     }
+    
+    private void Update()
+    {
+        // Debug input for testing modifier systems
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            PrintAllModifiers();
+        }
+    }
+    
+
     
     /// <summary>
     /// Validates all resource click power values after system initialization
@@ -77,9 +103,57 @@ public class GameUnitsLogic : MonoBehaviour
                 amount = slot.GetComponent<GameResourceSlot>().clickPower;
             }
 
+            // This prevents food overflow by calculating exactly how much can be consumed by population growth
+            bool isFoodResource = string.Equals(name, "Food", System.StringComparison.OrdinalIgnoreCase);
+            if (isFoodResource && amount > 0 && PopGrowthLogic.Instance != null)
+            {
+                // Check if population growth is possible
+                int freeHousing = PopGrowthLogic.Instance.housing - PopGrowthLogic.Instance.population;
+                bool allowVagrants = PopGrowthLogic.Instance.allowVagrants;
+                
+                if (freeHousing <= 0 && !allowVagrants)
+                {
+                    // No growth possible - clamp food addition to threshold
+                    float currentFood = slot.GetComponent<GameResourceSlot>().amount;
+                    float foodThreshold = PopGrowthLogic.Instance.foodThreshold;
+                    float maxAllowedFood = foodThreshold;
+                    
+                    // Calculate how much food we can actually add without exceeding threshold
+                    float foodToAdd = Mathf.Max(0f, maxAllowedFood - currentFood);
+                    amount = Mathf.Min(amount, foodToAdd);
+                    
+                    if (amount < foodToAdd && PopGrowthLogic.Instance.enablePopGrowthLogicLogging)
+                    {
+                        Debug.Log($"[GameUnitsLogic] Food addition clamped: {foodToAdd} → {amount} (no housing, vagrants disabled, threshold: {foodThreshold})");
+                    }
+                }
+                else if (freeHousing > 0 && !allowVagrants)
+                {
+                    // Housing available but no vagrants - calculate maximum food that can be consumed
+                    float currentFood = slot.GetComponent<GameResourceSlot>().amount;
+                    float foodThreshold = PopGrowthLogic.Instance.foodThreshold;
+                    
+                    // Calculate how many thresholds we can actually process
+                    int thresholdsPossible = freeHousing; // Each threshold consumes 1 housing
+                    float maxFoodConsumable = thresholdsPossible * foodThreshold;
+                    float maxAllowedFood = currentFood + maxFoodConsumable;
+                    
+                    // Clamp to prevent excess food that can't be consumed
+                    if (currentFood + amount > maxAllowedFood)
+                    {
+                        float excessFood = (currentFood + amount) - maxAllowedFood;
+                        amount = Mathf.Max(0f, amount - excessFood);
+                        
+                        if (PopGrowthLogic.Instance.enablePopGrowthLogicLogging)
+                        {
+                            Debug.Log($"[GameUnitsLogic] Food addition clamped: {amount + excessFood} → {amount} (housing: {freeHousing}, max consumable: {maxFoodConsumable}, threshold: {foodThreshold})");
+                        }
+                    }
+                }
+            }
+
             // Store old amount for food change notification
             float oldAmount = 0f;
-            bool isFoodResource = string.Equals(name, "Food", System.StringComparison.OrdinalIgnoreCase);
             if (isFoodResource)
             {
                 oldAmount = slot.GetComponent<GameResourceSlot>().amount;
@@ -146,19 +220,22 @@ public class GameUnitsLogic : MonoBehaviour
         for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
             string resourceName = productionUnitData.buildResourceRequirements[i];
-            productionSlot.incrementalCost = productionUnitData.buildRequirementsAmount[i];
+            float baseCost = productionUnitData.buildRequirementsAmount[i];
 
+            // Apply construction cost modifiers
+            float effectiveCost = GetEffectiveConstructionCost(productionUnitData, baseCost);
+            
             if (!isUnit)
             {
-                productionSlot.incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
-
-                float incrementalCost = productionSlot.CalculateIncrementalCost(resourceName, productionSlot.maxAmount);
-
+                // Apply exponential scaling for buildings (not units)
+                effectiveCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
             }
+
+            productionSlot.incrementalCost = effectiveCost;
 
             GameResourceSlot resourceSlot = GetResourceSlotFromName(resourceName);
 
-            if (resourceSlot == null || resourceSlot.amount < productionSlot.incrementalCost)
+            if (resourceSlot == null || resourceSlot.amount < effectiveCost)
             {
                 return false;
             }
@@ -181,13 +258,19 @@ public class GameUnitsLogic : MonoBehaviour
         for (int i = 0; i < productionUnitData.buildResourceRequirements.Count; i++)
         {
             string resourceName = productionUnitData.buildResourceRequirements[i];
-            productionSlot.incrementalCost = productionUnitData.buildRequirementsAmount[i];
+            float baseCost = productionUnitData.buildRequirementsAmount[i];
 
+            // Apply construction cost modifiers
+            float effectiveCost = GetEffectiveConstructionCost(productionUnitData, baseCost);
+            
             if (!isUnit)
             {
-                productionSlot.incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
+                // Apply exponential scaling for buildings (not units)
+                effectiveCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * productionSlot.maxAmount);
             }
-            ChangeResourceFromName(resourceName, -productionSlot.incrementalCost, false);
+
+            productionSlot.incrementalCost = effectiveCost;
+            ChangeResourceFromName(resourceName, -effectiveCost, false);
         }
 
         if (productionUnitData.housing > 0)
@@ -223,6 +306,12 @@ public class GameUnitsLogic : MonoBehaviour
         }
 
         ChangeProductionUnitFromName(productionUnitName, 1);
+
+        // Apply satisfaction effects from the building
+        if (productionUnitData.satisfactionPoints != 0 && StatManager.Instance != null)
+        {
+            StatManager.Instance.ChangeSatisfactionPoints(productionUnitData.satisfactionPoints, $"Building {productionUnitName}");
+        }
 
         return true;
     }
@@ -424,7 +513,7 @@ public class GameUnitsLogic : MonoBehaviour
         float eff01 = 0f;
         if (StatManager.Instance != null)
         {
-            eff01 = StatManager.Instance.GetDiscoveryEfficiency01Capped();
+            eff01 = StatManager.Instance.GetDiscoveryEfficiencyCapped();
         }
 
         var adjusted = new List<float>(data.resourceAmount.Count);
@@ -527,6 +616,27 @@ public class GameUnitsLogic : MonoBehaviour
     {
         return storageTab.slots.Select(slot => slot.GetComponent<GameResourceSlot>()).ToList();
     }
+    
+    /// <summary>
+    /// Get all available production units
+    /// </summary>
+    public List<GameUnit> GetAvailableProductionUnits()
+    {
+        var productionUnits = new List<GameUnit>();
+        
+        if (productionTab != null)
+        {
+            foreach (var slot in productionTab.slots)
+            {
+                if (slot != null)
+                {
+                    productionUnits.Add(slot.GetComponent<GameUnit>());
+                }
+            }
+        }
+        
+        return productionUnits;
+    }
 
     // Adjust click power of a single resource by flat amount
     public void AdjustClickPower(string resourceName, float delta)
@@ -583,6 +693,529 @@ public class GameUnitsLogic : MonoBehaviour
             }
         }
     }
+
+    // === PRODUCTION MODIFIER SYSTEM ===
+    
+    /// <summary>
+    /// Apply production efficiency modifier to buildings of a specific type
+    /// </summary>
+    /// <param name="buildingType">Type of building (e.g., "Building", "Unit")</param>
+    /// <param name="modifierPercent">Percentage modifier (positive for bonus, negative for penalty)</param>
+    /// <param name="isAdd">True to add modifier, false to remove</param>
+    /// <param name="modifierSource">Source of the modifier (e.g., "Legend Bonus: Vittoria")</param>
+    public void AdjustProductionModifierByType(string buildingType, float modifierPercent, bool isAdd, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(buildingType) || string.IsNullOrEmpty(modifierSource)) return;
+        
+        if (!productionModifiersByType.ContainsKey(buildingType))
+        {
+            productionModifiersByType[buildingType] = new Dictionary<string, float>();
+        }
+        
+        var typeModifiers = productionModifiersByType[buildingType];
+        
+        if (isAdd)
+        {
+            typeModifiers[modifierSource] = modifierPercent;
+            if (enableProductionModifierLogging)
+            {
+                Debug.Log($"[GameUnitsLogic] Applied production modifier by type: {buildingType} +{modifierPercent}% from {modifierSource}");
+            }
+        }
+        else
+        {
+            if (typeModifiers.ContainsKey(modifierSource))
+            {
+                typeModifiers.Remove(modifierSource);
+                if (enableProductionModifierLogging)
+                {
+                    Debug.Log($"[GameUnitsLogic] Removed production modifier by type: {buildingType} from {modifierSource}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Apply production efficiency modifier to buildings of a specific section
+    /// </summary>
+    /// <param name="sectionName">Section name (e.g., "Academia", "Production")</param>
+    /// <param name="modifierPercent">Percentage modifier (positive for bonus, negative for penalty)</param>
+    /// <param name="isAdd">True to add modifier, false to remove</param>
+    /// <param name="modifierSource">Source of the modifier (e.g., "Legend Bonus: Vittoria")</param>
+    public void AdjustProductionModifierBySection(string sectionName, float modifierPercent, bool isAdd, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(sectionName) || string.IsNullOrEmpty(modifierSource)) return;
+        
+        if (!productionModifiersBySection.ContainsKey(sectionName))
+        {
+            productionModifiersBySection[sectionName] = new Dictionary<string, float>();
+        }
+        
+        var sectionModifiers = productionModifiersBySection[sectionName];
+        
+        if (isAdd)
+        {
+            sectionModifiers[modifierSource] = modifierPercent;
+            if (enableProductionModifierLogging)
+            {
+                Debug.Log($"[GameUnitsLogic] Applied production modifier by section: {sectionName} +{modifierPercent}% from {modifierSource}");
+            }
+        }
+        else
+        {
+            if (sectionModifiers.ContainsKey(modifierSource))
+            {
+                sectionModifiers.Remove(modifierSource);
+                if (enableProductionModifierLogging)
+                {
+                    Debug.Log($"[GameUnitsLogic] Removed production modifier by section: {sectionName} from {modifierSource}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get the total production efficiency modifier for a specific building
+    /// </summary>
+    /// <param name="buildingType">Type of building</param>
+    /// <param name="sectionName">Section of building</param>
+    /// <returns>Total production efficiency modifier as percentage</returns>
+    public float GetProductionEfficiencyModifier(string buildingType, string sectionName)
+    {
+        float totalModifier = 0f;
+        
+        // Add type-based modifiers
+        if (productionModifiersByType.ContainsKey(buildingType))
+        {
+            foreach (var modifier in productionModifiersByType[buildingType].Values)
+            {
+                totalModifier += modifier;
+            }
+        }
+        
+        // Add section-based modifiers
+        if (productionModifiersBySection.ContainsKey(sectionName))
+        {
+            foreach (var modifier in productionModifiersBySection[sectionName].Values)
+            {
+                totalModifier += modifier;
+            }
+        }
+        
+        return totalModifier;
+    }
+    
+    // === CONSTRUCTION COST MODIFIER SYSTEM ===
+    
+    /// <summary>
+    /// Apply construction cost modifier to buildings of a specific type
+    /// </summary>
+    /// <param name="buildingType">Type of building (e.g., "Building", "Unit")</param>
+    /// <param name="modifierPercent">Percentage modifier (positive increases cost, negative reduces cost)</param>
+    /// <param name="isAdd">True to add modifier, false to remove</param>
+    /// <param name="modifierSource">Source of the modifier (e.g., "Legend Bonus: Vittoria")</param>
+    public void AdjustConstructionCostModifierByType(string buildingType, float modifierPercent, bool isAdd, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(buildingType) || string.IsNullOrEmpty(modifierSource)) return;
+        
+        if (!constructionCostModifiersByType.ContainsKey(buildingType))
+        {
+            constructionCostModifiersByType[buildingType] = new Dictionary<string, float>();
+        }
+        
+        var typeModifiers = constructionCostModifiersByType[buildingType];
+        
+        if (isAdd)
+        {
+            typeModifiers[modifierSource] = modifierPercent;
+            if (enableProductionModifierLogging)
+            {
+                string effect = modifierPercent > 0 ? "increases" : "reduces";
+                Debug.Log($"[GameUnitsLogic] Applied construction cost modifier by type: {buildingType} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}");
+            }
+        }
+        else
+        {
+            if (typeModifiers.ContainsKey(modifierSource))
+            {
+                typeModifiers.Remove(modifierSource);
+                if (enableProductionModifierLogging)
+                {
+                    Debug.Log($"[GameUnitsLogic] Removed construction cost modifier by type: {buildingType} from {modifierSource}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Apply construction cost modifier to buildings of a specific section
+    /// </summary>
+    /// <param name="sectionName">Section name (e.g., "Academia", "Production")</param>
+    /// <param name="modifierPercent">Percentage modifier (positive increases cost, negative reduces cost)</param>
+    /// <param name="isAdd">True to add modifier, false to remove</param>
+    /// <param name="modifierSource">Source of the modifier (e.g., "Legend Bonus: Vittoria")</param>
+    public void AdjustConstructionCostModifierBySection(string sectionName, float modifierPercent, bool isAdd, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(sectionName) || string.IsNullOrEmpty(modifierSource)) return;
+        
+        if (!constructionCostModifiersBySection.ContainsKey(sectionName))
+        {
+            constructionCostModifiersBySection[sectionName] = new Dictionary<string, float>();
+        }
+        
+        var sectionModifiers = constructionCostModifiersBySection[sectionName];
+        
+        if (isAdd)
+        {
+            sectionModifiers[modifierSource] = modifierPercent;
+            if (enableProductionModifierLogging)
+            {
+                string effect = modifierPercent > 0 ? "increases" : "reduces";
+                Debug.Log($"[GameUnitsLogic] Applied construction cost modifier by section: {sectionName} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}");
+            }
+        }
+        else
+        {
+            if (sectionModifiers.ContainsKey(modifierSource))
+            {
+                sectionModifiers.Remove(modifierSource);
+                if (enableProductionModifierLogging)
+                {
+                    Debug.Log($"[GameUnitsLogic] Removed construction cost modifier by section: {sectionName} from {modifierSource}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get the total construction cost modifier for a specific building
+    /// </summary>
+    /// <param name="buildingType">Type of building</param>
+    /// <param name="sectionName">Section of building</param>
+    /// <returns>Total construction cost modifier as percentage</returns>
+    public float GetConstructionCostModifier(string buildingType, string sectionName)
+    {
+        float totalModifier = 0f;
+        
+        // Add type-based modifiers
+        if (constructionCostModifiersByType.ContainsKey(buildingType))
+        {
+            foreach (var modifier in constructionCostModifiersByType[buildingType].Values)
+            {
+                totalModifier += modifier;
+            }
+        }
+        
+        // Add section-based modifiers
+        if (constructionCostModifiersBySection.ContainsKey(sectionName))
+        {
+            foreach (var modifier in constructionCostModifiersBySection[sectionName].Values)
+            {
+                totalModifier += modifier;
+            }
+        }
+        
+        return totalModifier;
+    }
+    
+    /// <summary>
+    /// Get the effective production rate for a production unit considering all modifiers
+    /// </summary>
+    /// <param name="productionUnitData">The production unit data</param>
+    /// <param name="baseRate">Base production rate</param>
+    /// <returns>Modified production rate</returns>
+    public float GetEffectiveProductionRate(ProductionUnitData productionUnitData, float baseRate)
+    {
+        if (productionUnitData == null || productionUnitData.gameUnit == null) return baseRate;
+        
+        float efficiencyModifier = GetProductionEfficiencyModifier(productionUnitData.gameUnit.type, productionUnitData.gameUnit.section);
+        float efficiencyMultiplier = 1f + (efficiencyModifier / 100f);
+        
+        return baseRate * efficiencyMultiplier;
+    }
+    
+    /// <summary>
+    /// Get the effective construction cost for a building considering all modifiers
+    /// </summary>
+    /// <param name="productionUnitData">The production unit data</param>
+    /// <param name="baseCost">Base construction cost</param>
+    /// <returns>Modified construction cost</returns>
+    public float GetEffectiveConstructionCost(ProductionUnitData productionUnitData, float baseCost)
+    {
+        if (productionUnitData == null || productionUnitData.gameUnit == null) return baseCost;
+        
+        float costModifier = GetConstructionCostModifier(productionUnitData.gameUnit.type, productionUnitData.gameUnit.section);
+        float costMultiplier = 1f + (costModifier / 100f);
+        
+        // Ensure cost doesn't go below 10% of base cost
+        float effectiveCost = baseCost * costMultiplier;
+        return Mathf.Max(effectiveCost, baseCost * 0.1f);
+    }
+
+    // === DEBUG AND UI METHODS ===
+    
+    /// <summary>
+    /// Get all active production modifiers for display in UI/debug
+    /// </summary>
+    public Dictionary<string, Dictionary<string, float>> GetAllProductionModifiers()
+    {
+        var allModifiers = new Dictionary<string, Dictionary<string, float>>();
+        
+        // Add type-based modifiers
+        foreach (var kvp in productionModifiersByType)
+        {
+            if (kvp.Value.Count > 0)
+            {
+                allModifiers[$"Type: {kvp.Key}"] = new Dictionary<string, float>(kvp.Value);
+            }
+        }
+        
+        // Add section-based modifiers
+        foreach (var kvp in productionModifiersBySection)
+        {
+            if (kvp.Value.Count > 0)
+            {
+                allModifiers[$"Section: {kvp.Key}"] = new Dictionary<string, float>(kvp.Value);
+            }
+        }
+        
+        return allModifiers;
+    }
+    
+    /// <summary>
+    /// Get all active construction cost modifiers for display in UI/debug
+    /// </summary>
+    public Dictionary<string, Dictionary<string, float>> GetAllConstructionCostModifiers()
+    {
+        var allModifiers = new Dictionary<string, Dictionary<string, float>>();
+        
+        // Add type-based modifiers
+        foreach (var kvp in constructionCostModifiersByType)
+        {
+            if (kvp.Value.Count > 0)
+            {
+                allModifiers[$"Type: {kvp.Key}"] = new Dictionary<string, float>(kvp.Value);
+            }
+        }
+        
+        // Add section-based modifiers
+        foreach (var kvp in constructionCostModifiersBySection)
+        {
+            if (kvp.Value.Count > 0)
+            {
+                allModifiers[$"Section: {kvp.Key}"] = new Dictionary<string, float>(kvp.Value);
+            }
+        }
+        
+        return allModifiers;
+    }
+    
+    /// <summary>
+    /// Add a production scaling bonus (bonus resources per production unit)
+    /// </summary>
+    public void AddProductionScalingBonus(string productionUnitName, float bonusPerUnit, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(productionUnitName) || string.IsNullOrEmpty(modifierSource))
+        {
+            Debug.LogWarning("[GameUnitsLogic] Cannot add production scaling bonus with empty parameters");
+            return;
+        }
+        
+        if (!productionScalingBonuses.ContainsKey(productionUnitName))
+        {
+            productionScalingBonuses[productionUnitName] = new Dictionary<string, float>();
+        }
+        
+        productionScalingBonuses[productionUnitName][modifierSource] = bonusPerUnit;
+        
+        if (enableProductionModifierLogging)
+        {
+            Debug.Log($"[GameUnitsLogic] Added production scaling bonus: +{bonusPerUnit} per {productionUnitName} from {modifierSource}");
+        }
+    }
+    
+    /// <summary>
+    /// Remove a production scaling bonus
+    /// </summary>
+    public void RemoveProductionScalingBonus(string productionUnitName, string modifierSource)
+    {
+        if (string.IsNullOrEmpty(productionUnitName) || string.IsNullOrEmpty(modifierSource))
+        {
+            Debug.LogWarning("[GameUnitsLogic] Cannot remove production scaling bonus with empty parameters");
+            return;
+        }
+        
+        if (productionScalingBonuses.ContainsKey(productionUnitName) && 
+            productionScalingBonuses[productionUnitName].ContainsKey(modifierSource))
+        {
+            float removedBonus = productionScalingBonuses[productionUnitName][modifierSource];
+            productionScalingBonuses[productionUnitName].Remove(modifierSource);
+            
+            if (productionScalingBonuses[productionUnitName].Count == 0)
+            {
+                productionScalingBonuses.Remove(productionUnitName);
+            }
+            
+            if (enableProductionModifierLogging)
+            {
+                Debug.Log($"[GameUnitsLogic] Removed production scaling bonus: -{removedBonus} per {productionUnitName} from {modifierSource}");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Clear all production scaling bonuses from a specific source
+    /// </summary>
+    public void ClearProductionScalingBonusesFromSource(string modifierSource)
+    {
+        if (string.IsNullOrEmpty(modifierSource)) return;
+        
+        var toRemove = new List<string>();
+        
+        foreach (var kvp in productionScalingBonuses)
+        {
+            string productionUnitName = kvp.Key;
+            if (kvp.Value.ContainsKey(modifierSource))
+            {
+                toRemove.Add(productionUnitName);
+            }
+        }
+        
+        foreach (string productionUnitName in toRemove)
+        {
+            RemoveProductionScalingBonus(productionUnitName, modifierSource);
+        }
+        
+        if (enableProductionModifierLogging && toRemove.Count > 0)
+        {
+            Debug.Log($"[GameUnitsLogic] Cleared production scaling bonuses from source: {modifierSource} ({toRemove.Count} units affected)");
+        }
+    }
+    
+    /// <summary>
+    /// Get the total production scaling bonus for a specific production unit
+    /// </summary>
+    public float GetProductionScalingBonus(string productionUnitName)
+    {
+        if (productionScalingBonuses.ContainsKey(productionUnitName))
+        {
+            return productionScalingBonuses[productionUnitName].Values.Sum();
+        }
+        return 0f;
+    }
+    
+    /// <summary>
+    /// Get all production scaling bonuses for debugging
+    /// </summary>
+    public Dictionary<string, Dictionary<string, float>> GetAllProductionScalingBonuses()
+    {
+        return new Dictionary<string, Dictionary<string, float>>(productionScalingBonuses);
+    }
+    
+    /// <summary>
+    /// Calculate bonus resources from production scaling bonuses
+    /// This should be called by GlobalProductionManager to add bonus production
+    /// </summary>
+    public float CalculateProductionScalingBonus(string resourceName)
+    {
+        float totalBonus = 0f;
+        
+        // Check all production units that provide scaling bonuses
+        foreach (var kvp in productionScalingBonuses)
+        {
+            string productionUnitName = kvp.Key;
+            float bonusPerUnit = kvp.Value.Values.Sum();
+            
+            if (bonusPerUnit > 0)
+            {
+                // Find the production slot for this unit
+                var productionSlotObj = productionTab.slots.Find(slot => slot.name == productionUnitName);
+                if (productionSlotObj != null)
+                {
+                    var productionSlot = productionSlotObj.GetComponent<GameProductionSlot>();
+                    if (productionSlot != null && productionSlot.productionUnitData != null)
+                    {
+                        // Check if this production unit produces the target resource
+                        if (productionSlot.productionUnitData.producedResources.Contains(resourceName))
+                        {
+                            int unitCount = Mathf.RoundToInt(productionSlot.amount);
+                            totalBonus += unitCount * bonusPerUnit;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return totalBonus;
+    }
+    
+    /// <summary>
+    /// Debug method to print all active modifiers
+    /// </summary>
+    [ContextMenu("Print All Modifiers")]
+    public void PrintAllModifiers()
+    {
+        if (!enableProductionModifierLogging) return;
+        
+        Debug.Log("=== PRODUCTION & CONSTRUCTION MODIFIERS ===");
+        
+        var productionModifiers = GetAllProductionModifiers();
+        if (productionModifiers.Count > 0)
+        {
+            Debug.Log("Production Modifiers:");
+            foreach (var category in productionModifiers)
+            {
+                Debug.Log($"  {category.Key}:");
+                foreach (var modifier in category.Value)
+                {
+                    string sign = modifier.Value >= 0 ? "+" : "";
+                    Debug.Log($"    {sign}{modifier.Value}% from {modifier.Key}");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("  No production modifiers active");
+        }
+        
+        var constructionModifiers = GetAllConstructionCostModifiers();
+        if (constructionModifiers.Count > 0)
+        {
+            Debug.Log("Construction Cost Modifiers:");
+            foreach (var category in constructionModifiers)
+            {
+                Debug.Log($"  {category.Key}:");
+                foreach (var modifier in category.Value)
+                {
+                    string effect = modifier.Value > 0 ? "increases" : "reduces";
+                    Debug.Log($"    {effect} cost by {Mathf.Abs(modifier.Value)}% from {modifier.Key}");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("  No construction cost modifiers active");
+        }
+        
+        var scalingBonuses = GetAllProductionScalingBonuses();
+        if (scalingBonuses.Count > 0)
+        {
+            Debug.Log("Production Scaling Bonuses:");
+            foreach (var kvp in scalingBonuses)
+            {
+                Debug.Log($"  {kvp.Key}:");
+                foreach (var source in kvp.Value)
+                {
+                    Debug.Log($"    +{source.Value} per unit from {source.Key}");
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("  No production scaling bonuses active");
+        }
+    }
+
     public List<GameUnit> GetAvailableGameUnits()
     {
         List<GameUnit> availableUnits = new List<GameUnit>();
@@ -724,4 +1357,5 @@ public class GameUnitsLogic : MonoBehaviour
         
         return null;
     }
+
 }

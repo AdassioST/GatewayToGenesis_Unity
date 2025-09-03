@@ -15,6 +15,7 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: b4af47ff59642fd418dc9ceab16665f6, type: 2}
   isUnique: 0
   housing: 0
+  satisfactionPoints: -5
   buildResourceRequirements:
   - Elderwood
   buildRequirementsAmount:

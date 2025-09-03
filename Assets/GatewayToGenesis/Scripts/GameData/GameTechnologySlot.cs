@@ -193,11 +193,29 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         if (technologyData != null && technologyData.isEventTech)
         {
             TriggerEventTechnology(gameUnit.name);
+            
+            // Event technologies always give +10 satisfaction points
+            if (StatManager.Instance != null)
+            {
+                StatManager.Instance.ChangeSatisfactionPoints(10, $"Event Technology {gameUnit.name}");
+            }
+        }
+        
+        // Crisis technologies always give -25 satisfaction points
+        if (gameUnit.type == "Crisis" && StatManager.Instance != null)
+        {
+            StatManager.Instance.ChangeSatisfactionPoints(-25, $"Crisis Technology {gameUnit.name}");
         }
 
         foreach (var unlockable in technologyData.techUnlockables)
         {
             gameUnitsLogic.HandleTechUnlockable(unlockable, this);
+        }
+
+        // Apply satisfaction effects from the technology
+        if (technologyData.satisfactionPoints != 0 && StatManager.Instance != null)
+        {
+            StatManager.Instance.ChangeSatisfactionPoints(technologyData.satisfactionPoints, $"Technology {gameUnit.name}");
         }
 
         // Refresh visibility directly after unlocking

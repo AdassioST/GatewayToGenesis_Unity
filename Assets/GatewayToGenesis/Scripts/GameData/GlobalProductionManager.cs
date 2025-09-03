@@ -121,6 +121,12 @@ public class GlobalProductionManager : MonoBehaviour
                 if (!persistentBonusBySource.ContainsKey(resourceName)) persistentBonusBySource[resourceName] = new Dictionary<string, float>();
                 if (!persistentMalusBySource.ContainsKey(resourceName)) persistentMalusBySource[resourceName] = new Dictionary<string, float>();
             }
+            
+            // Apply any pending legend bonuses to this new resource
+            if (GovernmentLogic.Instance != null)
+            {
+                GovernmentLogic.Instance.ApplyPendingBonusesToResource(resourceName, resourceSlot.gameUnit.section);
+            }
         }
     }
 
@@ -238,6 +244,88 @@ public class GlobalProductionManager : MonoBehaviour
         return new Dictionary<string, float>();
     }
 
+    // Remove ALL modifiers (percentage and persistent flat, bonus and malus) that originated from a specific source
+    // across all resources and sections. Also cleans up modifierSourceDict entries.
+    public void ClearAllModifiersFromSource(string modifierSource)
+    {
+        if (string.IsNullOrEmpty(modifierSource)) return;
+
+        // Walk existing resource slots first (ensures aggregated maps remain consistent)
+        foreach (var resourceSlot in resourceSlots)
+        {
+            if (resourceSlot == null || resourceSlot.gameUnit == null) continue;
+            string resourceName = resourceSlot.gameUnit.name;
+
+            // Percentage bonuses
+            if (percentageBonusBySource.TryGetValue(resourceName, out var posMap))
+            {
+                posMap.Remove(modifierSource);
+            }
+            // Percentage maluses
+            if (percentageMalusBySource.TryGetValue(resourceName, out var negMap))
+            {
+                negMap.Remove(modifierSource);
+            }
+
+            // Persistent flat bonuses
+            if (persistentBonusBySource.TryGetValue(resourceName, out var flatPosMap))
+            {
+                if (flatPosMap.TryGetValue(modifierSource, out float flatBonus))
+                {
+                    if (persistentPositiveModifiers.ContainsKey(resourceName))
+                    {
+                        persistentPositiveModifiers[resourceName] = Mathf.Max(0f, persistentPositiveModifiers[resourceName] - flatBonus);
+                    }
+                    flatPosMap.Remove(modifierSource);
+                }
+            }
+            // Persistent flat maluses
+            if (persistentMalusBySource.TryGetValue(resourceName, out var flatNegMap))
+            {
+                if (flatNegMap.TryGetValue(modifierSource, out float flatMalus))
+                {
+                    if (persistentNegativeModifiers.ContainsKey(resourceName))
+                    {
+                        persistentNegativeModifiers[resourceName] = Mathf.Max(0f, persistentNegativeModifiers[resourceName] - flatMalus);
+                    }
+                    flatNegMap.Remove(modifierSource);
+                }
+            }
+
+            // Cleanup source listing for UI/debug
+            if (modifierSourceDict.TryGetValue(resourceName, out var srcList))
+            {
+                srcList.Remove(modifierSource);
+            }
+        }
+
+        // Also scrub any entries for resources not yet instantiated (pre-registered by name)
+        // This prevents stale modifiers from being applied when the resource is later added.
+        foreach (var kv in percentageBonusBySource.ToList())
+        {
+            var perSource = kv.Value;
+            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
+        }
+        foreach (var kv in percentageMalusBySource.ToList())
+        {
+            var perSource = kv.Value;
+            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
+        }
+        foreach (var kv in persistentBonusBySource.ToList())
+        {
+            var perSource = kv.Value;
+            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
+        }
+        foreach (var kv in persistentMalusBySource.ToList())
+        {
+            var perSource = kv.Value;
+            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
+        }
+
+        // Recalculate after cleanup
+        CalculateGlobalProductionRates();
+    }
+
     public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
     {
         if (string.IsNullOrEmpty(resourceName)) return;
@@ -334,6 +422,21 @@ public class GlobalProductionManager : MonoBehaviour
         foreach (var resourceName in persistentNegativeModifiers.Keys)
         {
             negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
+        }
+        
+        // Apply production scaling bonuses (bonus resources per production unit)
+        if (GameUnitsLogic.Instance != null)
+        {
+            foreach (var resourceSlot in resourceSlots)
+            {
+                string resourceName = resourceSlot.gameUnit.name;
+                float scalingBonus = GameUnitsLogic.Instance.CalculateProductionScalingBonus(resourceName);
+                
+                if (scalingBonus > 0f)
+                {
+                    positiveModifiers[resourceName] += scalingBonus;
+                }
+            }
         }
 
         // Apply percentage modifiers
@@ -463,4 +566,5 @@ public class GlobalProductionManager : MonoBehaviour
             }
         }
     }
+
 }
