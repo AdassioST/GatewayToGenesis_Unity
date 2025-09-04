@@ -219,7 +219,7 @@ public class GovernmentTab : MonoBehaviour
         
         spawnedCivics.Add(civicObj);
         
-        Debug.Log($"[GovernmentTab] Spawned Civic '{civic.civicName}' (Tier: {civic.tier}) in {targetContainer.name}");
+        GameLoggingSystem.Instance.LogEvent($"Spawned Civic '{civic.civicName}' (Tier: {civic.tier}) in {targetContainer.name}", "GovernmentTab");
     }
 
     private void RefreshCouncilSeats()
@@ -405,7 +405,7 @@ public class GovernmentTab : MonoBehaviour
             }
             
             // Log the organization for debugging
-            Debug.Log($"[GovernmentTab] Organizing {availableLegends.Count} available legends for seat {selectedSeatIndex}: {unequippedLegends.Count} unequipped, {equippedLegends.Count} equipped");
+            GameLoggingSystem.Instance.LogEvent($"Organizing {availableLegends.Count} available legends for seat {selectedSeatIndex}: {unequippedLegends.Count} unequipped, {equippedLegends.Count} equipped", "GovernmentTab");
             
             // Spawn unequipped legends first (priority)
             foreach (var legend in unequippedLegends)
@@ -530,7 +530,7 @@ public class GovernmentTab : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[GovernmentTab] Using {tier} container: {targetContainer.name}");
+            GameLoggingSystem.Instance.LogEvent($"Using {tier} container: {targetContainer.name}", "GovernmentTab");
         }
         
         return targetContainer;

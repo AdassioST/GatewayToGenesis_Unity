@@ -161,7 +161,7 @@ public class LeaderSlotDisplay : MonoBehaviour
         {
             int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(targetSeatIndex);
             string seatName = (targetSeatIndex == -1) ? "Head of State" : $"Seat {targetSeatIndex}";
-            Debug.Log($"[LeaderSlotDisplay] Cannot assign legend - {seatName} is on cooldown for {remainingCooldown} more sevenths");
+            GameLoggingSystem.Instance.LogEvent($"Cannot assign legend - {seatName} is on cooldown for {remainingCooldown} more sevenths", "LeaderSlotDisplay");
             return;
         }
         

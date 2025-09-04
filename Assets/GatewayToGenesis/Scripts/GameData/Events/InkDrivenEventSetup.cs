@@ -68,7 +68,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             created++;
         }
 
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Created {created} volumes from Events folder", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Created {created} volumes from Events folder", "InkDrivenEventSetup");
     }
 
     // ===== CHOICE METADATA INDEX =====
@@ -138,7 +138,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                     // Continue until choices appear or content ends
                     while (s.canContinue) s.Continue();
                     var ch = s.currentChoices;
-                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Choice scan: knot='{knotName}', choices={(ch!=null?ch.Count:0)}", "InkDrivenEventSetup");
+                    GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Choice scan: knot='{knotName}', choices={(ch!=null?ch.Count:0)}", "InkDrivenEventSetup");
                     if (ch != null && ch.Count > 0)
                     {
                         var list = new List<ChorusChoiceData>();
@@ -190,14 +190,14 @@ public class InkDrivenEventSetup : MonoBehaviour
                         {
                             ChoiceMetadataByKnot[knotName] = list;
                             compiledChorusKnots++;
-                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Stored {list.Count} choices for '{knotName}'", "InkDrivenEventSetup");
+                            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Stored {list.Count} choices for '{knotName}'", "InkDrivenEventSetup");
                         }
                     }
                 }
                 catch { /* skip invalid knots */ }
             }
         }
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Built choice metadata index for {ChoiceMetadataByKnot.Count} knot(s) (compiled knots {compiledChorusKnots})", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Built choice metadata index for {ChoiceMetadataByKnot.Count} knot(s) (compiled knots {compiledChorusKnots})", "InkDrivenEventSetup");
     }
 
     // ===== PRECOMPILED KNOT CONTENT/CHOICES INDEX =====
@@ -270,7 +270,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (s.currentChoices != null && s.currentChoices.Count > 0) break;
                     }
                     var pk = new PrecompiledKnot { knotName = knotName, content = sb.ToString() };
-                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] KnotIndex: '{knotName}': contentLen={pk.content?.Length ?? 0}, hasChoices={(s.currentChoices!=null ? s.currentChoices.Count:0)}, fallthrough={(leftStartKnot ? nextKnot:"-")}", "InkDrivenEventSetup");
+                    GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] KnotIndex: '{knotName}': contentLen={pk.content?.Length ?? 0}, hasChoices={(s.currentChoices!=null ? s.currentChoices.Count:0)}, fallthrough={(leftStartKnot ? nextKnot:"-")}", "InkDrivenEventSetup");
                     if (leftStartKnot)
                     {
                         pk.nextKnotIfNoChoices = nextKnot;
@@ -289,7 +289,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                                 resolvedTop = ResolveChoiceTargetTopLevel(json.text, knotName, i);
                             }
                             pk.choices.Add(new PrecompiledChoice { text = choiceText, targetPath = resolvedTop });
-                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup]   Choice[{i}] '{choiceText}' -> '{(resolvedTop ?? "-")}'", "InkDrivenEventSetup");
+                            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup]   Choice[{i}] '{choiceText}' -> '{(resolvedTop ?? "-")}'", "InkDrivenEventSetup");
                         }
                     }
                     else
@@ -299,7 +299,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (!string.IsNullOrEmpty(currentTop) && currentTop != knotName)
                         {
                             pk.nextKnotIfNoChoices = currentTop;
-                            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup]   Next-if-no-choices='{pk.nextKnotIfNoChoices}' for '{knotName}'", "InkDrivenEventSetup");
+                            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup]   Next-if-no-choices='{pk.nextKnotIfNoChoices}' for '{knotName}'", "InkDrivenEventSetup");
                         }
                     }
                     KnotIndexByKnot[knotName] = pk;
@@ -307,7 +307,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 catch { /* skip invalid knot */ }
             }
         }
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Built knot content index for {KnotIndexByKnot.Count} knot(s)", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Built knot content index for {KnotIndexByKnot.Count} knot(s)", "InkDrivenEventSetup");
     }
 
     public static string GetTopLevelKnotNameFromPath(string path)
@@ -407,7 +407,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 if (!string.IsNullOrEmpty(currentKnot) && currentKnotChoices != null && currentKnotChoices.Count > 0)
                 {
                     string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
-                    EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
+                    GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
                 }
                 currentKnot = end > start ? l.Substring(start, end - start).Trim() : l.Trim('=', ' ').Trim();
                 currentKnotChoices = new List<ChorusChoiceData>();
@@ -457,7 +457,7 @@ public class InkDrivenEventSetup : MonoBehaviour
         if (!string.IsNullOrEmpty(currentKnot) && currentKnotChoices != null && currentKnotChoices.Count > 0)
         {
             string summary = string.Join(", ", currentKnotChoices.Select(c => $"{c.choiceId} (pillar:{(c.hasChallenge ? c.challengePillar : "-")}, str:{(c.hasChallenge ? c.challengeStrength : 0)}, succ:{c.successPath}, fail:{c.failurePath})"));
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Extracted choices for '{currentKnot}': {currentKnotChoices.Count} -> [{summary}]", "InkDrivenEventSetup");
         }
     }
 
@@ -1141,20 +1141,20 @@ public class InkDrivenEventSetup : MonoBehaviour
         var named = story.mainContentContainer?.namedContent;
         if (named == null || named.Count == 0)
         {
-            EventSystemLogic.Instance.LogEvent("[InkDrivenEventSetup] Compiled story has no named content", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent("[InkDrivenEventSetup] Compiled story has no named content", "InkDrivenEventSetup");
             return;
         }
 
         foreach (var kv in named)
         {
             string knotName = kv.Key;
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Processing knot: '{knotName}'", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Processing knot: '{knotName}'", "InkDrivenEventSetup");
             
             // Get tags for this knot (metadata lines imported as tags)
             List<string> tags = story.TagsForContentAtPath(knotName) ?? new List<string>();
             // Hide deprecated screen_flow from debug output to reduce confusion
             var filtered = tags.FindAll(t => !t.TrimStart().StartsWith("screen_flow:"));
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Found {filtered.Count} tags for knot '{knotName}': {string.Join(", ", filtered)}", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Found {filtered.Count} tags for knot '{knotName}': {string.Join(", ", filtered)}", "InkDrivenEventSetup");
 
             string title = null, description = null, conditions = null, consequences = null, screenFlow = null;
             int cooldown = 0;
@@ -1181,7 +1181,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 else if (t.StartsWith("layout:")) uiMetadata["layout"] = t.Substring(8).Trim();
             }
             
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Extracted metadata for '{knotName}': title='{title}', conditions='{conditions}', event_type='{uiMetadata.GetValueOrDefault("event_type")}'", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Extracted metadata for '{knotName}': title='{title}', conditions='{conditions}', event_type='{uiMetadata.GetValueOrDefault("event_type")}'", "InkDrivenEventSetup");
 
             // Only create story nodes for knots that have the essential metadata (title and conditions)
             // This prevents internal story flow knots from being treated as separate events
@@ -1199,7 +1199,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 );
 
                 volume.storyNodes.Add(node);
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Added story node '{knotName}' with title '{node.storyTitle}' and {node.storyConditions.Count} conditions", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Added story node '{knotName}' with title '{node.storyTitle}' and {node.storyConditions.Count} conditions", "InkDrivenEventSetup");
             }
             else
             {
@@ -1209,11 +1209,11 @@ public class InkDrivenEventSetup : MonoBehaviour
                 if (string.IsNullOrEmpty(uiMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                 missingFields = missingFields.TrimEnd(',', ' ');
                 
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Skipped internal knot '{knotName}' - missing: {missingFields}", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Skipped internal knot '{knotName}' - missing: {missingFields}", "InkDrivenEventSetup");
             }
         }
 
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] (Compiled) Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
     }
     
     /// <summary>
@@ -1257,7 +1257,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         );
                         volume.storyNodes.Add(storyNode);
                         
-                        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
+                        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
                     }
                     else
                     {
@@ -1267,7 +1267,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                         if (string.IsNullOrEmpty(currentUIMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                         missingFields = missingFields.TrimEnd(',', ' ');
                         
-                        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
+                        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
                     }
                 }
 
@@ -1283,7 +1283,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 currentCooldown = 0;
                 currentUIMetadata = new Dictionary<string, string>();
 
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Found knot: '{currentNodeName}'", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Found knot: '{currentNodeName}'", "InkDrivenEventSetup");
             }
             // Check for metadata lines
             else if (trimmedLine.StartsWith("#"))
@@ -1312,7 +1312,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 );
                 volume.storyNodes.Add(storyNode);
                 
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Added story node '{currentNodeName}' with title '{currentTitle}' and {storyNode.storyConditions.Count} conditions", "InkDrivenEventSetup");
             }
             else
             {
@@ -1322,15 +1322,15 @@ public class InkDrivenEventSetup : MonoBehaviour
                 if (string.IsNullOrEmpty(currentUIMetadata.GetValueOrDefault("event_type"))) missingFields += "event_type, ";
                 missingFields = missingFields.TrimEnd(',', ' ');
                 
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Skipped internal knot '{currentNodeName}' - missing: {missingFields}", "InkDrivenEventSetup");
             }
         }
 
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {volume.storyNodes.Count} story node(s) for volume '{volume.volumeName}'", "InkDrivenEventSetup");
         for (int i = 0; i < volume.storyNodes.Count; i++)
         {
             var sn = volume.storyNodes[i];
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node[{i}]: name='{sn.nodeName}', title='{sn.storyTitle}', conditions={sn.storyConditions.Count}, flowSteps={sn.screenFlow.Count}", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Node[{i}]: name='{sn.nodeName}', title='{sn.storyTitle}', conditions={sn.storyConditions.Count}, flowSteps={sn.screenFlow.Count}", "InkDrivenEventSetup");
         }
     }
     
@@ -1430,13 +1430,13 @@ public class InkDrivenEventSetup : MonoBehaviour
         if (!string.IsNullOrEmpty(conditions))
         {
             storyNode.storyConditions = ParseConditions(conditions);
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConditions.Count} condition(s): '{conditions}'", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConditions.Count} condition(s): '{conditions}'", "InkDrivenEventSetup");
         }
 
         if (!string.IsNullOrEmpty(consequences))
         {
             storyNode.storyConsequences = ParseConsequences(consequences);
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConsequences.Count} consequence(s): '{consequences}'", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Node '{nodeName}' parsed {storyNode.storyConsequences.Count} consequence(s): '{consequences}'", "InkDrivenEventSetup");
         }
 
         // Generate screen flow (ignore deprecated custom screen_flow metadata)
@@ -1458,7 +1458,7 @@ public class InkDrivenEventSetup : MonoBehaviour
         if (string.IsNullOrEmpty(conditionString))
             return conditions;
         
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsing conditions: '{conditionString}'", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Parsing conditions: '{conditionString}'", "InkDrivenEventSetup");
         
         // Support multiple conditions separated by ';'
         string[] parts = conditionString.Split(';');
@@ -1467,13 +1467,13 @@ public class InkDrivenEventSetup : MonoBehaviour
             string trimmed = part.Trim();
             if (string.IsNullOrEmpty(trimmed)) continue;
             
-            EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Processing condition part: '{trimmed}'", "InkDrivenEventSetup");
+            GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Processing condition part: '{trimmed}'", "InkDrivenEventSetup");
             
             EventCondition condition = ParseConditionString(trimmed);
             if (condition != null)
             {
                 conditions.Add(condition);
-                EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Successfully parsed condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "InkDrivenEventSetup");
+                GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Successfully parsed condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "InkDrivenEventSetup");
             }
             else
             {
@@ -1481,7 +1481,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             }
         }
         
-        EventSystemLogic.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {conditions.Count} conditions successfully", "InkDrivenEventSetup");
+        GameLoggingSystem.Instance.LogEvent($"[InkDrivenEventSetup] Parsed {conditions.Count} conditions successfully", "InkDrivenEventSetup");
         
         return conditions;
     }

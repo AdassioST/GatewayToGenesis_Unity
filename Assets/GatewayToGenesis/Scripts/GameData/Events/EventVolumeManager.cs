@@ -262,13 +262,13 @@ public class EventVolumeManager : MonoBehaviour
     /// </summary>
     public StoryNode FindBestAvailableStory()
     {
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Finding best available story from {eventVolumes.Count} volumes", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Finding best available story from {eventVolumes.Count} volumes", "EventVolumeManager");
         
         // Check if there are any story nodes at all
         int totalStoryNodes = eventVolumes.Sum(v => v.storyNodes.Count);
         if (totalStoryNodes == 0)
         {
-            EventSystemLogic.Instance.LogEvent("[EventVolumeManager] No story nodes found in any volume - no events available", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] No story nodes found in any volume - no events available", "EventVolumeManager");
             return null;
         }
         
@@ -283,7 +283,7 @@ public class EventVolumeManager : MonoBehaviour
                 
         if (hasPopulationConditions && PopGrowthLogic.Instance == null)
         {
-            EventSystemLogic.Instance.LogEvent("[EventVolumeManager] Some stories have population conditions but PopGrowthLogic.Instance is null - waiting for system to be ready", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] Some stories have population conditions but PopGrowthLogic.Instance is null - waiting for system to be ready", "EventVolumeManager");
             return null;
         }
         
@@ -294,29 +294,29 @@ public class EventVolumeManager : MonoBehaviour
         
         foreach (EventVolume volume in eventVolumes)
         {
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking volume '{volume.volumeName}' (unlocked: {volume.isUnlocked})", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking volume '{volume.volumeName}' (unlocked: {volume.isUnlocked})", "EventVolumeManager");
             
             if (!IsVolumeAvailable(volume)) 
             {
-                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is not available", "EventVolumeManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is not available", "EventVolumeManager");
                 continue;
             }
             
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is available, checking {volume.storyNodes.Count} story nodes", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is available, checking {volume.storyNodes.Count} story nodes", "EventVolumeManager");
             
             foreach (StoryNode storyNode in volume.storyNodes)
             {
-                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking story node '{storyNode.nodeName}' (unlocked: {storyNode.isUnlocked}, priority: {storyNode.priority})", "EventVolumeManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking story node '{storyNode.nodeName}' (unlocked: {storyNode.isUnlocked}, priority: {storyNode.priority})", "EventVolumeManager");
                 
                 if (!storyNode.isUnlocked) 
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is locked", "EventVolumeManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is locked", "EventVolumeManager");
                     continue;
                 }
                 
                 if (AreStoryConditionsMet(storyNode))
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' meets conditions with priority {storyNode.priority}", "EventVolumeManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' meets conditions with priority {storyNode.priority}", "EventVolumeManager");
                     
                     if (storyNode.priority > highestPriority)
                     {
@@ -325,18 +325,18 @@ public class EventVolumeManager : MonoBehaviour
                         samePriorityCandidates.Clear();
                         samePriorityCandidates.Add(storyNode);
                         bestVolume = volume;
-                        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] New highest priority: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
+                        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] New highest priority: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
                     }
                     else if (storyNode.priority == highestPriority)
                     {
                         // Same priority - add to candidates for random selection
                         samePriorityCandidates.Add(storyNode);
-                        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Added to same priority candidates: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
+                        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Added to same priority candidates: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
                     }
                 }
                 else
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' did not meet conditions", "EventVolumeManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' did not meet conditions", "EventVolumeManager");
 
                 }
             }
@@ -349,11 +349,11 @@ public class EventVolumeManager : MonoBehaviour
             bestStory = samePriorityCandidates[randomIndex];
             currentVolume = bestVolume;
             
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Randomly selected from {samePriorityCandidates.Count} candidates: '{bestStory.nodeName}' (priority {highestPriority})", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Randomly selected from {samePriorityCandidates.Count} candidates: '{bestStory.nodeName}' (priority {highestPriority})", "EventVolumeManager");
 
         }
         
-        EventSystemLogic.Instance.LogEvent(bestStory != null
+        GameLoggingSystem.Instance.LogEvent(bestStory != null
             ? $"[EventVolumeManager] Selected best story '{bestStory.nodeName}' (priority {highestPriority})"
             : "[EventVolumeManager] No available story found", "EventVolumeManager");
 
@@ -386,17 +386,17 @@ public class EventVolumeManager : MonoBehaviour
             EventSystemLogic eventSystem = EventSystemLogic.Instance;
             if (eventSystem != null && eventSystem.IsEventOnCooldown(storyNode.nodeName, storyNode.cooldownSevenths))
             {
-                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping", "EventVolumeManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping", "EventVolumeManager");
 
                 return false; // Event is on cooldown, don't allow it to trigger
             }
         }
         
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate", "EventVolumeManager");
         
         if (storyNode.storyConditions.Count == 0)
         {
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has no conditions - allowing trigger", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has no conditions - allowing trigger", "EventVolumeManager");
 
             return true;
         }
@@ -411,7 +411,7 @@ public class EventVolumeManager : MonoBehaviour
             
         if (hasPopulationConditions && PopGrowthLogic.Instance == null)
         {
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has population conditions but PopGrowthLogic.Instance is null - blocking trigger", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has population conditions but PopGrowthLogic.Instance is null - blocking trigger", "EventVolumeManager");
 
             return false;
         }
@@ -419,17 +419,17 @@ public class EventVolumeManager : MonoBehaviour
         foreach (EventCondition condition in storyNode.storyConditions)
         {
             bool result = condition.Evaluate();
-            EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Condition check for '{storyNode.nodeName}': {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue} => {result}", "EventVolumeManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Condition check for '{storyNode.nodeName}': {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue} => {result}", "EventVolumeManager");
 
             if (!result) 
             {
-                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' blocked by condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "EventVolumeManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' blocked by condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "EventVolumeManager");
 
                 return false;
             }
         }
         
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] All conditions met for story '{storyNode.nodeName}' - allowing trigger", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] All conditions met for story '{storyNode.nodeName}' - allowing trigger", "EventVolumeManager");
 
         return true;
     }
@@ -469,7 +469,7 @@ public class EventVolumeManager : MonoBehaviour
         
         ScreenFlowStep step = currentStoryNode.screenFlow[currentScreenIndex];
         
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}", "EventVolumeManager");
         
         // Create EventScreen from ScreenFlowStep
         EventScreen screen = new EventScreen
@@ -481,7 +481,7 @@ public class EventVolumeManager : MonoBehaviour
             inkKnot = step.inkKnot
         };
         
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}", "EventVolumeManager");
         
         // Execute the screen
         EventSystemLogic.Instance?.ExecuteScreen(screen);
@@ -526,7 +526,7 @@ public class EventVolumeManager : MonoBehaviour
             inkKnot = normalized,
             waitForInput = true
         };
-        EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}", "EventVolumeManager");
 
         EventSystemLogic.Instance?.ExecuteScreen(screen);
     }
@@ -570,7 +570,7 @@ public class EventVolumeManager : MonoBehaviour
             Debug.LogError("[EventVolumeManager] EventSystemLogic.Instance is null!");
         }
 
-        EventSystemLogic.Instance.LogEvent("[EventVolumeManager] Story completion delegated to EventSystemLogic", "EventVolumeManager");
+        GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] Story completion delegated to EventSystemLogic", "EventVolumeManager");
     }
     
 
@@ -591,7 +591,7 @@ public class EventVolumeManager : MonoBehaviour
                 volumeStories[volume.volumeName] = story;
                 BindExternalFunctions(story);
 
-                EventSystemLogic.Instance.LogEvent($"[EventVolumeManager] AddVolume loaded story for '{volume.volumeName}'", "EventVolumeManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] AddVolume loaded story for '{volume.volumeName}'", "EventVolumeManager");
             }
             else
             {

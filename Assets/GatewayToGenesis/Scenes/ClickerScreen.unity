@@ -1065,7 +1065,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 193c8ac429910304d9b3c65e097be532, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableGameUnitsLogicLogging: 0
   storageTab: {fileID: 1465858056}
   productionTab: {fileID: 989069526}
   researchTab: {fileID: 668560537}
@@ -1074,7 +1073,6 @@ MonoBehaviour:
   HUD: {fileID: 845168990}
   expandibleHUD: {fileID: 555142226}
   buildingMaterialButton: {fileID: 1261511148}
-  enableProductionModifierLogging: 1
 --- !u!114 &118059066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1104,7 +1102,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaa643587ce2037458451a69ac8f90e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enablePopGrowthLogicLogging: 0
   foodThreshold: 12
   vagrantToPopulationRate: 4
   researchPerPopulation: 100
@@ -1158,7 +1155,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cdde45bdf3b70749a1a510d05b8db1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableStatManagerLogging: 1
   aureus: 10
   regalia: 10
   waltz: 10
@@ -1905,7 +1901,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableTimeSystemLogicLogging: 0
   secondsPerSeventh: 10
   slowMotionFactor: 3
   cycleText: {fileID: 655627174}
@@ -8172,7 +8167,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 671844795}
   m_HandleRect: {fileID: 671844794}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -9553,7 +9548,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2013945151}
+  m_Father: {fileID: 1582231806}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &713420661
@@ -17998,7 +17993,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00018310547}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 320, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1429569790
@@ -19730,6 +19725,7 @@ Transform:
   - {fileID: 175149198}
   - {fileID: 2013945151}
   - {fileID: 1877707811}
+  - {fileID: 1582231806}
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -19888,6 +19884,72 @@ MonoBehaviour:
   customDescription: 
   customType: 
   customStorageBreakdown: 
+--- !u!1 &1582231805
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1582231806}
+  - component: {fileID: 1582231807}
+  m_Layer: 0
+  m_Name: DebuggingSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1582231806
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582231805}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 713420660}
+  m_Father: {fileID: 1562319191}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1582231807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582231805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33e4780569d45e645834a3f1fe501028, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableAllGameLogicLogging: 0
+  enableAllEventSystemLogicLogging: 0
+  enableAllGovernmentLogicLogging: 0
+  enableAllEnvironmentLogicLogging: 0
+  enableGameUnitsLogicLogging: 0
+  enablePopGrowthLogicLogging: 0
+  enableTimeSystemLogicLogging: 0
+  enableEventSystemLogicLogging: 0
+  enableEventVolumeManagerLogging: 0
+  enableEventScreenManagerLogging: 0
+  enableInkStoryManagerLogging: 0
+  enableInkDrivenEventSetupLogging: 0
+  enableChorusScreenManagerLogging: 0
+  enableDecisionTokenLogging: 0
+  enableStatManagerLogging: 0
+  enableGovernmentLogicLogging: 0
+  enableGovernmentTabLogging: 0
+  enableCivicManagerLogging: 0
+  enableLegendLeaderLogicLogging: 0
+  enableSeatPositionDisplayLogging: 0
+  enableLeaderSlotDisplayLogging: 0
 --- !u!1 &1585513879
 GameObject:
   m_ObjectHideFlags: 0
@@ -22325,7 +22387,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 327092354}
   m_HandleRect: {fileID: 327092353}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -23279,7 +23341,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ded17da0822c99642a0e1b93f3c35778, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableLegendLogging: 1
   seventhsForActivation: 3
 --- !u!114 &1877707813
 MonoBehaviour:
@@ -23293,7 +23354,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 987c71237064c214e8ae605b6751a792, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableCivicLogging: 1
   startingAeonicSlots: 1
   startingMajorSlots: 1
   startingMinorSlots: 2
@@ -23314,7 +23374,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1dd34a280f3f2ae4d92c8c4166a2c145, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableGovernmentLogicLogging: 1
   centristThreshold: 25
   leaningThreshold: 50
   pillarThreshold: 75
@@ -24574,7 +24633,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00018310547}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1204, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2002197164
@@ -24764,8 +24823,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 713420660}
+  m_Children: []
   m_Father: {fileID: 1562319191}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -24870,13 +24928,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de631632960c9cd4798bc98198a36c6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableEventSystemLogicLogging: 0
-  enableEventVolumeManagerLogging: 0
-  enableEventScreenManagerLogging: 0
-  enableInkStoryManagerLogging: 0
-  enableInkDrivenEventSetupLogging: 0
-  enableChorusScreenManagerLogging: 0
-  enableDecisionTokenLogging: 0
   eventScores: []
   gameUnitsLogic: {fileID: 118059065}
   statManager: {fileID: 118059069}

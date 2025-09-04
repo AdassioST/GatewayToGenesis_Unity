@@ -10,9 +10,6 @@ public class StatManager : MonoBehaviour
 {
     public static StatManager Instance { get; private set; }
     
-    [Header("Stat Manager Settings")]
-    [SerializeField] private bool enableStatManagerLogging = true;
-    
     [Header("Pillars")]
     [SerializeField] private int aureus = 10;
     [SerializeField] private int regalia = 10;
@@ -367,7 +364,7 @@ public class StatManager : MonoBehaviour
                 // Recalculate derived stats to apply the change immediately
                 CalculateDerivedStats();
                 
-                Debug.Log($"[StatManager] Updated {statName} tier {tierIndex} balance modifier to {newBalanceModifier}");
+                GameLoggingSystem.Instance.LogEvent($"Updated {statName} tier {tierIndex} balance modifier to {newBalanceModifier}", "StatManager");
             }
         }
     }
@@ -484,7 +481,7 @@ public class StatManager : MonoBehaviour
             int oldGraceBuffer = satisfactionGraceBuffer;
             satisfactionGraceBuffer = newGraceBuffer;
             
-            Debug.Log($"[StatManager] Grace buffer updated: {oldGraceBuffer} → {newGraceBuffer} (effectiveness: {effectiveness:F2}% → rounded: {roundedEffectiveness} → multiple of 5: {multipleOf5} → half: {graceBuffer} → negative: {newGraceBuffer})");
+            GameLoggingSystem.Instance.LogEvent($"Grace buffer updated: {oldGraceBuffer} → {newGraceBuffer} (effectiveness: {effectiveness:F2}% → rounded: {roundedEffectiveness} → multiple of 5: {multipleOf5} → half: {graceBuffer} → negative: {newGraceBuffer})", "StatManager");
             
             // Recalculate tier size since grace buffer affects effective downgrade threshold
             RecalculateSatisfactionTierSize();
@@ -509,7 +506,7 @@ public class StatManager : MonoBehaviour
         int effectiveDowngradeThreshold = GetEffectiveDowngradeThreshold();
         satisfactionTierSize = satisfactionUpgradeThreshold + Mathf.Abs(effectiveDowngradeThreshold);
         
-        Debug.Log($"[StatManager] Tier size recalculated: {satisfactionTierSize} (upgrade: {satisfactionUpgradeThreshold}, effective downgrade: {effectiveDowngradeThreshold} = base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})");
+        GameLoggingSystem.Instance.LogEvent($"Tier size recalculated: {satisfactionTierSize} (upgrade: {satisfactionUpgradeThreshold}, effective downgrade: {effectiveDowngradeThreshold} = base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})", "StatManager");
     }
 
     private void Awake()
@@ -525,7 +522,7 @@ public class StatManager : MonoBehaviour
         // PHASE 1: Initialize base systems only (no calculations yet)
         InitializeBaseSystems();
         
-        if (enableStatManagerLogging) Debug.Log("[StatManager] Init: base systems ready");
+        GameLoggingSystem.Instance.LogEvent("Init: base systems ready", "StatManager");
     }
     
     /// <summary>
@@ -583,7 +580,7 @@ public class StatManager : MonoBehaviour
         // Start the initialization sequence after all managers have had their Start() called
         StartCoroutine(CompleteInitializationSequence());
         
-        if (enableStatManagerLogging) Debug.Log("[StatManager] Init: sequence start");
+        GameLoggingSystem.Instance.LogEvent("Init: sequence start", "StatManager");
     }
     
     /// <summary>
@@ -595,7 +592,7 @@ public class StatManager : MonoBehaviour
         // Wait one frame to ensure all other managers have completed their Start() methods
             yield return null;
         
-        if (enableStatManagerLogging) Debug.Log("[StatManager] Init: full recalculation");
+        GameLoggingSystem.Instance.LogEvent("Init: full recalculation", "StatManager");
         
         // Force a complete recalculation of all stats from base values
         // This ensures any bonuses applied by other systems are properly integrated
@@ -607,7 +604,7 @@ public class StatManager : MonoBehaviour
         // Trigger events for all stats to ensure UI is synchronized
         TriggerAllStatEvents();
         
-        if (enableStatManagerLogging) Debug.Log("[StatManager] Init: done");
+        GameLoggingSystem.Instance.LogEvent("Init: done", "StatManager");
     }
     
     /// <summary>
@@ -649,10 +646,10 @@ public class StatManager : MonoBehaviour
     /// </summary>
     private void LogCurrentStatValues()
     {
-        Debug.Log($"[StatManager] PILLARS: Aureus={aureus}, Regalia={regalia}, Waltz={waltz}, Chorus={chorus}");
-        Debug.Log($"[StatManager] SUBSTATS: Innovation={innovation}, Authority={authority}, Piety={piety}, Symphony={symphony}");
-        Debug.Log($"[StatManager] DERIVED: LegendEffectiveness={legendEffectiveness:F2}, DiscoveryEfficiency={discoveryEfficiency:F2}");
-        Debug.Log($"[StatManager] GLOBALS: Morale={globals["morale"]}, MaxMorale={globals["maxmorale"]}, SatisfactionThreshold={globals["satisfactionupgradethreshold"]}");
+        GameLoggingSystem.Instance.LogEvent($"PILLARS: Aureus={aureus}, Regalia={regalia}, Waltz={waltz}, Chorus={chorus}", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"SUBSTATS: Innovation={innovation}, Authority={authority}, Piety={piety}, Symphony={symphony}", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"DERIVED: LegendEffectiveness={legendEffectiveness:F2}, DiscoveryEfficiency={discoveryEfficiency:F2}", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"GLOBALS: Morale={globals["morale"]}, MaxMorale={globals["maxmorale"]}, SatisfactionThreshold={globals["satisfactionupgradethreshold"]}", "StatManager");
     }
     
     /// <summary>
@@ -667,7 +664,7 @@ public class StatManager : MonoBehaviour
         CalculateDerivedStats();
         TriggerAllStatEvents();
         
-        if (enableStatManagerLogging) Debug.Log("[StatManager] Recalc complete");
+        GameLoggingSystem.Instance.LogEvent("Recalc complete", "StatManager");
     }
 
     private System.Collections.IEnumerator SubscribeToTimeWhenReady()
@@ -719,7 +716,7 @@ public class StatManager : MonoBehaviour
         InitializeOriginalBaseValues();
         InitializeOriginalPillarValues();
         
-        if (enableStatManagerLogging) Debug.Log($"[StatManager] Globals init: maxMorale={maxMorale}, satisfactionUpgradeThreshold={satisfactionUpgradeThreshold}");
+        GameLoggingSystem.Instance.LogEvent($"Globals init: maxMorale={maxMorale}, satisfactionUpgradeThreshold={satisfactionUpgradeThreshold}", "StatManager");
     }
     
     /// <summary>
@@ -734,7 +731,7 @@ public class StatManager : MonoBehaviour
         originalBaseValues["morale"] = 100; // Default starting morale
         originalBaseValues["satisfactionpoints"] = 0; // Default satisfaction points
         
-        if (enableStatManagerLogging) Debug.Log($"[StatManager] Base globals tracked");
+        GameLoggingSystem.Instance.LogEvent($"Base globals tracked", "StatManager");
     }
     
     /// <summary>
@@ -764,10 +761,7 @@ public class StatManager : MonoBehaviour
         // Recalculate the stat with bonuses to reflect the new base value
         RecalculateGlobalStatWithBonuses(globalKey);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Updated original base value for '{globalKey}' to {newBaseValue} (permanent upgrade)");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Updated original base value for '{globalKey}' to {newBaseValue} (permanent upgrade)", "StatManager");
     }
     
     /// <summary>
@@ -780,7 +774,7 @@ public class StatManager : MonoBehaviour
         originalPillarValues["waltz"] = waltz;
         originalPillarValues["chorus"] = chorus;
         
-        if (enableStatManagerLogging) Debug.Log($"[StatManager] Base pillars tracked");
+        GameLoggingSystem.Instance.LogEvent("Base pillars tracked", "StatManager");
     }
     
     /// <summary>
@@ -817,12 +811,7 @@ public class StatManager : MonoBehaviour
             int basePillarValue = GetOriginalPillarValue(parentPillar);
             int resultFromFinal = Mathf.Max(1, Mathf.RoundToInt(finalPillarValue * multiplier));
             
-            Debug.Log($"[StatManager] FIXED Authority Calculation:");
-            Debug.Log($"[StatManager]   Parent Pillar: {parentPillar}");
-            Debug.Log($"[StatManager]   Base Pillar Value: {basePillarValue}");
-            Debug.Log($"[StatManager]   Final Pillar Value: {finalPillarValue}");
-            Debug.Log($"[StatManager]   Multiplier: {multiplier}");
-            Debug.Log($"[StatManager]   USING Final: {finalPillarValue} × {multiplier} = {resultFromFinal}");
+            GameLoggingSystem.Instance.LogEvent($"FIXED Authority Calculation: Parent Pillar: {parentPillar}, Base Pillar Value: {basePillarValue}, Final Pillar Value: {finalPillarValue}, Multiplier: {multiplier}, USING Final: {finalPillarValue} × {multiplier} = {resultFromFinal}", "StatManager");
         }
         
         return Mathf.Max(1, Mathf.RoundToInt(finalPillarValue * multiplier));
@@ -889,7 +878,7 @@ public class StatManager : MonoBehaviour
         }
         
         // Safe fallback during initialization - trigger full recalculation instead
-        Debug.LogWarning($"[StatManager] Cannot calculate individual derived stat '{derivedKey}' - triggering full recalculation");
+        GameLoggingSystem.Instance.LogEvent($"Cannot calculate individual derived stat '{derivedKey}' - triggering full recalculation", "StatManager");
         if (Application.isPlaying && derivationFormulas != null)
         {
             CalculateDerivedStats();
@@ -953,7 +942,7 @@ public class StatManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"[StatManager] ⚠️ Missing substat '{substatName}' for derived stat '{formula.Key}'");
+                GameLoggingSystem.Instance.LogEvent($"⚠️ Missing substat '{substatName}' for derived stat '{formula.Key}'", "StatManager");
             }
         }
 
@@ -1068,7 +1057,7 @@ public class StatManager : MonoBehaviour
             int delta = newValue - currentMorale;
             if (delta != 0)
             {
-                Debug.Log($"[StatManager] Routing morale: {currentMorale} → {newValue} (delta: {delta})");
+                GameLoggingSystem.Instance.LogEvent($"Routing morale: {currentMorale} → {newValue} (delta: {delta})", "StatManager");
                 // Apply the enhanced delta directly to avoid double-application
                 int enhancedDelta = ApplyMoraleShiftAndReturnEnhanced(delta, "UpdateStat", false);
                 UpdateGlobal("morale", currentMorale + enhancedDelta);
@@ -1083,7 +1072,7 @@ public class StatManager : MonoBehaviour
                 int delta = newValue - currentPoints;
                 if (delta != 0)
                 {
-                    Debug.Log($"[StatManager] Routing satisfaction points: {currentPoints} → {newValue} (delta: {delta})");
+                    GameLoggingSystem.Instance.LogEvent($"Routing satisfaction points: {currentPoints} → {newValue} (delta: {delta})", "StatManager");
                     ModifySatisfactionPoints(delta, "UpdateStat");
                 }
                 return;
@@ -1095,7 +1084,7 @@ public class StatManager : MonoBehaviour
                 int currentLevel = GetSatisfactionLevel();
                 if (newValue != currentLevel)
                 {
-                    Debug.Log($"[StatManager] Routing satisfaction level: {currentLevel} → {newValue}");
+                    GameLoggingSystem.Instance.LogEvent($"Routing satisfaction level: {currentLevel} → {newValue}", "StatManager");
                     SetSatisfactionLevel(newValue, "UpdateStat");
             }
             return;
@@ -1136,14 +1125,14 @@ public class StatManager : MonoBehaviour
         {
             globals["maxmorale"] = newValue;
             maxMorale = newValue;
-            Debug.Log($"[StatManager] Updated maxMorale to {newValue}");
+            GameLoggingSystem.Instance.LogEvent($"Updated maxMorale to {newValue}", "StatManager");
             return;
         }
         if (key == "satisfactionupgradethreshold")
         {
             globals["satisfactionupgradethreshold"] = newValue;
             satisfactionUpgradeThreshold = newValue;
-            Debug.Log($"[StatManager] Updated satisfactionUpgradeThreshold to {newValue}");
+            GameLoggingSystem.Instance.LogEvent($"Updated satisfactionUpgradeThreshold to {newValue}", "StatManager");
             return;
         }
         if (key == "satisfactionPoints")
@@ -1172,7 +1161,7 @@ public class StatManager : MonoBehaviour
             int finalPillarValue = GetPillarValue(pillarName);
             int newSubstatValue = Mathf.Max(1, Mathf.RoundToInt(finalPillarValue * multiplier));
             
-            if (enableStatManagerLogging) Debug.Log($"[StatManager] Pillar→Substats: {pillarName} → {newSubstatValue}");
+            GameLoggingSystem.Instance.LogEvent($"Pillar→Substats: {pillarName} → {newSubstatValue}", "StatManager");
             
             foreach (string substat in affectedSubstats)
             {
@@ -1205,10 +1194,7 @@ public class StatManager : MonoBehaviour
             // Recalculate substats for this pillar
             UpdatePillarSubstats(key);
             
-            if (enableStatManagerLogging)
-            {
-            Debug.Log($"[StatManager] Updated {pillarName} multiplier to {newMultiplier:F2}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Updated {pillarName} multiplier to {newMultiplier:F2}", "StatManager");
         }
         else
         {
@@ -1314,7 +1300,7 @@ public class StatManager : MonoBehaviour
         // Enhanced debugging for satisfaction and morale stats
         if (key == "maxmorale" || key == "satisfactionupgradethreshold")
         {
-            Debug.Log($"[StatManager] GetBaseGlobalValue('{key}') - found: {found}, value: {value}");
+            GameLoggingSystem.Instance.LogEvent($"GetBaseGlobalValue('{key}') - found: {found}, value: {value}", "StatManager");
             if (!found)
             {
                 Debug.LogWarning($"[StatManager] '{key}' not found in globals dictionary! Available keys: {string.Join(", ", globals.Keys)}");
@@ -1418,51 +1404,53 @@ public class StatManager : MonoBehaviour
     [ContextMenu("Print All Stats")]
     public void PrintAllStats()
     {
-        Debug.Log("=== CIVILIZATION STATS ===");
+        GameLoggingSystem.Instance.LogEvent("=== CIVILIZATION STATS ===", "StatManager");
         
         // Show pillars with base values and final values (including bonuses)
-        Debug.Log($"Aureus: Base {GetBasePillarValue("aureus")} → Final {GetPillarValue("aureus")} (Innovation: Base {GetBaseSubstatValue("innovation")} → Final {GetSubstatValue("innovation")}, Piety: Base {GetBaseSubstatValue("piety")} → Final {GetSubstatValue("piety")})");
-        Debug.Log($"Regalia: Base {GetBasePillarValue("regalia")} → Final {GetPillarValue("regalia")} (Authority: Base {GetBaseSubstatValue("authority")} → Final {GetSubstatValue("authority")}, Ambition: Base {GetBaseSubstatValue("ambition")} → Final {GetSubstatValue("ambition")})");
-        Debug.Log($"Waltz: Base {GetBasePillarValue("waltz")} → Final {GetPillarValue("waltz")} (Symphony: Base {GetBaseSubstatValue("symphony")} → Final {GetSubstatValue("symphony")}, Euphony: Base {GetBaseSubstatValue("euphony")} → Final {GetSubstatValue("euphony")})");
-        Debug.Log($"Chorus: Base {GetBasePillarValue("chorus")} → Final {GetPillarValue("chorus")} (Arcane: Base {GetBaseSubstatValue("arcane")} → Final {GetSubstatValue("arcane")}, Secrecy: Base {GetBaseSubstatValue("secrecy")} → Final {GetSubstatValue("secrecy")})");
+        GameLoggingSystem.Instance.LogEvent($"Aureus: Base {GetBasePillarValue("aureus")} → Final {GetPillarValue("aureus")} (Innovation: Base {GetBaseSubstatValue("innovation")} → Final {GetSubstatValue("innovation")}, Piety: Base {GetBaseSubstatValue("piety")} → Final {GetSubstatValue("piety")})", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"Regalia: Base {GetBasePillarValue("regalia")} → Final {GetPillarValue("regalia")} (Authority: Base {GetBaseSubstatValue("authority")} → Final {GetSubstatValue("authority")}, Ambition: Base {GetBaseSubstatValue("ambition")} → Final {GetSubstatValue("ambition")})", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"Waltz: Base {GetBasePillarValue("waltz")} → Final {GetPillarValue("waltz")} (Symphony: Base {GetBaseSubstatValue("symphony")} → Final {GetSubstatValue("symphony")}, Euphony: Base {GetBaseSubstatValue("euphony")} → Final {GetSubstatValue("euphony")})", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"Chorus: Base {GetBasePillarValue("chorus")} → Final {GetPillarValue("chorus")} (Arcane: Base {GetBaseSubstatValue("arcane")} → Final {GetSubstatValue("arcane")}, Secrecy: Base {GetBaseSubstatValue("secrecy")} → Final {GetSubstatValue("secrecy")})", "StatManager");
         
         // Show active bonuses
-        Debug.Log("=== ACTIVE BONUSES ===");
+        GameLoggingSystem.Instance.LogEvent("=== ACTIVE BONUSES ===", "StatManager");
         foreach (var pillar in new[] { "aureus", "regalia", "waltz", "chorus" })
         {
             float bonus = GetPillarBonus(pillar);
             if (bonus > 0)
             {
                 var sources = GetBonusSources("pillar", pillar);
-                Debug.Log($"  {pillar}: +{bonus:F1} from {string.Join(", ", sources.Select(kvp => $"{kvp.Key}(+{kvp.Value:F1})"))}");
+                GameLoggingSystem.Instance.LogEvent($"  {pillar}: +{bonus:F1} from {string.Join(", ", sources.Select(kvp => $"{kvp.Key}(+{kvp.Value:F1})"))}", "StatManager");
             }
         }
         
-        Debug.Log($"Morale: {GetMorale()} (Balance: {GetMoraleBalance()})");
-        Debug.Log($"Dark Morale: {EventSystemLogic.Instance?.GetEventScore("dark_morale")}");
+        GameLoggingSystem.Instance.LogEvent($"Morale: {GetMorale()} (Balance: {GetMoraleBalance()})", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"Dark Morale: {EventSystemLogic.Instance?.GetEventScore("dark_morale")}", "StatManager");
         
         // Show detailed satisfaction information
         var tierInfo = GetSatisfactionTierInfo();
         var progress = GetSatisfactionProgress();
-        Debug.Log($"Satisfaction: {tierInfo.name} (Level {tierInfo.level}) - {GetSatisfactionPoints()} points");
-        Debug.Log($"  Tier Range: {tierInfo.minPoints} to {tierInfo.maxPoints} points");
-        Debug.Log($"  Progress in tier: {progress.progress:P1} ({progress.pointsInTier} points)");
+        GameLoggingSystem.Instance.LogEvent($"Satisfaction: {tierInfo.name} (Level {tierInfo.level}) - {GetSatisfactionPoints()} points", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"  Tier Range: {tierInfo.minPoints} to {tierInfo.maxPoints} points", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"  Progress in tier: {progress.progress:P1} ({progress.pointsInTier} points)", "StatManager");
         if (progress.pointsForNext > 0)
-            Debug.Log($"  Points needed for next tier: {progress.pointsForNext}");
+            GameLoggingSystem.Instance.LogEvent($"  Points needed for next tier: {progress.pointsForNext}", "StatManager");
         if (progress.pointsForPrevious > 0)
-            Debug.Log($"  Points to lose for previous tier: {progress.pointsForPrevious}");
+            GameLoggingSystem.Instance.LogEvent($"  Points to lose for previous tier: {progress.pointsForPrevious}", "StatManager");
         
         // Show satisfaction effectiveness information
         float satisfactionEffectiveness = GetDerivedValue("satisfactionEffectiveness");
-        Debug.Log($"  Satisfaction Effectiveness: {satisfactionEffectiveness:F2}% (Symphony: {GetSubstatValue("symphony")})");
-        Debug.Log($"  Effectiveness Multiplier: {GetSatisfactionEffectivenessMultiplier():F3}x");
+        GameLoggingSystem.Instance.LogEvent($"  Satisfaction Effectiveness: {satisfactionEffectiveness:F2}% (Symphony: {GetSubstatValue("symphony")})", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"  Effectiveness Multiplier: {GetSatisfactionEffectivenessMultiplier():F3}x", "StatManager");
+        
+        GameLoggingSystem.Instance.LogEvent($"  Effectiveness Multiplier: {GetSatisfactionEffectivenessMultiplier():F3}x", "StatManager");
         
         // Show grace buffer information
         int effectiveDowngradeThreshold = GetEffectiveDowngradeThreshold();
-        Debug.Log($"  Grace Buffer: {satisfactionGraceBuffer} (downgrade protection)");
-        Debug.Log($"  Effective Downgrade Threshold: {effectiveDowngradeThreshold} (base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})");
+        GameLoggingSystem.Instance.LogEvent($"  Grace Buffer: {satisfactionGraceBuffer} (downgrade protection)", "StatManager");
+        GameLoggingSystem.Instance.LogEvent($"  Effective Downgrade Threshold: {effectiveDowngradeThreshold} (base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})", "StatManager");
         
-        Debug.Log("=== DERIVED STATS ===");
+        GameLoggingSystem.Instance.LogEvent("=== DERIVED STATS ===", "StatManager");
         foreach (var kvp in derived)
         {
             // Display as decimal percentages (e.g., 101.145 instead of 10,114.5%)
@@ -1471,11 +1459,11 @@ public class StatManager : MonoBehaviour
             float finalValue = GetDerivedValue(kvp.Key);
             if (Mathf.Abs(baseValue - finalValue) > 0.001f)
             {
-                Debug.Log($"{kvp.Key}: Base {baseValue:F3} → Final {finalValue:F3}");
+                GameLoggingSystem.Instance.LogEvent($"{kvp.Key}: Base {baseValue:F3} → Final {finalValue:F3}", "StatManager");
             }
             else
             {
-                Debug.Log($"{kvp.Key}: {finalValue:F3}");
+                GameLoggingSystem.Instance.LogEvent($"{kvp.Key}: {finalValue:F3}", "StatManager");
             }
         }
     }
@@ -1605,7 +1593,7 @@ public class StatManager : MonoBehaviour
             finalChange = Mathf.RoundToInt(enhancedChange);
             
             // Log effectiveness application
-            Debug.Log($"[StatManager] Satisfaction effectiveness: {change} × {effectivenessMultiplier:F3} (Symphony: {satisfactionEffectiveness:F2}%) = {enhancedChange:F2} → {finalChange}");
+            GameLoggingSystem.Instance.LogEvent($"Satisfaction effectiveness: {change} × {effectivenessMultiplier:F3} (Symphony: {satisfactionEffectiveness:F2}%) = {enhancedChange:F2} → {finalChange}", "StatManager");
         }
         else
         {
@@ -1626,13 +1614,13 @@ public class StatManager : MonoBehaviour
         // Log the change
         string direction = finalChange > 0 ? "+" : "";
         string effectivenessNote = change > 0 && finalChange != change ? " (with effectiveness bonus)" : "";
-        Debug.Log($"[StatManager] Satisfaction points changed by {direction}{finalChange} from '{source}'{effectivenessNote} → {oldPoints} → {satisfactionPoints} (range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})");
+        GameLoggingSystem.Instance.LogEvent($"Satisfaction points changed by {direction}{finalChange} from '{source}'{effectivenessNote} → {oldPoints} → {satisfactionPoints} (range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})", "StatManager");
         
         // Log level change if it occurred
         if (satisfactionLevel != oldLevel)
         {
             string levelChangeType = satisfactionLevel > oldLevel ? "UPGRADE" : "DOWNGRADE";
-            Debug.Log($"[StatManager] Level change triggered: {satisfactionLevelNames[oldLevel]} → {satisfactionLevelNames[satisfactionLevel]} ({levelChangeType})");
+            GameLoggingSystem.Instance.LogEvent($"Level change triggered: {satisfactionLevelNames[oldLevel]} → {satisfactionLevelNames[satisfactionLevel]} ({levelChangeType})", "StatManager");
         }
         
         // Notify listeners
@@ -1653,7 +1641,7 @@ public class StatManager : MonoBehaviour
             globals["satisfactionPoints"] = satisfactionPoints;
             UpdateSatisfactionLevel();
             
-            Debug.Log($"[StatManager] Satisfaction points modified by {change} from '{source}' → {oldPoints} → {satisfactionPoints} (effective range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})");
+            GameLoggingSystem.Instance.LogEvent($"Satisfaction points modified by {change} from '{source}' → {oldPoints} → {satisfactionPoints} (effective range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})", "StatManager");
             OnSatisfactionChanged?.Invoke(satisfactionLevel, satisfactionPoints);
         }
     }
@@ -1677,7 +1665,7 @@ public class StatManager : MonoBehaviour
         satisfactionPoints = 0;
         globals["satisfactionPoints"] = satisfactionPoints;
         
-        Debug.Log($"[StatManager] Satisfaction level set to {satisfactionLevelNames[newLevel]} ({newLevel}) with {satisfactionPoints} points from '{source}'");
+        GameLoggingSystem.Instance.LogEvent($"Satisfaction level set to {satisfactionLevelNames[newLevel]} ({newLevel}) with {satisfactionPoints} points from '{source}'", "StatManager");
         OnSatisfactionChanged?.Invoke(satisfactionLevel, satisfactionPoints);
     }
 
@@ -1692,7 +1680,7 @@ public class StatManager : MonoBehaviour
         // Automatically recalculate tier size using new method
         RecalculateSatisfactionTierSize();
         
-        Debug.Log($"[StatManager] Satisfaction upgrade threshold changed from {oldThreshold} to {newThreshold} from '{source}'");
+        GameLoggingSystem.Instance.LogEvent($"Satisfaction upgrade threshold changed from {oldThreshold} to {newThreshold} from '{source}'", "StatManager");
         
         // Recalculate satisfaction level with new thresholds
         UpdateSatisfactionLevel();
@@ -1709,7 +1697,7 @@ public class StatManager : MonoBehaviour
         // Automatically recalculate tier size using new method
         RecalculateSatisfactionTierSize();
         
-        Debug.Log($"[StatManager] Satisfaction downgrade threshold changed from {oldThreshold} to {newThreshold} from '{source}'");
+        GameLoggingSystem.Instance.LogEvent($"Satisfaction downgrade threshold changed from {oldThreshold} to {newThreshold} from '{source}'", "StatManager");
         
         // Recalculate satisfaction level with new thresholds
         UpdateSatisfactionLevel();
@@ -1754,7 +1742,7 @@ public class StatManager : MonoBehaviour
                 
                 if (mitigationPercent > 0f)
                 {
-                    Debug.Log($"[StatManager] Loss: {amount} → {mitigationPercent:P1} mitigation → {actualAmount}");
+                    GameLoggingSystem.Instance.LogEvent($"Loss: {amount} → {mitigationPercent:P1} mitigation → {actualAmount}", "StatManager");
                 }
             }
             else
@@ -1767,7 +1755,7 @@ public class StatManager : MonoBehaviour
                 
                 if (enhancementPercent > 0f)
                 {
-                    Debug.Log($"[StatManager] Gain: {amount} → +{enhancementPercent:P1} boost → {actualAmount}");
+                    GameLoggingSystem.Instance.LogEvent($"Gain: {amount} → +{enhancementPercent:P1} boost → {actualAmount}", "StatManager");
                 }
             }
         }
@@ -1816,7 +1804,7 @@ public class StatManager : MonoBehaviour
 
     private void OnSeventhTick(int newSeventh)
     {
-        Debug.Log($"[StatManager] Seventh tick triggered: {newSeventh} - Processing morale and satisfaction updates...");
+        GameLoggingSystem.Instance.LogEvent($"Seventh tick triggered: {newSeventh} - Processing morale and satisfaction updates...", "StatManager");
 
         // Natural oscillation toward balance controlled by Waltz and enhanced by Euphony
         int waltzValue = GetPillarValue("waltz");
@@ -1838,7 +1826,7 @@ public class StatManager : MonoBehaviour
             if (next < oscillationTarget) next = oscillationTarget;
             UpdateGlobal("morale", Mathf.Clamp(next, minMorale, maxMorale));
             
-            Debug.Log($"[StatManager] Morale decline: {currentMorale} → {next} (target: {oscillationTarget}, effective balance: {effectiveBalance})");
+            GameLoggingSystem.Instance.LogEvent($"Morale decline: {currentMorale} → {next} (target: {oscillationTarget}, effective balance: {effectiveBalance})", "StatManager");
         }
         else if (currentMorale < effectiveBalance)
         {
@@ -1851,7 +1839,7 @@ public class StatManager : MonoBehaviour
             if (next > effectiveBalance) next = effectiveBalance;
             UpdateGlobal("morale", Mathf.Clamp(next, minMorale, maxMorale));
             
-            Debug.Log($"[StatManager] Morale recovery: {baseRecovery} (Waltz) × {moraleRecoveryMod:F2} (Euphony) = {enhancedRecovery} → {currentMorale} → {next} (effective balance: {effectiveBalance})");
+            GameLoggingSystem.Instance.LogEvent($"Morale recovery: {baseRecovery} (Waltz) × {moraleRecoveryMod:F2} (Euphony) = {enhancedRecovery} → {currentMorale} → {next} (effective balance: {effectiveBalance})", "StatManager");
         }
 
         // Expire timed shifts
@@ -1902,30 +1890,30 @@ public class StatManager : MonoBehaviour
         UpdateSatisfactionFromMorale();
         
         int effectiveDowngradeThreshold = GetEffectiveDowngradeThreshold();
-        Debug.Log($"[StatManager] Seventh {newSeventh} completed - Morale: {GetMorale()}, Balance: {GetMoraleBalance()}, Satisfaction: {GetSatisfactionLevelName()} (Level {GetSatisfactionLevel()}) with {GetSatisfactionPoints()} points (range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})");
+        GameLoggingSystem.Instance.LogEvent($"Seventh {newSeventh} completed - Morale: {GetMorale()}, Balance: {GetMoraleBalance()}, Satisfaction: {GetSatisfactionLevelName()} (Level {GetSatisfactionLevel()}) with {GetSatisfactionPoints()} points (range: {effectiveDowngradeThreshold} to {satisfactionUpgradeThreshold}, grace buffer: {satisfactionGraceBuffer})", "StatManager");
     }
 
     private void UpdateSatisfactionFromMorale()
     {
         int moraleSurplus = GetMorale() - GetMoraleBalance();
         
-        Debug.Log($"[StatManager] Checking satisfaction from morale - Current: {GetMorale()}, Balance: {GetMoraleBalance()}, Surplus: {moraleSurplus}, Threshold: {moralePointThreshold}");
+        GameLoggingSystem.Instance.LogEvent($"Checking satisfaction from morale - Current: {GetMorale()}, Balance: {GetMoraleBalance()}, Surplus: {moraleSurplus}, Threshold: {moralePointThreshold}", "StatManager");
 
         if (moraleSurplus > moralePointThreshold)
         {
             // Morale surplus: increase satisfaction points
-            Debug.Log($"[StatManager] Morale surplus: {moraleSurplus} > {moralePointThreshold} → Satisfaction Points +1 (from {satisfactionPoints})");
+            GameLoggingSystem.Instance.LogEvent($"Morale surplus: {moraleSurplus} > {moralePointThreshold} → Satisfaction Points +1 (from {satisfactionPoints})", "StatManager");
             ChangeSatisfactionPoints(1, "Morale Surplus");
         }
         else if (moraleSurplus < -moralePointThreshold)
         {
             // Morale deficit: decrease satisfaction points
-            Debug.Log($"[StatManager] Morale deficit: {moraleSurplus} < -{moralePointThreshold} → Satisfaction Points -1 (from {satisfactionPoints})");
+            GameLoggingSystem.Instance.LogEvent($"Morale deficit: {moraleSurplus} < -{moralePointThreshold} → Satisfaction Points -1 (from {satisfactionPoints})", "StatManager");
             ChangeSatisfactionPoints(-1, "Morale Deficit");
         }
         else
         {
-            Debug.Log($"[StatManager] Morale within threshold range: {moraleSurplus} (between -{moralePointThreshold} and +{moralePointThreshold}) → No satisfaction change");
+            GameLoggingSystem.Instance.LogEvent($"Morale within threshold range: {moraleSurplus} (between -{moralePointThreshold} and +{moralePointThreshold}) → No satisfaction change", "StatManager");
         }
     }
 
@@ -1946,7 +1934,7 @@ public class StatManager : MonoBehaviour
             if (satisfactionLevel < 6) // Can't go above Utopian
             {
                 newLevel = satisfactionLevel + 1;
-                Debug.Log($"[StatManager] UPGRADE: {satisfactionLevelNames[satisfactionLevel]} → {satisfactionLevelNames[newLevel]} (reached {satisfactionPoints} points)");
+                GameLoggingSystem.Instance.LogEvent($"UPGRADE: {satisfactionLevelNames[satisfactionLevel]} → {satisfactionLevelNames[newLevel]} (reached {satisfactionPoints} points)", "StatManager");
             }
         }
         else if (satisfactionPoints <= effectiveDowngradeThreshold)
@@ -1955,7 +1943,7 @@ public class StatManager : MonoBehaviour
             if (satisfactionLevel > 0) // Can't go below Forsaken
             {
                 newLevel = satisfactionLevel - 1;
-                Debug.Log($"[StatManager] DOWNGRADE: {satisfactionLevelNames[satisfactionLevel]} → {satisfactionLevelNames[newLevel]} (reached {satisfactionPoints} points, effective threshold: {effectiveDowngradeThreshold} = base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})");
+                GameLoggingSystem.Instance.LogEvent($"DOWNGRADE: {satisfactionLevelNames[satisfactionLevel]} → {satisfactionLevelNames[newLevel]} (reached {satisfactionPoints} points, effective threshold: {effectiveDowngradeThreshold} = base {satisfactionDowngradeThreshold} + grace {satisfactionGraceBuffer})", "StatManager");
             }
         }
 
@@ -1972,7 +1960,7 @@ public class StatManager : MonoBehaviour
             // Determine if this is an upgrade or downgrade
             bool isUpgrade = newLevel > oldLevel;
             
-            Debug.Log($"[StatManager] Satisfaction Level changed from {satisfactionLevelNames[oldLevel]} ({oldLevel}) to {satisfactionLevelNames[satisfactionLevel]} ({satisfactionLevel}) - {(isUpgrade ? "UPGRADE" : "DOWNGRADE")} - Points reset to {satisfactionPoints}");
+            GameLoggingSystem.Instance.LogEvent($"Satisfaction Level changed from {satisfactionLevelNames[oldLevel]} ({oldLevel}) to {satisfactionLevelNames[satisfactionLevel]} ({satisfactionLevel}) - {(isUpgrade ? "UPGRADE" : "DOWNGRADE")} - Points reset to {satisfactionPoints}", "StatManager");
             
             // Trigger level change event for systems that need to react
             OnSatisfactionLevelChanged?.Invoke(oldLevel, satisfactionLevel, isUpgrade);
@@ -2011,10 +1999,7 @@ public class StatManager : MonoBehaviour
         // Recalculate the pillar with bonuses
         RecalculatePillarWithBonuses(key);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Added pillar bonus: {pillarName} +{bonusValue} from {source}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Added pillar bonus: {pillarName} +{bonusValue} from {source}", "StatManager");
     }
     
     /// <summary>
@@ -2033,10 +2018,7 @@ public class StatManager : MonoBehaviour
             // Recalculate the pillar with remaining bonuses
             RecalculatePillarWithBonuses(key);
             
-            if (enableStatManagerLogging)
-            {
-                Debug.Log($"[StatManager] Removed pillar bonus: {pillarName} -{removedBonus} from {source}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed pillar bonus: {pillarName} -{removedBonus} from {source}", "StatManager");
         }
     }
     
@@ -2059,10 +2041,7 @@ public class StatManager : MonoBehaviour
         // Recalculate the substat with bonuses
         RecalculateSubstatWithBonuses(key);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Added substat bonus: {substatName} +{bonusValue} from {source}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Added substat bonus: {substatName} +{bonusValue} from {source}", "StatManager");
     }
     
     /// <summary>
@@ -2081,10 +2060,7 @@ public class StatManager : MonoBehaviour
             // Recalculate the substat with remaining bonuses
             RecalculateSubstatWithBonuses(key);
             
-            if (enableStatManagerLogging)
-            {
-                Debug.Log($"[StatManager] Removed substat bonus: {substatName} -{removedBonus} from {source}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed substat bonus: {substatName} -{removedBonus} from {source}", "StatManager");
         }
     }
     
@@ -2107,10 +2083,7 @@ public class StatManager : MonoBehaviour
         // Recalculate the derived stat with bonuses
         RecalculateDerivedStatWithBonuses(key);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Added derived stat bonus: {derivedStatName} +{bonusValue} from {source}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Added derived stat bonus: {derivedStatName} +{bonusValue} from {source}", "StatManager");
     }
     
     /// <summary>
@@ -2129,10 +2102,7 @@ public class StatManager : MonoBehaviour
             // Recalculate the derived stat with remaining bonuses
             RecalculateDerivedStatWithBonuses(key);
             
-            if (enableStatManagerLogging)
-            {
-                Debug.Log($"[StatManager] Removed derived stat bonus: {derivedStatName} -{removedBonus} from {source}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed derived stat bonus: {derivedStatName} -{removedBonus} from {source}", "StatManager");
         }
     }
     
@@ -2149,9 +2119,9 @@ public class StatManager : MonoBehaviour
         // Enhanced debugging for satisfaction and morale stats
         if (key == "maxmorale" || key == "satisfactionupgradethreshold")
         {
-            Debug.Log($"[StatManager] AddGlobalBonus called for '{key}' with value {bonusValue} from source '{source}'");
-            Debug.Log($"[StatManager] Current base value: {GetBaseGlobalValue(key)}");
-            Debug.Log($"[StatManager] Current total value: {GetGlobalValue(key)}");
+            GameLoggingSystem.Instance.LogEvent($"AddGlobalBonus called for '{key}' with value {bonusValue} from source '{source}'", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"Current base value: {GetBaseGlobalValue(key)}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"Current total value: {GetGlobalValue(key)}", "StatManager");
         }
         
         if (!globalBonuses.ContainsKey(key))
@@ -2159,7 +2129,7 @@ public class StatManager : MonoBehaviour
             globalBonuses[key] = new Dictionary<string, int>();
             if (key == "maxmorale" || key == "satisfactionupgradethreshold")
             {
-                Debug.Log($"[StatManager] Created new bonus dictionary for '{key}'");
+                GameLoggingSystem.Instance.LogEvent($"Created new bonus dictionary for '{key}'", "StatManager");
             }
         }
         
@@ -2168,9 +2138,9 @@ public class StatManager : MonoBehaviour
         // Enhanced debugging after adding bonus
         if (key == "maxmorale" || key == "satisfactionupgradethreshold")
         {
-            Debug.Log($"[StatManager] Added bonus {bonusValue} from '{source}' to '{key}'");
-            Debug.Log($"[StatManager] Total bonuses for '{key}': {GetGlobalBonus(key)}");
-            Debug.Log($"[StatManager] All bonus sources for '{key}': {string.Join(", ", globalBonuses[key].Select(kvp => $"{kvp.Key}:{kvp.Value}"))}");
+            GameLoggingSystem.Instance.LogEvent($"Added bonus {bonusValue} from '{source}' to '{key}'", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"Total bonuses for '{key}': {GetGlobalBonus(key)}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"All bonus sources for '{key}': {string.Join(", ", globalBonuses[key].Select(kvp => $"{kvp.Key}:{kvp.Value}"))}", "StatManager");
         }
         
         // Recalculate the global stat with bonuses
@@ -2179,13 +2149,10 @@ public class StatManager : MonoBehaviour
         // Enhanced debugging after recalculation
         if (key == "maxmorale" || key == "satisfactionupgradethreshold")
         {
-            Debug.Log($"[StatManager] After recalculation - base: {GetBaseGlobalValue(key)}, total: {GetGlobalValue(key)}");
+            GameLoggingSystem.Instance.LogEvent($"After recalculation - base: {GetBaseGlobalValue(key)}, total: {GetGlobalValue(key)}", "StatManager");
         }
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Added global stat bonus: {globalStatName} +{bonusValue} from {source}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Added global stat bonus: {globalStatName} +{bonusValue} from {source}", "StatManager");
     }
     
     /// <summary>
@@ -2200,9 +2167,9 @@ public class StatManager : MonoBehaviour
         // Enhanced debugging for satisfaction and morale stats
         if (key == "maxmorale" || key == "satisfactionupgradethreshold")
         {
-            Debug.Log($"[StatManager] RemoveGlobalBonus called for '{key}' from source '{source}'");
-            Debug.Log($"[StatManager] Current base value: {GetBaseGlobalValue(key)}");
-            Debug.Log($"[StatManager] Current total value: {GetGlobalValue(key)}");
+            GameLoggingSystem.Instance.LogEvent($"RemoveGlobalBonus called for '{key}' from source '{source}'", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"Current base value: {GetBaseGlobalValue(key)}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"Current total value: {GetGlobalValue(key)}", "StatManager");
         }
         
         if (globalBonuses.ContainsKey(key) && globalBonuses[key].ContainsKey(source))
@@ -2213,8 +2180,8 @@ public class StatManager : MonoBehaviour
             // Enhanced debugging after removing bonus
             if (key == "maxmorale" || key == "satisfactionupgradethreshold")
             {
-                Debug.Log($"[StatManager] Removed bonus {removedBonus} from '{source}' for '{key}'");
-                Debug.Log($"[StatManager] Remaining bonuses for '{key}': {GetGlobalBonus(key)}");
+                GameLoggingSystem.Instance.LogEvent($"Removed bonus {removedBonus} from '{source}' for '{key}'", "StatManager");
+                GameLoggingSystem.Instance.LogEvent($"Remaining bonuses for '{key}': {GetGlobalBonus(key)}", "StatManager");
             }
             
             // Recalculate the global stat with remaining bonuses
@@ -2223,13 +2190,10 @@ public class StatManager : MonoBehaviour
             // Enhanced debugging after recalculation
             if (key == "maxmorale" || key == "satisfactionupgradethreshold")
             {
-                Debug.Log($"[StatManager] After removal recalculation - base: {GetBaseGlobalValue(key)}, total: {GetGlobalValue(key)}");
+                GameLoggingSystem.Instance.LogEvent($"After removal recalculation - base: {GetBaseGlobalValue(key)}, total: {GetGlobalValue(key)}", "StatManager");
             }
             
-            if (enableStatManagerLogging)
-            {
-                Debug.Log($"[StatManager] Removed global stat bonus: {globalStatName} -{removedBonus} from {source}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed global stat bonus: {globalStatName} -{removedBonus} from {source}", "StatManager");
         }
         else
         {
@@ -2239,11 +2203,11 @@ public class StatManager : MonoBehaviour
                 Debug.LogWarning($"[StatManager] Failed to remove bonus for '{key}' from '{source}' - bonus not found");
                 if (globalBonuses.ContainsKey(key))
                 {
-                    Debug.Log($"[StatManager] Existing sources for '{key}': {string.Join(", ", globalBonuses[key].Keys)}");
+                    GameLoggingSystem.Instance.LogEvent($"Existing sources for '{key}': {string.Join(", ", globalBonuses[key].Keys)}", "StatManager");
                 }
                 else
                 {
-                    Debug.Log($"[StatManager] No bonus dictionary exists for '{key}'");
+                    GameLoggingSystem.Instance.LogEvent($"No bonus dictionary exists for '{key}'", "StatManager");
                 }
             }
         }
@@ -2389,9 +2353,9 @@ public class StatManager : MonoBehaviour
             }
         }
         
-        if (anyCleared && enableStatManagerLogging)
+        if (anyCleared)
         {
-            Debug.Log($"[StatManager] Cleared all bonuses from source: {source}");
+            GameLoggingSystem.Instance.LogEvent($"Cleared all bonuses from source: {source}", "StatManager");
         }
     }
     
@@ -2420,10 +2384,7 @@ public class StatManager : MonoBehaviour
         // Trigger events
         OnPillarChanged?.Invoke(pillarKey, finalValue);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Recalculated {pillarKey}: {baseValue} + {totalBonus:F1} bonus = {finalValue}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Recalculated {pillarKey}: {baseValue} + {totalBonus:F1} bonus = {finalValue}", "StatManager");
     }
     
     /// <summary>
@@ -2450,10 +2411,7 @@ public class StatManager : MonoBehaviour
         // Trigger events
         OnSubstatChanged?.Invoke(substatKey, finalValue);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Recalculated {substatKey}: {baseValue} + {totalBonus:F1} bonus = {finalValue}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Recalculated {substatKey}: {baseValue} + {totalBonus:F1} bonus = {finalValue}", "StatManager");
     }
     
     /// <summary>
@@ -2477,34 +2435,32 @@ public class StatManager : MonoBehaviour
         // Trigger events
         OnDerivedChanged?.Invoke(derivedKey, finalValue);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Recalculated {derivedKey}: {baseValue:F2} + {totalBonus:F2} bonus = {finalValue:F2}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Recalculated {derivedKey}: {baseValue:F2} + {totalBonus:F2} bonus = {finalValue:F2}", "StatManager");
         
         // Enhanced debugging for Legend Effectiveness
         if (derivedKey.ToLower() == "legendeffectiveness")
         {
             int authorityValue = substats.GetValueOrDefault("authority", 0);
             float expectedBase = 100f + (authorityValue * 0.15f);
-            Debug.Log($"[StatManager] DEBUG Legend Effectiveness: Authority = {authorityValue}");
-            Debug.Log($"[StatManager] DEBUG Expected Base (100 + Auth*0.15) = {expectedBase:F5}");
-            Debug.Log($"[StatManager] DEBUG Actual Base Calc = {baseValue:F5}");
-            Debug.Log($"[StatManager] DEBUG Applied Bonus = {totalBonus:F5}");
-            Debug.Log($"[StatManager] DEBUG Final Result = {finalValue:F5}");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Legend Effectiveness: Authority = {authorityValue}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Expected Base (100 + Auth*0.15) = {expectedBase:F5}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Actual Base Calc = {baseValue:F5}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Applied Bonus = {totalBonus:F5}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Final Result = {finalValue:F5}", "StatManager");
+            GameLoggingSystem.Instance.LogEvent($"DEBUG Final Result = {finalValue:F5}", "StatManager");
             
             // Check if there are any bonuses being applied to Legend Effectiveness
             if (derivedStatBonuses.ContainsKey(derivedKey.ToLower()))
             {
-                Debug.Log($"[StatManager] DEBUG Legend Effectiveness has {derivedStatBonuses[derivedKey.ToLower()].Count} bonus sources:");
+                GameLoggingSystem.Instance.LogEvent($"DEBUG Legend Effectiveness has {derivedStatBonuses[derivedKey.ToLower()].Count} bonus sources:", "StatManager");
                 foreach (var bonus in derivedStatBonuses[derivedKey.ToLower()])
                 {
-                    Debug.Log($"[StatManager] DEBUG   - {bonus.Key}: {bonus.Value:F5}");
+                    GameLoggingSystem.Instance.LogEvent($"DEBUG   - {bonus.Key}: {bonus.Value:F5}", "StatManager");
                 }
             }
             else
             {
-                Debug.Log($"[StatManager] DEBUG Legend Effectiveness has NO bonuses applied");
+                GameLoggingSystem.Instance.LogEvent($"DEBUG Legend Effectiveness has NO bonuses applied", "StatManager");
             }
         }
     }
@@ -2557,10 +2513,7 @@ public class StatManager : MonoBehaviour
         // Update the serialized field
         UpdateGlobal(globalKey, finalValue);
         
-        if (enableStatManagerLogging)
-        {
-            Debug.Log($"[StatManager] Recalculated {globalKey}: {baseValue} + {totalBonus} bonus = {finalValue}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Recalculated {globalKey}: {baseValue} + {totalBonus} bonus = {finalValue}", "StatManager");
     }
 
 }

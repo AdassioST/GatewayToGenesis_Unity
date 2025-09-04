@@ -81,9 +81,6 @@ public class GovernmentLogic : MonoBehaviour
 {
     public static GovernmentLogic Instance { get; private set; }
 
-    [Header("Government System Settings")]
-    [SerializeField] private bool enableGovernmentLogicLogging = true;
-    
     [Header("Threshold Configuration")]
     [SerializeField] private int centristThreshold = 25; // Net difference 0-24 = Centrist
     [SerializeField] private int leaningThreshold = 50; // Net difference 25-49 = Leaning
@@ -327,7 +324,7 @@ public class GovernmentLogic : MonoBehaviour
             
             if (isSignificantChange)
             {
-                if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] LE changed: {lastKnownLegendEffectiveness:F2} → {newValue:F2}");
+                GameLoggingSystem.Instance.LogEvent($"LE changed: {lastKnownLegendEffectiveness:F2} → {newValue:F2}", "GovernmentLogic");
                 
                 // Update stored value
                 lastKnownLegendEffectiveness = newValue;
@@ -357,11 +354,7 @@ public class GovernmentLogic : MonoBehaviour
         if (StatManager.Instance == null) return;
         
         lastKnownLegendEffectiveness = StatManager.Instance.GetDerivedValue("legendEffectiveness");
-        
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Initialized Legend Effectiveness tracking baseline: {lastKnownLegendEffectiveness:F3}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Initialized Legend Effectiveness tracking baseline: {lastKnownLegendEffectiveness:F3}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -378,11 +371,8 @@ public class GovernmentLogic : MonoBehaviour
         var seat = GetCouncilSeat(seatIndex);
         if (seat == null || seat.assignedLegend == null)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
-                Debug.Log($"[GovernmentLogic] {seatName} is unassigned - ignoring cooldown, change allowed");
-            }
+            string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
+            GameLoggingSystem.Instance.LogEvent($"{seatName} is unassigned - ignoring cooldown, change allowed", "GovernmentLogic");
             return true; // Unassigned seats have no cooldown
         }
         
@@ -443,18 +433,12 @@ public class GovernmentLogic : MonoBehaviour
         if (seatIndex == -1) // Head of State
         {
             headOfStateCooldownRemaining = headOfStateCooldownSevenths; // HARD RESET to base value
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] HARD RESET: Head of State cooldown set to {headOfStateCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"HARD RESET: Head of State cooldown set to {headOfStateCooldownSevenths} sevenths", "GovernmentLogic");
         }
         else // Regular council seat
         {
             seatCooldownRemaining[seatIndex] = councilSeatCooldownSevenths; // HARD RESET to base value
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] HARD RESET: Seat {seatIndex} cooldown set to {councilSeatCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"HARD RESET: Seat {seatIndex} cooldown set to {councilSeatCooldownSevenths} sevenths", "GovernmentLogic");
         }
     }
     
@@ -472,42 +456,27 @@ public class GovernmentLogic : MonoBehaviour
         if (seatIndex1 == -1) // Head of State
         {
             headOfStateCooldownRemaining = headOfStateCooldownSevenths;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Perfect swap: HARD RESET Head of State cooldown to {headOfStateCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Perfect swap: HARD RESET Head of State cooldown to {headOfStateCooldownSevenths} sevenths", "GovernmentLogic");
         }
         else // Regular council seat
         {
             seatCooldownRemaining[seatIndex1] = councilSeatCooldownSevenths;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Perfect swap: HARD RESET seat {seatIndex1} cooldown to {councilSeatCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Perfect swap: HARD RESET seat {seatIndex1} cooldown to {councilSeatCooldownSevenths} sevenths", "GovernmentLogic");
         }
         
         // Record cooldown for second seat - HARD RESET to base value
         if (seatIndex2 == -1) // Head of State
         {
             headOfStateCooldownRemaining = headOfStateCooldownSevenths;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Perfect swap: HARD RESET Head of State cooldown to {headOfStateCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Perfect swap: HARD RESET Head of State cooldown to {headOfStateCooldownSevenths} sevenths", "GovernmentLogic");
         }
         else // Regular council seat
         {
             seatCooldownRemaining[seatIndex2] = councilSeatCooldownSevenths;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Perfect swap: HARD RESET seat {seatIndex2} cooldown to {councilSeatCooldownSevenths} sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Perfect swap: HARD RESET seat {seatIndex2} cooldown to {councilSeatCooldownSevenths} sevenths", "GovernmentLogic");
         }
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Perfect swap cooldowns HARD RESET for seats {seatIndex1} and {seatIndex2}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Perfect swap cooldowns HARD RESET for seats {seatIndex1} and {seatIndex2}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -522,20 +491,14 @@ public class GovernmentLogic : MonoBehaviour
         if (!CanChangeSeat(seatIndex))
         {
             int remainingCooldown = GetSeatCooldownRemaining(seatIndex);
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Seat change denied by {requestingSystem} - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Seat change denied by {requestingSystem} - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths", "GovernmentLogic");
             return false;
         }
         
         // Record the change request
         RecordSeatChange(seatIndex);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Seat change approved for {requestingSystem} - Seat {seatIndex} changed");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Seat change approved for {requestingSystem} - Seat {seatIndex} changed", "GovernmentLogic");
         
         // Trigger leader pool update to reflect cooldown changes
         OnLeaderPoolChanged?.Invoke();
@@ -572,10 +535,7 @@ public class GovernmentLogic : MonoBehaviour
         headOfStateCooldownRemaining = 0;
         seatCooldownRemaining.Clear();
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] FORCE RESET: All seat cooldowns cleared - all seats ready for changes");
-        }
+        GameLoggingSystem.Instance.LogEvent("FORCE RESET: All seat cooldowns cleared - all seats ready for changes", "GovernmentLogic");
         
         // Trigger leader pool update to reflect cooldown changes
         OnLeaderPoolChanged?.Invoke();
@@ -593,12 +553,9 @@ public class GovernmentLogic : MonoBehaviour
         var headOfState = GetCouncilSeat(-1); // Head of State has index -1
         if (headOfState == null) return;
         
-        if (enableGovernmentLogicLogging)
-        {
-            bool isActive = headOfState.IsActive();
-            bool onCooldown = !CanChangeSeat(-1);
-            Debug.Log($"[GovernmentLogic] Updating Head of State UI - Active: {isActive}, OnCooldown: {onCooldown}, HasLegend: {headOfState.assignedLegend != null}, SeventhsUntilActive: {headOfState.seventhsUntilActive}");
-        }
+        bool isActive = headOfState.IsActive();
+        bool onCooldown = !CanChangeSeat(-1);
+        GameLoggingSystem.Instance.LogEvent($"Updating Head of State UI - Active: {isActive}, OnCooldown: {onCooldown}, HasLegend: {headOfState.assignedLegend != null}, SeventhsUntilActive: {headOfState.seventhsUntilActive}", "GovernmentLogic");
         
         // Get Active and Cooldown indicator components (with fallback logic)
         UnityEngine.UI.Image activeImage = GetHeadOfStateActiveIndicator();
@@ -607,14 +564,12 @@ public class GovernmentLogic : MonoBehaviour
         // Update Active indicator (red = inactive, green = active)
         if (activeImage != null)
         {
-            bool isActive = headOfState.IsActive();
             activeImage.color = isActive ? activeColor : inactiveColor;
         }
         
         // Update Cooldown indicator (deep blue = on cooldown, cyan = ready)
         if (cooldownImage != null)
         {
-            bool onCooldown = !CanChangeSeat(-1); // Check if Head of State is on cooldown
             cooldownImage.color = onCooldown ? cooldownColor : readyColor;
         }
     }
@@ -703,27 +658,18 @@ public class GovernmentLogic : MonoBehaviour
     {
         if (isProcessingSeatBonuses || isRecalculatingHeadOfState)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Skipping full council recalculation - already processing seat bonuses or recalculating");
-            }
+            GameLoggingSystem.Instance.LogEvent("Skipping full council recalculation - already processing seat bonuses or recalculating", "GovernmentLogic");
             return;
         }
         
         // Check if we've already recalculated this seventh (use unified throttling)
         if (!ShouldTriggerHeadOfStateRecalculation(force))
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Skipping full council recalculation - already done this seventh (reason: {reason})");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Skipping full council recalculation - already done this seventh (reason: {reason})", "GovernmentLogic");
             return;
         }
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Triggering full council recalculation due to: {reason}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Triggering full council recalculation due to: {reason}", "GovernmentLogic");
         
         // Set flags to prevent recursion and mark that we've recalculated this seventh
         isRecalculatingHeadOfState = true;
@@ -750,18 +696,13 @@ public class GovernmentLogic : MonoBehaviour
     {
         if (isProcessingSeatBonuses)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Skipping legend bonus recalculation - already processing seat bonuses");
-            }
+
+            GameLoggingSystem.Instance.LogEvent("Skipping legend bonus recalculation - already processing seat bonuses", "GovernmentLogic");
             return;
         }
         
         // Deprecated path: directly use centralized pipeline now
-            if (enableGovernmentLogicLogging)
-            {
-            Debug.Log($"[GovernmentLogic] RecalculateAllLegendBonuses redirected to centralized pipeline");
-        }
+        GameLoggingSystem.Instance.LogEvent("RecalculateAllLegendBonuses redirected to centralized pipeline", "GovernmentLogic");
         ProcessAllSeatBonuses();
     }
     
@@ -835,9 +776,9 @@ public class GovernmentLogic : MonoBehaviour
             pendingResourceBonuses[resourceName].Clear();
         }
         
-        if (appliedBonuses > 0 && enableGovernmentLogicLogging)
+        if (appliedBonuses > 0)
         {
-            Debug.Log($"[GovernmentLogic] Applied {appliedBonuses} pending legend bonuses to new resource: {resourceName} (section: {sectionName})");
+            GameLoggingSystem.Instance.LogEvent($"Applied {appliedBonuses} pending legend bonuses to new resource: {resourceName} (section: {sectionName})", "GovernmentLogic");
         }
     }
     
@@ -864,13 +805,10 @@ public class GovernmentLogic : MonoBehaviour
         waltzRegaliaCoordinate = CalculateAxisCoordinate(waltzRegaliaDifference);
         chorusAureusCoordinate = CalculateAxisCoordinate(chorusAureusDifference);
 
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Coordinates calculated:");
-            Debug.Log($"  Waltz: {waltz}, Regalia: {regalia} → Net difference: {waltzRegaliaDifference} → Coordinate: {waltzRegaliaCoordinate} (Waltz negative, Regalia positive)");
-            Debug.Log($"  Chorus: {chorus}, Aureus: {aureus} → Net difference: {chorusAureusDifference} → Coordinate: {chorusAureusCoordinate}");
-            Debug.Log($"  Political compass position: ({waltzRegaliaCoordinate}, {chorusAureusCoordinate})");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Coordinates calculated:", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Waltz: {waltz}, Regalia: {regalia} → Net difference: {waltzRegaliaDifference} → Coordinate: {waltzRegaliaCoordinate} (Waltz negative, Regalia positive)", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Chorus: {chorus}, Aureus: {aureus} → Net difference: {chorusAureusDifference} → Coordinate: {chorusAureusCoordinate}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Political compass position: ({waltzRegaliaCoordinate}, {chorusAureusCoordinate})", "GovernmentLogic");
 
         // Notify listeners if coordinates changed
         if (oldWaltzRegalia != waltzRegaliaCoordinate || oldChorusAureus != chorusAureusCoordinate)
@@ -915,12 +853,9 @@ public class GovernmentLogic : MonoBehaviour
         // Update government name and description
         UpdateGovernmentInfo();
 
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Government type determined: {oldType} → {currentGovernmentType}");
-            Debug.Log($"  Name: {currentGovernmentName}");
-            Debug.Log($"  Description: {currentGovernmentDescription}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Government type determined: {oldType} → {currentGovernmentType}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Name: {currentGovernmentName}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Description: {currentGovernmentDescription}", "GovernmentLogic");
 
         // Notify listeners if government type changed
         if (oldType != currentGovernmentType)
@@ -972,48 +907,48 @@ public class GovernmentLogic : MonoBehaviour
         // Top-left quadrant: Waltz + Chorus Radicals
         if (waltzRegalia == -2 && chorusAureus == 3) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Pillar + Chorus Fanatic");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Pillar + Chorus Fanatic", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         if (waltzRegalia == -3 && chorusAureus == 2) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Fanatic + Chorus Pillar");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Fanatic + Chorus Pillar", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         
         // Top-right quadrant: Regalia + Chorus Radicals
         if (waltzRegalia == 2 && chorusAureus == 3) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Pillar + Chorus Fanatic");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Pillar + Chorus Fanatic", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         if (waltzRegalia == 3 && chorusAureus == 2) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Fanatic + Chorus Pillar");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Fanatic + Chorus Pillar", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         
         // Bottom-left quadrant: Waltz + Aureus Radicals
         if (waltzRegalia == -2 && chorusAureus == -3) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Pillar + Aureus Fanatic");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Pillar + Aureus Fanatic", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         if (waltzRegalia == -3 && chorusAureus == -2) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Fanatic + Aureus Pillar");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Waltz Fanatic + Aureus Pillar", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         
         // Bottom-right quadrant: Regalia + Aureus Radicals
         if (waltzRegalia == 2 && chorusAureus == -3) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Pillar + Aureus Fanatic");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Pillar + Aureus Fanatic", "GovernmentLogic");
             return GovernmentType.Radical;
         }
         if (waltzRegalia == 3 && chorusAureus == -2) 
         {
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Fanatic + Aureus Pillar");
+            GameLoggingSystem.Instance.LogEvent($"Radical classified: ({waltzRegalia},{chorusAureus}) - Regalia Fanatic + Aureus Pillar", "GovernmentLogic");
             return GovernmentType.Radical;
         }
 
@@ -1201,13 +1136,13 @@ public class GovernmentLogic : MonoBehaviour
 
     public void LogGovernmentInfo()
     {
-        if (!enableGovernmentLogicLogging) return;
+        if (!GameLoggingSystem.Instance.enableGovernmentLogicLogging) return;
 
-        Debug.Log("=== GOVERNMENT SYSTEM INFO ===");
-        Debug.Log($"Current Government: {currentGovernmentName}");
-        Debug.Log($"Government Type: {currentGovernmentType}");
-        Debug.Log($"Description: {currentGovernmentDescription}");
-        Debug.Log($"Political Compass: ({waltzRegaliaCoordinate}, {chorusAureusCoordinate})");
+        GameLoggingSystem.Instance.LogEvent("=== GOVERNMENT SYSTEM INFO ===", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Current Government: {currentGovernmentName}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Government Type: {currentGovernmentType}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Description: {currentGovernmentDescription}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Political Compass: ({waltzRegaliaCoordinate}, {chorusAureusCoordinate})", "GovernmentLogic");
         
         // Show pillar values and differences
         if (StatManager.Instance != null)
@@ -1217,47 +1152,47 @@ public class GovernmentLogic : MonoBehaviour
             int chorus = StatManager.Instance.GetPillarValue("chorus");
             int aureus = StatManager.Instance.GetPillarValue("aureus");
             
-            Debug.Log($"Pillar Values: Waltz={waltz}, Regalia={regalia}, Chorus={chorus}, Aureus={aureus}");
-            Debug.Log($"Net Differences: Waltz-Regalia={waltz-regalia}, Chorus-Aureus={chorus-aureus}");
+            GameLoggingSystem.Instance.LogEvent($"Pillar Values: Waltz={waltz}, Regalia={regalia}, Chorus={chorus}, Aureus={aureus}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"Net Differences: Waltz-Regalia={waltz-regalia}, Chorus-Aureus={chorus-aureus}", "GovernmentLogic");
         }
         
-        Debug.Log($"Thresholds: Centrist={centristThreshold}, Leaning={leaningThreshold}, Pillar={pillarThreshold}, Fanatic={fanaticThreshold}");
+        GameLoggingSystem.Instance.LogEvent($"Thresholds: Centrist={centristThreshold}, Leaning={leaningThreshold}, Pillar={pillarThreshold}, Fanatic={fanaticThreshold}", "GovernmentLogic");
         
         // Show civic system integration
         if (CivicManager.Instance != null)
         {
-            Debug.Log("=== CIVIC INTEGRATION ===");
+            GameLoggingSystem.Instance.LogEvent("=== CIVIC INTEGRATION ===", "GovernmentLogic");
             var allCivics = CivicManager.Instance.GetAllActiveCivics();
-            Debug.Log($"Active Civics: {allCivics.Count}");
+            GameLoggingSystem.Instance.LogEvent($"Active Civics: {allCivics.Count}", "GovernmentLogic");
             foreach (var civic in allCivics)
             {
-                Debug.Log($"  {civic.civicName} ({civic.tier}) - {civic.description}");
+                GameLoggingSystem.Instance.LogEvent($"  {civic.civicName} ({civic.tier}) - {civic.description}", "GovernmentLogic");
             }
             
             // Show civic status information
             var civicStatus = GetCivicStatus();
             var totalLoaded = CivicManager.Instance.GetAllAvailableCivicNames().Count;
-            Debug.Log($"Civic Status:");
-            Debug.Log($"  Total Loaded from Resources: {totalLoaded} civics");
-            Debug.Log($"  Loaded but Locked: {civicStatus.locked.Count} civics");
-            Debug.Log($"  Unlocked: {civicStatus.unlocked.Count} civics");
-            Debug.Log($"  Available for Seat Replacement: {civicStatus.availableForSeats.Count} options");
+            GameLoggingSystem.Instance.LogEvent($"Civic Status:", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Total Loaded from Resources: {totalLoaded} civics", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Loaded but Locked: {civicStatus.locked.Count} civics", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Unlocked: {civicStatus.unlocked.Count} civics", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Available for Seat Replacement: {civicStatus.availableForSeats.Count} options", "GovernmentLogic");
             
             if (civicStatus.locked.Count > 0)
             {
-                Debug.Log($"  Locked Civics: {string.Join(", ", civicStatus.locked)}");
+                GameLoggingSystem.Instance.LogEvent($"  Locked Civics: {string.Join(", ", civicStatus.locked)}", "GovernmentLogic");
             }
             
             if (civicStatus.unlocked.Count > 0)
             {
-                Debug.Log($"  Unlocked Civics: {string.Join(", ", civicStatus.unlocked)}");
+                GameLoggingSystem.Instance.LogEvent($"  Unlocked Civics: {string.Join(", ", civicStatus.unlocked)}", "GovernmentLogic");
             }
         }
         
         // Show council system information
-        Debug.Log("=== COUNCIL SYSTEM ===");
-        Debug.Log($"Total Council Seats: {councilSeats.Count}");
-        Debug.Log($"Unlocked Regular Seats: {unlockedSeatCount}/6");
+        GameLoggingSystem.Instance.LogEvent("=== COUNCIL SYSTEM ===", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Total Council Seats: {councilSeats.Count}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Unlocked Regular Seats: {unlockedSeatCount}/6", "GovernmentLogic");
         
         // Display Head of State (never changes)
         var headOfState = GetCouncilSeat(-1);
@@ -1266,11 +1201,11 @@ public class GovernmentLogic : MonoBehaviour
             string headStatus = headOfState.assignedLegend != null ? 
                 $"Assigned: {headOfState.assignedLegend.legendName} (Active: {headOfState.IsActive()})" : 
                 "Empty";
-            Debug.Log($"  Head of State (-1): {headStatus}");
+            GameLoggingSystem.Instance.LogEvent($"  Head of State (-1): {headStatus}", "GovernmentLogic");
         }
         
         // Display all 6 regular positions (0-5)
-        Debug.Log("=== REGULAR COUNCIL POSITIONS ===");
+        GameLoggingSystem.Instance.LogEvent("=== REGULAR COUNCIL POSITIONS ===", "GovernmentLogic");
         for (int i = 0; i < 6; i++)
         {
             var seat = activeRegularSeats[i];
@@ -1282,23 +1217,23 @@ public class GovernmentLogic : MonoBehaviour
                         "Empty") : 
                     "Locked";
                 string seatType = seat.sourceCivic != null ? $"Civic: {seat.sourceCivic.civicName}" : "Default";
-                Debug.Log($"  Position {i}: {seat.GetEffectiveTitle()} ({seatType}) - {status}");
+                GameLoggingSystem.Instance.LogEvent($"  Position {i}: {seat.GetEffectiveTitle()} ({seatType}) - {status}", "GovernmentLogic");
             }
         }
         
         // Show available seat pool
-        Debug.Log("=== AVAILABLE SEAT POOL ===");
-        Debug.Log($"Total Available Seats: {availableSeatPool.Count}");
+        GameLoggingSystem.Instance.LogEvent("=== AVAILABLE SEAT POOL ===", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Total Available Seats: {availableSeatPool.Count}", "GovernmentLogic");
         foreach (var seat in availableSeatPool)
         {
             string seatType = seat.sourceCivic != null ? $"Civic: {seat.sourceCivic.civicName}" : "Default";
-            Debug.Log($"  {seat.seatTitle} ({seatType})");
+            GameLoggingSystem.Instance.LogEvent($"  {seat.seatTitle} ({seatType})", "GovernmentLogic");
         }
         
         // Show civic council seats
         if (civicCouncilSeats.Count > 0)
         {
-            Debug.Log("=== CIVIC COUNCIL SEATS ===");
+            GameLoggingSystem.Instance.LogEvent("=== CIVIC COUNCIL SEATS ===", "GovernmentLogic");
             foreach (var kvp in civicCouncilSeats)
             {
                 var civic = kvp.Key;
@@ -1306,11 +1241,11 @@ public class GovernmentLogic : MonoBehaviour
                 string status = seat.assignedLegend != null ? 
                     $"Assigned: {seat.assignedLegend.legendName} (Active: {seat.IsActive()})" : 
                     "Empty";
-                Debug.Log($"  {civic} ({seat.GetEffectiveTitle()}): {status}");
+                GameLoggingSystem.Instance.LogEvent($"  {civic} ({seat.GetEffectiveTitle()}): {status}", "GovernmentLogic");
             }
         }
         
-        Debug.Log($"Total Council Seats (including civics): {GetTotalCouncilSeatCount()}");
+        GameLoggingSystem.Instance.LogEvent($"Total Council Seats (including civics): {GetTotalCouncilSeatCount()}", "GovernmentLogic");
     }
 
     public void ForceRecalculation()
@@ -1396,11 +1331,8 @@ public class GovernmentLogic : MonoBehaviour
         // Initialize the 6 regular positions with default seats
         InitializeRegularSeats();
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Initialized flexible council system with {councilSeats.Count} total seats (1 Head of State + {unlockedSeatCount} unlocked regular seats)");
-            Debug.Log($"[GovernmentLogic] Available seat pool: {availableSeatPool.Count} seats, Default templates: {defaultSeatTemplates.Count}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Initialized flexible council system with {councilSeats.Count} total seats (1 Head of State + {unlockedSeatCount} unlocked regular seats)", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Available seat pool: {availableSeatPool.Count} seats, Default templates: {defaultSeatTemplates.Count}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -1418,10 +1350,7 @@ public class GovernmentLogic : MonoBehaviour
             availableSeatPool.Add(template);
         }
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Created {defaultSeatTemplates.Count} default seat templates from configuration");
-        }
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Created {defaultSeatTemplates.Count} default seat templates from configuration", "GovernmentLogic");
     }
     
     /// <summary>
@@ -1553,10 +1482,7 @@ public class GovernmentLogic : MonoBehaviour
         
         OnCouncilSeatUnlocked?.Invoke(seat);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Unlocked council seat {seatIndex}: {seat.GetEffectiveTitle()}. Total unlocked: {unlockedSeatCount}/6");
-        }
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Unlocked council seat {seatIndex}: {seat.GetEffectiveTitle()}. Total unlocked: {unlockedSeatCount}/6", "GovernmentLogic");
         
         return true;
     }
@@ -1619,10 +1545,7 @@ public class GovernmentLogic : MonoBehaviour
             // Properly remove the legend and trigger UI events
             if (RemoveLegendFromSeat(position))
             {
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Removed legend {legend.legendName} from seat at position {position} during replacement");
-                }
+                GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Removed legend {legend.legendName} from seat at position {position} during replacement", "GovernmentLogic");
             }
         }
 
@@ -1644,10 +1567,7 @@ public class GovernmentLogic : MonoBehaviour
         // Also notify about council composition change since we replaced a seat
         OnCouncilCompositionChanged?.Invoke();
 
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Replaced seat at position {position}: {oldSeat.GetEffectiveTitle()} -> {newSeatInstance.GetEffectiveTitle()}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Replaced seat at position {position}: {oldSeat.GetEffectiveTitle()} -> {newSeatInstance.GetEffectiveTitle()}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -1751,7 +1671,7 @@ public class GovernmentLogic : MonoBehaviour
         
         isProcessingSeatBonuses = true;
         
-        if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Seat pipeline: start ({GetUnlockedCouncilSeatCount()} unlocked)");
+        GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Seat pipeline: start ({GetUnlockedCouncilSeatCount()} unlocked)", "GovernmentLogic");
         
         try
         {
@@ -1778,11 +1698,11 @@ public class GovernmentLogic : MonoBehaviour
             
             if (activeSeats.Count == 0)
             {
-                if (enableGovernmentLogicLogging) Debug.Log("[GovernmentLogic] No active seats to process");
+                GameLoggingSystem.Instance.LogEvent("[GovernmentLogic] No active seats to process", "GovernmentLogic");
             }
             else
             {
-                if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Processing {activeSeats.Count} active seats");
+                GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Processing {activeSeats.Count} active seats", "GovernmentLogic");
                 
                 // Reset override/snapshot for this processing cycle
                 useLegendEffectivenessOverride = false;
@@ -1816,7 +1736,7 @@ public class GovernmentLogic : MonoBehaviour
             {
                     StatManager.Instance.ForceCompleteRecalculation();
                     lastKnownLegendEffectiveness = StatManager.Instance.GetDerivedValue("legendEffectiveness");
-                    if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] LE after authority: {lastKnownLegendEffectiveness:F2}");
+                    GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] LE after authority: {lastKnownLegendEffectiveness:F2}", "GovernmentLogic");
                     useLegendEffectivenessOverride = true;
                     legendEffectivenessOverride = lastKnownLegendEffectiveness;
                 }
@@ -1848,10 +1768,10 @@ public class GovernmentLogic : MonoBehaviour
                 {
                 StatManager.Instance.ForceCompleteRecalculation();
                 lastKnownLegendEffectiveness = StatManager.Instance.GetDerivedValue("legendEffectiveness");
-                    if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] LE direct: {leBeforeDirect:F2} → {lastKnownLegendEffectiveness:F2}");
+                    GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] LE direct: {leBeforeDirect:F2} → {lastKnownLegendEffectiveness:F2}", "GovernmentLogic");
                     legendEffectivenessOverride = lastKnownLegendEffectiveness;
                     _currentLegendEffectivenessSnapshot = lastKnownLegendEffectiveness;
-                    if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] LE snapshot: {_currentLegendEffectivenessSnapshot:F2}");
+                    GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] LE snapshot: {_currentLegendEffectivenessSnapshot:F2}", "GovernmentLogic");
             }
             
                 // PHASE C: Apply all Legend bonuses that are enhanced by Legend Effectiveness (resources/production/click/etc.)
@@ -1936,16 +1856,13 @@ public class GovernmentLogic : MonoBehaviour
                 {
                     if (seat.bonusesProcessed)
                     {
-                        if (enableGovernmentLogicLogging)
-                        {
-                            Debug.Log($"[GovernmentLogic] Resetting bonusesProcessed flag for inactive/empty seat '{seat.seatTitle}'");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"Resetting bonusesProcessed flag for inactive/empty seat '{seat.seatTitle}'", "GovernmentLogic");
                         seat.bonusesProcessed = false;
                     }
                 }
             }
             
-            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Seat pipeline: done ({processedCount} seats)");
+            GameLoggingSystem.Instance.LogEvent($"Seat pipeline: done ({processedCount} seats)", "GovernmentLogic");
         }
         catch (System.Exception e)
         {
@@ -1979,22 +1896,17 @@ public class GovernmentLogic : MonoBehaviour
         
         if (!seat.IsActive())
         {
-            if (enableGovernmentLogicLogging)
-                Debug.Log($"[GovernmentLogic] ProcessSeatBonuses: Seat '{seat.seatTitle}' is not active (seventhsUntilActive: {seat.seventhsUntilActive})");
+            GameLoggingSystem.Instance.LogEvent($"ProcessSeatBonuses: Seat '{seat.seatTitle}' is not active (seventhsUntilActive: {seat.seventhsUntilActive})", "GovernmentLogic");
             return;
         }
         
         if (seat.assignedLegend == null)
         {
-            if (enableGovernmentLogicLogging)
-                Debug.Log($"[GovernmentLogic] ProcessSeatBonuses: Seat '{seat.seatTitle}' has no assigned legend");
+            GameLoggingSystem.Instance.LogEvent($"ProcessSeatBonuses: Seat '{seat.seatTitle}' has no assigned legend", "GovernmentLogic");
             return;
         }
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Processing {seat.seatBonuses.Count} bonuses for seat '{seat.seatTitle}' with legend '{seat.assignedLegend.legendName}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Processing {seat.seatBonuses.Count} bonuses for seat '{seat.seatTitle}' with legend '{seat.assignedLegend.legendName}'", "GovernmentLogic");
         
         // Process seat bonuses (skip Authority bonuses - already processed in Phase 1)
         foreach (var seatBonus in seat.seatBonuses)
@@ -2008,36 +1920,24 @@ public class GovernmentLogic : MonoBehaviour
             
             if (seatBonus.requiresLegend && seat.assignedLegend != null)
             {
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Applying seat bonus: {seatBonus.bonusType} | Target: '{seatBonus.targetStat}' | Value: {seatBonus.modifierValue} | Type: {seatBonus.modifierType}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Applying seat bonus: {seatBonus.bonusType} | Target: '{seatBonus.targetStat}' | Value: {seatBonus.modifierValue} | Type: {seatBonus.modifierType}", "GovernmentLogic");
                 ApplySeatBonus(seatBonus, seat.assignedLegend);
             }
             else if (!seatBonus.requiresLegend)
             {
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Applying passive seat bonus: {seatBonus.bonusType} | Target: '{seatBonus.targetStat}' | Value: {seatBonus.modifierValue} | Type: {seatBonus.modifierType}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Applying passive seat bonus: {seatBonus.bonusType} | Target: '{seatBonus.targetStat}' | Value: {seatBonus.modifierValue} | Type: {seatBonus.modifierType}", "GovernmentLogic");
                 ApplySeatBonus(seatBonus, seat.assignedLegend);
             }
             else
             {
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Skipping seat bonus (requires legend but none assigned): {seatBonus.bonusType}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Skipping seat bonus (requires legend but none assigned): {seatBonus.bonusType}", "GovernmentLogic");
             }
         }
         
         // Process legend bonuses (from the assigned legend's own bonuses)
         if (seat.assignedLegend != null)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Processing {seat.assignedLegend.bonuses.Count} legend bonuses for legend '{seat.assignedLegend.legendName}'");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Processing {seat.assignedLegend.bonuses.Count} legend bonuses for legend '{seat.assignedLegend.legendName}'", "GovernmentLogic");
             
             foreach (var legendBonus in seat.assignedLegend.bonuses)
             {
@@ -2048,10 +1948,7 @@ public class GovernmentLogic : MonoBehaviour
                     continue; // Skip Authority bonuses
                 }
                 
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Applying legend bonus: {legendBonus.bonusType} | Target: '{legendBonus.targetStat}' | Value: {legendBonus.modifierValue} | Type: {legendBonus.modifierType}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Applying legend bonus: {legendBonus.bonusType} | Target: '{legendBonus.targetStat}' | Value: {legendBonus.modifierValue} | Type: {legendBonus.modifierType}", "GovernmentLogic");
                 ApplyLegendBonus(legendBonus, seat.assignedLegend);
             }
         }
@@ -2115,7 +2012,7 @@ public class GovernmentLogic : MonoBehaviour
                     // Get base value for proper percentage calculation
                     float basePillarValue = StatManager.Instance.GetBasePillarValue(legendBonus.targetStat);
                     float pillarBonusValue = CalculateLegendStatModifierValue(effectiveValue, legendBonus.modifierType, basePillarValue);
-                    if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Legend Pillar: {legendBonus.targetStat} +{pillarBonusValue} by {sourceName}");
+                    GameLoggingSystem.Instance.LogEvent($"Legend Pillar: {legendBonus.targetStat} +{pillarBonusValue} by {sourceName}", "GovernmentLogic");
                     StatManager.Instance.AddPillarBonus(legendBonus.targetStat, pillarBonusValue, sourceName);
                     
                     break;
@@ -2138,7 +2035,7 @@ public class GovernmentLogic : MonoBehaviour
                         {
                             bonusValue = CalculateLegendStatModifierValue(effectiveValue, legendBonus.modifierType, baseSubstatValue);
                         }
-                        if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Legend Substat: {legendBonus.targetStat} +{bonusValue} by {sourceName}");
+                        GameLoggingSystem.Instance.LogEvent($"Legend Substat: {legendBonus.targetStat} +{bonusValue} by {sourceName}", "GovernmentLogic");
                         StatManager.Instance.AddSubstatBonus(legendBonus.targetStat, bonusValue, sourceName);
                     }
                     break;
@@ -2172,7 +2069,7 @@ public class GovernmentLogic : MonoBehaviour
                                 // SetValue: set absolute LE; add delta
                                 bonusValue = effectiveValue - baseDerivedValue;
                             }
-                            if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] LE direct: base {baseDerivedValue:F2} +{bonusValue:F2} via {legendBonus.modifierType} from {sourceName}");
+                            GameLoggingSystem.Instance.LogEvent($"LE direct: base {baseDerivedValue:F2} +{bonusValue:F2} via {legendBonus.modifierType} from {sourceName}", "GovernmentLogic");
                         }
                         else
                         {
@@ -2197,12 +2094,9 @@ public class GovernmentLogic : MonoBehaviour
                         if (legendBonus.scope == ScopeType.Global || string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to all resources (global bonus)
-                            if (enableGovernmentLogicLogging)
-                            {
-                                int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
-                                float mult = 1f + (leSnap / 100f);
-                                Debug.Log($"[GovernmentLogic] Resource(global): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}");
-                            }
+                            int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
+                            float mult = 1f + (leSnap / 100f);
+                            GameLoggingSystem.Instance.LogEvent($"Resource(global): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}", "GovernmentLogic");
                             var allResources = GameUnitsLogic.Instance?.GetAvailableResources() ?? new List<GameResourceSlot>();
                             
                             // Apply to existing resources
@@ -2225,20 +2119,14 @@ public class GovernmentLogic : MonoBehaviour
                             var pendingBonus = new PendingLegendBonus(sourceName, legendBonus.bonusType, legendBonus.targetStat, modifierValue, legendBonus.modifierType, legendBonus.scope, isPositive);
                             pendingGlobalBonuses.Add(pendingBonus);
                             
-                            if (enableGovernmentLogicLogging)
-                            {
-                                Debug.Log($"[GovernmentLogic] Stored global ResourceModifier as pending bonus for future resources");
-                            }
+                            GameLoggingSystem.Instance.LogEvent($"Stored global ResourceModifier as pending bonus for future resources", "GovernmentLogic");
                         }
                         else if (legendBonus.scope == ScopeType.Section && !string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific section
-                            if (enableGovernmentLogicLogging)
-                            {
-                                int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
-                                float mult = 1f + (leSnap / 100f);
-                                Debug.Log($"[GovernmentLogic] Resource(section {legendBonus.targetStat}): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}");
-                            }
+                            int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
+                            float mult = 1f + (leSnap / 100f);
+                            GameLoggingSystem.Instance.LogEvent($"Resource(section {legendBonus.targetStat}): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}", "GovernmentLogic");
                             if (legendBonus.modifierType == ModifierType.Percentage)
                             {
                                 GlobalProductionManager.Instance.AdjustPercentageModifierForSection(legendBonus.targetStat, Mathf.Abs(modifierValue), isPositive, true, sourceName);
@@ -2263,20 +2151,14 @@ public class GovernmentLogic : MonoBehaviour
                             var pendingBonus = new PendingLegendBonus(sourceName, legendBonus.bonusType, legendBonus.targetStat, modifierValue, legendBonus.modifierType, legendBonus.scope, isPositive);
                             pendingSectionBonuses[legendBonus.targetStat].Add(pendingBonus);
                             
-                            if (enableGovernmentLogicLogging)
-                            {
-                                Debug.Log($"[GovernmentLogic] Stored section ResourceModifier as pending bonus for future {legendBonus.targetStat} resources");
-                            }
+                            GameLoggingSystem.Instance.LogEvent($"Stored section ResourceModifier as pending bonus for future {legendBonus.targetStat} resources", "GovernmentLogic");
                         }
                         else if (!string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific resource
-                            if (enableGovernmentLogicLogging)
-                            {
-                                int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
-                                float mult = 1f + (leSnap / 100f);
-                                Debug.Log($"[GovernmentLogic] Resource({legendBonus.targetStat}): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}");
-                            }
+                            int leSnap = Mathf.RoundToInt(_currentLegendEffectivenessSnapshot >= 0 ? _currentLegendEffectivenessSnapshot : (useLegendEffectivenessOverride ? legendEffectivenessOverride : (StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f)));
+                            float mult = 1f + (leSnap / 100f);
+                            GameLoggingSystem.Instance.LogEvent($"Resource({legendBonus.targetStat}): {effectiveValue}→{modifierValue} (LE {leSnap}%, ×{mult:F2}) by {sourceName}", "GovernmentLogic");
                             bool resourceExists = false;
                             
                             if (legendBonus.modifierType == ModifierType.Percentage)
@@ -2307,10 +2189,7 @@ public class GovernmentLogic : MonoBehaviour
                                 var pendingBonus = new PendingLegendBonus(sourceName, legendBonus.bonusType, legendBonus.targetStat, modifierValue, legendBonus.modifierType, legendBonus.scope, isPositive);
                                 pendingResourceBonuses[legendBonus.targetStat].Add(pendingBonus);
                                 
-                                if (enableGovernmentLogicLogging)
-                                {
-                                    Debug.Log($"[GovernmentLogic] Stored individual ResourceModifier as pending bonus for future {legendBonus.targetStat} resource");
-                                }
+                                GameLoggingSystem.Instance.LogEvent($"Stored individual ResourceModifier as pending bonus for future {legendBonus.targetStat} resource", "GovernmentLogic");
                             }
                         }
                     }
@@ -2324,20 +2203,20 @@ public class GovernmentLogic : MonoBehaviour
                         if (legendBonus.scope == ScopeType.Global || string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to all production units (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionModifier: all production units {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionModifier: all production units {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustProductionModifierByType("Building", modifierValue, true, sourceName);
                             GameUnitsLogic.Instance.AdjustProductionModifierByType("Unit", modifierValue, true, sourceName);
                         }
                         else if (legendBonus.scope == ScopeType.Section && !string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific section
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionModifier: {legendBonus.targetStat} section {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionModifier: {legendBonus.targetStat} section {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustProductionModifierBySection(legendBonus.targetStat, modifierValue, true, sourceName);
                         }
                         else if (!string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific production unit type
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionModifier: {legendBonus.targetStat} type {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionModifier: {legendBonus.targetStat} type {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustProductionModifierByType(legendBonus.targetStat, modifierValue, true, sourceName);
                         }
                     }
@@ -2357,7 +2236,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (legendBonus.scope == ScopeType.Global || string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to all resources (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Legend ClickPowerBonus: all resources {modifierValue} from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ClickPowerBonus: all resources {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                             foreach (var resource in GameUnitsLogic.Instance.GetAvailableResources())
                             {
                                 if (resource != null && resource.gameUnit != null)
@@ -2369,33 +2248,33 @@ public class GovernmentLogic : MonoBehaviour
                         else if (legendBonus.scope == ScopeType.Section && !string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific section
-                            Debug.Log($"[GovernmentLogic] Applying Legend ClickPowerBonus: {legendBonus.targetStat} section {modifierValue} from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ClickPowerBonus: {legendBonus.targetStat} section {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustClickPowerForSection(legendBonus.targetStat, modifierValue);
                         }
                         else if (!string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific resource
-                            Debug.Log($"[GovernmentLogic] Applying Legend ClickPowerBonus: {legendBonus.targetStat} {modifierValue} from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ClickPowerBonus: {legendBonus.targetStat} {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustClickPower(legendBonus.targetStat, modifierValue);
                         }
                     }
                     break;
                     
                 case GameEffectType.MaxMoraleModifier:
-                    Debug.Log($"[GovernmentLogic] DEBUG: MaxMoraleModifier case triggered for '{sourceName}' with value {legendBonus.modifierValue} {legendBonus.modifierType}");
+                    GameLoggingSystem.Instance.LogEvent($"MaxMoraleModifier case triggered for '{sourceName}' with value {legendBonus.modifierValue} {legendBonus.modifierType}", "GovernmentLogic");
                     if (StatManager.Instance != null)
                     {
                         float baseMaxMorale = StatManager.Instance.GetBaseGlobalValue("maxmorale");
-                        Debug.Log($"[GovernmentLogic] DEBUG: Retrieved base max morale: {baseMaxMorale}");
+                        GameLoggingSystem.Instance.LogEvent($"Retrieved base max morale: {baseMaxMorale}", "GovernmentLogic");
                         float modifierValue = CalculateLegendStatModifierValue(effectiveValue, legendBonus.modifierType, baseMaxMorale);
-                        Debug.Log($"[GovernmentLogic] DEBUG: Calculated modifier value: {modifierValue}");
-                        Debug.Log($"[GovernmentLogic] Applying Legend MaxMoraleModifier: +{modifierValue} ({effectiveValue} {legendBonus.modifierType} of base {baseMaxMorale}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Calculated modifier value: {modifierValue}", "GovernmentLogic");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Legend MaxMoraleModifier: +{modifierValue} ({effectiveValue} {legendBonus.modifierType} of base {baseMaxMorale}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("maxmorale", Mathf.RoundToInt(modifierValue), sourceName);
-                        Debug.Log($"[GovernmentLogic] DEBUG: AddGlobalBonus call completed for maxMorale");
+                        GameLoggingSystem.Instance.LogEvent($"AddGlobalBonus call completed for maxMorale", "GovernmentLogic");
                     }
                     else
                     {
-                        Debug.LogError($"[GovernmentLogic] DEBUG: StatManager.Instance is null when trying to apply MaxMoraleModifier!");
+                        Debug.LogError($"[GovernmentLogic]StatManager.Instance is null when trying to apply MaxMoraleModifier!");
                     }
                     break;
                     
@@ -2404,34 +2283,34 @@ public class GovernmentLogic : MonoBehaviour
                     {
                         float enhancedValue = CalculateLegendModifierValue(effectiveValue, legendBonus.modifierType);
                         int modifierValue = Mathf.RoundToInt(enhancedValue);
-                        Debug.Log($"[GovernmentLogic] Applying Legend MoraleBalanceModifier: {modifierValue} from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Legend MoraleBalanceModifier: {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("moraleBalance", modifierValue, sourceName);
                     }
                     break;
                     
                 case GameEffectType.SatisfactionThresholdModifier:
-                    Debug.Log($"[GovernmentLogic] DEBUG: SatisfactionThresholdModifier case triggered for '{sourceName}' with value {legendBonus.modifierValue} {legendBonus.modifierType}");
+                    GameLoggingSystem.Instance.LogEvent($"SatisfactionThresholdModifier case triggered for '{sourceName}' with value {legendBonus.modifierValue} {legendBonus.modifierType}", "GovernmentLogic");
                     if (StatManager.Instance != null)
                     {
                         // Get the base satisfaction upgrade threshold
                         float baseSatisfactionThreshold = StatManager.Instance.GetBaseGlobalValue("satisfactionupgradethreshold");
-                        Debug.Log($"[GovernmentLogic] DEBUG: Retrieved base satisfaction threshold: {baseSatisfactionThreshold}");
+                        GameLoggingSystem.Instance.LogEvent($"Retrieved base satisfaction threshold: {baseSatisfactionThreshold}", "GovernmentLogic");
                         
                         // Calculate modifier value - for percentage, reduce the threshold
                         float modifierValue = CalculateLegendStatModifierValue(effectiveValue, legendBonus.modifierType, baseSatisfactionThreshold);
-                        Debug.Log($"[GovernmentLogic] DEBUG: Calculated modifier value: {modifierValue}");
+                        GameLoggingSystem.Instance.LogEvent($"Calculated modifier value: {modifierValue}", "GovernmentLogic");
                         
                         // Make it easier to upgrade by reducing the threshold (negative value)
                         int finalModifier = -Mathf.RoundToInt(Mathf.Abs(modifierValue));
-                        Debug.Log($"[GovernmentLogic] DEBUG: Final modifier (negative for easier upgrades): {finalModifier}");
+                        GameLoggingSystem.Instance.LogEvent($"Final modifier (negative for easier upgrades): {finalModifier}", "GovernmentLogic");
                         
-                        Debug.Log($"[GovernmentLogic] Applying Legend SatisfactionThresholdModifier: {finalModifier} ({effectiveValue} {legendBonus.modifierType} of base {baseSatisfactionThreshold}, easier upgrades) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Legend SatisfactionThresholdModifier: {finalModifier} ({effectiveValue} {legendBonus.modifierType} of base {baseSatisfactionThreshold}, easier upgrades) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("satisfactionupgradethreshold", finalModifier, sourceName);
-                        Debug.Log($"[GovernmentLogic] DEBUG: AddGlobalBonus call completed for satisfactionUpgradeThreshold");
+                        GameLoggingSystem.Instance.LogEvent($"AddGlobalBonus call completed for satisfactionUpgradeThreshold", "GovernmentLogic");
                     }
                     else
                     {
-                        Debug.LogError($"[GovernmentLogic] DEBUG: StatManager.Instance is null when trying to apply SatisfactionThresholdModifier!");
+                        Debug.LogError($"[GovernmentLogic] StatManager.Instance is null when trying to apply SatisfactionThresholdModifier!");
                     }
                     break;
                     
@@ -2441,7 +2320,7 @@ public class GovernmentLogic : MonoBehaviour
                         // For housing, we can use a base housing value assumption for percentage calculations
                         float baseHousing = 100f; // Assumed base housing capacity for percentage calculations
                         float bonusValue = CalculateLegendStatModifierValue(effectiveValue, legendBonus.modifierType, baseHousing);
-                        Debug.Log($"[GovernmentLogic] Applying Legend HousingBonus: +{bonusValue} ({effectiveValue} {legendBonus.modifierType} of base {baseHousing}) housing from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Legend HousingBonus: +{bonusValue} ({effectiveValue} {legendBonus.modifierType} of base {baseHousing}) housing from SOURCE: '{sourceName}'", "GovernmentLogic");
                         PopGrowthLogic.Instance.AddHousingBonus(Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2454,20 +2333,20 @@ public class GovernmentLogic : MonoBehaviour
                         if (legendBonus.scope == ScopeType.Global || string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to all building types (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Legend ConstructionCostModifier: all buildings {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ConstructionCostModifier: all buildings {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierByType("Building", modifierValue, true, sourceName);
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierByType("Unit", modifierValue, true, sourceName);
                         }
                         else if (legendBonus.scope == ScopeType.Section && !string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific section
-                            Debug.Log($"[GovernmentLogic] Applying Legend ConstructionCostModifier: {legendBonus.targetStat} section {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ConstructionCostModifier: {legendBonus.targetStat} section {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierBySection(legendBonus.targetStat, modifierValue, true, sourceName);
                         }
                         else if (!string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific building type
-                            Debug.Log($"[GovernmentLogic] Applying Legend ConstructionCostModifier: {legendBonus.targetStat} type {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ConstructionCostModifier: {legendBonus.targetStat} type {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierByType(legendBonus.targetStat, modifierValue, true, sourceName);
                         }
                     }
@@ -2491,7 +2370,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (legendBonus.scope == ScopeType.Global || string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to all production units (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionScalingBonus: all production units +{bonusValue} per unit from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionScalingBonus: all production units +{bonusValue} per unit from SOURCE: '{sourceName}'", "GovernmentLogic");
                             var allProductionUnits = GameUnitsLogic.Instance.GetAvailableProductionUnits();
                             foreach (var productionUnit in allProductionUnits)
                             {
@@ -2504,7 +2383,7 @@ public class GovernmentLogic : MonoBehaviour
                         else if (legendBonus.scope == ScopeType.Section && !string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific section
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionScalingBonus: {legendBonus.targetStat} section +{bonusValue} per unit from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionScalingBonus: {legendBonus.targetStat} section +{bonusValue} per unit from SOURCE: '{sourceName}'", "GovernmentLogic");
                             var allProductionUnits = GameUnitsLogic.Instance.GetAvailableProductionUnits();
                             foreach (var productionUnit in allProductionUnits)
                             {
@@ -2518,14 +2397,14 @@ public class GovernmentLogic : MonoBehaviour
                         else if (!string.IsNullOrEmpty(legendBonus.targetStat))
                         {
                             // Apply to specific production unit
-                            Debug.Log($"[GovernmentLogic] Applying Legend ProductionScalingBonus: {legendBonus.targetStat} +{bonusValue} per unit from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Legend ProductionScalingBonus: {legendBonus.targetStat} +{bonusValue} per unit from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AddProductionScalingBonus(legendBonus.targetStat, bonusValue, sourceName);
                         }
                     }
                     break;
                     
                 case GameEffectType.SpecialAbility:
-                    Debug.Log($"[GovernmentLogic] Legend SpecialAbility effects not implemented yet for {sourceName}");
+                    GameLoggingSystem.Instance.LogEvent($"Legend SpecialAbility effects not implemented yet for {sourceName}", "GovernmentLogic");
                     break;
                     
                 default:
@@ -2585,7 +2464,7 @@ public class GovernmentLogic : MonoBehaviour
                     // Get base value for proper percentage calculation
                     float basePillarValue = StatManager.Instance.GetBasePillarValue(seatBonus.targetStat);
                     float pillarBonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, basePillarValue);
-                    if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Seat Pillar: {seatBonus.targetStat} +{pillarBonusValue} by {sourceName}");
+                    GameLoggingSystem.Instance.LogEvent($"Seat Pillar: {seatBonus.targetStat} +{pillarBonusValue} by {sourceName}", "GovernmentLogic");
                     StatManager.Instance.AddPillarBonus(seatBonus.targetStat, pillarBonusValue, sourceName);
                     
                     break;
@@ -2599,7 +2478,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Get base value for proper percentage calculation
                         float baseSubstatValue = StatManager.Instance.GetBaseSubstatValue(seatBonus.targetStat);
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseSubstatValue);
-                        if (enableGovernmentLogicLogging) Debug.Log($"[GovernmentLogic] Seat Substat: {seatBonus.targetStat} +{bonusValue} by {sourceName}");
+                        GameLoggingSystem.Instance.LogEvent($"Seat Substat: {seatBonus.targetStat} +{bonusValue} by {sourceName}", "GovernmentLogic");
                         StatManager.Instance.AddSubstatBonus(seatBonus.targetStat, bonusValue, sourceName);
                     }
                     break;
@@ -2613,7 +2492,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Get base value for proper percentage calculation
                         float baseDerivedValue = StatManager.Instance.GetBaseDerivedValue(seatBonus.targetStat);
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseDerivedValue);
-                        Debug.Log($"[GovernmentLogic] Applying Seat DerivedStatBonus: {seatBonus.targetStat} +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseDerivedValue}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat DerivedStatBonus: {seatBonus.targetStat} +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseDerivedValue}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddDerivedStatBonus(seatBonus.targetStat, bonusValue, sourceName);
                     }
                     break;
@@ -2633,7 +2512,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (string.IsNullOrEmpty(seatBonus.targetStat))
                         {
                             // Apply to all resources (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Seat ResourceModifier: all resources {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ResourceModifier: all resources {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             var allResources = GameUnitsLogic.Instance?.GetAvailableResources() ?? new List<GameResourceSlot>();
                             foreach (var resource in allResources)
                             {
@@ -2653,7 +2532,7 @@ public class GovernmentLogic : MonoBehaviour
                         else
                         {
                             // Apply to specific resource
-                            Debug.Log($"[GovernmentLogic] Applying Seat ResourceModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ResourceModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             if (seatBonus.modifierType == ModifierType.Percentage)
                             {
                                 GlobalProductionManager.Instance.AdjustPercentageModifier(seatBonus.targetStat, Mathf.Abs(modifierValue), isPositive, true, sourceName);
@@ -2674,7 +2553,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (string.IsNullOrEmpty(seatBonus.targetStat))
                         {
                             // Apply to all production units (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Seat ProductionModifier: all production units {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ProductionModifier: all production units {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustProductionModifierByType("Building", modifierValue, true, sourceName);
                             GameUnitsLogic.Instance.AdjustProductionModifierByType("Unit", modifierValue, true, sourceName);
                         }
@@ -2682,7 +2561,7 @@ public class GovernmentLogic : MonoBehaviour
                         {
                             // Check if it's a section name or specific type
                             // First try as section, then as type
-                            Debug.Log($"[GovernmentLogic] Applying Seat ProductionModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ProductionModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             
                             // Try section first
                             bool appliedAsSection = false;
@@ -2714,7 +2593,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (string.IsNullOrEmpty(seatBonus.targetStat))
                         {
                             // Apply to all resources (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Seat ClickPowerBonus: all resources {modifierValue} from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ClickPowerBonus: all resources {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                             foreach (var resourceSlot in GameUnitsLogic.Instance.GetAvailableResources())
                             {
                                 if (resourceSlot != null && resourceSlot.gameUnit != null)
@@ -2726,7 +2605,7 @@ public class GovernmentLogic : MonoBehaviour
                         else
                         {
                             // Check if it's a section name or specific resource
-                            Debug.Log($"[GovernmentLogic] Applying Seat ClickPowerBonus: {seatBonus.targetStat} {modifierValue} from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ClickPowerBonus: {seatBonus.targetStat} {modifierValue} from SOURCE: '{sourceName}'", "GovernmentLogic");
                             
                             // Try section first
                             bool appliedAsSection = false;
@@ -2756,7 +2635,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Get base value for proper percentage calculation
                         float baseMaxMorale = StatManager.Instance.GetBaseGlobalValue("maxmorale");
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseMaxMorale);
-                        Debug.Log($"[GovernmentLogic] Applying Seat MaxMoraleModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMaxMorale}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat MaxMoraleModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMaxMorale}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("maxMorale", Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2767,7 +2646,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Get base value for proper percentage calculation
                         float baseMorale = StatManager.Instance.GetBaseGlobalValue("morale");
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseMorale);
-                        Debug.Log($"[GovernmentLogic] Applying Seat MoraleModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMorale}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat MoraleModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMorale}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("morale", Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2778,7 +2657,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Get base value for proper percentage calculation
                         float baseMoraleBalance = StatManager.Instance.GetBaseGlobalValue("moraleBalance");
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseMoraleBalance);
-                        Debug.Log($"[GovernmentLogic] Applying Seat MoraleBalanceModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMoraleBalance}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat MoraleBalanceModifier: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseMoraleBalance}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("moraleBalance", Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2791,7 +2670,7 @@ public class GovernmentLogic : MonoBehaviour
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseThreshold);
                         // Make the value negative to make upgrades easier (reduce threshold)
                         bonusValue = -Mathf.Abs(bonusValue);
-                        Debug.Log($"[GovernmentLogic] Applying Seat SatisfactionThresholdModifier: {bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseThreshold}, made negative for easier upgrades) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat SatisfactionThresholdModifier: {bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseThreshold}, made negative for easier upgrades) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         StatManager.Instance.AddGlobalBonus("satisfactionupgradethreshold", Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2803,7 +2682,7 @@ public class GovernmentLogic : MonoBehaviour
                         // Since housing bonuses are typically additive, but percentages could apply to base housing capacity
                         float baseHousing = 100f; // Assumed base housing capacity for percentage calculations
                         float bonusValue = CalculateStatModifierValue(seatBonus.modifierValue, seatBonus.modifierType, baseHousing);
-                        Debug.Log($"[GovernmentLogic] Applying Seat HousingBonus: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseHousing}) from SOURCE: '{sourceName}'");
+                        GameLoggingSystem.Instance.LogEvent($"Applying Seat HousingBonus: +{bonusValue} ({seatBonus.modifierValue} {seatBonus.modifierType} of base {baseHousing}) from SOURCE: '{sourceName}'", "GovernmentLogic");
                         PopGrowthLogic.Instance.AddHousingBonus(Mathf.RoundToInt(bonusValue), sourceName);
                     }
                     break;
@@ -2816,14 +2695,14 @@ public class GovernmentLogic : MonoBehaviour
                         if (string.IsNullOrEmpty(seatBonus.targetStat))
                         {
                             // Apply to all building types (global bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Seat ConstructionCostModifier: all buildings {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ConstructionCostModifier: all buildings {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierByType("Building", modifierValue, true, sourceName);
                             GameUnitsLogic.Instance.AdjustConstructionCostModifierByType("Unit", modifierValue, true, sourceName);
                         }
                         else
                         {
                             // Check if it's a section name or specific building type
-                            Debug.Log($"[GovernmentLogic] Applying Seat ConstructionCostModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ConstructionCostModifier: {seatBonus.targetStat} {modifierValue}% from SOURCE: '{sourceName}'", "GovernmentLogic");
                             
                             // Try section first
                             bool appliedAsSection = false;
@@ -2855,7 +2734,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (string.IsNullOrEmpty(seatBonus.targetStat))
                         {
                             // Apply to all production units (global scaling bonus)
-                            Debug.Log($"[GovernmentLogic] Applying Seat ProductionScalingBonus: all production units +{bonusValue} per unit from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ProductionScalingBonus: all production units +{bonusValue} per unit from SOURCE: '{sourceName}'", "GovernmentLogic");
                             var allProductionUnits = GameUnitsLogic.Instance.GetAvailableProductionUnits();
                             foreach (var productionUnit in allProductionUnits)
                             {
@@ -2868,7 +2747,7 @@ public class GovernmentLogic : MonoBehaviour
                         else
                         {
                             // Check if it's a section name or specific production unit
-                            Debug.Log($"[GovernmentLogic] Applying Seat ProductionScalingBonus: {seatBonus.targetStat} +{bonusValue} per unit from SOURCE: '{sourceName}'");
+                            GameLoggingSystem.Instance.LogEvent($"Applying Seat ProductionScalingBonus: {seatBonus.targetStat} +{bonusValue} per unit from SOURCE: '{sourceName}'", "GovernmentLogic");
                             
                             // Try section first
                             bool appliedAsSection = false;
@@ -2894,10 +2773,7 @@ public class GovernmentLogic : MonoBehaviour
                     
                 case SeatBonusType.CivicBonus:
                     // Civic bonuses are handled separately through the civic system
-                    if (enableGovernmentLogicLogging)
-                    {
-                        Debug.Log($"[GovernmentLogic] Civic bonus from seat {seatBonus.GetAutoDescription()} - handled by civic system");
-                    }
+                    GameLoggingSystem.Instance.LogEvent($"Civic bonus from seat {seatBonus.GetAutoDescription()} - handled by civic system", "GovernmentLogic");
                     break;
                     
                 default:
@@ -2953,10 +2829,7 @@ public class GovernmentLogic : MonoBehaviour
             ClearPendingBonusesFromSource(seatSourceName);
             ClearPendingBonusesFromSource(legendSourceName);
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Removed all seat and legend bonuses for '{seatSourceName}' and '{legendSourceName}' (legend: {legend.legendName})");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed all seat and legend bonuses for '{seatSourceName}' and '{legendSourceName}' (legend: {legend.legendName})", "GovernmentLogic");
         }
         catch (System.Exception e)
         {
@@ -3076,26 +2949,17 @@ public class GovernmentLogic : MonoBehaviour
         if (_currentLegendEffectivenessSnapshot >= 0f)
         {
             legendEffectiveness = _currentLegendEffectivenessSnapshot;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using LE snapshot: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using LE snapshot: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         else if (useLegendEffectivenessOverride)
         {
             legendEffectiveness = legendEffectivenessOverride;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using LE override: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using LE override: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         else
         {
             legendEffectiveness = StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using live LE: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using live LE: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         
         // Round to get percentage bonus (e.g., 53.99 -> 54%)
@@ -3108,9 +2972,9 @@ public class GovernmentLogic : MonoBehaviour
         // Apply enhancement to the modifier value
         float enhancedValue = modifierValue * enhancementMultiplier;
         
-        if (enableGovernmentLogicLogging && effectivenessPercent > 0)
+        if (effectivenessPercent > 0)
         {
-            Debug.Log($"[GovernmentLogic] Legend Effectiveness applied: {modifierValue} × {enhancementMultiplier:F3} (LE: {legendEffectiveness:F2} = +{effectivenessPercent}%) = {enhancedValue:F2}");
+            GameLoggingSystem.Instance.LogEvent($"Legend Effectiveness applied: {modifierValue} × {enhancementMultiplier:F3} (LE: {legendEffectiveness:F2} = +{effectivenessPercent}%) = {enhancedValue:F2}", "GovernmentLogic");
         }
         
         switch (modifierType)
@@ -3141,26 +3005,17 @@ public class GovernmentLogic : MonoBehaviour
         if (_currentLegendEffectivenessSnapshot >= 0f)
         {
             legendEffectiveness = _currentLegendEffectivenessSnapshot;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using LE snapshot: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using LE snapshot: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         else if (useLegendEffectivenessOverride)
         {
             legendEffectiveness = legendEffectivenessOverride;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using LE override: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using LE override: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         else
         {
             legendEffectiveness = StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("legendEffectiveness") : 0f;
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Using live LE: {legendEffectiveness:F5}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Using live LE: {legendEffectiveness:F5}", "GovernmentLogic");
         }
         
         // Round to get percentage bonus (e.g., 53.99 -> 54%)
@@ -3173,9 +3028,9 @@ public class GovernmentLogic : MonoBehaviour
         // Apply enhancement to the modifier value
         float enhancedValue = modifierValue * enhancementMultiplier;
         
-        if (enableGovernmentLogicLogging && effectivenessPercent > 0)
+        if (effectivenessPercent > 0)
         {
-            Debug.Log($"[GovernmentLogic] Legend Effectiveness applied: {modifierValue} × {enhancementMultiplier:F3} (LE: {legendEffectiveness:F2} = +{effectivenessPercent}%) = {enhancedValue:F2}");
+            GameLoggingSystem.Instance.LogEvent($"Legend Effectiveness applied: {modifierValue} × {enhancementMultiplier:F3} (LE: {legendEffectiveness:F2} = +{effectivenessPercent}%) = {enhancedValue:F2}", "GovernmentLogic");
         }
         
         switch (modifierType)
@@ -3255,7 +3110,7 @@ public class GovernmentLogic : MonoBehaviour
                 }
             }
             
-            Debug.Log($"[GovernmentLogic] Loaded {validResourceNames.Count} valid resource names: {string.Join(", ", validResourceNames)}");
+            GameLoggingSystem.Instance.LogEvent($"Loaded {validResourceNames.Count} valid resource names: {string.Join(", ", validResourceNames)}", "GovernmentLogic");
         }
         catch (System.Exception e)
         {
@@ -3291,7 +3146,7 @@ public class GovernmentLogic : MonoBehaviour
             validSectionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // Empty set as fallback
         }
         
-        Debug.Log($"[GovernmentLogic] Loaded {validSectionNames.Count} valid section names: {string.Join(", ", validSectionNames)}");
+        GameLoggingSystem.Instance.LogEvent($"Loaded {validSectionNames.Count} valid section names: {string.Join(", ", validSectionNames)}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -3321,7 +3176,7 @@ public class GovernmentLogic : MonoBehaviour
             Debug.LogError($"[GovernmentLogic] Error loading production unit names: {e.Message}");
         }
         
-        Debug.Log($"[GovernmentLogic] Loaded {validProductionUnitNames.Count} valid production unit names: {string.Join(", ", validProductionUnitNames)}");
+        GameLoggingSystem.Instance.LogEvent($"Loaded {validProductionUnitNames.Count} valid production unit names: {string.Join(", ", validProductionUnitNames)}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -3348,7 +3203,6 @@ public class GovernmentLogic : MonoBehaviour
             "clickPowerBonus", "magicEffectiveness", "communionStage"
         };
         
-        Debug.Log($"[GovernmentLogic] Loaded stat names - Pillars: {validPillarNames.Count}, Substats: {validSubstatNames.Count}, Derived: {validDerivedStatNames.Count}");
     }
     
     /// <summary>
@@ -3455,7 +3309,7 @@ public class GovernmentLogic : MonoBehaviour
                 
             default:
                 // Unknown bonus type - can't validate
-                Debug.Log($"[GovernmentLogic] VALIDATION INFO: Unknown bonus type '{bonusType}' for {statType} '{targetStat}' in {sourceName} - skipping validation");
+                Debug.LogWarning($"[GovernmentLogic] VALIDATION INFO: Unknown bonus type '{bonusType}' for {statType} '{targetStat}' in {sourceName} - skipping validation");
                 break;
         }
         
@@ -3468,7 +3322,7 @@ public class GovernmentLogic : MonoBehaviour
     /// </summary>
     public static void ValidateAllDataAtStartup()
     {
-        Debug.Log("[GovernmentLogic] Starting validation of all legends and civics...");
+        GameLoggingSystem.Instance.LogEvent("Starting validation of all legends and civics...", "GovernmentLogic");
         
         // Ensure validation data is loaded
         LoadValidResourceNames();
@@ -3479,14 +3333,18 @@ public class GovernmentLogic : MonoBehaviour
         int totalWarnings = 0;
         
         // Validate all legends
+        int legendCount = Resources.LoadAll<LegendData>("").Length;
         totalWarnings += ValidateAllLegends();
         
         // Validate all civics
+        int civicCount = Resources.LoadAll<CivicData>("").Length;
         totalWarnings += ValidateAllCivics();
+        
+        GameLoggingSystem.Instance.LogEvent($"Validation completed: {legendCount} legends, {civicCount} civics processed", "GovernmentLogic");
         
         if (totalWarnings == 0)
         {
-            Debug.Log("[GovernmentLogic] ✅ All legends and civics passed validation!");
+            GameLoggingSystem.Instance.LogEvent("✅ All legends and civics passed validation!", "GovernmentLogic");
         }
         else
         {
@@ -3504,7 +3362,6 @@ public class GovernmentLogic : MonoBehaviour
         try
         {
             var allLegends = Resources.LoadAll<LegendData>("");
-            Debug.Log($"[GovernmentLogic] Validating {allLegends.Length} legends...");
             
             foreach (var legend in allLegends)
             {
@@ -3558,7 +3415,6 @@ public class GovernmentLogic : MonoBehaviour
         try
         {
             var allCivics = Resources.LoadAll<CivicData>("");
-            Debug.Log($"[GovernmentLogic] Validating {allCivics.Length} civics...");
             
             foreach (var civic in allCivics)
             {
@@ -3638,12 +3494,9 @@ public class GovernmentLogic : MonoBehaviour
             // Add to available pool for potential replacement
             availableSeatPool.Add(civicSeat);
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Registered UNLOCKED civic council position: {civic.civicName} -> {civicSeat.GetEffectiveTitle()}");
-                Debug.Log($"[GovernmentLogic] Legend classes: {string.Join(", ", civicSeat.allowedLegendClasses)}");
-                Debug.Log($"[GovernmentLogic] Added to available seat pool. Total available: {availableSeatPool.Count}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Registered UNLOCKED civic council position: {civic.civicName} -> {civicSeat.GetEffectiveTitle()}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"Legend classes: {string.Join(", ", civicSeat.allowedLegendClasses)}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"Added to available seat pool. Total available: {availableSeatPool.Count}", "GovernmentLogic");
         }
         catch (System.Exception e)
         {
@@ -3698,10 +3551,9 @@ public class GovernmentLogic : MonoBehaviour
     {
         if (civic.councilPosition == null)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.LogWarning($"[GovernmentLogic] Civic '{civic.civicName}' grants council position but has no councilPosition configuration. Using default settings.");
-            }
+
+            Debug.LogWarning($"[GovernmentLogic] Civic '{civic.civicName}' grants council position but has no councilPosition configuration. Using default settings.");
+
             // Use default settings for civics without council position configuration
             civicSeat.allowedLegendClasses.AddRange(new[] { 
                 LegendClass.Sovereign, LegendClass.Vanguard, LegendClass.Steward, 
@@ -3721,20 +3573,14 @@ public class GovernmentLogic : MonoBehaviour
                 LegendClass.Weaver, LegendClass.Seer, LegendClass.Justiciar 
             });
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Civic '{civic.civicName}' council position allows any legend class");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Civic '{civic.civicName}' council position allows any legend class", "GovernmentLogic");
         }
         else if (councilPos.allowedClasses != null && councilPos.allowedClasses.Length > 0)
         {
             // Use the specific legend classes defined in the council position
             civicSeat.allowedLegendClasses.AddRange(councilPos.allowedClasses);
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Civic '{civic.civicName}' council position restricted to classes: {string.Join(", ", councilPos.allowedClasses)}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Civic '{civic.civicName}' council position restricted to classes: {string.Join(", ", councilPos.allowedClasses)}", "GovernmentLogic");
         }
         else
         {
@@ -3744,10 +3590,7 @@ public class GovernmentLogic : MonoBehaviour
                 LegendClass.Weaver, LegendClass.Seer, LegendClass.Justiciar 
             });
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Civic '{civic.civicName}' council position using default class restrictions (all classes allowed)");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Civic '{civic.civicName}' council position using default class restrictions (all classes allowed)", "GovernmentLogic");
         }
         
         // Add seat bonuses from the new structure
@@ -3765,10 +3608,7 @@ public class GovernmentLogic : MonoBehaviour
                 }
             }
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Civic '{civic.civicName}' council position added {councilPos.bonuses.Length} seat bonuses");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Civic '{civic.civicName}' council position added {councilPos.bonuses.Length} seat bonuses", "GovernmentLogic");
         }
     }
     
@@ -3824,11 +3664,8 @@ public class GovernmentLogic : MonoBehaviour
                 // Remove the seat from tracking
                 civicCouncilSeats.Remove(civic.civicName);
                 
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Unregistered civic council position: {civic.civicName}");
-                    Debug.Log($"[GovernmentLogic] Removed from available pool. Total available: {availableSeatPool.Count}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Unregistered civic council position: {civic.civicName}", "GovernmentLogic");
+                GameLoggingSystem.Instance.LogEvent($"Removed from available pool. Total available: {availableSeatPool.Count}", "GovernmentLogic");
             }
         }
         catch (System.Exception e)
@@ -3941,20 +3778,14 @@ public class GovernmentLogic : MonoBehaviour
         // Check if seat is unlocked
         if (!seat.isUnlocked)
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Cannot assign {legend.legendName} to locked seat {seatIndex}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Cannot assign {legend.legendName} to locked seat {seatIndex}", "GovernmentLogic");
             return false;
         }
         
         // Check if legend class is allowed for this seat
         if (!seat.allowedLegendClasses.Contains(legend.legendClass))
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Cannot assign {legend.legendName} ({legend.legendClass}) to seat {seatIndex} - class not allowed. Allowed: {string.Join(", ", seat.allowedLegendClasses)}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Cannot assign {legend.legendName} ({legend.legendClass}) to seat {seatIndex} - class not allowed. Allowed: {string.Join(", ", seat.allowedLegendClasses)}", "GovernmentLogic");
             return false;
         }
         
@@ -3977,10 +3808,7 @@ public class GovernmentLogic : MonoBehaviour
         if (!bypassCooldown && !CanChangeSeat(seatIndex))
         {
             int remainingCooldown = GetSeatCooldownRemaining(seatIndex);
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Assignment blocked - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Assignment blocked - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths", "GovernmentLogic");
             return false; // Assignment blocked by cooldown
         }
         
@@ -4046,10 +3874,7 @@ public class GovernmentLogic : MonoBehaviour
             seat.seventhsUntilActive = isRecalculatingHeadOfState ? 0 : 3; // Skip grace period during recalculation
             seat.bonusesProcessed = false; // Reset bonus processing flag
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Reset activation timer for seat '{seat.seatTitle}' (was active: {wasActive}, now needs {seat.seventhsUntilActive} sevenths)");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Reset activation timer for seat '{seat.seatTitle}' (was active: {wasActive}, now needs {seat.seventhsUntilActive} sevenths)", "GovernmentLogic");
             
             // Do NOT process seat bonuses here - wait for activation timer
             // ProcessSeatBonuses(seat); // REMOVED - bonuses will be applied when seat becomes active
@@ -4068,11 +3893,8 @@ public class GovernmentLogic : MonoBehaviour
             // Force deterministic processing after any assignment
             RecalculateFullCouncil("Post-assignment forced", true);
             
-            if (enableGovernmentLogicLogging)
-            {
-                string seatTitle = seatIndex == -1 ? "Head of State" : seat.GetEffectiveTitle();
-                Debug.Log($"[GovernmentLogic] Assigned {legend.legendName} to seat {seatIndex} ({seatTitle})");
-            }
+            string seatTitle = seatIndex == -1 ? "Head of State" : seat.GetEffectiveTitle();
+            GameLoggingSystem.Instance.LogEvent($"Assigned {legend.legendName} to seat {seatIndex} ({seatTitle})", "GovernmentLogic");
             
             // CRITICAL: Only recalculate entire council when Head of State or Legend Effectiveness changes, not for simple assignments
             // This prevents unnecessary recalculation that resets activation timers for all legends
@@ -4080,11 +3902,8 @@ public class GovernmentLogic : MonoBehaviour
             {
                 // For both Head of State and regular seats, we don't need full recalculation for simple assignments
                 // Full recalculation only happens when Head of State or Legend Effectiveness changes (which affects all legend multipliers)
-                if (enableGovernmentLogicLogging)
-                {
-                    string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
-                    Debug.Log($"[GovernmentLogic] {seatName} assignment - no full council recalculation needed for simple assignment");
-                }
+                string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
+                GameLoggingSystem.Instance.LogEvent($"{seatName} assignment - no full council recalculation needed for simple assignment", "GovernmentLogic");
             }
             
             // Update Head of State status indicators if this was a Head of State assignment
@@ -4153,12 +3972,9 @@ public class GovernmentLogic : MonoBehaviour
                 UpdateHeadOfStateStatusIndicators();
             }
             
-            if (enableGovernmentLogicLogging)
-            {
-                string seatName = (targetSeat.seatIndex == -1) ? "Head of State" : $"Seat {targetSeat.seatIndex}";
-                string prevName = (previousSeat.seatIndex == -1) ? "Head of State" : $"Seat {previousSeat.seatIndex}";
-                Debug.Log($"[GovernmentLogic] Centralized perfect swap executed between {seatName} and {prevName}");
-            }
+            string seatName = (targetSeat.seatIndex == -1) ? "Head of State" : $"Seat {targetSeat.seatIndex}";
+            string prevName = (previousSeat.seatIndex == -1) ? "Head of State" : $"Seat {previousSeat.seatIndex}";
+            GameLoggingSystem.Instance.LogEvent($"Centralized perfect swap executed between {seatName} and {prevName}", "GovernmentLogic");
             
             // Force a deterministic recalculation now that both swapped seats are inactive.
             // This ensures any removed LE/direct bonuses are reflected immediately for remaining active seats.
@@ -4168,9 +3984,9 @@ public class GovernmentLogic : MonoBehaviour
         
         // Not a perfect swap; optionally log and let caller handle standard path (removal + assign)
         LogSwapOperation(incomingLegend, targetSeat, displacedLegend, previousSeat, false);
-        if (enableGovernmentLogicLogging && canReassignDisplaced && previousSeatOnCooldown)
+        if (canReassignDisplaced && previousSeatOnCooldown)
         {
-            Debug.Log($"[GovernmentLogic] Perfect swap blocked - previous seat {previousSeat.seatIndex} is on cooldown");
+            GameLoggingSystem.Instance.LogEvent($"Perfect swap blocked - previous seat {previousSeat.seatIndex} is on cooldown", "GovernmentLogic");
         }
         return false;
     }
@@ -4187,10 +4003,7 @@ public class GovernmentLogic : MonoBehaviour
         if (!bypassCooldown && !CanChangeSeat(seatIndex))
         {
             int remainingCooldown = GetSeatCooldownRemaining(seatIndex);
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Removal blocked - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removal blocked - Seat {seatIndex} on cooldown for {remainingCooldown} more sevenths", "GovernmentLogic");
             return false; // Removal blocked by cooldown
         }
         
@@ -4228,10 +4041,7 @@ public class GovernmentLogic : MonoBehaviour
             
             if (seat.assignedLegend == null)
             {
-                if (enableGovernmentLogicLogging)
-                {
-                    Debug.Log($"[GovernmentLogic] Seat {seatIndex} has no legend to remove");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Seat {seatIndex} has no legend to remove", "GovernmentLogic");
                 return false;
             }
             
@@ -4259,10 +4069,7 @@ public class GovernmentLogic : MonoBehaviour
             // Force deterministic processing after any removal
             RecalculateFullCouncil("Post-removal forced", true);
             
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Removed {legend.legendName} from seat {seatIndex}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed {legend.legendName} from seat {seatIndex}", "GovernmentLogic");
             
             // CRITICAL: Only recalculate entire council when Head of State or Legend Effectiveness changes, not for simple removals
             // This prevents unnecessary recalculation that resets activation timers for all legends
@@ -4270,11 +4077,8 @@ public class GovernmentLogic : MonoBehaviour
             {
                 // For both Head of State and regular seats, we don't need full recalculation for simple removals
                 // Full recalculation only happens when Head of State or Legend Effectiveness changes (which affects all legend multipliers)
-                if (enableGovernmentLogicLogging)
-                {
-                    string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
-                    Debug.Log($"[GovernmentLogic] {seatName} removal - no full council recalculation needed for simple removal");
-                }
+                string seatName = (seatIndex == -1) ? "Head of State" : $"Seat {seatIndex}";
+                GameLoggingSystem.Instance.LogEvent($"{seatName} removal - no full council recalculation needed for simple removal", "GovernmentLogic");
             }
             
             // Update Head of State status indicators if this was a Head of State removal
@@ -4360,10 +4164,7 @@ public class GovernmentLogic : MonoBehaviour
                         if (assignedSeatOnCooldown)
                         {
                             // Skip this legend - it's assigned to a seat on cooldown
-                            if (enableGovernmentLogicLogging)
-                            {
-                                Debug.Log($"[GovernmentLogic] Hiding {legend.legendName} from leader pool - assigned to seat {assignedSeat.seatIndex} on cooldown");
-                            }
+                            GameLoggingSystem.Instance.LogEvent($"Hiding {legend.legendName} from leader pool - assigned to seat {assignedSeat.seatIndex} on cooldown", "GovernmentLogic");
                             continue;
                         }
                     }
@@ -4425,9 +4226,9 @@ public class GovernmentLogic : MonoBehaviour
             if (headOfStateCooldownRemaining > 0)
             {
                 headOfStateCooldownRemaining--;
-                if (enableGovernmentLogicLogging && headOfStateCooldownRemaining == 0)
+                if (headOfStateCooldownRemaining == 0)
                 {
-                    Debug.Log($"[GovernmentLogic] Head of State cooldown expired - ready for changes");
+                    GameLoggingSystem.Instance.LogEvent("Head of State cooldown expired - ready for changes", "GovernmentLogic");
                 }
             }
             
@@ -4442,9 +4243,9 @@ public class GovernmentLogic : MonoBehaviour
                 if (remaining > 0)
                 {
                     seatCooldownRemaining[seatIndex] = remaining - 1;
-                    if (enableGovernmentLogicLogging && seatCooldownRemaining[seatIndex] == 0)
+                    if (seatCooldownRemaining[seatIndex] == 0)
                     {
-                        Debug.Log($"[GovernmentLogic] Seat {seatIndex} cooldown expired - ready for changes");
+                        GameLoggingSystem.Instance.LogEvent($"Seat {seatIndex} cooldown expired - ready for changes", "GovernmentLogic");
                     }
                 }
                 
@@ -4472,10 +4273,7 @@ public class GovernmentLogic : MonoBehaviour
                     if (seat.seventhsUntilActive <= 0)
                     {
                         // Seat is now active; centralized pipeline will handle applying bonuses
-                        if (enableGovernmentLogicLogging)
-                        {
-                            Debug.Log($"[GovernmentLogic] Seat active: {seat.GetEffectiveTitle()} → {seat.assignedLegend.legendName}. Triggering pipeline.");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"Seat active: {seat.GetEffectiveTitle()} → {seat.assignedLegend.legendName}. Triggering pipeline.", "GovernmentLogic");
                         seat.bonusesProcessed = false; // ensure included in next centralized processing
                         // Trigger the centralized pipeline immediately so UI reflects correct state
                         ProcessAllSeatBonuses();
@@ -4516,20 +4314,14 @@ public class GovernmentLogic : MonoBehaviour
         // Check if this seat is already in use at another position
         if (IsSeatInUseAtOtherPosition(seatTitle, position))
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Seat '{seatTitle}' is already in use at another position");
-            }
+            GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Seat '{seatTitle}' is already in use at another position", "GovernmentLogic");
             return false;
         }
         
         // Perform the replacement
         ReplaceSeatAtPosition(position, availableSeat);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Successfully replaced seat at position {position} with '{seatTitle}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully replaced seat at position {position} with '{seatTitle}'", "GovernmentLogic");
         
         return true;
     }
@@ -4574,10 +4366,7 @@ public class GovernmentLogic : MonoBehaviour
         OnCouncilSeatChanged?.Invoke(seat1);
         OnCouncilSeatChanged?.Invoke(seat2);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Swapped seats: {seat1.GetEffectiveTitle()} (pos {position1}) <-> {seat2.GetEffectiveTitle()} (pos {position2})");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Swapped seats: {seat1.GetEffectiveTitle()} (pos {position1}) <-> {seat2.GetEffectiveTitle()} (pos {position2})", "GovernmentLogic");
         
         return true;
     }
@@ -4697,10 +4486,7 @@ public class GovernmentLogic : MonoBehaviour
         // Perform the replacement
         ReplaceSeatAtPosition(position, civicSeat);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Successfully replaced seat at position {position} with civic '{civicName}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully replaced seat at position {position} with civic '{civicName}'", "GovernmentLogic");
         
         return true;
     }
@@ -4810,23 +4596,17 @@ public class GovernmentLogic : MonoBehaviour
             return false;
         }
         
-        if (enableGovernmentLogicLogging)
-        {
-            var currentSeat = GetSeatAtPosition(position);
-            string currentTitle = currentSeat?.GetEffectiveTitle() ?? "null";
-            string currentCivic = currentSeat?.sourceCivic?.civicName ?? "none";
-            string currentLegend = currentSeat?.assignedLegend?.legendName ?? "none";
-            
-            Debug.Log($"[GovernmentLogic] Resetting position {position} from '{currentTitle}' (Civic: {currentCivic}, Legend: {currentLegend}) to default seat: {availableTemplate.seatTitle}");
-        }
+        var currentSeat = GetSeatAtPosition(position);
+        string currentTitle = currentSeat?.GetEffectiveTitle() ?? "null";
+        string currentCivic = currentSeat?.sourceCivic?.civicName ?? "none";
+        string currentLegend = currentSeat?.assignedLegend?.legendName ?? "none";
+        
+        GameLoggingSystem.Instance.LogEvent($"Resetting position {position} from '{currentTitle}' (Civic: {currentCivic}, Legend: {currentLegend}) to default seat: {availableTemplate.seatTitle}", "GovernmentLogic");
         
         // Perform the replacement
         ReplaceSeatAtPosition(position, availableTemplate);
         
-        if (enableGovernmentLogicLogging)
-        {
-            Debug.Log($"[GovernmentLogic] Successfully reset position {position} to default seat: {availableTemplate.seatTitle}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully reset position {position} to default seat: {availableTemplate.seatTitle}", "GovernmentLogic");
         
         return true;
     }
@@ -4888,55 +4668,13 @@ public class GovernmentLogic : MonoBehaviour
     }
     
     /// <summary>
-    /// Debug method to test the seat replacement system
-    /// </summary>
-    private void TestSeatReplacementSystem()
-    {
-        if (!enableGovernmentLogicLogging) return;
-        
-        Debug.Log("=== TESTING SEAT REPLACEMENT SYSTEM ===");
-        
-        // Show current configuration
-        var config = GetSeatConfigurationInfo();
-        Debug.Log($"Current: {config.unlockedCount}/6 seats unlocked");
-        Debug.Log($"Active seats: {string.Join(", ", config.activeSeats)}");
-        Debug.Log($"Available seats: {string.Join(", ", config.availableSeats)}");
-        
-        // Test seat swapping
-        if (config.unlockedCount >= 2)
-        {
-            Debug.Log("Testing seat swap between positions 0 and 1...");
-            bool swapSuccess = SwapSeats(0, 1);
-            Debug.Log($"Swap result: {(swapSuccess ? "SUCCESS" : "FAILED")}");
-        }
-        
-        // Test seat replacement
-        if (config.unlockedCount >= 1)
-        {
-            var availableSeats = GetAvailableSeatTitles();
-            if (availableSeats.Count > 0)
-            {
-                string testSeat = availableSeats[0];
-                Debug.Log($"Testing seat replacement at position 0 with '{testSeat}'...");
-                bool replaceSuccess = ReplaceSeatWithAvailable(0, testSeat);
-                Debug.Log($"Replacement result: {(replaceSuccess ? "SUCCESS" : "FAILED")}");
-            }
-        }
-        
-        // Show final configuration
-        config = GetSeatConfigurationInfo();
-        Debug.Log($"Final: {config.unlockedCount}/6 seats unlocked");
-        Debug.Log($"Active seats: {string.Join(", ", config.activeSeats)}");
-    }
-    
-    /// <summary>
     /// Debug method to unlock the next available seat
     /// </summary>
     private void UnlockNextAvailableSeat()
     {
         if (unlockedSeatCount >= 6)
         {
-            Debug.Log("All 6 regular seats are already unlocked!");
+            GameLoggingSystem.Instance.LogEvent("All 6 regular seats are already unlocked!", "GovernmentLogic");
             return;
         }
         
@@ -4946,9 +4684,9 @@ public class GovernmentLogic : MonoBehaviour
             var seat = activeRegularSeats[i];
             if (seat != null && !seat.isUnlocked)
             {
-                Debug.Log($"Unlocking seat at position {i}...");
+                GameLoggingSystem.Instance.LogEvent($"Unlocking seat at position {i}...", "GovernmentLogic");
                 bool success = UnlockCouncilSeat(i);
-                Debug.Log($"Unlock result: {(success ? "SUCCESS" : "FAILED")}");
+                GameLoggingSystem.Instance.LogEvent($"Unlock result: {(success ? "SUCCESS" : "FAILED")}", "GovernmentLogic");
                 break;
             }
         }
@@ -4969,10 +4707,8 @@ public class GovernmentLogic : MonoBehaviour
         // Check if civic is already unlocked
         if (IsCivicUnlocked(civicName))
         {
-            if (enableGovernmentLogicLogging)
-            {
-                Debug.Log($"[GovernmentLogic] Civic '{civicName}' is already unlocked");
-            }
+
+            GameLoggingSystem.Instance.LogEvent($"[GovernmentLogic] Civic '{civicName}' is already unlocked", "GovernmentLogic");
             return true; // Already unlocked
         }
         
@@ -4985,10 +4721,10 @@ public class GovernmentLogic : MonoBehaviour
         
         bool unlockSuccess = CivicManager.Instance.UnlockCivic(civicName, source);
         
-        if (unlockSuccess && enableGovernmentLogicLogging)
+        if (unlockSuccess)
         {
-            Debug.Log($"[GovernmentLogic] Successfully unlocked civic '{civicName}' from '{source}'");
-            Debug.Log($"[GovernmentLogic] Civic is now available for council seat replacement");
+            GameLoggingSystem.Instance.LogEvent($"Successfully unlocked civic '{civicName}' from '{source}'", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"Civic is now available for council seat replacement", "GovernmentLogic");
         }
         else if (!unlockSuccess)
         {
@@ -5039,107 +4775,58 @@ public class GovernmentLogic : MonoBehaviour
         return (unlocked, locked, availableForSeats);
     }
     
-    /// <summary>
-    /// Debug method to test the civic unlocking system
-    /// </summary>
-    private void TestCivicUnlockingSystem()
-    {
-        if (!enableGovernmentLogicLogging) return;
-        
-        Debug.Log("=== TESTING CIVIC UNLOCKING SYSTEM ===");
-        
-        // Show current civic status
-        var civicStatus = GetCivicStatus();
-        Debug.Log($"Current Status:");
-        Debug.Log($"  Locked: {civicStatus.locked.Count} civics");
-        Debug.Log($"  Unlocked: {civicStatus.unlocked.Count} civics");
-        Debug.Log($"  Available for Seats: {civicStatus.availableForSeats.Count} options");
-        
-        // Show locked civics
-        if (civicStatus.locked.Count > 0)
-        {
-            Debug.Log($"Locked Civics: {string.Join(", ", civicStatus.locked)}");
-            
-            // Try to unlock the first locked civic
-            string firstLocked = civicStatus.locked[0];
-            Debug.Log($"Attempting to unlock '{firstLocked}'...");
-            
-            var (canUnlock, reasons) = CanUnlockCivic(firstLocked);
-            if (canUnlock)
-            {
-                Debug.Log($"Can unlock '{firstLocked}' - attempting unlock...");
-                bool unlockSuccess = UnlockCivic(firstLocked, "Debug Test");
-                Debug.Log($"Unlock result: {(unlockSuccess ? "SUCCESS" : "FAILED")}");
-            }
-            else
-            {
-                Debug.Log($"Cannot unlock '{firstLocked}' - reasons: {string.Join(", ", reasons)}");
-            }
-        }
-        else
-        {
-            Debug.Log("No locked civics found - all loaded civics are already unlocked");
-        }
-        
-        // Show final status
-        civicStatus = GetCivicStatus();
-        Debug.Log($"Final Status:");
-        Debug.Log($"  Locked: {civicStatus.locked.Count} civics");
-        Debug.Log($"  Unlocked: {civicStatus.unlocked.Count} civics");
-        Debug.Log($"  Available for Seats: {civicStatus.availableForSeats.Count} options");
-    }
     
     /// <summary>
     /// Show the complete civic pipeline from loading to unlocking to seat availability
     /// </summary>
     public void LogCivicPipeline()
     {
-        if (!enableGovernmentLogicLogging) return;
+        if (!GameLoggingSystem.Instance.enableGovernmentLogicLogging) return;
         
-        Debug.Log("=== COMPLETE CIVIC PIPELINE ===");
+        GameLoggingSystem.Instance.LogEvent("=== COMPLETE CIVIC PIPELINE ===", "GovernmentLogic");
         
         if (CivicManager.Instance == null)
         {
-            Debug.Log("CivicManager not found!");
+            GameLoggingSystem.Instance.LogEvent("CivicManager not found!", "GovernmentLogic");
             return;
         }
         
         // Step 1: Loaded from Resources
         var loadedCivics = CivicManager.Instance.GetAllAvailableCivicNames();
-        Debug.Log($"STEP 1 - LOADED FROM RESOURCES: {loadedCivics.Count} civics");
+        GameLoggingSystem.Instance.LogEvent($"STEP 1 - LOADED FROM RESOURCES: {loadedCivics.Count} civics", "GovernmentLogic");
         foreach (var civicName in loadedCivics)
         {
-            Debug.Log($"  📁 {civicName}");
+            GameLoggingSystem.Instance.LogEvent($"  📁 {civicName}", "GovernmentLogic");
         }
         
         // Step 2: Unlocked through requirements
         var unlockedCivics = GetUnlockedCivicNames();
-        Debug.Log($"STEP 2 - UNLOCKED THROUGH REQUIREMENTS: {unlockedCivics.Count} civics");
+        GameLoggingSystem.Instance.LogEvent($"STEP 2 - UNLOCKED THROUGH REQUIREMENTS: {unlockedCivics.Count} civics", "GovernmentLogic");
         foreach (var civicName in unlockedCivics)
         {
-            Debug.Log($"  🔓 {civicName}");
+            GameLoggingSystem.Instance.LogEvent($"  🔓 {civicName}", "GovernmentLogic");
         }
         
         // Step 3: Available for seat replacement
         var availableSeats = GetAvailableSeatTitles();
-        Debug.Log($"STEP 3 - AVAILABLE FOR SEAT REPLACEMENT: {availableSeats.Count} options");
+        GameLoggingSystem.Instance.LogEvent($"STEP 3 - AVAILABLE FOR SEAT REPLACEMENT: {availableSeats.Count} options", "GovernmentLogic");
         foreach (var seatTitle in availableSeats)
         {
             string type = IsCivicSeatTitle(seatTitle) ? "Civic" : "Default";
-            Debug.Log($"  🪑 {seatTitle} ({type})");
+            GameLoggingSystem.Instance.LogEvent($"  🪑 {seatTitle} ({type})", "GovernmentLogic");
         }
         
         // Step 4: Currently equipped in council
         var detailedSeats = GetDetailedSeatInfo();
-        Debug.Log($"STEP 4 - CURRENTLY EQUIPPED IN COUNCIL: {detailedSeats.Count} positions");
+        GameLoggingSystem.Instance.LogEvent($"STEP 4 - CURRENTLY EQUIPPED IN COUNCIL: {detailedSeats.Count} positions", "GovernmentLogic");
         foreach (var (position, title, type, isUnlocked, hasLegend, legendName) in detailedSeats)
         {
             string status = isUnlocked ? (hasLegend ? $"Legend: {legendName}" : "Empty") : "Locked";
-            Debug.Log($"  Position {position}: {title} ({type}) - {status}");
+            GameLoggingSystem.Instance.LogEvent($"  Position {position}: {title} ({type}) - {status}", "GovernmentLogic");
         }
         
-        Debug.Log("=== PIPELINE SUMMARY ===");
-        Debug.Log($"Loaded: {loadedCivics.Count} → Unlocked: {unlockedCivics.Count} → Available for Seats: {availableSeats.Count} → Equipped: {detailedSeats.Count(s => s.isUnlocked)}");
+        GameLoggingSystem.Instance.LogEvent("=== PIPELINE SUMMARY ===", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Loaded: {loadedCivics.Count} → Unlocked: {unlockedCivics.Count} → Available for Seats: {availableSeats.Count} → Equipped: {detailedSeats.Count(s => s.isUnlocked)}", "GovernmentLogic");
     }
     
     /// <summary>
@@ -5313,11 +5000,11 @@ public class GovernmentLogic : MonoBehaviour
     /// </summary>
     private void LogSwapOperation(LegendData newLegend, CouncilSeat targetSeat, LegendData displacedLegend, CouncilSeat previousSeat, bool isPerfectSwap)
     {
-        if (!enableGovernmentLogicLogging) return;
+        if (!GameLoggingSystem.Instance.enableGovernmentLogicLogging) return;
         string targetSeatTitle = targetSeat.seatIndex == -1 ? "Head of State" : targetSeat.GetEffectiveTitle();
         string previousSeatTitle = previousSeat.seatIndex == -1 ? "Head of State" : previousSeat.GetEffectiveTitle();
         string mode = isPerfectSwap ? "PERFECT" : "STANDARD";
-        Debug.Log($"[GovernmentLogic] Swap {mode}: {newLegend.legendName} → {targetSeatTitle}, displaced: {displacedLegend.legendName} → {previousSeatTitle}");
+        GameLoggingSystem.Instance.LogEvent($"Swap {mode}: {newLegend.legendName} → {targetSeatTitle}, displaced: {displacedLegend.legendName} → {previousSeatTitle}", "GovernmentLogic");
     }
 
     /// <summary>
@@ -5350,32 +5037,32 @@ public class GovernmentLogic : MonoBehaviour
     [ContextMenu("Debug All Council Seats")]
     public void DebugAllCouncilSeats()
     {
-        Debug.Log("=== COUNCIL SEAT DEBUG REPORT ===");
-        Debug.Log($"Total seats: {councilSeats.Count}");
-        Debug.Log($"Unlocked seats: {GetUnlockedCouncilSeatCount()}");
-        Debug.Log($"StatManager.Instance: {(StatManager.Instance != null ? "Available" : "NULL")}");
-        Debug.Log($"Processing bonuses lock: {isProcessingSeatBonuses}");
+        GameLoggingSystem.Instance.LogEvent("=== COUNCIL SEAT DEBUG REPORT ===", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Total seats: {councilSeats.Count}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Unlocked seats: {GetUnlockedCouncilSeatCount()}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"StatManager.Instance: {(StatManager.Instance != null ? "Available" : "NULL")}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Processing bonuses lock: {isProcessingSeatBonuses}", "GovernmentLogic");
         
         for (int i = 0; i < councilSeats.Count; i++)
         {
             var seat = councilSeats[i];
-            Debug.Log($"\n--- SEAT {i}: {seat.seatTitle} ---");
-            Debug.Log($"  Unlocked: {seat.isUnlocked}");
-            Debug.Log($"  Has Legend: {seat.assignedLegend != null}");
-            Debug.Log($"  Legend Name: {(seat.assignedLegend != null ? seat.assignedLegend.legendName : "None")}");
-            Debug.Log($"  Sevenths Until Active: {seat.seventhsUntilActive}");
-            Debug.Log($"  Is Active: {seat.IsActive()} (requires: legend != null && seventhsUntilActive <= 0)");
-            Debug.Log($"  Bonus Count: {seat.seatBonuses.Count}");
+            GameLoggingSystem.Instance.LogEvent($"\n--- SEAT {i}: {seat.seatTitle} ---", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Unlocked: {seat.isUnlocked}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Has Legend: {seat.assignedLegend != null}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Legend Name: {(seat.assignedLegend != null ? seat.assignedLegend.legendName : "None")}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Sevenths Until Active: {seat.seventhsUntilActive}", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Is Active: {seat.IsActive()} (requires: legend != null && seventhsUntilActive <= 0)", "GovernmentLogic");
+            GameLoggingSystem.Instance.LogEvent($"  Bonus Count: {seat.seatBonuses.Count}", "GovernmentLogic");
             
             for (int j = 0; j < seat.seatBonuses.Count; j++)
             {
                 var bonus = seat.seatBonuses[j];
-                Debug.Log($"    Bonus {j}: {bonus.bonusType} | Target: '{bonus.targetStat}' | Value: {bonus.modifierValue} | Type: {bonus.modifierType} | Requires Legend: {bonus.requiresLegend}");
+                GameLoggingSystem.Instance.LogEvent($"    Bonus {j}: {bonus.bonusType} | Target: '{bonus.targetStat}' | Value: {bonus.modifierValue} | Type: {bonus.modifierType} | Requires Legend: {bonus.requiresLegend}", "GovernmentLogic");
             }
         }
         
         // Show current active bonuses
-        Debug.Log("\n=== CURRENT ACTIVE BONUSES ===");
+        GameLoggingSystem.Instance.LogEvent("\n=== CURRENT ACTIVE BONUSES ===", "GovernmentLogic");
         if (StatManager.Instance != null)
         {
             foreach (var pillarName in new[] { "aureus", "regalia", "waltz", "chorus" })
@@ -5384,20 +5071,20 @@ public class GovernmentLogic : MonoBehaviour
                 if (bonus != 0)
                 {
                     var sources = StatManager.Instance.GetBonusSources("pillar", pillarName);
-                    Debug.Log($"  {pillarName}: +{bonus:F1} from {sources.Count} sources: {string.Join(", ", sources.Select(kvp => $"'{kvp.Key}'(+{kvp.Value:F1})"))}");
+                    GameLoggingSystem.Instance.LogEvent($"  {pillarName}: +{bonus:F1} from {sources.Count} sources: {string.Join(", ", sources.Select(kvp => $"'{kvp.Key}'(+{kvp.Value:F1})"))}", "GovernmentLogic");
                 }
                 else
                 {
-                    Debug.Log($"  {pillarName}: No bonuses");
+                    GameLoggingSystem.Instance.LogEvent($"  {pillarName}: No bonuses", "GovernmentLogic");
                 }
             }
         }
         
         // Force process all seat bonuses to see what happens
-        Debug.Log("\n=== FORCING SEAT BONUS PROCESSING ===");
+        GameLoggingSystem.Instance.LogEvent("\n=== FORCING SEAT BONUS PROCESSING ===", "GovernmentLogic");
         ProcessAllSeatBonuses();
         
-        Debug.Log("=== END COUNCIL SEAT DEBUG REPORT ===");
+        GameLoggingSystem.Instance.LogEvent("=== END COUNCIL SEAT DEBUG REPORT ===", "GovernmentLogic");
     }
     
     /// <summary>
@@ -5406,12 +5093,12 @@ public class GovernmentLogic : MonoBehaviour
     [ContextMenu("Force Clear and Reapply All Seat Bonuses")]
     public void ForceClearAndReapplyAllSeatBonuses()
     {
-        Debug.Log("=== FORCE CLEAR AND REAPPLY SEAT BONUSES ===");
+        GameLoggingSystem.Instance.LogEvent("=== FORCE CLEAR AND REAPPLY SEAT BONUSES ===", "GovernmentLogic");
         
         // Step 1: Clear ALL seat bonuses from StatManager
         if (StatManager.Instance != null)
         {
-            Debug.Log("Step 1: Clearing all Council Seat bonuses from StatManager");
+            GameLoggingSystem.Instance.LogEvent("Step 1: Clearing all Council Seat bonuses from StatManager", "GovernmentLogic");
             var allBonusSources = new List<string>();
             
             // Get all pillar bonus sources that contain "Council Seat:"
@@ -5427,22 +5114,22 @@ public class GovernmentLogic : MonoBehaviour
                 }
             }
             
-            Debug.Log($"Found {allBonusSources.Count} Council Seat bonus sources to clear: {string.Join(", ", allBonusSources.Select(s => $"'{s}'"))}");
+            GameLoggingSystem.Instance.LogEvent($"Found {allBonusSources.Count} Council Seat bonus sources to clear: {string.Join(", ", allBonusSources.Select(s => $"'{s}'"))}", "GovernmentLogic");
             
             // Clear each source
             foreach (var source in allBonusSources)
             {
-                Debug.Log($"Clearing bonus source: '{source}'");
+                GameLoggingSystem.Instance.LogEvent($"Clearing bonus source: '{source}'", "GovernmentLogic");
                 StatManager.Instance.ClearBonusesFromSource(source);
             }
         }
         
         // Step 2: Reapply bonuses for all currently active seats
-        Debug.Log("\nStep 2: Reapplying bonuses for currently active seats");
+        GameLoggingSystem.Instance.LogEvent("\nStep 2: Reapplying bonuses for currently active seats", "GovernmentLogic");
         ProcessAllSeatBonuses();
         
         // Step 3: Show final state
-        Debug.Log("\nStep 3: Final bonus state after cleanup:");
+        GameLoggingSystem.Instance.LogEvent("\nStep 3: Final bonus state after cleanup:", "GovernmentLogic");
         DebugAllCouncilSeats();
     }
     
@@ -5452,15 +5139,15 @@ public class GovernmentLogic : MonoBehaviour
     [ContextMenu("Debug Cooldown System")]
     public void DebugCooldownSystem()
     {
-        Debug.Log("=== COOLDOWN SYSTEM DEBUG ===");
+        GameLoggingSystem.Instance.LogEvent("=== COOLDOWN SYSTEM DEBUG ===", "GovernmentLogic");
         
         // Show current cooldown state
-        Debug.Log($"Head of State cooldown remaining: {headOfStateCooldownRemaining}");
-        Debug.Log($"Regular seat cooldowns: {seatCooldownRemaining.Count} seats on cooldown");
+        GameLoggingSystem.Instance.LogEvent($"Head of State cooldown remaining: {headOfStateCooldownRemaining}", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"Regular seat cooldowns: {seatCooldownRemaining.Count} seats on cooldown", "GovernmentLogic");
         
         foreach (var kvp in seatCooldownRemaining)
         {
-            Debug.Log($"  Seat {kvp.Key}: {kvp.Value} sevenths remaining");
+            GameLoggingSystem.Instance.LogEvent($"  Seat {kvp.Key}: {kvp.Value} sevenths remaining", "GovernmentLogic");
         }
         
         // Show which seats can be changed
@@ -5470,15 +5157,15 @@ public class GovernmentLogic : MonoBehaviour
             bool canChange = CanChangeSeat(i);
             int remaining = GetSeatCooldownRemaining(i);
             string seatName = (i == -1) ? "Head of State" : $"Seat {i}";
-            Debug.Log($"  {seatName}: {(canChange ? "READY" : $"COOLDOWN ({remaining} sevenths)")}");
+            GameLoggingSystem.Instance.LogEvent($"  {seatName}: {(canChange ? "READY" : $"COOLDOWN ({remaining} sevenths)")}", "GovernmentLogic");
         }
         
         // Show base cooldown values
-        Debug.Log($"\nBase cooldown values:");
-        Debug.Log($"  Head of State: {headOfStateCooldownSevenths} sevenths");
-        Debug.Log($"  Regular seats: {councilSeatCooldownSevenths} sevenths");
+        GameLoggingSystem.Instance.LogEvent($"\nBase cooldown values:", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Head of State: {headOfStateCooldownSevenths} sevenths", "GovernmentLogic");
+        GameLoggingSystem.Instance.LogEvent($"  Regular seats: {councilSeatCooldownSevenths} sevenths", "GovernmentLogic");
         
-        Debug.Log("=== END COOLDOWN SYSTEM DEBUG ===");
+        GameLoggingSystem.Instance.LogEvent("=== END COOLDOWN SYSTEM DEBUG ===", "GovernmentLogic");
     }
     
     /// <summary>

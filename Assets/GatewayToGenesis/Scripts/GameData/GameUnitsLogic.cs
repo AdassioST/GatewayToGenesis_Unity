@@ -6,10 +6,6 @@ using UnityEngine;
 
 public class GameUnitsLogic : MonoBehaviour
 {
-
-    [Header("Game Units Logic Settings")]
-    [SerializeField] private bool enableGameUnitsLogicLogging; // Whether to log what the boss is doing
-
     public static GameUnitsLogic Instance { get; private set; }
 
     [SerializeField] public TabBuilderLogic storageTab;
@@ -28,10 +24,6 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] private GameObject HUD, expandibleHUD, buildingMaterialButton;
 
     public Dictionary<string, Dictionary<string, float>> storageBreakdown = new Dictionary<string, Dictionary<string, float>>();
-
-    // Production and Construction Modifier Systems
-    [Header("Production & Construction Modifiers")]
-    [SerializeField] private bool enableProductionModifierLogging = true;
     
     // Production efficiency modifiers by building type and section
     private Dictionary<string, Dictionary<string, float>> productionModifiersByType = new Dictionary<string, Dictionary<string, float>>();
@@ -84,10 +76,7 @@ public class GameUnitsLogic : MonoBehaviour
         // Ensure all resources have at least their base click power
         EnsureAllResourceClickPowerMinimums();
         
-        if (enableGameUnitsLogicLogging)
-        {
-            Debug.Log("[GameUnitsLogic] Validated all resource click power minimums on startup");
-        }
+        GameLoggingSystem.Instance.LogEvent("Validated all resource click power minimums on startup", "GameUnitsLogic");
     }
 
     public void ChangeResourceFromName(string name, float amount, bool changeFromClickPower)
@@ -122,9 +111,9 @@ public class GameUnitsLogic : MonoBehaviour
                     float foodToAdd = Mathf.Max(0f, maxAllowedFood - currentFood);
                     amount = Mathf.Min(amount, foodToAdd);
                     
-                    if (amount < foodToAdd && PopGrowthLogic.Instance.enablePopGrowthLogicLogging)
+                    if (amount < foodToAdd)
                     {
-                        Debug.Log($"[GameUnitsLogic] Food addition clamped: {foodToAdd} → {amount} (no housing, vagrants disabled, threshold: {foodThreshold})");
+                        GameLoggingSystem.Instance.LogEvent($"Food addition clamped: {foodToAdd} → {amount} (no housing, vagrants disabled, threshold: {foodThreshold})", "GameUnitsLogic");
                     }
                 }
                 else if (freeHousing > 0 && !allowVagrants)
@@ -144,10 +133,8 @@ public class GameUnitsLogic : MonoBehaviour
                         float excessFood = (currentFood + amount) - maxAllowedFood;
                         amount = Mathf.Max(0f, amount - excessFood);
                         
-                        if (PopGrowthLogic.Instance.enablePopGrowthLogicLogging)
-                        {
-                            Debug.Log($"[GameUnitsLogic] Food addition clamped: {amount + excessFood} → {amount} (housing: {freeHousing}, max consumable: {maxFoodConsumable}, threshold: {foodThreshold})");
-                        }
+
+                        GameLoggingSystem.Instance.LogEvent($"Food addition clamped: {amount + excessFood} → {amount} (housing: {freeHousing}, max consumable: {maxFoodConsumable}, threshold: {foodThreshold})", "GameUnitsLogic");
                     }
                 }
             }
@@ -554,10 +541,7 @@ public class GameUnitsLogic : MonoBehaviour
             case TechUnlockableType.Building:
             case TechUnlockableType.Unit:
                 productionTab.AddNewUnit(unlockable.gameUnit);
-                if (enableGameUnitsLogicLogging)
-                {
-                    Debug.Log($"Unit/Building {unlockable.gameUnit.name} has been added to Production.");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Unit/Building {unlockable.gameUnit.name} has been added to Production.", "GameUnitsLogic");
                 break;
 
             case TechUnlockableType.Modifier:
@@ -573,20 +557,14 @@ public class GameUnitsLogic : MonoBehaviour
                 break;
 
             case TechUnlockableType.Arts:
-                if (enableGameUnitsLogicLogging)
-                {
-                    Debug.Log($"Arts unit {unlockable.gameUnit.name} has been unlocked.");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Arts unit {unlockable.gameUnit.name} has been unlocked.", "GameUnitsLogic");
                 break;
 
             case TechUnlockableType.Special:
 
                 HandleSpecialUnlockable(unlockable);
 
-                if (enableGameUnitsLogicLogging)
-                {
-                    Debug.Log($"Special unit {unlockable.name} has been unlocked.");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Special unit {unlockable.name} has been unlocked.", "GameUnitsLogic");
 
                 break;
 
@@ -717,20 +695,14 @@ public class GameUnitsLogic : MonoBehaviour
         if (isAdd)
         {
             typeModifiers[modifierSource] = modifierPercent;
-            if (enableProductionModifierLogging)
-            {
-                Debug.Log($"[GameUnitsLogic] Applied production modifier by type: {buildingType} +{modifierPercent}% from {modifierSource}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Applied production modifier by type: {buildingType} +{modifierPercent}% from {modifierSource}", "GameUnitsLogic");
         }
         else
         {
             if (typeModifiers.ContainsKey(modifierSource))
             {
                 typeModifiers.Remove(modifierSource);
-                if (enableProductionModifierLogging)
-                {
-                    Debug.Log($"[GameUnitsLogic] Removed production modifier by type: {buildingType} from {modifierSource}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Removed production modifier by type: {buildingType} from {modifierSource}", "GameUnitsLogic");
             }
         }
     }
@@ -756,20 +728,14 @@ public class GameUnitsLogic : MonoBehaviour
         if (isAdd)
         {
             sectionModifiers[modifierSource] = modifierPercent;
-            if (enableProductionModifierLogging)
-            {
-                Debug.Log($"[GameUnitsLogic] Applied production modifier by section: {sectionName} +{modifierPercent}% from {modifierSource}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Applied production modifier by section: {sectionName} +{modifierPercent}% from {modifierSource}", "GameUnitsLogic");
         }
         else
         {
             if (sectionModifiers.ContainsKey(modifierSource))
             {
                 sectionModifiers.Remove(modifierSource);
-                if (enableProductionModifierLogging)
-                {
-                    Debug.Log($"[GameUnitsLogic] Removed production modifier by section: {sectionName} from {modifierSource}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Removed production modifier by section: {sectionName} from {modifierSource}", "GameUnitsLogic");
             }
         }
     }
@@ -828,21 +794,15 @@ public class GameUnitsLogic : MonoBehaviour
         if (isAdd)
         {
             typeModifiers[modifierSource] = modifierPercent;
-            if (enableProductionModifierLogging)
-            {
-                string effect = modifierPercent > 0 ? "increases" : "reduces";
-                Debug.Log($"[GameUnitsLogic] Applied construction cost modifier by type: {buildingType} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}");
-            }
+            string effect = modifierPercent > 0 ? "increases" : "reduces";
+            GameLoggingSystem.Instance.LogEvent($"Applied construction cost modifier by type: {buildingType} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}", "GameUnitsLogic");
         }
         else
         {
             if (typeModifiers.ContainsKey(modifierSource))
             {
                 typeModifiers.Remove(modifierSource);
-                if (enableProductionModifierLogging)
-                {
-                    Debug.Log($"[GameUnitsLogic] Removed construction cost modifier by type: {buildingType} from {modifierSource}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Removed construction cost modifier by type: {buildingType} from {modifierSource}", "GameUnitsLogic");
             }
         }
     }
@@ -868,21 +828,15 @@ public class GameUnitsLogic : MonoBehaviour
         if (isAdd)
         {
             sectionModifiers[modifierSource] = modifierPercent;
-            if (enableProductionModifierLogging)
-            {
-                string effect = modifierPercent > 0 ? "increases" : "reduces";
-                Debug.Log($"[GameUnitsLogic] Applied construction cost modifier by section: {sectionName} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}");
-            }
+            string effect = modifierPercent > 0 ? "increases" : "reduces";
+            GameLoggingSystem.Instance.LogEvent($"Applied construction cost modifier by section: {sectionName} {effect} cost by {Mathf.Abs(modifierPercent)}% from {modifierSource}", "GameUnitsLogic");
         }
         else
         {
             if (sectionModifiers.ContainsKey(modifierSource))
             {
                 sectionModifiers.Remove(modifierSource);
-                if (enableProductionModifierLogging)
-                {
-                    Debug.Log($"[GameUnitsLogic] Removed construction cost modifier by section: {sectionName} from {modifierSource}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Removed construction cost modifier by section: {sectionName} from {modifierSource}", "GameUnitsLogic");
             }
         }
     }
@@ -1028,10 +982,7 @@ public class GameUnitsLogic : MonoBehaviour
         
         productionScalingBonuses[productionUnitName][modifierSource] = bonusPerUnit;
         
-        if (enableProductionModifierLogging)
-        {
-            Debug.Log($"[GameUnitsLogic] Added production scaling bonus: +{bonusPerUnit} per {productionUnitName} from {modifierSource}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Added production scaling bonus: +{bonusPerUnit} per {productionUnitName} from {modifierSource}", "GameUnitsLogic");
     }
     
     /// <summary>
@@ -1056,10 +1007,7 @@ public class GameUnitsLogic : MonoBehaviour
                 productionScalingBonuses.Remove(productionUnitName);
             }
             
-            if (enableProductionModifierLogging)
-            {
-                Debug.Log($"[GameUnitsLogic] Removed production scaling bonus: -{removedBonus} per {productionUnitName} from {modifierSource}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Removed production scaling bonus: -{removedBonus} per {productionUnitName} from {modifierSource}", "GameUnitsLogic");
         }
     }
     
@@ -1086,10 +1034,7 @@ public class GameUnitsLogic : MonoBehaviour
             RemoveProductionScalingBonus(productionUnitName, modifierSource);
         }
         
-        if (enableProductionModifierLogging && toRemove.Count > 0)
-        {
-            Debug.Log($"[GameUnitsLogic] Cleared production scaling bonuses from source: {modifierSource} ({toRemove.Count} units affected)");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Cleared production scaling bonuses from source: {modifierSource} ({toRemove.Count} units affected)", "GameUnitsLogic");
     }
     
     /// <summary>
@@ -1155,64 +1100,64 @@ public class GameUnitsLogic : MonoBehaviour
     [ContextMenu("Print All Modifiers")]
     public void PrintAllModifiers()
     {
-        if (!enableProductionModifierLogging) return;
+        if (!GameLoggingSystem.Instance.enableGameUnitsLogicLogging) return;
         
-        Debug.Log("=== PRODUCTION & CONSTRUCTION MODIFIERS ===");
+        GameLoggingSystem.Instance.LogEvent("=== PRODUCTION & CONSTRUCTION MODIFIERS ===", "GameUnitsLogic");
         
         var productionModifiers = GetAllProductionModifiers();
         if (productionModifiers.Count > 0)
         {
-            Debug.Log("Production Modifiers:");
+            GameLoggingSystem.Instance.LogEvent("Production Modifiers:", "GameUnitsLogic");
             foreach (var category in productionModifiers)
             {
-                Debug.Log($"  {category.Key}:");
+                GameLoggingSystem.Instance.LogEvent($"  {category.Key}:", "GameUnitsLogic");
                 foreach (var modifier in category.Value)
                 {
                     string sign = modifier.Value >= 0 ? "+" : "";
-                    Debug.Log($"    {sign}{modifier.Value}% from {modifier.Key}");
+                    GameLoggingSystem.Instance.LogEvent($"    {sign}{modifier.Value}% from {modifier.Key}", "GameUnitsLogic");
                 }
             }
         }
         else
         {
-            Debug.Log("  No production modifiers active");
+            GameLoggingSystem.Instance.LogEvent("  No production modifiers active", "GameUnitsLogic");
         }
         
         var constructionModifiers = GetAllConstructionCostModifiers();
         if (constructionModifiers.Count > 0)
         {
-            Debug.Log("Construction Cost Modifiers:");
+            GameLoggingSystem.Instance.LogEvent("Construction Cost Modifiers:", "GameUnitsLogic");
             foreach (var category in constructionModifiers)
             {
-                Debug.Log($"  {category.Key}:");
+                GameLoggingSystem.Instance.LogEvent($"  {category.Key}:", "GameUnitsLogic");
                 foreach (var modifier in category.Value)
                 {
                     string effect = modifier.Value > 0 ? "increases" : "reduces";
-                    Debug.Log($"    {effect} cost by {Mathf.Abs(modifier.Value)}% from {modifier.Key}");
+                    GameLoggingSystem.Instance.LogEvent($"    {effect} cost by {Mathf.Abs(modifier.Value)}% from {modifier.Key}", "GameUnitsLogic");
                 }
             }
         }
         else
         {
-            Debug.Log("  No construction cost modifiers active");
+            GameLoggingSystem.Instance.LogEvent("  No construction cost modifiers active", "GameUnitsLogic");
         }
         
         var scalingBonuses = GetAllProductionScalingBonuses();
         if (scalingBonuses.Count > 0)
         {
-            Debug.Log("Production Scaling Bonuses:");
+            GameLoggingSystem.Instance.LogEvent("Production Scaling Bonuses:", "GameUnitsLogic");
             foreach (var kvp in scalingBonuses)
             {
-                Debug.Log($"  {kvp.Key}:");
+                GameLoggingSystem.Instance.LogEvent($"  {kvp.Key}:", "GameUnitsLogic");
                 foreach (var source in kvp.Value)
                 {
-                    Debug.Log($"    +{source.Value} per unit from {source.Key}");
+                    GameLoggingSystem.Instance.LogEvent($"    +{source.Value} per unit from {source.Key}", "GameUnitsLogic");
                 }
             }
         }
         else
         {
-            Debug.Log("  No production scaling bonuses active");
+            GameLoggingSystem.Instance.LogEvent("  No production scaling bonuses active", "GameUnitsLogic");
         }
     }
 

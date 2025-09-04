@@ -280,14 +280,14 @@ public class ChorusScreenManager : MonoBehaviour
         
         try
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsing chorus knot '{currentEventScreen.inkKnot}'", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Parsing chorus knot '{currentEventScreen.inkKnot}'", "ChorusScreenManager");
             // PRIMARY: use precompiled metadata built at startup (fast and reliable)
             var precompiled = inkManager != null
                 ? inkManager.GetPrecompiledChoicesForKnot(currentEventScreen.inkKnot)
                 : InkStoryManager.GetPrecompiledChoices(currentEventScreen.inkKnot);
 
             availableChoices.AddRange(precompiled);
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Precompiled choices found: {availableChoices.Count}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Precompiled choices found: {availableChoices.Count}", "ChorusScreenManager");
 
             // If for some reason precompiled is empty, do a minimal UI-only fallback using current story choices
             if (availableChoices.Count == 0 && currentStory != null)
@@ -310,18 +310,18 @@ public class ChorusScreenManager : MonoBehaviour
             // Pragmatism availability drives which variant we show
             isPragmatismAvailable = availableChoices.Exists(c => c.ChoiceId.ToLower().Contains("pragmatism"));
             
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Using precompiled choices for '{currentEventScreen.inkKnot}': {availableChoices.Count}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Using precompiled choices for '{currentEventScreen.inkKnot}': {availableChoices.Count}", "ChorusScreenManager");
 
             {
                 foreach (var c in availableChoices)
                 {
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice summary -> id={c.ChoiceId}, title='{c.Title}', hasReqs={c.HasRequirements} (count={c.Requirements?.Count ?? 0}), hasChallenge={c.HasChallenge}, validation={c.ValidationType}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice summary -> id={c.ChoiceId}, title='{c.Title}', hasReqs={c.HasRequirements} (count={c.Requirements?.Count ?? 0}), hasChallenge={c.HasChallenge}, validation={c.ValidationType}", "ChorusScreenManager");
                     if (c.HasRequirements && c.Requirements != null)
                     {
                         for (int i = 0; i < c.Requirements.Count; i++)
                         {
                             var r = c.Requirements[i];
-                            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - req[{i}] type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}", "ChorusScreenManager");
+                            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager]   - req[{i}] type={r.type}, target='{r.targetName}', cmp={r.comparison}, value={r.requiredValue}", "ChorusScreenManager");
                         }
                     }
                 }
@@ -475,7 +475,7 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 string metadata = choiceText.Substring(cIdx + 3).Trim();
                 var metadataDict = ParseMetadata(metadata);
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] (Compiled Choice) Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] (Compiled Choice) Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
 
                 // Requirements
                 if (metadataDict.ContainsKey("requirements"))
@@ -595,8 +595,8 @@ public class ChorusScreenManager : MonoBehaviour
             // Parse metadata for requirements, pillar, strength, success/failure paths
             Dictionary<string, string> metadataDict = ParseMetadata(metadata);
             // Debug: show raw metadata string and parsed keys
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Raw metadata for '{choiceText}': {metadata}", "ChorusScreenManager");
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Raw metadata for '{choiceText}': {metadata}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Parsed metadata keys: {string.Join(",", metadataDict.Keys)}", "ChorusScreenManager");
             
             // Create the choice data
             ChorusChoiceData choiceData = new ChorusChoiceData();
@@ -611,12 +611,12 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 choiceData.requirements = ParseRequirementsFromString(metadataDict["requirements"]);
                 choiceData.hasRequirements = true;
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Requirements count for '{title}': {choiceData.requirements.Count}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Requirements count for '{title}': {choiceData.requirements.Count}", "ChorusScreenManager");
             }
             else
             {
                 choiceData.hasRequirements = false;
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No requirements for '{title}'", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] No requirements for '{title}'", "ChorusScreenManager");
             }
 
             // Parse requirement costs if specified (resources/housing/population to consume later)
@@ -630,13 +630,13 @@ public class ChorusScreenManager : MonoBehaviour
             {
                 choiceData.successPath = metadataDict["success"];
             }
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Missing 'success' in metadata for '{choiceText}'", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Missing 'success' in metadata for '{choiceText}'", "ChorusScreenManager");
             
             if (metadataDict.ContainsKey("failure"))
             {
                 choiceData.failurePath = metadataDict["failure"];
             }
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Missing 'failure' in metadata for '{choiceText}'", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Missing 'failure' in metadata for '{choiceText}'", "ChorusScreenManager");
             
             // Extended: critical success/failure and rare event
             if (metadataDict.ContainsKey("crit_success")) choiceData.critSuccessPath = metadataDict["crit_success"];
@@ -678,11 +678,11 @@ public class ChorusScreenManager : MonoBehaviour
                 choiceData.challengeStrength = strength;
                 choiceData.hasChallenge = true;
             }
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No 'pillar' found in metadata for '{choiceText}' (no challenge)", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] No 'pillar' found in metadata for '{choiceText}' (no challenge)", "ChorusScreenManager");
             
             // Determine validation type based on what's present
             choiceData.validationType = DetermineValidationType(choiceData);
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice '{title}' validation type: {choiceData.validationType}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice '{title}' validation type: {choiceData.validationType}", "ChorusScreenManager");
             
             return choiceData;
         }
@@ -881,7 +881,7 @@ public class ChorusScreenManager : MonoBehaviour
         List<EventCondition> conditions = new List<EventCondition>();
         
         if (string.IsNullOrEmpty(requirementsString)) return conditions;
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Parsing requirements string: '{requirementsString}'", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Parsing requirements string: '{requirementsString}'", "ChorusScreenManager");
         
         // Split by semicolon for multiple requirements
         string[] requirements = requirementsString.Split(';');
@@ -890,7 +890,7 @@ public class ChorusScreenManager : MonoBehaviour
         {
             string trimmedReq = req.Trim();
             if (string.IsNullOrEmpty(trimmedReq)) continue;
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Requirement token: '{trimmedReq}'", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Requirement token: '{trimmedReq}'", "ChorusScreenManager");
             
             EventCondition condition = ParseRequirementString(trimmedReq);
             if (condition != null)
@@ -1146,7 +1146,7 @@ public class ChorusScreenManager : MonoBehaviour
     {
         // Since ChallengeSlot is now assigned directly on ChorusChoice,
         // we just return null and let the existing component handle initialization
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] ChallengeSlot should be assigned directly on ChorusChoice for {pillarType}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] ChallengeSlot should be assigned directly on ChorusChoice for {pillarType}", "ChorusScreenManager");
         return null;
     }
     
@@ -1199,7 +1199,7 @@ public class ChorusScreenManager : MonoBehaviour
             twoChoicesVariant.SetActive(!isPragmatismAvailable);
         }
         
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Selected {(isPragmatismAvailable ? "FullOutcomes" : "TwoChoices")} variant", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Selected {(isPragmatismAvailable ? "FullOutcomes" : "TwoChoices")} variant", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -1239,45 +1239,45 @@ public class ChorusScreenManager : MonoBehaviour
         }
         
         // Find corresponding background elements
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Looking for background elements in container: {(backgroundsContainer != null ? backgroundsContainer.name : "NULL")}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Looking for background elements in container: {(backgroundsContainer != null ? backgroundsContainer.name : "NULL")}", "ChorusScreenManager");
         
         // Debug: List all children in backgrounds container
         if (backgroundsContainer != null)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Background container children:", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Background container children:", "ChorusScreenManager");
             for (int i = 0; i < backgroundsContainer.childCount; i++)
             {
                 Transform child = backgroundsContainer.GetChild(i);
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager]   - {child.name}", "ChorusScreenManager");
                 
                 // Check if this child has ChorusChoiceBackground component
                 ChorusChoiceBackground existingComponent = child.GetComponent<ChorusChoiceBackground>();
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has ChorusChoiceBackground: {(existingComponent != null ? "YES" : "NO")}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has ChorusChoiceBackground: {(existingComponent != null ? "YES" : "NO")}", "ChorusScreenManager");
                 
                 // Check if this child has Image component
                 Image existingImage = child.GetComponent<Image>();
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has Image: {(existingImage != null ? "YES" : "NO")}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager]   - {child.name} has Image: {(existingImage != null ? "YES" : "NO")}", "ChorusScreenManager");
             }
         }
         
         foreach (var choiceData in availableChoices)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Processing choice: {choiceData.ChoiceId}", "ChorusScreenManager");
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice data - Title: '{choiceData.Title}', HasChallenge: {choiceData.HasChallenge}, ValidationType: {choiceData.ValidationType}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Processing choice: {choiceData.ChoiceId}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice data - Title: '{choiceData.Title}', HasChallenge: {choiceData.HasChallenge}, ValidationType: {choiceData.ValidationType}", "ChorusScreenManager");
             
             // Try to find background element by choice ID first
             Transform backgroundElement = backgroundsContainer?.Find(choiceData.ChoiceId);
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Direct search for '{choiceData.ChoiceId}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Direct search for '{choiceData.ChoiceId}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
             
             // If not found, try to find by matching the choice type in the name
             if (backgroundElement == null)
             {
                 string choiceType = GetChoiceTypeFromId(choiceData.ChoiceId);
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Trying to find by choice type: '{choiceType}'", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Trying to find by choice type: '{choiceType}'", "ChorusScreenManager");
                 if (!string.IsNullOrEmpty(choiceType))
                 {
                     backgroundElement = backgroundsContainer?.Find(choiceType);
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Search by type '{choiceType}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Search by type '{choiceType}': {(backgroundElement != null ? "Found" : "Not found")}", "ChorusScreenManager");
                 }
             }
             
@@ -1289,7 +1289,7 @@ public class ChorusScreenManager : MonoBehaviour
                     // Initialize the background with choice data
                     backgroundChoice.InitializeChoice(choiceData.ChoiceId, choiceData);
                     backgroundChoices.Add(backgroundChoice);
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Found and initialized background element for {choiceData.ChoiceId}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Found and initialized background element for {choiceData.ChoiceId}", "ChorusScreenManager");
                 }
                 else
                 {
@@ -1310,8 +1310,8 @@ public class ChorusScreenManager : MonoBehaviour
     {
         if (choiceObject == null || choiceData == null) return;
         
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Updating choice object {choiceObject.name} with data: {choiceData.ChoiceId}", "ChorusScreenManager");
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choiceData.ValidationType}, has challenge: {choiceData.HasChallenge}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Updating choice object {choiceObject.name} with data: {choiceData.ChoiceId}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choiceData.ValidationType}, has challenge: {choiceData.HasChallenge}", "ChorusScreenManager");
         
         // Combine gating requirements with cost-display requirements to show all icons in UI
         List<EventCondition> combinedRequirements = new List<EventCondition>();
@@ -1354,7 +1354,7 @@ public class ChorusScreenManager : MonoBehaviour
             bg.InitializeChoice(choiceData.ChoiceId, choiceData);
         }
         
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice object {choiceObject.name} updated successfully", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice object {choiceObject.name} updated successfully", "ChorusScreenManager");
     }
     
     /// <summary>
@@ -1645,9 +1645,9 @@ public class ChorusScreenManager : MonoBehaviour
     {
         if (choice == null) return;
         
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] OnChoiceSelected called for choice: {choice.ChoiceId}", "ChorusScreenManager");
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choice.ValidationType}, has challenge: {choice.HasChallenge}", "ChorusScreenManager");
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice destination path: {choice.DestinationPath}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] OnChoiceSelected called for choice: {choice.ChoiceId}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice validation type: {choice.ValidationType}, has challenge: {choice.HasChallenge}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice destination path: {choice.DestinationPath}", "ChorusScreenManager");
         
         // Find the corresponding choice data
         ChorusChoiceData choiceData = availableChoices.Find(c => c.ChoiceId == choice.ChoiceId);
@@ -1657,7 +1657,7 @@ public class ChorusScreenManager : MonoBehaviour
             return;
         }
         
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Found choice data, resolving choice: {choice.ChoiceId} with validation type: {choice.ValidationType}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Found choice data, resolving choice: {choice.ChoiceId} with validation type: {choice.ValidationType}", "ChorusScreenManager");
         
         // Before handling navigation/roll, accumulate requirement costs as consequences for Outro application
         // Costs do not gate availability; they are consumed at the end
@@ -1808,7 +1808,7 @@ public class ChorusScreenManager : MonoBehaviour
             if (enhancedRoll >= rareThreshold)
             {
                 bool rareSavedByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, rareThreshold, "rare_event");
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: enhancedRoll={enhancedRoll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Rare event triggered for {choice.ChoiceId}: enhancedRoll={enhancedRoll} >= {rareThreshold} (top {choiceData.rareEventPercent}%)", "ChorusScreenManager");
                 ApplyConsequences(choiceData.rareEventConsequences);
                 overrideNextPath = choiceData.rareEventPath;
                 ShowChallengeResult(choice, true, rareSavedByRoll, "rare_event");
@@ -1821,7 +1821,7 @@ public class ChorusScreenManager : MonoBehaviour
         int successPercent = Mathf.Clamp(Mathf.RoundToInt((currentStrength / (float)Mathf.Max(1, choiceData.ChallengeStrength)) * 100f), 0, 100);
         int requiredRoll = Mathf.Clamp(100 - successPercent, 0, 100);
         bool successBaseline = enhancedRoll > requiredRoll;
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} enhancedRoll={enhancedRoll} -> {(successBaseline ? "Success" : "Failure")} (success if enhancedRoll > requiredRoll)", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Baseline check: {choiceData.ChallengePillar} current={currentStrength} required={choiceData.ChallengeStrength} success%={successPercent} requiredRoll>{requiredRoll} enhancedRoll={enhancedRoll} -> {(successBaseline ? "Success" : "Failure")} (success if enhancedRoll > requiredRoll)", "ChorusScreenManager");
 
         // Critical tiers: bottom 10 => critical failure if failure; top 10 => critical success if success
         bool isCritFail = (enhancedRoll <= 10) && !successBaseline && !string.IsNullOrEmpty(choiceData.critFailurePath);
@@ -1830,7 +1830,7 @@ public class ChorusScreenManager : MonoBehaviour
         if (isCritSuccess)
         {
                             bool critTriggeredByRoll = DidSavingRollMakeDifference(naturalRoll, enhancedRoll, 90, "critical_success");
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL SUCCESS! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] CRITICAL SUCCESS! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
                 ApplyConsequences(choiceData.critSuccessConsequences);
                 overrideNextPath = choiceData.critSuccessPath;
                 ShowChallengeResult(choice, true, critTriggeredByRoll, "critical_success");
@@ -1838,7 +1838,7 @@ public class ChorusScreenManager : MonoBehaviour
         }
         if (isCritFail)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] CRITICAL FAILURE! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] CRITICAL FAILURE! enhancedRoll={enhancedRoll}", "ChorusScreenManager");
             ApplyConsequences(choiceData.critFailureConsequences);
             overrideNextPath = choiceData.critFailurePath;
             ShowChallengeResult(choice, false, false, "critical_failure");
@@ -1847,7 +1847,7 @@ public class ChorusScreenManager : MonoBehaviour
 
         // Normal success/failure
         bool normalSavedByRoll = successBaseline && DidSavingRollMakeDifference(naturalRoll, enhancedRoll, requiredRoll, "success");
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (enhancedRoll={enhancedRoll})", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Challenge result for {choice.ChoiceId}: {(successBaseline ? "Success" : "Failure")} (enhancedRoll={enhancedRoll})", "ChorusScreenManager");
         ShowChallengeResult(choice, successBaseline, normalSavedByRoll, successBaseline ? "success" : "failure");
     }
 
@@ -1875,7 +1875,7 @@ public class ChorusScreenManager : MonoBehaviour
             int enhancedRoll = GetEnhancedRoll(naturalRoll);
             // New rule: numbers ABOVE the threshold succeed, numbers BELOW OR EQUAL fail
             bool success = enhancedRoll > successPercent;
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, EnhancedRoll: {enhancedRoll} -> {(success ? "Success" : "Failure")} (success if enhancedRoll > Success%)", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Challenge roll: {pillarType} pillar. Current: {currentStrength}, Required: {requiredStrength}, Success%: {successPercent}, EnhancedRoll: {enhancedRoll} -> {(success ? "Success" : "Failure")} (success if enhancedRoll > Success%)", "ChorusScreenManager");
             return success;
         }
         catch (System.Exception ex)
@@ -2044,24 +2044,24 @@ public class ChorusScreenManager : MonoBehaviour
                 if (!string.IsNullOrEmpty(overrideNextPath))
                 {
                     targetPath = overrideNextPath;
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Using override next path: {targetPath}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Using override next path: {targetPath}", "ChorusScreenManager");
                     overrideNextPath = null;
                 }
                 else if (success && !string.IsNullOrEmpty(choice.SuccessPath))
                 {
                     targetPath = choice.SuccessPath;
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Navigating to success path: {targetPath}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Navigating to success path: {targetPath}", "ChorusScreenManager");
                 }
                 else if (!success && !string.IsNullOrEmpty(choice.FailurePath))
                 {
                     targetPath = choice.FailurePath;
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Navigating to failure path: {targetPath}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Navigating to failure path: {targetPath}", "ChorusScreenManager");
                 }
                 else
                 {
                     // Fallback to destination path if no success/failure paths specified
                     targetPath = choice.DestinationPath;
-                    EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] No success/failure path specified, using destination: {targetPath}", "ChorusScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] No success/failure path specified, using destination: {targetPath}", "ChorusScreenManager");
                 }
                 
                 // Navigate directly by knot without overrides/static flow
@@ -2082,13 +2082,13 @@ public class ChorusScreenManager : MonoBehaviour
         {
             // Navigate to the specified path
             currentStory.ChoosePathString(path);
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Successfully navigated to path: {path}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Successfully navigated to path: {path}", "ChorusScreenManager");
             var vm = eventSystem != null ? eventSystem.GetVolumeManager() : null;
             if (vm != null)
             {
                 // Prevent accidental self-navigation loops and normalize
                 var targetTop = InkDrivenEventSetup.NormalizeKnotName(path) ?? path;
-                EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] NavigateToPath normalized '{path}' -> '{targetTop}'", "ChorusScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] NavigateToPath normalized '{path}' -> '{targetTop}'", "ChorusScreenManager");
                 if (!string.IsNullOrEmpty(targetTop)) vm.NavigateToKnot(targetTop);
             }
         }
@@ -2124,7 +2124,7 @@ public class ChorusScreenManager : MonoBehaviour
     /// </summary>
     public void OnChoiceMade(string choiceId)
     {
-        EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Choice made: {choiceId}", "ChorusScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Choice made: {choiceId}", "ChorusScreenManager");
         
         // Mark that a choice was made to prevent choices from fading back in
         choiceWasMade = true;
@@ -2172,7 +2172,7 @@ public class ChorusScreenManager : MonoBehaviour
         // Log the enhancement for debugging
         if (savingRollBonus > 0f)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Roll enhanced: {naturalRoll} + {savingRollBonus:F1}% = {enhancedRoll} (capped at 100)", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Roll enhanced: {naturalRoll} + {savingRollBonus:F1}% = {enhancedRoll} (capped at 100)", "ChorusScreenManager");
         }
         
         return enhancedRoll;
@@ -2199,7 +2199,7 @@ public class ChorusScreenManager : MonoBehaviour
         
         if (naturalWouldFail && enhancedSucceeds)
         {
-            EventSystemLogic.Instance.LogEvent($"[ChorusScreenManager] Saving roll made difference: natural {naturalRoll} <= {threshold} but enhanced {enhancedRoll} > {threshold} for {outcomeType}", "ChorusScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[ChorusScreenManager] Saving roll made difference: natural {naturalRoll} <= {threshold} but enhanced {enhancedRoll} > {threshold} for {outcomeType}", "ChorusScreenManager");
             return true;
         }
         

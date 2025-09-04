@@ -10,9 +10,6 @@ public class CivicManager : MonoBehaviour
 {
     public static CivicManager Instance { get; private set; }
 
-    [Header("Civic System Settings")]
-    [SerializeField] private bool enableCivicLogging = true;
-    
     [Header("Civic Slot Configuration")]
     [SerializeField] private int startingAeonicSlots = 1;
     [SerializeField] private int startingMajorSlots = 1;
@@ -138,20 +135,12 @@ public class CivicManager : MonoBehaviour
 
     private void Update()
     {
-        // Debug input for testing civics system
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            PrintCivicInfo();
-        }
         
         if (Input.GetKeyDown(KeyCode.U))
         {
             // Test unlocking a civic
             bool success = UnlockCivic("Innovation Council", "Debug Input");
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
         }
         
         if (Input.GetKeyDown(KeyCode.R))
@@ -160,10 +149,7 @@ public class CivicManager : MonoBehaviour
             if (IsCivicActive("Innovation Council"))
             {
                 bool success = RemoveCivic("Innovation Council", "Debug Input");
-                if (enableCivicLogging)
-                {
-                    Debug.Log($"[CivicManager] Debug remove attempt: {(success ? "SUCCESS" : "FAILED")}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Debug remove attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
             }
             else
             {
@@ -175,20 +161,14 @@ public class CivicManager : MonoBehaviour
         {
             // Test unlocking Guild Masters
             bool success = UnlockCivic("Guild Masters", "Debug Input");
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
         }
         
         if (Input.GetKeyDown(KeyCode.F))
         {
             // Test unlocking Military Academy
             bool success = UnlockCivic("Military Academy", "Debug Input");
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
         }
     }
 
@@ -231,10 +211,7 @@ public class CivicManager : MonoBehaviour
                 }
                 
                 availableCivics[civic.civicName] = civic;
-                if (enableCivicLogging)
-                {
-                    Debug.Log($"[CivicManager] Loaded civic: {civic.civicName} (Tier: {civic.tier}, Rarity: {civic.rarity})");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Loaded civic: {civic.civicName} (Tier: {civic.tier}, Rarity: {civic.rarity})", "CivicManager");
             }
             else
             {
@@ -242,10 +219,7 @@ public class CivicManager : MonoBehaviour
             }
         }
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Loaded {availableCivics.Count} civics from Resources");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Loaded {availableCivics.Count} civics from Resources", "CivicManager");
     }
 
     /// <summary>
@@ -261,10 +235,7 @@ public class CivicManager : MonoBehaviour
             councilPositions.Add(new CouncilPosition($"Position {i + 1}", null, int.MaxValue));
         }
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Initialized council with {councilSize} positions");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Initialized council with {councilSize} positions", "CivicManager");
     }
 
     /// <summary>
@@ -314,10 +285,7 @@ public class CivicManager : MonoBehaviour
         OnCivicSlotsChanged?.Invoke();
         OnActiveCivicsChanged?.Invoke();
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Successfully unlocked civic: {civicName} from '{source}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully unlocked civic: {civicName} from '{source}'", "CivicManager");
         
         // Force a UI refresh to ensure the civic detailed displays appear immediately in the civic pool
         StartCoroutine(ForceUIRefreshAfterCivicUnlock(civic));
@@ -337,10 +305,7 @@ public class CivicManager : MonoBehaviour
             return false;
         }
 
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Removing civic: {civicName} from '{source}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Removing civic: {civicName} from '{source}'", "CivicManager");
 
         // Handle council seat replacement BEFORE removing the civic
         if (civic.grantsCouncilPosition)
@@ -352,10 +317,7 @@ public class CivicManager : MonoBehaviour
             }
             
             // Immediately trigger civic pool refresh to remove CivicDetailed objects
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Immediately refreshing civic pool to remove CivicDetailed for '{civic.civicName}'");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Immediately refreshing civic pool to remove CivicDetailed for '{civic.civicName}'", "CivicManager");
             OnCivicPoolChanged?.Invoke();
             
             // Then replace the seat with default (this triggers UI refresh)
@@ -373,10 +335,7 @@ public class CivicManager : MonoBehaviour
         OnCivicSlotsChanged?.Invoke();
         OnActiveCivicsChanged?.Invoke();
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Successfully removed civic: {civicName} from '{source}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully removed civic: {civicName} from '{source}'", "CivicManager");
         
         return true;
     }
@@ -393,10 +352,7 @@ public class CivicManager : MonoBehaviour
         {
             if (!CheckSingleRequirement(requirement))
             {
-                if (enableCivicLogging)
-                {
-                    Debug.Log($"[CivicManager] Requirement not met: {requirement.GetAutoDescription()}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Requirement not met: {requirement.GetAutoDescription()}", "CivicManager");
                 return false;
             }
         }
@@ -520,10 +476,7 @@ public class CivicManager : MonoBehaviour
     /// </summary>
     private void AddCivic(CivicData civic, string source)
     {
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Adding civic '{civic.civicName}' (Tier: {civic.tier}) from '{source}'");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Adding civic '{civic.civicName}' (Tier: {civic.tier}) from '{source}'", "CivicManager");
         
         switch (civic.tier)
         {
@@ -571,10 +524,7 @@ public class CivicManager : MonoBehaviour
         OnCivicSlotsChanged?.Invoke();
         OnActiveCivicsChanged?.Invoke();
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Successfully added civic '{civic.civicName}' to active {civic.tier} civics");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Successfully added civic '{civic.civicName}' to active {civic.tier} civics", "CivicManager");
     }
 
     /// <summary>
@@ -630,10 +580,7 @@ public class CivicManager : MonoBehaviour
         // This line was removed as per the edit hint, as the civic was already removed from its list.
         // activeCivics.Remove(civic); 
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Removed {civic.civicName} and cleared all associated bonuses");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Removed {civic.civicName} and cleared all associated bonuses", "CivicManager");
     }
 
     /// <summary>
@@ -661,6 +608,7 @@ public class CivicManager : MonoBehaviour
             }
             
             float value = isAdding ? effect.modifierValue : -effect.modifierValue;
+            string action = isAdding ? "Applied" : "Removed";
             
             switch (effect.effectType)
             {
@@ -677,11 +625,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemovePillarBonus(effect.targetStat, $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} pillar effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} pillar effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -698,11 +642,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemoveSubstatBonus(effect.targetStat, $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} substat effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} substat effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -719,11 +659,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemoveDerivedStatBonus(effect.targetStat, $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} derived stat effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} derived stat effect: {effect.targetStat} +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -740,11 +676,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemoveGlobalBonus("maxMorale", $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} max morale effect: +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} max morale effect: +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -763,11 +695,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemoveGlobalBonus("moraleBalance", $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} morale balance effect: Balance -{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} morale balance effect: Balance -{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -784,11 +712,7 @@ public class CivicManager : MonoBehaviour
                             StatManager.Instance.RemoveGlobalBonus("satisfactionUpgradeThreshold", $"Civic: {civic.civicName}");
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            Debug.Log($"[CivicManager] {action} satisfaction threshold effect: +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                        }
+                        GameLoggingSystem.Instance.LogEvent($"{action} satisfaction threshold effect: +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -818,14 +742,10 @@ public class CivicManager : MonoBehaviour
                             );
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            string target = effect.scope == ScopeType.Global ? "all resources" : 
-                                         effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
-                                         effect.targetStat;
-                            Debug.Log($"[CivicManager] {action} resource modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})");
-                        }
+                        string target = effect.scope == ScopeType.Global ? "all resources" : 
+                                     effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
+                                     effect.targetStat;
+                        GameLoggingSystem.Instance.LogEvent($"{action} resource modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -858,14 +778,10 @@ public class CivicManager : MonoBehaviour
                             }
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            string target = effect.scope == ScopeType.Global ? "all buildings" : 
-                                         effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
-                                         effect.targetStat;
-                            Debug.Log($"[CivicManager] {action} production modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})");
-                        }
+                        string target = effect.scope == ScopeType.Global ? "all buildings" : 
+                                     effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
+                                     effect.targetStat;
+                        GameLoggingSystem.Instance.LogEvent($"{action} production modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -889,14 +805,10 @@ public class CivicManager : MonoBehaviour
                             GameUnitsLogic.Instance.AdjustClickPowerPercent(effect.targetStat, effect.modifierValue);
                         }
                         
-                        if (enableCivicLogging)
-                        {
-                            string action = isAdding ? "Applied" : "Removed";
-                            string target = effect.scope == ScopeType.Global ? "all resources" : 
-                                         effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
-                                         effect.targetStat;
-                            Debug.Log($"[CivicManager] {action} click power modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})");
-                        }
+                        string target = effect.scope == ScopeType.Global ? "all resources" : 
+                                     effect.scope == ScopeType.Section ? $"{effect.targetStat} section" : 
+                                     effect.targetStat;
+                        GameLoggingSystem.Instance.LogEvent($"{action} click power modifier: {target} +{effect.modifierValue}% ({effect.GetAutoDescription()})", "CivicManager");
                     }
                     break;
                     
@@ -915,11 +827,7 @@ public class CivicManager : MonoBehaviour
                                 PopGrowthLogic.Instance.RemoveHousingBonus($"Civic: {civic.civicName}");
                             }
                             
-                            if (enableCivicLogging)
-                            {
-                                string action = isAdding ? "Applied" : "Removed";
-                                Debug.Log($"[CivicManager] {action} housing bonus: +{effect.modifierValue} ({effect.GetAutoDescription()})");
-                            }
+                            GameLoggingSystem.Instance.LogEvent($"{action} housing bonus: +{effect.modifierValue} ({effect.GetAutoDescription()})", "CivicManager");
                         }
                     }
                     break;
@@ -942,25 +850,17 @@ public class CivicManager : MonoBehaviour
                                 GameUnitsLogic.Instance.RemoveProductionScalingBonus(productionUnitName, $"Civic: {civic.civicName}");
                             }
                             
-                            if (enableCivicLogging)
-                            {
-                                string action = isAdding ? "Applied" : "Removed";
-                                string description = !string.IsNullOrEmpty(effect.conditionStat) 
-                                    ? $"+{effect.modifierValue} {effect.targetStat} per {effect.conditionStat}"
-                                    : $"+{effect.modifierValue} {effect.targetStat} per production unit";
-                                Debug.Log($"[CivicManager] {action} production scaling bonus: {description} ({effect.GetAutoDescription()})");
-                            }
+                            string description = !string.IsNullOrEmpty(effect.conditionStat) 
+                                ? $"+{effect.modifierValue} {effect.targetStat} per {effect.conditionStat}"
+                                : $"+{effect.modifierValue} {effect.targetStat} per production unit";
+                            GameLoggingSystem.Instance.LogEvent($"{action} production scaling bonus: {description} ({effect.GetAutoDescription()})", "CivicManager");
                         }
                     }
                     break;
                     
                 case GameEffectType.SpecialAbility:
                     // Handle special abilities
-                    if (enableCivicLogging)
-                    {
-                        string action = isAdding ? "Applied" : "Removed";
-                        Debug.Log($"[CivicManager] {action} special ability: {effect.GetAutoDescription()}");
-                    }
+                    GameLoggingSystem.Instance.LogEvent($"{action} special ability: {effect.GetAutoDescription()}", "CivicManager");
                     break;
             }
         }
@@ -1052,12 +952,9 @@ public class CivicManager : MonoBehaviour
 
         // For the new GovernmentLogic system, we just need to ensure the civic is registered
         // The actual council seat creation happens in GovernmentLogic.RegisterCivicCouncilPosition
-        if (enableCivicLogging)
-        {
-            string positionName = civic.councilPosition?.title ?? civic.civicName;
-            Debug.Log($"[CivicManager] Civic {civic.civicName} grants council position: {positionName}");
-            Debug.Log($"[CivicManager] Council position will be registered with GovernmentLogic system");
-        }
+        string positionName = civic.councilPosition?.title ?? civic.civicName;
+        GameLoggingSystem.Instance.LogEvent($"Civic {civic.civicName} grants council position: {positionName}", "CivicManager");
+        GameLoggingSystem.Instance.LogEvent("Council position will be registered with GovernmentLogic system", "CivicManager");
         
         // The old councilPositions system is deprecated - we use GovernmentLogic now
         // This method is kept for compatibility but no longer manages actual positions
@@ -1095,10 +992,7 @@ public class CivicManager : MonoBehaviour
     {
         if (GovernmentLogic.Instance == null) return;
 
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Replacing civic council seat for '{civic.civicName}' with default seat");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Replacing civic council seat for '{civic.civicName}' with default seat", "CivicManager");
 
         // Find which position this civic seat occupies
         int position = GovernmentLogic.Instance.GetSeatPosition(civic.councilPosition?.title ?? civic.civicName);
@@ -1110,18 +1004,12 @@ public class CivicManager : MonoBehaviour
             
             if (currentSeat != null && currentSeat.sourceCivic == civic)
             {
-                if (enableCivicLogging)
-                {
-                    Debug.Log($"[CivicManager] Found civic seat '{civic.civicName}' at position {position} with legend: {currentSeat.assignedLegend?.legendName ?? "none"}");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Found civic seat '{civic.civicName}' at position {position} with legend: {currentSeat.assignedLegend?.legendName ?? "none"}", "CivicManager");
                 
                 // Remove any assigned legend from this seat
                 if (currentSeat.assignedLegend != null)
                 {
-                    if (enableCivicLogging)
-                    {
-                        Debug.Log($"[CivicManager] Removing assigned legend '{currentSeat.assignedLegend.legendName}' from civic seat '{civic.civicName}'");
-                    }
+                    GameLoggingSystem.Instance.LogEvent($"Removing assigned legend '{currentSeat.assignedLegend.legendName}' from civic seat '{civic.civicName}'", "CivicManager");
                     
                     // Remove the legend assignment
                     GovernmentLogic.Instance.RemoveLegendFromSeat(position);
@@ -1132,9 +1020,7 @@ public class CivicManager : MonoBehaviour
                 
                 if (replaced)
                 {
-                    if (enableCivicLogging)
-                    {
-                        Debug.Log($"[CivicManager] Successfully replaced civic seat '{civic.civicName}' with default seat at position {position}");
+                    GameLoggingSystem.Instance.LogEvent($"Successfully replaced civic seat '{civic.civicName}' with default seat at position {position}", "CivicManager");
                         
                         // Verify the replacement worked
                         var newSeat = GovernmentLogic.Instance.GetSeatAtPosition(position);
@@ -1144,8 +1030,7 @@ public class CivicManager : MonoBehaviour
                             string newCivic = newSeat.sourceCivic?.civicName ?? "none";
                             string newLegend = newSeat.assignedLegend?.legendName ?? "none";
                             
-                            Debug.Log($"[CivicManager] Verification - New seat at position {position}: Title='{newTitle}', Civic='{newCivic}', Legend='{newLegend}'");
-                        }
+                            GameLoggingSystem.Instance.LogEvent($"Verification - New seat at position {position}: Title='{newTitle}', Civic='{newCivic}', Legend='{newLegend}'", "CivicManager");
                     }
                     
                     // Force a UI refresh to ensure the display is updated immediately
@@ -1153,27 +1038,21 @@ public class CivicManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning($"[CivicManager] Failed to replace civic seat '{civic.civicName}' with default seat at position {position}");
+                    GameLoggingSystem.Instance.LogEvent($"Failed to replace civic seat '{civic.civicName}' with default seat at position {position}", "CivicManager");
                 }
             }
             else
             {
-                if (enableCivicLogging)
+                GameLoggingSystem.Instance.LogEvent($"Civic seat '{civic.civicName}' not found at position {position} or doesn't match source civic", "CivicManager");
+                if (currentSeat != null)
                 {
-                    Debug.Log($"[CivicManager] Civic seat '{civic.civicName}' not found at position {position} or doesn't match source civic");
-                    if (currentSeat != null)
-                    {
-                        Debug.Log($"[CivicManager] Current seat at position {position}: Title='{currentSeat.GetEffectiveTitle()}', Civic='{currentSeat.sourceCivic?.civicName ?? "none"}'");
-                    }
+                    GameLoggingSystem.Instance.LogEvent($"Current seat at position {position}: Title='{currentSeat.GetEffectiveTitle()}', Civic='{currentSeat.sourceCivic?.civicName ?? "none"}'", "CivicManager");
                 }
             }
         }
         else
         {
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Civic seat '{civic.civicName}' position not found in GovernmentLogic system");
-            }
+            GameLoggingSystem.Instance.LogEvent($"Civic seat '{civic.civicName}' position not found in GovernmentLogic system", "CivicManager");
         }
     }
     
@@ -1188,10 +1067,7 @@ public class CivicManager : MonoBehaviour
         // Force GovernmentLogic to trigger final UI update events
         if (GovernmentLogic.Instance != null)
         {
-            if (enableCivicLogging)
-            {
-                Debug.Log($"[CivicManager] Final UI refresh after seat replacement");
-            }
+            GameLoggingSystem.Instance.LogEvent("Final UI refresh after seat replacement", "CivicManager");
             
             // Trigger the council composition changed event to force final UI refresh
             GovernmentLogic.Instance.ForceRecalculation();
@@ -1206,10 +1082,7 @@ public class CivicManager : MonoBehaviour
         // Wait for the end of frame to ensure all civic unlock logic is complete
         yield return new WaitForEndOfFrame();
         
-        if (enableCivicLogging)
-        {
-            Debug.Log($"[CivicManager] Forcing UI refresh after civic unlock: {civic.civicName}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Forcing UI refresh after civic unlock: {civic.civicName}", "CivicManager");
         
         // Trigger civic pool changed event to force UI refresh
         OnCivicPoolChanged?.Invoke();
@@ -1276,9 +1149,9 @@ public class CivicManager : MonoBehaviour
             removalPenalties.Remove(civicName);
         }
 
-        if (toRemove.Count > 0 && enableCivicLogging)
+        if (toRemove.Count > 0)
         {
-            Debug.Log($"[CivicManager] Expired removal penalties for: {string.Join(", ", toRemove)}");
+            GameLoggingSystem.Instance.LogEvent($"Expired removal penalties for: {string.Join(", ", toRemove)}", "CivicManager");
         }
     }
 
@@ -1486,166 +1359,6 @@ public class CivicManager : MonoBehaviour
     {
         var civicBonuses = GetCivicBonuses(statType, statName);
         return civicBonuses.ContainsKey(civicName);
-    }
-
-    /// <summary>
-    /// Debug method to print all civic information
-    /// </summary>
-    [ContextMenu("Print Civic Info")]
-    public void PrintCivicInfo()
-    {
-        if (!enableCivicLogging) return;
-
-        Debug.Log("=== CIVIC SYSTEM INFO ===");
-        Debug.Log($"Available Civics: {availableCivics.Count}");
-        Debug.Log($"Active Aeonic: {activeAeonicCivics.Count}/{maxAeonicSlots} (Starting: {startingAeonicSlots})");
-        Debug.Log($"Active Major: {activeMajorCivics.Count}/{maxMajorSlots} (Starting: {startingMajorSlots})");
-        Debug.Log($"Active Minor: {activeMinorCivics.Count}/{maxMinorSlots} (Starting: {startingMinorSlots})");
-        
-        Debug.Log("=== ACTIVE CIVICS ===");
-        foreach (var civic in GetAllActiveCivics())
-        {
-            Debug.Log($"  {civic.civicName} ({civic.tier}) - {civic.description}");
-            
-            // Show active bonuses from this civic
-            if (StatManager.Instance != null)
-            {
-                foreach (var effect in civic.effects)
-                {
-                    if (effect.effectType == GameEffectType.PillarBonus && !string.IsNullOrEmpty(effect.targetStat))
-                    {
-                        var sources = StatManager.Instance.GetBonusSources("pillar", effect.targetStat);
-                        if (sources.ContainsKey($"Civic: {civic.civicName}"))
-                        {
-                            Debug.Log($"    → Pillar Bonus: {effect.targetStat} +{effect.modifierValue}");
-                        }
-                    }
-                    else if (effect.effectType == GameEffectType.SubstatBonus && !string.IsNullOrEmpty(effect.targetStat))
-                    {
-                        var sources = StatManager.Instance.GetBonusSources("substat", effect.targetStat);
-                        if (sources.ContainsKey($"Civic: {civic.civicName}"))
-                        {
-                            Debug.Log($"    → Substat Bonus: {effect.targetStat} +{effect.modifierValue}");
-                        }
-                    }
-                    else if (effect.effectType == GameEffectType.DerivedStatBonus && !string.IsNullOrEmpty(effect.targetStat))
-                    {
-                        var sources = StatManager.Instance.GetBonusSources("derived", effect.targetStat);
-                        if (sources.ContainsKey($"Civic: {civic.civicName}"))
-                        {
-                            Debug.Log($"    → Derived Stat Bonus: {effect.targetStat} +{effect.modifierValue}");
-                        }
-                    }
-                }
-            }
-        }
-        
-        Debug.Log("=== COUNCIL POSITIONS ===");
-        foreach (var position in councilPositions)
-        {
-            string status = position.isOccupied ? $"Occupied by {position.sourceCivic?.civicName}" : "Empty";
-            Debug.Log($"  {position.positionName}: {status}");
-        }
-        
-        Debug.Log("=== REMOVAL PENALTIES ===");
-        foreach (var penalty in removalPenalties.Values)
-        {
-            Debug.Log($"  {penalty.civicName}: {penalty.moralePenaltyPerSeventh} morale per seventh, {penalty.remainingSevenths} sevenths remaining");
-        }
-        
-        // Show total civic bonuses
-        if (StatManager.Instance != null)
-        {
-            Debug.Log("=== TOTAL CIVIC BONUSES ===");
-            
-            // Pillar bonuses
-            foreach (var pillar in new[] { "aureus", "regalia", "waltz", "chorus" })
-            {
-                float totalBonus = GetTotalCivicBonus("pillar", pillar);
-                if (totalBonus > 0)
-                {
-                    Debug.Log($"  {pillar}: +{totalBonus:F1} total from civics");
-                }
-            }
-            
-            // Substat bonuses
-            foreach (var substat in new[] { "innovation", "piety", "authority", "ambition", "symphony", "euphony", "arcane", "secrecy" })
-            {
-                float totalBonus = GetTotalCivicBonus("substat", substat);
-                if (totalBonus > 0)
-                {
-                    Debug.Log($"  {substat}: +{totalBonus:F1} total from civics");
-                }
-            }
-            
-            // Derived stat bonuses
-            foreach (var derived in new[] { "discoveryEfficiency", "savingRollChance", "legendEffectiveness", "expeditionCostMod", "expeditionTimeMod", "satisfactionEffectiveness", "moraleLossMod", "moraleRecoveryMod", "clickPowerBonus", "magicEffectiveness" })
-            {
-                float totalBonus = GetTotalCivicBonus("derived", derived);
-                if (totalBonus > 0)
-                {
-                    Debug.Log($"  {derived}: +{totalBonus:F1} total from civics");
-                }
-            }
-            
-            // Global stat bonuses (morale, satisfaction)
-            var maxMoraleBonus = GetTotalCivicBonus("global", "maxMorale");
-            var moraleBalanceBonus = GetTotalCivicBonus("global", "moraleBalance");
-            var satisfactionBonus = GetTotalCivicBonus("global", "satisfactionUpgradeThreshold");
-            
-            if (maxMoraleBonus > 0 || moraleBalanceBonus != 0 || satisfactionBonus > 0)
-            {
-                Debug.Log("  Global Bonuses:");
-                if (maxMoraleBonus > 0)
-                    Debug.Log($"    Max Morale: +{maxMoraleBonus:F1} (more room for positive morale)");
-                if (moraleBalanceBonus != 0)
-                    Debug.Log($"    Morale Balance: {moraleBalanceBonus:F1} (easier to stay above balance)");
-                if (satisfactionBonus > 0)
-                    Debug.Log($"    Satisfaction Threshold: +{satisfactionBonus:F1} (easier upgrades)");
-            }
-            
-            // Housing bonuses
-            if (PopGrowthLogic.Instance != null)
-            {
-                var housingSources = PopGrowthLogic.Instance.GetHousingBonusSources();
-                var civicHousingBonuses = housingSources.Where(kvp => kvp.Key.StartsWith("Civic:")).ToList();
-                
-                if (civicHousingBonuses.Count > 0)
-                {
-                    Debug.Log("  Housing Bonuses:");
-                    foreach (var kvp in civicHousingBonuses)
-                    {
-                        string civicName = kvp.Key.Replace("Civic: ", "");
-                        Debug.Log($"    +{kvp.Value} housing from {civicName}");
-                    }
-                    Debug.Log($"    Total Housing Bonus: +{PopGrowthLogic.Instance.GetTotalHousingBonus()} (persistent, cannot be destroyed)");
-                }
-            }
-            
-            // Production scaling bonuses
-            if (GameUnitsLogic.Instance != null)
-            {
-                var scalingBonuses = GameUnitsLogic.Instance.GetAllProductionScalingBonuses();
-                var civicScalingBonuses = scalingBonuses.Where(kvp => kvp.Value.Any(source => source.Key.StartsWith("Civic:"))).ToList();
-                
-                if (civicScalingBonuses.Count > 0)
-                {
-                    Debug.Log("  Production Scaling Bonuses:");
-                    foreach (var kvp in civicScalingBonuses)
-                    {
-                        string productionUnit = kvp.Key;
-                        foreach (var source in kvp.Value)
-                        {
-                            if (source.Key.StartsWith("Civic:"))
-                            {
-                                string civicName = source.Key.Replace("Civic: ", "");
-                                Debug.Log($"    +{source.Value} per {productionUnit} from {civicName}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>

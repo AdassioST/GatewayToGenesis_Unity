@@ -9,9 +9,6 @@ using System.Linq;
 public class LegendLeaderLogic : MonoBehaviour
 {
     public static LegendLeaderLogic Instance { get; private set; }
-
-    [Header("Legend System Settings")]
-    [SerializeField] private bool enableLegendLogging = true;
     
     [Header("Council Assignment")]
     [SerializeField] private int seventhsForActivation = 0; // How many sevenths until council effects activate (1 seventh = ~3 minutes)
@@ -107,10 +104,7 @@ public class LegendLeaderLogic : MonoBehaviour
                 }
                 
                 availableLegends[legend.legendName] = legend;
-                if (enableLegendLogging)
-                {
-                    Debug.Log($"[LegendLeaderLogic] Loaded legend: {legend.legendName} (Class: {legend.legendClass}, Rarity: {legend.rarity})");
-                }
+                GameLoggingSystem.Instance.LogEvent($"Loaded legend: {legend.legendName} (Class: {legend.legendClass}, Rarity: {legend.rarity})", "LegendLeaderLogic");
             }
             else
             {
@@ -118,10 +112,7 @@ public class LegendLeaderLogic : MonoBehaviour
             }
         }
         
-        if (enableLegendLogging)
-        {
-            Debug.Log($"[LegendLeaderLogic] Loaded {availableLegends.Count} legends from Resources");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Loaded {availableLegends.Count} legends from Resources", "LegendLeaderLogic");
     }
 
     /// <summary>
@@ -305,10 +296,7 @@ public class LegendLeaderLogic : MonoBehaviour
                 {
                     OnCouncilSeatActivated?.Invoke(seat);
                     
-                    if (enableLegendLogging)
-                    {
-                        Debug.Log($"[LegendLeaderLogic] Council seat {seat.GetEffectiveTitle()} (seat {i}) is now active with {seat.assignedLegend.legendName} after {seventhsForActivation} sevenths");
-                    }
+                    GameLoggingSystem.Instance.LogEvent($"Council seat {seat.GetEffectiveTitle()} (seat {i}) is now active with {seat.assignedLegend.legendName} after {seventhsForActivation} sevenths", "LegendLeaderLogic");
                 }
             }
         }
@@ -334,10 +322,7 @@ public class LegendLeaderLogic : MonoBehaviour
     public void SetSeventhsForActivation(int newSevenths)
     {
         seventhsForActivation = Mathf.Max(1, newSevenths);
-        if (enableLegendLogging)
-        {
-            Debug.Log($"[LegendLeaderLogic] Sevenths for activation set to {seventhsForActivation}");
-        }
+        GameLoggingSystem.Instance.LogEvent($"Sevenths for activation set to {seventhsForActivation}", "LegendLeaderLogic");
     }
 
 
@@ -348,27 +333,25 @@ public class LegendLeaderLogic : MonoBehaviour
     [ContextMenu("Print Legend Info")]
     public void PrintLegendInfo()
     {
-        if (!enableLegendLogging) return;
-
-        Debug.Log("=== LEGEND SYSTEM INFO ===");
-        Debug.Log($"Available Legends: {availableLegends.Count}");
-        Debug.Log($"Assigned Legends: {assignedLegends.Count}");
+        GameLoggingSystem.Instance.LogEvent("=== LEGEND SYSTEM INFO ===", "LegendLeaderLogic");
+        GameLoggingSystem.Instance.LogEvent($"Available Legends: {availableLegends.Count}", "LegendLeaderLogic");
+        GameLoggingSystem.Instance.LogEvent($"Assigned Legends: {assignedLegends.Count}", "LegendLeaderLogic");
         
-        Debug.Log("=== AVAILABLE LEGENDS ===");
+        GameLoggingSystem.Instance.LogEvent("=== AVAILABLE LEGENDS ===", "LegendLeaderLogic");
         foreach (var legend in availableLegends.Values)
         {
-            Debug.Log($"  {legend.legendName} ({legend.legendClass}) - {legend.originStory}");
+            GameLoggingSystem.Instance.LogEvent($"  {legend.legendName} ({legend.legendClass}) - {legend.originStory}", "LegendLeaderLogic");
         }
         
-        Debug.Log("=== ASSIGNED LEGENDS ===");
+        GameLoggingSystem.Instance.LogEvent("=== ASSIGNED LEGENDS ===", "LegendLeaderLogic");
         foreach (var kvp in assignedLegends)
         {
             var seat = GovernmentLogic.Instance?.GetCouncilSeat(kvp.Key);
             string seatTitle = seat?.GetEffectiveTitle() ?? "Unknown Seat";
-            Debug.Log($"  Seat {kvp.Key} ({seatTitle}): {kvp.Value.legendName} ({kvp.Value.legendClass})");
+            GameLoggingSystem.Instance.LogEvent($"  Seat {kvp.Key} ({seatTitle}): {kvp.Value.legendName} ({kvp.Value.legendClass})", "LegendLeaderLogic");
         }
         
-        Debug.Log("=== COUNCIL SEATS STATUS ===");
+        GameLoggingSystem.Instance.LogEvent("=== COUNCIL SEATS STATUS ===", "LegendLeaderLogic");
         if (GovernmentLogic.Instance != null)
         {
             for (int i = -1; i < 6; i++) // -1 for Head of State, 0-5 for regular seats (7 total)
@@ -379,7 +362,7 @@ public class LegendLeaderLogic : MonoBehaviour
                     string status = seat.assignedLegend != null ? 
                         $"Assigned: {seat.assignedLegend.legendName} (Active: {seat.IsActive()})" : 
                         "Empty";
-                    Debug.Log($"  Seat {i} ({seat.GetEffectiveTitle()}): {status}");
+                    GameLoggingSystem.Instance.LogEvent($"  Seat {i} ({seat.GetEffectiveTitle()}): {status}", "LegendLeaderLogic");
                 }
             }
         }
@@ -387,7 +370,7 @@ public class LegendLeaderLogic : MonoBehaviour
         // Show total legend bonuses
         if (StatManager.Instance != null)
         {
-            Debug.Log("=== TOTAL LEGEND BONUSES ===");
+            GameLoggingSystem.Instance.LogEvent("=== TOTAL LEGEND BONUSES ===", "LegendLeaderLogic");
             
             // Pillar bonuses
             foreach (var pillar in new[] { "aureus", "regalia", "waltz", "chorus" })
@@ -399,11 +382,11 @@ public class LegendLeaderLogic : MonoBehaviour
                     var legendSources = sources.Where(kvp => kvp.Key.StartsWith("Legend:")).ToList();
                     if (legendSources.Count > 0)
                     {
-                        Debug.Log($"  {pillar}: +{totalBonus:F1} total from legends");
+                        GameLoggingSystem.Instance.LogEvent($"  {pillar}: +{totalBonus:F1} total from legends", "LegendLeaderLogic");
                         foreach (var source in legendSources)
                         {
                             string legendName = source.Key.Replace("Legend: ", "");
-                            Debug.Log($"    +{source.Value:F1} from {legendName}");
+                            GameLoggingSystem.Instance.LogEvent($"    +{source.Value:F1} from {legendName}", "LegendLeaderLogic");
                         }
                     }
                 }
@@ -415,11 +398,11 @@ public class LegendLeaderLogic : MonoBehaviour
             
             if (maxMoraleBonus > 0 || moraleBalanceBonus != 0)
             {
-                Debug.Log("  Morale Bonuses:");
+                GameLoggingSystem.Instance.LogEvent("  Morale Bonuses:", "LegendLeaderLogic");
                 if (maxMoraleBonus > 0)
-                    Debug.Log($"    Max Morale: +{maxMoraleBonus:F1} (more room for positive morale)");
+                    GameLoggingSystem.Instance.LogEvent($"    Max Morale: +{maxMoraleBonus:F1} (more room for positive morale)", "LegendLeaderLogic");
                 if (moraleBalanceBonus != 0)
-                    Debug.Log($"    Morale Balance: {moraleBalanceBonus:F1} (easier to stay above balance)");
+                    GameLoggingSystem.Instance.LogEvent($"    Morale Balance: {moraleBalanceBonus:F1} (easier to stay above balance)", "LegendLeaderLogic");
             }
             
             // Housing bonuses
@@ -430,13 +413,13 @@ public class LegendLeaderLogic : MonoBehaviour
                 
                 if (legendHousingBonuses.Count > 0)
                 {
-                    Debug.Log("  Housing Bonuses:");
+                    GameLoggingSystem.Instance.LogEvent("  Housing Bonuses:", "LegendLeaderLogic");
                     foreach (var kvp in legendHousingBonuses)
                     {
                         string legendName = kvp.Key.Replace("Legend: ", "");
-                        Debug.Log($"    +{kvp.Value} housing from {legendName}");
+                        GameLoggingSystem.Instance.LogEvent($"    +{kvp.Value} housing from {legendName}", "LegendLeaderLogic");
                     }
-                    Debug.Log($"    Total Housing Bonus: +{PopGrowthLogic.Instance.GetTotalHousingBonus()} (persistent, cannot be destroyed)");
+                    GameLoggingSystem.Instance.LogEvent($"    Total Housing Bonus: +{PopGrowthLogic.Instance.GetTotalHousingBonus()} (persistent, cannot be destroyed)", "LegendLeaderLogic");
                 }
             }
             
@@ -448,7 +431,7 @@ public class LegendLeaderLogic : MonoBehaviour
                 
                 if (legendScalingBonuses.Count > 0)
                 {
-                    Debug.Log("  Production Scaling Bonuses:");
+                    GameLoggingSystem.Instance.LogEvent("  Production Scaling Bonuses:", "LegendLeaderLogic");
                     foreach (var kvp in legendScalingBonuses)
                     {
                         string productionUnit = kvp.Key;

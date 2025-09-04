@@ -423,7 +423,7 @@ public class EventScreenManager : MonoBehaviour
     {
         if (screenContainer == null) return;
 
-        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] ShowChorusScreen called with screen: {screen?.screenId}, inkKnot: {screen?.inkKnot}", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] ShowChorusScreen called with screen: {screen?.screenId}, inkKnot: {screen?.inkKnot}", "EventScreenManager");
 
         // Clear any existing chorus screens first
         ClearScreensExceptFade();
@@ -432,7 +432,7 @@ public class EventScreenManager : MonoBehaviour
         GameObject chorusScreen = Instantiate(chorusScreenPrefab, screenContainer);
         currentScreen = chorusScreen;
 
-        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Chorus screen instantiated: {chorusScreen.name}", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Chorus screen instantiated: {chorusScreen.name}", "EventScreenManager");
 
         // Ensure CanvasGroup component exists
         CanvasGroup canvasGroup = chorusScreen.GetComponent<CanvasGroup>();
@@ -443,11 +443,11 @@ public class EventScreenManager : MonoBehaviour
 
         // Initialize the ChorusScreenManager if it exists
         ChorusScreenManager chorusManager = chorusScreen.GetComponent<ChorusScreenManager>();
-        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] ChorusScreenManager component found: {(chorusManager != null ? "YES" : "NO")}", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] ChorusScreenManager component found: {(chorusManager != null ? "YES" : "NO")}", "EventScreenManager");
         
         if (chorusManager != null)
         {
-            EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Calling InitializeChorusScreen on ChorusScreenManager", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Calling InitializeChorusScreen on ChorusScreenManager", "EventScreenManager");
             
             // Wait a frame to ensure the component is fully initialized
             StartCoroutine(InitializeChorusScreenDelayed(chorusManager, screen));
@@ -514,12 +514,12 @@ public class EventScreenManager : MonoBehaviour
         // Wait a frame to ensure the component is fully initialized
         yield return null;
         
-        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Initializing ChorusScreenManager after delay", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Initializing ChorusScreenManager after delay", "EventScreenManager");
         
         try
         {
             chorusManager.InitializeChorusScreen(screen);
-            EventSystemLogic.Instance.LogEvent($"[EventScreenManager] InitializeChorusScreen call completed successfully", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] InitializeChorusScreen call completed successfully", "EventScreenManager");
         }
         catch (System.Exception ex)
         {
@@ -907,7 +907,7 @@ public class EventScreenManager : MonoBehaviour
                     if (!string.IsNullOrEmpty(label))
                     {
                         buttonText.text = label;
-                        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse button label set to '{label}' for knot '{screen.inkKnot}'", "EventScreenManager");
+                        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse button label set to '{label}' for knot '{screen.inkKnot}'", "EventScreenManager");
                     }
                     else
                     {
@@ -915,7 +915,7 @@ public class EventScreenManager : MonoBehaviour
                         string runtimeLabel = GetRuntimeFirstChoiceText(screen.inkKnot);
                         string finalLabel = !string.IsNullOrEmpty(runtimeLabel) ? FormatChoiceLabel(runtimeLabel) : (screen.buttonText ?? "Continue");
                         buttonText.text = finalLabel;
-                        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse button label fallback to '{finalLabel}' for knot '{screen.inkKnot}'", "EventScreenManager");
+                        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse button label fallback to '{finalLabel}' for knot '{screen.inkKnot}'", "EventScreenManager");
                     }
                 }
                 // Do not add an extra onClick here to avoid double invocation with progressive reveal's handler
@@ -949,7 +949,7 @@ public class EventScreenManager : MonoBehaviour
 
         string firstChoiceText = GetPrecompiledFirstChoiceText(screen.inkKnot);
         string firstChoiceTarget = GetPrecompiledFirstChoiceTarget(screen.inkKnot);
-        EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Splash resolve: knot='{screen.inkKnot}', precompiledLabel='{firstChoiceText}', target='{firstChoiceTarget}'", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Splash resolve: knot='{screen.inkKnot}', precompiledLabel='{firstChoiceText}', target='{firstChoiceTarget}'", "EventScreenManager");
         if (!string.IsNullOrEmpty(firstChoiceText))
         {
             choiceText = FormatChoiceLabel(firstChoiceText);
@@ -959,11 +959,11 @@ public class EventScreenManager : MonoBehaviour
                 target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
                 if (!string.IsNullOrEmpty(target))
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Splash click navigating to '{target}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Splash click navigating to '{target}'", "EventScreenManager");
                     volumeManager?.NavigateToKnot(target);
                 }
             };
-            EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Splash choice label set to '{choiceText}' from knot '{screen.inkKnot}'", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Splash choice label set to '{choiceText}' from knot '{screen.inkKnot}'", "EventScreenManager");
         }
 
         // Fallback if no Ink choice available
@@ -996,7 +996,7 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private void OnSplashButtonPressed()
     {
-        EventSystemLogic.Instance.LogEvent("Splash button pressed - advancing to next screen", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent("Splash button pressed - advancing to next screen", "EventScreenManager");
         // Prefer navigating to first precompiled choice target, else complete
         string target = GetPrecompiledFirstChoiceTarget(currentEventScreen?.inkKnot);
         if (!string.IsNullOrEmpty(target))
@@ -1018,7 +1018,7 @@ public class EventScreenManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(content))
         {
-            EventSystemLogic.Instance.LogEvent("Warning: No content provided for progressive reveal system", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("Warning: No content provided for progressive reveal system", "EventScreenManager");
             return;
         }
 
@@ -1042,7 +1042,7 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private void OnVerseRevealComplete()
     {
-        EventSystemLogic.Instance.LogEvent("Verse progressive reveal completed", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent("Verse progressive reveal completed", "EventScreenManager");
         // The continue button is now visible and interactable
     }
 
@@ -1051,7 +1051,7 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private void OnVerseContinuePressed()
     {
-        EventSystemLogic.Instance.LogEvent("Verse continue button pressed - advancing to next screen", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent("Verse continue button pressed - advancing to next screen", "EventScreenManager");
         
         // Clean up event handlers
         if (progressiveRevealLogic != null)
@@ -1065,14 +1065,14 @@ public class EventScreenManager : MonoBehaviour
         {
             string source = currentEventScreen.inkKnot;
             string target = GetPrecompiledFirstChoiceTarget(source);
-            EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue: source='{source}', precompiledTarget='{target}'", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue: source='{source}', precompiledTarget='{target}'", "EventScreenManager");
             if (string.IsNullOrEmpty(target))
             {
                 // If no target from edges, try runtime resolution before giving up
                 string runtimeTarget = GetRuntimeSingleChoiceTarget(source);
                 if (!string.IsNullOrEmpty(runtimeTarget))
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue: runtimeTarget='{runtimeTarget}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue: runtimeTarget='{runtimeTarget}'", "EventScreenManager");
                     target = runtimeTarget;
                 }
             }
@@ -1081,12 +1081,12 @@ public class EventScreenManager : MonoBehaviour
                 string runtimeTarget = GetRuntimeSingleChoiceTarget(source);
                 if (!string.IsNullOrEmpty(runtimeTarget) && runtimeTarget != source)
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue: resolved loop with runtimeTarget='{runtimeTarget}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue: resolved loop with runtimeTarget='{runtimeTarget}'", "EventScreenManager");
                     target = runtimeTarget;
                 }
                 else if (InkDrivenEventSetup.TryGetKnot(source, out var knot) && !string.IsNullOrEmpty(knot.nextKnotIfNoChoices))
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue: using nextKnotIfNoChoices='{knot.nextKnotIfNoChoices}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue: using nextKnotIfNoChoices='{knot.nextKnotIfNoChoices}'", "EventScreenManager");
                     target = knot.nextKnotIfNoChoices;
                 }
                 else
@@ -1098,7 +1098,7 @@ public class EventScreenManager : MonoBehaviour
             if (!string.IsNullOrEmpty(target))
             {
                 target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
-                EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue: normalized target='{target}'", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue: normalized target='{target}'", "EventScreenManager");
             }
             if (!string.IsNullOrEmpty(target))
             {
@@ -1108,7 +1108,7 @@ public class EventScreenManager : MonoBehaviour
                 if (choiceConsequences != null && choiceConsequences.Count > 0 && eventSystem != null)
                 {
                     foreach (var ec in choiceConsequences) eventSystem.AddConsequence(ec);
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Accumulated {choiceConsequences.Count} consequences from verse '{source}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Accumulated {choiceConsequences.Count} consequences from verse '{source}'", "EventScreenManager");
                 }
 
                 // Apply any deferred consequences for this verse before navigation
@@ -1119,18 +1119,18 @@ public class EventScreenManager : MonoBehaviour
                     {
                         eventSystem.AddConsequence(ec);
                     }
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Applied {deferred.Count} deferred consequences for verse '{target}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Applied {deferred.Count} deferred consequences for verse '{target}'", "EventScreenManager");
                 }
 
                 // If this is clearly a chorus knot by suffix, navigate expecting chorus
                 var lower = target.ToLower();
                 if (lower.EndsWith("_chorus") || lower.Contains("_chorus_"))
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue -> navigating to Chorus knot '{target}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue -> navigating to Chorus knot '{target}'", "EventScreenManager");
                 }
                 else
                 {
-                    EventSystemLogic.Instance.LogEvent($"[EventScreenManager] Verse continue -> navigating to knot '{target}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"[EventScreenManager] Verse continue -> navigating to knot '{target}'", "EventScreenManager");
                 }
 
                 volumeManager.NavigateToKnot(target);
@@ -1446,7 +1446,7 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private void OnBridgeContinuePressed()
     {
-        EventSystemLogic.Instance.LogEvent("Bridge continue pressed - advancing to next screen", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent("Bridge continue pressed - advancing to next screen", "EventScreenManager");
         isScreenComplete = true;
         // Navigate by Ink edges rather than static flow
         if (volumeManager != null && currentEventScreen != null)
@@ -1465,15 +1465,15 @@ public class EventScreenManager : MonoBehaviour
                 if (bridgeConsequences != null && bridgeConsequences.Count > 0 && eventSystem != null)
                 {
                     foreach (var ec in bridgeConsequences) eventSystem.AddConsequence(ec);
-                    EventSystemLogic.Instance.LogEvent($"Accumulated {bridgeConsequences.Count} consequences from bridge '{source}'", "EventScreenManager");
+                    GameLoggingSystem.Instance.LogEvent($"Accumulated {bridgeConsequences.Count} consequences from bridge '{source}'", "EventScreenManager");
                 }
                 target = InkDrivenEventSetup.NormalizeKnotName(target) ?? target;
-                EventSystemLogic.Instance.LogEvent($"Bridge continue navigating to '{target}' from '{source}'", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"Bridge continue navigating to '{target}' from '{source}'", "EventScreenManager");
                 volumeManager.NavigateToKnot(target);
                 return;
             }
             // If no target, complete
-            EventSystemLogic.Instance.LogEvent("Bridge had no target; completing story", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("Bridge had no target; completing story", "EventScreenManager");
             volumeManager.CompleteStory();
         }
     }
@@ -1578,7 +1578,7 @@ public class EventScreenManager : MonoBehaviour
     {
         if (currentScreen == null)
         {
-            EventSystemLogic.Instance.LogEvent("ERROR: currentScreen is null in SetupOutroButton", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("ERROR: currentScreen is null in SetupOutroButton", "EventScreenManager");
             return;
         }
 
@@ -1590,16 +1590,16 @@ public class EventScreenManager : MonoBehaviour
             {
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => OnOutroButtonPressed());
-                EventSystemLogic.Instance.LogEvent($"Outro button setup complete - listener added", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"Outro button setup complete - listener added", "EventScreenManager");
             }
             else
             {
-                EventSystemLogic.Instance.LogEvent($"ERROR: Button component not found on Button transform", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"ERROR: Button component not found on Button transform", "EventScreenManager");
             }
         }
         else
         {
-            EventSystemLogic.Instance.LogEvent($"ERROR: Button transform not found. Available children: {GetChildrenNames(currentScreen.transform)}", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent($"ERROR: Button transform not found. Available children: {GetChildrenNames(currentScreen.transform)}", "EventScreenManager");
         }
     }
 
@@ -1619,12 +1619,12 @@ public class EventScreenManager : MonoBehaviour
     /// </summary>
     private void OnOutroButtonPressed()
     {
-        EventSystemLogic.Instance.LogEvent("Outro button pressed - completing story", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent("Outro button pressed - completing story", "EventScreenManager");
         
         // Prevent multiple button presses
         if (isScreenComplete)
         {
-            EventSystemLogic.Instance.LogEvent("Button already pressed, ignoring duplicate press", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("Button already pressed, ignoring duplicate press", "EventScreenManager");
             return;
         }
         
@@ -1638,7 +1638,7 @@ public class EventScreenManager : MonoBehaviour
             if (button != null)
             {
                 button.interactable = false;
-                EventSystemLogic.Instance.LogEvent("Button disabled to prevent multiple presses", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent("Button disabled to prevent multiple presses", "EventScreenManager");
             }
         }
         
@@ -1658,23 +1658,23 @@ public class EventScreenManager : MonoBehaviour
             // Kill any tweens on the screen's transform
             DOTween.Kill(currentScreen.transform);
             
-            EventSystemLogic.Instance.LogEvent("Killed all DOTween tweens on current screen to prevent errors", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("Killed all DOTween tweens on current screen to prevent errors", "EventScreenManager");
         }
         
         // Complete the story through the event system
         if (eventSystem != null)
         {
-            EventSystemLogic.Instance.LogEvent("Calling eventSystem.OnStoryCompleted()", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("Calling eventSystem.OnStoryCompleted()", "EventScreenManager");
             eventSystem.OnStoryCompleted();
         }
         else if (volumeManager != null)
         {
-            EventSystemLogic.Instance.LogEvent("eventSystem is null, calling volumeManager.CompleteStory()", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("eventSystem is null, calling volumeManager.CompleteStory()", "EventScreenManager");
             volumeManager.CompleteStory();
         }
         else
         {
-            EventSystemLogic.Instance.LogEvent("ERROR: Both eventSystem and volumeManager are null!", "EventScreenManager");
+            GameLoggingSystem.Instance.LogEvent("ERROR: Both eventSystem and volumeManager are null!", "EventScreenManager");
         }
     }
 
@@ -1719,12 +1719,12 @@ public class EventScreenManager : MonoBehaviour
             Sprite sprite = Resources.Load<Sprite>(path);
             if (sprite != null)
             {
-                EventSystemLogic.Instance.LogEvent($"Loaded sprite '{spriteName}' from path '{path}'", "EventScreenManager");
+                GameLoggingSystem.Instance.LogEvent($"Loaded sprite '{spriteName}' from path '{path}'", "EventScreenManager");
                 return sprite;
             }
         }
 
-        EventSystemLogic.Instance.LogEvent($"Failed to load sprite '{spriteName}' from any path", "EventScreenManager");
+        GameLoggingSystem.Instance.LogEvent($"Failed to load sprite '{spriteName}' from any path", "EventScreenManager");
         return null;
     }
 

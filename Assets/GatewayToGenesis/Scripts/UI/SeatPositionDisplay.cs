@@ -142,7 +142,7 @@ public class SeatPositionDisplay : MonoBehaviour
             if (IsOnCooldown())
             {
                 int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(seatIndex);
-                Debug.Log($"[SeatPositionDisplay] Seat {seatIndex} ({councilSeat.GetEffectiveTitle()}) is on cooldown for {remainingCooldown} more sevenths");
+                GameLoggingSystem.Instance.LogEvent($"Seat {seatIndex} ({councilSeat.GetEffectiveTitle()}) is on cooldown for {remainingCooldown} more sevenths", "SeatPositionDisplay");
                 return;
             }
             

@@ -6,9 +6,6 @@ using UnityEngine.UI;
 
 public class TimeSystemLogic : MonoBehaviour
 {
-    [Header("Time System Settings")]
-    [SerializeField] private bool enableTimeSystemLogicLogging; // Whether to log what the boss is doing
-
     public static TimeSystemLogic Instance { get; private set; }
 
     [SerializeField] private float secondsPerSeventh = 180f; // 1 Seventh = 3 minutes
@@ -89,7 +86,7 @@ public class TimeSystemLogic : MonoBehaviour
                     // The accumulated time was scaled down by slowMotionFactor, so we need to scale it back up
                     float convertedTime = slowMotionTimeAccumulated * slowMotionFactor;
                     timeSinceLastSeventh += convertedTime;
-                    LogTimeSystem($"Slow motion ended: converted {slowMotionTimeAccumulated:F2}s slow motion → {convertedTime:F2}s normal time, total time: {timeSinceLastSeventh:F2}s");
+                    GameLoggingSystem.Instance.LogEvent($"Slow motion ended: converted {slowMotionTimeAccumulated:F2}s slow motion → {convertedTime:F2}s normal time, total time: {timeSinceLastSeventh:F2}s", "TimeSystemLogic");
                     slowMotionTimeAccumulated = 0f;
                     wasInSlowMotion = false;
                 }
@@ -229,7 +226,7 @@ public class TimeSystemLogic : MonoBehaviour
         {
             isSlowMotionActive = true;
             wasInSlowMotion = true;
-            LogTimeSystem($"Slow motion enabled - time will pass {slowMotionFactor}x slower");
+            GameLoggingSystem.Instance.LogEvent($"Slow motion enabled - time will pass {slowMotionFactor}x slower", "TimeSystemLogic");
         }
     }
     
@@ -241,7 +238,7 @@ public class TimeSystemLogic : MonoBehaviour
         if (isSlowMotionActive)
         {
             isSlowMotionActive = false;
-            LogTimeSystem("Slow motion disabled - time returns to normal speed");
+            GameLoggingSystem.Instance.LogEvent("Slow motion disabled - time returns to normal speed", "TimeSystemLogic");
         }
     }
     
@@ -286,21 +283,11 @@ public class TimeSystemLogic : MonoBehaviour
     {
         if (wasInSlowMotion)
         {
-            LogTimeSystem($"{boundaryName} changed - resetting slow motion tracking");
+            GameLoggingSystem.Instance.LogEvent($"{boundaryName} changed - resetting slow motion tracking", "TimeSystemLogic");
             slowMotionTimeAccumulated = 0f;
             wasInSlowMotion = false;
         }
     }
     
-    /// <summary>
-    /// Log time system messages
-    /// </summary>
-    private void LogTimeSystem(string message)
-    {
-        if (enableTimeSystemLogicLogging)
-        {
-            Debug.Log($"[TimeSystemLogic] {message}");
-        }
-    }
 }
 
