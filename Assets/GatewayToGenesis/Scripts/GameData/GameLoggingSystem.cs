@@ -15,12 +15,63 @@ public class GameLoggingSystem : MonoBehaviour
         }
     }
 
-
     [Header("Full Event System Settings")]
-    public bool enableAllGameLogicLogging;
-    public bool enableAllEventSystemLogicLogging;
-    public bool enableAllGovernmentLogicLogging;
-    public bool enableAllEnvironmentLogicLogging;
+    [SerializeField] private bool _enableAllGameLogicLogging;
+    [SerializeField] private bool _enableAllEventSystemLogicLogging;
+    [SerializeField] private bool _enableAllGovernmentLogicLogging;
+    [SerializeField] private bool _enableAllEnvironmentLogicLogging;
+
+    public bool enableAllGameLogicLogging
+    {
+        get => _enableAllGameLogicLogging;
+        set
+        {
+            if (_enableAllGameLogicLogging != value)
+            {
+                _enableAllGameLogicLogging = value;
+                UpdateGameLogicLogging();
+            }
+        }
+    }
+
+    public bool enableAllEventSystemLogicLogging
+    {
+        get => _enableAllEventSystemLogicLogging;
+        set
+        {
+            if (_enableAllEventSystemLogicLogging != value)
+            {
+                _enableAllEventSystemLogicLogging = value;
+                UpdateEventSystemLogging();
+            }
+        }
+    }
+
+    public bool enableAllGovernmentLogicLogging
+    {
+        get => _enableAllGovernmentLogicLogging;
+        set
+        {
+            if (_enableAllGovernmentLogicLogging != value)
+            {
+                _enableAllGovernmentLogicLogging = value;
+                UpdateGovernmentLogging();
+            }
+        }
+    }
+
+    public bool enableAllEnvironmentLogicLogging
+    {
+        get => _enableAllEnvironmentLogicLogging;
+        set
+        {
+            if (_enableAllEnvironmentLogicLogging != value)
+            {
+                _enableAllEnvironmentLogicLogging = value;
+                UpdateEnvironmentLogging();
+            }
+        }
+    }
 
     [Header("Detailed Game Logic Settings")]
     public bool enableGameUnitsLogicLogging;
@@ -48,24 +99,104 @@ public class GameLoggingSystem : MonoBehaviour
     public bool enableSeatPositionDisplayLogging;
     public bool enableLeaderSlotDisplayLogging;
 
+    // Track previous states to detect actual changes
+    private bool _previousGameLogicState;
+    private bool _previousEnvironmentState;
+    private bool _previousEventSystemState;
+    private bool _previousGovernmentState;
+
     private void Start()
     {
         InitializeLoggingSettings();
     }
 
+    private void OnValidate()
+    {
+        // This method is called when values change in the inspector
+        if (Application.isPlaying)
+        {
+            CheckForMainCategoryChanges();
+        }
+    }
+
     private void InitializeLoggingSettings()
+    {
+        // Initialize previous states
+        _previousGameLogicState = enableAllGameLogicLogging;
+        _previousEnvironmentState = enableAllEnvironmentLogicLogging;
+        _previousEventSystemState = enableAllEventSystemLogicLogging;
+        _previousGovernmentState = enableAllGovernmentLogicLogging;
+        
+        UpdateAllLoggingSettings();
+    }
+
+    private void CheckForMainCategoryChanges()
+    {
+        // Check for Game Logic changes
+        if (_previousGameLogicState != enableAllGameLogicLogging)
+        {
+            UpdateGameLogicLogging();
+            _previousGameLogicState = enableAllGameLogicLogging;
+        }
+
+        // Check for Environment changes
+        if (_previousEnvironmentState != enableAllEnvironmentLogicLogging)
+        {
+            UpdateEnvironmentLogging();
+            _previousEnvironmentState = enableAllEnvironmentLogicLogging;
+        }
+
+        // Check for Event System changes
+        if (_previousEventSystemState != enableAllEventSystemLogicLogging)
+        {
+            UpdateEventSystemLogging();
+            _previousEventSystemState = enableAllEventSystemLogicLogging;
+        }
+
+        // Check for Government changes
+        if (_previousGovernmentState != enableAllGovernmentLogicLogging)
+        {
+            UpdateGovernmentLogging();
+            _previousGovernmentState = enableAllGovernmentLogicLogging;
+        }
+    }
+
+    private void UpdateAllLoggingSettings()
+    {
+        UpdateGameLogicLogging();
+        UpdateEnvironmentLogging();
+        UpdateEventSystemLogging();
+        UpdateGovernmentLogging();
+    }
+
+    private void UpdateGameLogicLogging()
     {
         if (enableAllGameLogicLogging)
         {
             enableGameUnitsLogicLogging = true;
             enablePopGrowthLogicLogging = true;
         }
+        else
+        {
+            enableGameUnitsLogicLogging = false;
+            enablePopGrowthLogicLogging = false;
+        }
+    }
 
+    private void UpdateEnvironmentLogging()
+    {
         if (enableAllEnvironmentLogicLogging)
         {
             enableTimeSystemLogicLogging = true;
         }
+        else
+        {
+            enableTimeSystemLogicLogging = false;
+        }
+    }
 
+    private void UpdateEventSystemLogging()
+    {
         if (enableAllEventSystemLogicLogging)
         {
             enableEventSystemLogicLogging = true;
@@ -76,7 +207,20 @@ public class GameLoggingSystem : MonoBehaviour
             enableChorusScreenManagerLogging = true;
             enableDecisionTokenLogging = true;
         }
+        else
+        {
+            enableEventSystemLogicLogging = false;
+            enableEventVolumeManagerLogging = false;
+            enableEventScreenManagerLogging = false;
+            enableInkStoryManagerLogging = false;
+            enableInkDrivenEventSetupLogging = false;
+            enableChorusScreenManagerLogging = false;
+            enableDecisionTokenLogging = false;
+        }
+    }
 
+    private void UpdateGovernmentLogging()
+    {
         if (enableAllGovernmentLogicLogging)
         {
             enableStatManagerLogging = true;
@@ -87,7 +231,25 @@ public class GameLoggingSystem : MonoBehaviour
             enableSeatPositionDisplayLogging = true;
             enableLeaderSlotDisplayLogging = true;
         }
+        else
+        {
+            enableStatManagerLogging = false;
+            enableGovernmentLogicLogging = false;
+            enableCivicManagerLogging = false;
+            enableLegendLeaderLogicLogging = false;
+            enableGovernmentTabLogging = false;
+            enableSeatPositionDisplayLogging = false;
+            enableLeaderSlotDisplayLogging = false;
+        }
+    }
 
+    /// <summary>
+    /// Manually refresh all logging settings. Useful for runtime debugging.
+    /// </summary>
+    public void RefreshLoggingSettings()
+    {
+        UpdateAllLoggingSettings();
+        Debug.Log("[GameLoggingSystem] Logging settings refreshed at runtime");
     }
 
     public void LogEvent(string message, string originScript)
