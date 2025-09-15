@@ -480,9 +480,7 @@ public class StatManager : MonoBehaviour
         {
             int oldGraceBuffer = satisfactionGraceBuffer;
             satisfactionGraceBuffer = newGraceBuffer;
-            
-            GameLoggingSystem.Instance.LogEvent($"Grace buffer updated: {oldGraceBuffer} → {newGraceBuffer} (effectiveness: {effectiveness:F2}% → rounded: {roundedEffectiveness} → multiple of 5: {multipleOf5} → half: {graceBuffer} → negative: {newGraceBuffer})", "StatManager");
-            
+
             // Recalculate tier size since grace buffer affects effective downgrade threshold
             RecalculateSatisfactionTierSize();
         }
@@ -522,7 +520,7 @@ public class StatManager : MonoBehaviour
         // PHASE 1: Initialize base systems only (no calculations yet)
         InitializeBaseSystems();
         
-        GameLoggingSystem.Instance.LogEvent("Init: base systems ready", "StatManager");
+        Debug.Log("[StatManager] Initialized: Base Systems Ready");
     }
     
     /// <summary>
@@ -715,8 +713,6 @@ public class StatManager : MonoBehaviour
         // Initialize original base values for proper recalculation
         InitializeOriginalBaseValues();
         InitializeOriginalPillarValues();
-        
-        GameLoggingSystem.Instance.LogEvent($"Globals init: maxMorale={maxMorale}, satisfactionUpgradeThreshold={satisfactionUpgradeThreshold}", "StatManager");
     }
     
     /// <summary>
@@ -730,8 +726,6 @@ public class StatManager : MonoBehaviour
         originalBaseValues["moraleBalance"] = moraleBalance;
         originalBaseValues["morale"] = 100; // Default starting morale
         originalBaseValues["satisfactionpoints"] = 0; // Default satisfaction points
-        
-        GameLoggingSystem.Instance.LogEvent($"Base globals tracked", "StatManager");
     }
     
     /// <summary>
@@ -773,8 +767,6 @@ public class StatManager : MonoBehaviour
         originalPillarValues["regalia"] = regalia;
         originalPillarValues["waltz"] = waltz;
         originalPillarValues["chorus"] = chorus;
-        
-        GameLoggingSystem.Instance.LogEvent("Base pillars tracked", "StatManager");
     }
     
     /// <summary>
@@ -925,8 +917,6 @@ public class StatManager : MonoBehaviour
             return;
         }
 
-        // reduce noise
-
         // Use the tiered growth system - THE ONLY CALCULATION METHOD
         foreach (var formula in derivationFormulas)
         {
@@ -935,10 +925,9 @@ public class StatManager : MonoBehaviour
             {
                 int substatValue = substats[substatName];
                 float value = formula.Value(substatValue);
-                derived[formula.Key.ToLower()] = value; // Store with lowercase key for consistency
+                derived[formula.Key.ToLower()] = value;
                 SetDerivedField(formula.Key, value);
                 
-                // reduce noise
             }
             else
             {
@@ -953,9 +942,6 @@ public class StatManager : MonoBehaviour
         // Recalculate grace buffer when satisfaction effectiveness changes
         CalculateSatisfactionGraceBuffer();
     }
-
-    /// <summary>
-    // REMOVED: CalculateSimpleDerivedStats - SINGLE SOURCE OF TRUTH is tiered formulas only
 
     private string GetSubstatForDerived(string derivedStat)
     {
