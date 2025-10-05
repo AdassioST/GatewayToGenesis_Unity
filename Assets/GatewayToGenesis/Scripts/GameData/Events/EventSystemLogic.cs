@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -40,7 +41,7 @@ public class EventSystemLogic : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindObjectOfType<EventSystemLogic>();
+                instance = FindFirstObjectByType<EventSystemLogic>();
                 if (instance == null)
                 {
                     GameObject go = new GameObject("EventSystem");
@@ -205,7 +206,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find system references if not assigned in editor
         if (gameUnitsLogic == null)
         {
-            gameUnitsLogic = FindObjectOfType<GameUnitsLogic>(); // Find resource manager if not assigned
+            gameUnitsLogic = FindFirstObjectByType<GameUnitsLogic>(); // Find resource manager if not assigned
             if (gameUnitsLogic != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned GameUnitsLogic reference", "EventSystemLogic"); // Boss announces the assignment
@@ -214,7 +215,7 @@ public class EventSystemLogic : MonoBehaviour
         
         if (statManager == null)
         {
-            statManager = FindObjectOfType<StatManager>(); // Find stats manager if not assigned
+            statManager = FindFirstObjectByType<StatManager>(); // Find stats manager if not assigned
             if (statManager != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned StatManager reference", "EventSystemLogic"); // Boss announces the assignment
@@ -224,7 +225,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find time system reference if not assigned in editor
         if (timeSystem == null)
         {
-            timeSystem = FindObjectOfType<TimeSystemLogic>(); // Find time system if not assigned
+            timeSystem = FindFirstObjectByType<TimeSystemLogic>(); // Find time system if not assigned
             if (timeSystem != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned TimeSystemLogic reference", "EventSystemLogic"); // Boss announces the assignment
@@ -234,7 +235,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find volume manager reference if not assigned in editor
         if (volumeManager == null)
         {
-            volumeManager = FindObjectOfType<EventVolumeManager>(); // Find volume manager if not assigned
+            volumeManager = FindFirstObjectByType<EventVolumeManager>(); // Find volume manager if not assigned
             if (volumeManager != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned EventVolumeManager reference", "EventSystemLogic"); // Boss announces the assignment
@@ -380,7 +381,7 @@ public class EventSystemLogic : MonoBehaviour
         }
         
         // Remember tab states and hide all tabs for the event
-        TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
+        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.RememberTabStatesAndHideForEvent();
@@ -608,7 +609,7 @@ public class EventSystemLogic : MonoBehaviour
         GameLoggingSystem.Instance.LogEvent($"Event started - slow motion remains active until completion", "EventSystemLogic");
         
         // Switch to event tab
-        TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
+        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.SwitchToEventTab();
@@ -869,7 +870,7 @@ public class EventSystemLogic : MonoBehaviour
         }
         
         // Restore previous tab states and HUD visibility
-        TabHotkeys hotkeys = FindObjectOfType<TabHotkeys>();
+        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.RestoreTabStatesAfterEvent();
@@ -1331,6 +1332,58 @@ public class EventSystemLogic : MonoBehaviour
                 
             case EventConsequence.ConsequenceType.UnlockEvent:
                 GameLoggingSystem.Instance.LogEvent($"UnlockEvent consequence for '{consequence.targetName}' - this would need to be implemented", "EventSystemLogic");
+                break;
+                
+            case EventConsequence.ConsequenceType.WeatherChange:
+                if (CelestialWeatherSystemLogic.Instance != null)
+                {
+                    // Check if this is a clear command
+                    if (string.Equals(consequence.targetName, "clear", StringComparison.OrdinalIgnoreCase))
+                    {
+                        CelestialWeatherSystemLogic.Instance.ClearWeather();
+                        GameLoggingSystem.Instance.LogEvent(
+                            "Event cleared all weather - returning to procedural system", 
+                            "EventSystemLogic"
+                        );
+                    }
+                    else
+                    {
+                        // Use centralized weather profile lookup with validation
+                        WeatherProfileSO weatherProfile = CelestialWeatherSystemLogic.FindWeatherProfile(consequence.targetName);
+                        if (weatherProfile != null)
+                        {
+                            // Check if this is permanent (value = 1) or procedural (value = 0)
+                            bool isPermanent = consequence.value == 1;
+                            
+                            if (isPermanent)
+                            {
+                                // Permanent weather - blocks procedural changes
+                                CelestialWeatherSystemLogic.Instance.SetWeatherProfileFromEvent(weatherProfile, isPermanent: true, ignoreEchoValidation: true);
+                                GameLoggingSystem.Instance.LogEvent(
+                                    $"Event changed weather to: {weatherProfile.weatherDisplayName} (permanent)", 
+                                    "EventSystemLogic"
+                                );
+                            }
+                            else
+                            {
+                                // Procedural weather - participates in normal weather system
+                                CelestialWeatherSystemLogic.Instance.SetWeatherProfileFromEvent(weatherProfile, isPermanent: false, ignoreEchoValidation: true);
+                                GameLoggingSystem.Instance.LogEvent(
+                                    $"Event changed weather to: {weatherProfile.weatherDisplayName} (procedural - subject to normal decay)", 
+                                    "EventSystemLogic"
+                                );
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[EventSystemLogic] Weather profile '{consequence.targetName}' not found");
+                        }
+                    }
+                }
+                else
+                {
+                    GameLoggingSystem.Instance.LogEvent($"Cannot apply WeatherChange consequence: CelestialWeatherSystemLogic.Instance is null", "EventSystemLogic");
+                }
                 break;
         }
     }

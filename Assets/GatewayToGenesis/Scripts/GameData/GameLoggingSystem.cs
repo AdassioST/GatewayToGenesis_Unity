@@ -14,9 +14,16 @@ public class GameLoggingSystem : MonoBehaviour
     [Header("Detailed Game Logic Settings")]
     public bool enableGameUnitsLogicLogging;
     public bool enablePopGrowthLogicLogging;
+    public bool enableGameTechnologySlotLogging;
+    public bool enableGameProductionSlotLogging;
 
     [Header("Detailed Environment Logic Settings")]
     public bool enableTimeSystemLogicLogging;
+    public bool enableCelestialWeatherSystemLogicLogging;
+    public bool enableCelestialWeatherVisualLogicLogging;
+    
+    [Header("Detailed Validator Settings")]
+    public bool enableGameAssetValidatorLogging;
 
     [Header("Detailed Event System Settings")]
     public bool enableEventSystemLogicLogging;
@@ -40,8 +47,8 @@ public class GameLoggingSystem : MonoBehaviour
     private readonly Dictionary<string, bool> _loggingStates = new Dictionary<string, bool>();
     private readonly Dictionary<string, string[]> _categoryMappings = new Dictionary<string, string[]>
     {
-        { "GameLogic", new[] { "enableGameUnitsLogicLogging", "enablePopGrowthLogicLogging" } },
-        { "Environment", new[] { "enableTimeSystemLogicLogging" } },
+        { "GameLogic", new[] { "enableGameUnitsLogicLogging", "enablePopGrowthLogicLogging", "enableGameTechnologySlotLogging", "enableGameProductionSlotLogging" } },
+        { "Environment", new[] { "enableTimeSystemLogicLogging", "enableCelestialWeatherSystemLogicLogging", "enableCelestialWeatherVisualLogicLogging", "enableGameAssetValidatorLogging" } },
         { "EventSystem", new[] { "enableEventSystemLogicLogging", "enableEventVolumeManagerLogging", "enableEventScreenManagerLogging", "enableInkStoryManagerLogging", "enableInkDrivenEventSetupLogging", "enableChorusScreenManagerLogging", "enableDecisionTokenLogging" } },
         { "Government", new[] { "enableStatManagerLogging", "enableGovernmentLogicLogging", "enableCivicManagerLogging", "enableLegendLeaderLogicLogging", "enableGovernmentTabLogging", "enableSeatPositionDisplayLogging", "enableLeaderSlotDisplayLogging" } }
     };
@@ -64,7 +71,12 @@ public class GameLoggingSystem : MonoBehaviour
         { "LegendLeaderLogic", "enableLegendLeaderLogicLogging" },
         { "SeatPositionDisplay", "enableSeatPositionDisplayLogging" },
         { "LeaderSlotDisplay", "enableLeaderSlotDisplayLogging" },
-        { "TimeSystemLogic", "enableTimeSystemLogicLogging" }
+        { "TimeSystemLogic", "enableTimeSystemLogicLogging" },
+        { "CelestialWeatherSystemLogic", "enableCelestialWeatherSystemLogicLogging" },
+        { "CelestialWeatherVisualLogic", "enableCelestialWeatherVisualLogicLogging" },
+        { "GameAssetValidator", "enableGameAssetValidatorLogging" },
+        { "GameTechnologySlot", "enableGameTechnologySlotLogging" },
+        { "GameProductionSlot", "enableGameProductionSlotLogging" }
     };
 
     // Property setters with centralized update logic

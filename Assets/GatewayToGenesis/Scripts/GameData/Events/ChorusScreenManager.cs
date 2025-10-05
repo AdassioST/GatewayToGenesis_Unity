@@ -134,9 +134,9 @@ public class ChorusScreenManager : MonoBehaviour
     
     private void Awake()
     {
-        eventSystem = FindObjectOfType<EventSystemLogic>();
-        inkManager = FindObjectOfType<InkStoryManager>();
-        statManager = FindObjectOfType<StatManager>();
+        eventSystem = FindFirstObjectByType<EventSystemLogic>();
+        inkManager = FindFirstObjectByType<InkStoryManager>();
+        statManager = FindFirstObjectByType<StatManager>();
         
         // Debug logging removed for cleaner output
     }
@@ -149,7 +149,7 @@ public class ChorusScreenManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (statManager == null) statManager = FindObjectOfType<StatManager>();
+        if (statManager == null) statManager = FindFirstObjectByType<StatManager>();
         if (statManager != null)
         {
             statManager.OnPillarChanged += HandlePillarChanged;
@@ -1118,6 +1118,7 @@ public class ChorusScreenManager : MonoBehaviour
             case "deaths": return EventConsequence.ConsequenceType.DeathsChange;
             case "death_records_revision": return EventConsequence.ConsequenceType.DeathRecordsRevision;
             case "technology": return EventConsequence.ConsequenceType.TechnologyEnlightened;
+            case "weather": return EventConsequence.ConsequenceType.WeatherChange;
             default: return EventConsequence.ConsequenceType.ScoreChange;
         }
     }

@@ -3081,129 +3081,8 @@ public class GovernmentLogic : MonoBehaviour
     
     // ===== DYNAMIC VALIDATION SYSTEM =====
     
-    // Cache for loaded validation data
-    private static HashSet<string> validResourceNames = null;
-    private static HashSet<string> validSectionNames = null;
-    private static HashSet<string> validProductionUnitNames = null;
-    private static HashSet<string> validPillarNames = null;
-    private static HashSet<string> validSubstatNames = null;
-    private static HashSet<string> validDerivedStatNames = null;
-    
-    /// <summary>
-    /// Load all valid resource names from the file system
-    /// </summary>
-    private static void LoadValidResourceNames()
-    {
-        if (validResourceNames != null) return; // Already loaded
-        
-        validResourceNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        
-        try
-        {
-            // Load all ResourceSO assets from anywhere in the Resources folders
-            var allResources = Resources.LoadAll<ResourceSO>("");
-            foreach (var resource in allResources)
-            {
-                if (resource != null && !string.IsNullOrEmpty(resource.name))
-                {
-                    validResourceNames.Add(resource.name);
-                }
-            }
-            
-            GameLoggingSystem.Instance.LogEvent($"Loaded {validResourceNames.Count} valid resource names: {string.Join(", ", validResourceNames)}", "GovernmentLogic");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[GovernmentLogic] Error loading valid resource names: {e.Message}");
-            validResourceNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // Empty set as fallback
-        }
-    }
-    
-    /// <summary>
-    /// Load all valid section names from the file system
-    /// </summary>
-    private static void LoadValidSectionNames()
-    {
-        if (validSectionNames != null) return; // Already loaded
-        
-        validSectionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        
-        try
-        {
-            // Load sections from Assets/Resources/Sections
-            var sections = Resources.LoadAll<SectionData>("Sections");
-            foreach (var section in sections)
-            {
-                if (section != null && !string.IsNullOrEmpty(section.name))
-                {
-                    validSectionNames.Add(section.name);
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[GovernmentLogic] Error loading valid section names: {e.Message}");
-            validSectionNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // Empty set as fallback
-        }
-        
-        GameLoggingSystem.Instance.LogEvent($"Loaded {validSectionNames.Count} valid section names: {string.Join(", ", validSectionNames)}", "GovernmentLogic");
-    }
-    
-    /// <summary>
-    /// Load all valid production unit names from the file system
-    /// </summary>
-    private static void LoadValidProductionUnitNames()
-    {
-        if (validProductionUnitNames != null) return; // Already loaded
-        
-        validProductionUnitNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
-        
-        try
-        {
-            // Load all ProductionUnitData assets from Resources/Production
-            var productionUnits = Resources.LoadAll<ProductionUnitData>("Production");
-            
-            foreach (var unit in productionUnits)
-            {
-                if (unit != null && unit.gameUnit != null && !string.IsNullOrEmpty(unit.gameUnit.name))
-                {
-                    validProductionUnitNames.Add(unit.gameUnit.name);
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[GovernmentLogic] Error loading production unit names: {e.Message}");
-        }
-        
-        GameLoggingSystem.Instance.LogEvent($"Loaded {validProductionUnitNames.Count} valid production unit names: {string.Join(", ", validProductionUnitNames)}", "GovernmentLogic");
-    }
-    
-    /// <summary>
-    /// Load all valid stat names from StatManager
-    /// </summary>
-    private static void LoadValidStatNames()
-    {
-        if (validPillarNames != null) return; // Already loaded
-        
-        validPillarNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "aureus", "regalia", "waltz", "chorus"
-        };
-        
-        validSubstatNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "innovation", "piety", "authority", "ambition", "symphony", "euphony", "arcane", "secrecy"
-        };
-        
-        validDerivedStatNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "discoveryEfficiency", "savingRollChance", "legendEffectiveness", "expeditionCostMod", 
-            "expeditionTimeMod", "satisfactionEffectiveness", "moraleLossMod", "moraleRecoveryMod", 
-            "clickPowerBonus", "magicEffectiveness", "communionStage"
-        };
-        
-    }
+    // NOTE: All validation logic moved to centralized GameAssetValidator
+    // Use GameAssetValidator methods instead of local caches
     
     /// <summary>
     /// Check if a stat name is a valid global stat or special condition stat
@@ -3221,23 +3100,17 @@ public class GovernmentLogic : MonoBehaviour
     }
     
     /// <summary>
-    /// Validate a target stat and provide detailed warnings if invalid
+    /// Validate a target stat using centralized GameAssetValidator
     /// </summary>
-    /// <param name="targetStat">The target stat to validate</param>
-    /// <param name="bonusType">The type of bonus for context</param>
-    /// <param name="sourceName">The source of the bonus for logging</param>
-    /// <param name="isConditionStat">Whether this is a condition stat (for scaling bonuses)</param>
-    /// <param name="isStartupValidation">Whether this is startup validation (affects return value)</param>
-    /// <returns>True if valid, false if invalid</returns>
     private static bool ValidateTargetStat(string targetStat, string bonusType, string sourceName, bool isConditionStat = false, bool isStartupValidation = false)
     {
         if (string.IsNullOrEmpty(targetStat)) return true; // Empty is valid for some bonuses
         
-        // Load validation data if not already loaded
-        LoadValidResourceNames();
-        LoadValidSectionNames();
-        LoadValidProductionUnitNames();
-        LoadValidStatNames();
+        // Use centralized validator
+        GameAssetValidator.LoadResourceNames();
+        GameAssetValidator.LoadSectionNames();
+        GameAssetValidator.LoadProductionUnitNames();
+        GameAssetValidator.LoadStatNames();
         
         string statType = isConditionStat ? "condition stat" : "target stat";
         bool hasWarning = false;
@@ -3246,25 +3119,11 @@ public class GovernmentLogic : MonoBehaviour
         switch (bonusType.ToLower())
         {
             case "pillarbonus":
-                if (!validPillarNames.Contains(targetStat))
-                {
-                    Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid pillar name. Valid pillars: {string.Join(", ", validPillarNames)}");
-                    hasWarning = true;
-                }
-                break;
-                
             case "substatbonus":
-                if (!validSubstatNames.Contains(targetStat))
-                {
-                    Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid substat name. Valid substats: {string.Join(", ", validSubstatNames)}");
-                    hasWarning = true;
-                }
-                break;
-                
             case "derivedstatbonus":
-                if (!validDerivedStatNames.Contains(targetStat))
+                // Use centralized stat validation
+                if (!GameAssetValidator.ValidateStat(targetStat, sourceName))
                 {
-                    Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid derived stat name. Valid derived stats: {string.Join(", ", validDerivedStatNames)}");
                     hasWarning = true;
                 }
                 break;
@@ -3272,9 +3131,9 @@ public class GovernmentLogic : MonoBehaviour
             case "resourcemodifier":
             case "clickpowerbonus":
                 // Can be either a resource name or a section name
-                if (!validResourceNames.Contains(targetStat) && !validSectionNames.Contains(targetStat))
+                if (!GameAssetValidator.ResourceExists(targetStat) && !GameAssetValidator.SectionExists(targetStat))
                 {
-                    Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid resource or section name.\nValid resources: {string.Join(", ", validResourceNames)}\nValid sections: {string.Join(", ", validSectionNames)}");
+                    Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid resource or section name.");
                     hasWarning = true;
                 }
                 break;
@@ -3284,24 +3143,19 @@ public class GovernmentLogic : MonoBehaviour
             case "productionscalingbonus":
                 if (isConditionStat)
                 {
-                    // Condition stats for scaling bonuses should be stat names (pillars, substats, derived stats, or globals)
-                    if (!validPillarNames.Contains(targetStat) && 
-                        !validSubstatNames.Contains(targetStat) && 
-                        !validDerivedStatNames.Contains(targetStat) &&
-                        !IsValidGlobalStat(targetStat))
+                    // Condition stats should be stat names (validated by GameAssetValidator)
+                    if (!GameAssetValidator.ValidateStat(targetStat, sourceName) && !IsValidGlobalStat(targetStat))
                     {
-                        Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid stat name.\nValid pillars: {string.Join(", ", validPillarNames)}\nValid substats: {string.Join(", ", validSubstatNames)}\nValid derived stats: {string.Join(", ", validDerivedStatNames)}\nValid global stats: housing, satisfaction, morale, moraleBalance, maxmorale, satisfactionupgradethreshold, satisfactionPoints, satisfactionLevel");
                         hasWarning = true;
                     }
                 }
                 else
                 {
                     // Target stats can be: resources, sections, or production unit names
-                    if (!validResourceNames.Contains(targetStat) && 
-                        !validSectionNames.Contains(targetStat) && 
-                        !validProductionUnitNames.Contains(targetStat))
+                    if (!GameAssetValidator.ResourceExists(targetStat) && 
+                        !GameAssetValidator.SectionExists(targetStat) && 
+                        !GameAssetValidator.ValidateProductionUnit(targetStat, sourceName))
                     {
-                        Debug.LogWarning($"[GovernmentLogic] VALIDATION WARNING: {statType} '{targetStat}' in {bonusType} for {sourceName} is not a valid resource, section, or production unit name.\nValid resources: {string.Join(", ", validResourceNames)}\nValid sections: {string.Join(", ", validSectionNames)}\nValid production units: {string.Join(", ", validProductionUnitNames)}");
                         hasWarning = true;
                     }
                 }
@@ -3318,26 +3172,24 @@ public class GovernmentLogic : MonoBehaviour
     }
     
     /// <summary>
-    /// Validate all legends and civics at startup to catch configuration errors early
+    /// Validate all legends and civics at startup using centralized GameAssetValidator
     /// </summary>
     public static void ValidateAllDataAtStartup()
     {
         GameLoggingSystem.Instance.LogEvent("Starting validation of all legends and civics...", "GovernmentLogic");
         
-        // Ensure validation data is loaded
-        LoadValidResourceNames();
-        LoadValidSectionNames();
-        LoadValidProductionUnitNames();
-        LoadValidStatNames();
+        // Initialize centralized validator caches
+        GameAssetValidator.InitializeAllCaches();
         
         int totalWarnings = 0;
         
-        // Validate all legends
+        // Validate all legends (still uses direct Resources.LoadAll since legends are dynamic)
         int legendCount = Resources.LoadAll<LegendData>("").Length;
         totalWarnings += ValidateAllLegends();
         
-        // Validate all civics
-        int civicCount = Resources.LoadAll<CivicData>("").Length;
+        // Validate all civics using centralized validator
+        var civicDict = GameAssetValidator.GetAllCivics();
+        int civicCount = civicDict.Count;
         totalWarnings += ValidateAllCivics();
         
         GameLoggingSystem.Instance.LogEvent($"Validation completed: {legendCount} legends, {civicCount} civics processed", "GovernmentLogic");
@@ -3406,7 +3258,7 @@ public class GovernmentLogic : MonoBehaviour
     }
     
     /// <summary>
-    /// Validate all loaded civics
+    /// Validate all loaded civics using centralized GameAssetValidator
     /// </summary>
     private static int ValidateAllCivics()
     {
@@ -3414,10 +3266,12 @@ public class GovernmentLogic : MonoBehaviour
         
         try
         {
-            var allCivics = Resources.LoadAll<CivicData>("");
+            // Use centralized validator instead of direct Resources.LoadAll
+            var civicDict = GameAssetValidator.GetAllCivics();
             
-            foreach (var civic in allCivics)
+            foreach (var kvp in civicDict)
             {
+                var civic = kvp.Value;
                 if (civic == null) continue;
                 
                 string sourceName = $"Civic: {civic.civicName}";

@@ -89,21 +89,21 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
 
     public static void InitializeProductionUnitDataDictionary()
     {
-        productionUnitDataDictionary = new Dictionary<string, ProductionUnitData>();
-
-        // Load all ProductionUnitData from Resources
-        ProductionUnitData[] productionUnitDataArray = Resources.LoadAll<ProductionUnitData>("Production");
-
-        foreach (var unitData in productionUnitDataArray)
+        // Only initialize once (prevent duplicate calls from multiple slots)
+        if (productionUnitDataDictionary != null && productionUnitDataDictionary.Count > 0)
         {
-            if (!productionUnitDataDictionary.ContainsKey(unitData.name))
-            {
-                productionUnitDataDictionary.Add(unitData.name, unitData);
-            }
-            else
-            {
-                Debug.LogWarning($"Duplicate ProductionUnitData found for {unitData.name}, Skipping");
-            }
+            return;
+        }
+        
+        // Use centralized validator for production unit loading
+        productionUnitDataDictionary = GameAssetValidator.GetAllProductionUnits();
+        
+        if (GameLoggingSystem.Instance != null)
+        {
+            GameLoggingSystem.Instance.LogEvent(
+                $"Initialized production unit dictionary with {productionUnitDataDictionary.Count} units from centralized validator",
+                "GameProductionSlot"
+            );
         }
     }
 

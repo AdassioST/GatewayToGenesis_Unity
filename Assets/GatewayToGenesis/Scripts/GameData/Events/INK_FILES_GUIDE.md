@@ -201,9 +201,14 @@ Implement complex population mechanics:
 {ModifyResource("Aetherlight", 30)} # Modify resources
 {CheckTechnology("Rites of Harvest")} # Check technology unlock status
 {TriggerTechnologyEnlightened("Advanced Farming")} # Unlock technology
+{BuildProductionUnit("Farm")}       # Build production unit
 ```
 
-**Note**: Resources that don't exist yet will be automatically discovered from the existing GameUnit system and added to the storage tab when events modify them.
+### **🎯 Stat Management Functions**
+```ink
+{GetStatValue("morale")}           # Get current stat value
+{ModifyStat("morale", 10)}         # Modify civilization stat
+```
 
 ### **🎯 Event Score Functions**
 ```ink
@@ -214,6 +219,12 @@ Implement complex population mechanics:
 ### **🎯 Event Triggering Functions**
 ```ink
 {TriggerEvent("Horology")}          # Trigger a specific event by name
+```
+
+### **🎯 Utility Functions**
+```ink
+{Random(1, 100)}                   # Generate random number between min and max
+{Log("Debug message")}             # Log message for debugging
 ```
 
 ---
@@ -328,6 +339,8 @@ The forest grows darker as you venture deeper into its heart...
   - Section-wide: `production_percent_section:{Section} +/-{int}`
   - Click power: `click_power:{Resource} +/-{int}`, `click_power_percent:{Resource} +/-{int}`
   - Section click power: `click_power_section:{Section} +/-{int}`, `click_power_percent_section:{Section} +/-{int}`
+  - **Weather changes**: `weather:{WeatherName}` (temporary), `weather:{WeatherName}, permanent` (permanent), `weather:clear` (clear all weather)
+  - **Section-wide modifiers**: `production_percent_section:{SectionName} +/-{int}`, `click_power_section:{SectionName} +/-{int}`, `click_power_percent_section:{SectionName} +/-{int}`
 - Optional durations: append `duration:sevenths:{N}` after a supported effect on the same line
 
 ### Chorus metadata (under `&C`)
@@ -342,6 +355,8 @@ The forest grows darker as you venture deeper into its heart...
   - `{GetResourceAmount("Food")}`
   - `{GetEventScore("some_score")}`
   - `{CheckTechnology("Tech Name")}`
+  - `{GetStatValue("morale")}` - Get current stat value
+  - **Weather**: `{GetCurrentWeather()}`, `{IsWeather("WeatherName")}`
 - Modify:
   - `{ModifyPopulation(-3)}`, `{ModifyHousing(5)}`, `{ModifyVagrants(10)}`
   - `{ProcessEventDeaths(5)}`
@@ -349,10 +364,97 @@ The forest grows darker as you venture deeper into its heart...
   - `{ModifyEventScore("ancient_knowledge", 5)}`
   - `{ModifyStat("morale", +10)}`, `{ModifyMorale(+5)}`
   - `{TriggerTechnologyEnlightened("Tech Name")}` (alternatively, use consequence `technology:{Tech Name} enlightened`)
+  - `{BuildProductionUnit("Farm")}` - Build production unit
+  - **Weather**: `{ChangeWeather("WeatherName")}`, `{SetTimedWeather("WeatherName", sevenths)}`
+  - **Utility**: `{Random(1, 100)}`, `{Log("Debug message")}`
 
 Notes:
-- Consequences are applied at Outro (after the story flow). If you need an effect earlier, place it on an earlier verse’s button and advance immediately.
+- Consequences are applied at Outro (after the story flow). If you need an effect earlier, place it on an earlier verse's button and advance immediately.
 - Enlightened technologies are revealed in the tech tree even without prerequisites (shown as NextResearchOption); once prerequisites are met, they become CurrentResearchOption.
+
+---
+
+## 🌦️ **Weather System Integration**
+
+### **Weather Consequence Syntax**
+The Event System supports three types of weather consequences:
+
+```ink
+# Temporary weather (subject to procedural decay)
+weather:Weeping Sky
+
+# Permanent weather (blocks procedural changes)
+weather:Weeping Sky, permanent
+
+# Clear all weather (return to procedural system)
+weather:clear
+```
+
+### **Weather Consequence Examples**
+```ink
+=== storm_summoning ===
+# title: Summon the Storm
+# description: Call upon ancient powers to change the weather
+# consequences: weather:Heavy Storm, permanent
+# event_type:Mystical
+# priority: 50
+
+The skies darken as you channel ancient magic...
+
+* [Accept the storm] -> storm_outro
+&C consequences: weather:Heavy Storm, permanent
+
+* [Clear the skies] -> clear_outro  
+&C consequences: weather:clear
+
+=== storm_outro ===
+The storm rages overhead, its power now permanent.
+-> END
+
+=== clear_outro ===
+The winds have fallen silent, returning to natural patterns.
+-> END
+```
+
+### **Weather External Functions**
+Ink stories can directly control weather using these functions:
+
+```ink
+=== weather_shrine ===
+The ancient shrine hums with power...
+
+* [Change weather permanently]
+  { ChangeWeather("GentleRain"):
+    - true: Rain begins to fall.
+    - false: Nothing happens.
+  }
+
+* [Temporary weather (5 sevenths)]
+  { SetTimedWeather("Storm", 5):
+    - true: A storm erupts!
+    - false: The spell fails.
+  }
+
+* [Check current weather]
+  VAR current = GetCurrentWeather()
+  The weather is: {current}
+  
+  { IsWeather("Storm"):
+    - true: The storm rages on!
+    - false: Clear skies.
+  }
+```
+
+### **Weather Types**
+- **Temporary Weather**: Subject to normal procedural decay and can be replaced by the weather system's natural rolls
+- **Permanent Weather**: Blocks all procedural weather changes until manually cleared via `weather:clear` or external functions
+- **Clear Weather**: Removes all weather effects and returns control to the procedural weather system
+
+### **Weather Integration Points**
+1. **Event Consequences**: Use `weather:` syntax in consequence lists
+2. **Ink Functions**: Use `{ChangeWeather()}`, `{SetTimedWeather()}`, `{GetCurrentWeather()}`, `{IsWeather()}`
+3. **Procedural System**: Automatic weather changes based on weighted selection and conditions
+4. **Time-Based Changes**: Weather automatically changes when conditions are no longer met
 
 
 ## 🚫 **Event Trigger Protection System**

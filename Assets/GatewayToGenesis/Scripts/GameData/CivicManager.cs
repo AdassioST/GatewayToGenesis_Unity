@@ -173,15 +173,19 @@ public class CivicManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Load all available civics from Resources/Civics folder
+    /// Load all available civics from Resources/Civics folder using centralized validator
     /// </summary>
     private void LoadAvailableCivics()
     {
         availableCivics.Clear();
-        CivicData[] civics = Resources.LoadAll<CivicData>("Civics");
         
-        foreach (var civic in civics)
+        // Use centralized validator for civic loading
+        Dictionary<string, CivicData> civicDict = GameAssetValidator.GetAllCivics();
+        
+        foreach (var kvp in civicDict)
         {
+            CivicData civic = kvp.Value;
+            
             if (!availableCivics.ContainsKey(civic.civicName))
             {
                 // Validate civic requirements during loading
@@ -212,10 +216,6 @@ public class CivicManager : MonoBehaviour
                 
                 availableCivics[civic.civicName] = civic;
                 GameLoggingSystem.Instance.LogEvent($"Loaded civic: {civic.civicName} (Tier: {civic.tier}, Rarity: {civic.rarity})", "CivicManager");
-            }
-            else
-            {
-                Debug.LogWarning($"[CivicManager] Duplicate civic found: {civic.civicName}");
             }
         }
         

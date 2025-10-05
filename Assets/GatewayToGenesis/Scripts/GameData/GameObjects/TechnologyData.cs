@@ -21,7 +21,6 @@ public class TechnologyData : ScriptableObject
     public List<EnlightenedCondition> enlightenedConditions = new List<EnlightenedCondition>();
 
     public List<TechUnlockable> techUnlockables = new List<TechUnlockable>(); // Unlockable items
-    
 
 }
 

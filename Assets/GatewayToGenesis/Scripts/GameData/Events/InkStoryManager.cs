@@ -44,9 +44,9 @@ public class InkStoryManager : MonoBehaviour
         }
         else
         {
-            // PSEUDOCODE: Fallback to FindObjectOfType if EventSystemLogic not found
-            statManager = FindObjectOfType<StatManager>();   // PSEUDOCODE: Find stats manager in scene
-            gameUnitsLogic = FindObjectOfType<GameUnitsLogic>(); // PSEUDOCODE: Find resource manager in scene
+            // PSEUDOCODE: Fallback to FindFirstObjectByType if EventSystemLogic not found
+            statManager = FindFirstObjectByType<StatManager>();   // PSEUDOCODE: Find stats manager in scene
+            gameUnitsLogic = FindFirstObjectByType<GameUnitsLogic>(); // PSEUDOCODE: Find resource manager in scene
         }
     }
     
@@ -486,6 +486,75 @@ public class InkStoryManager : MonoBehaviour
         currentStory.BindExternalFunction("Log", (string message) => 
         {
             LogStory($"Ink Log: {message}");               // PSEUDOCODE: Log message from Ink story
+        });
+        
+        // PSEUDOCODE: Weather change function for Ink story weather control
+        currentStory.BindExternalFunction("ChangeWeather", (string weatherProfileName) =>
+        {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                // Use centralized weather profile lookup with validation
+                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
+                
+                if (foundProfile != null)
+                {
+                    CelestialWeatherSystemLogic.Instance.SetWeatherProfile(foundProfile, ignoreEchoValidation: true);
+                    LogStory($"Weather changed to: {foundProfile.weatherDisplayName}");
+                    return true; // PSEUDOCODE: Return true if weather was changed
+                }
+                else
+                {
+                    LogStory($"Weather profile '{weatherProfileName}' not found");
+                    return false; // PSEUDOCODE: Return false if weather profile not found
+                }
+            }
+            else
+            {
+                LogStory("CelestialWeatherSystemLogic not available");
+                return false; // PSEUDOCODE: Return false if controller not available
+            }
+        });
+        
+        // PSEUDOCODE: Get current active weather name
+        currentStory.BindExternalFunction("GetCurrentWeather", () =>
+        {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                return CelestialWeatherSystemLogic.Instance.GetCurrentWeatherName();
+            }
+            return ""; // PSEUDOCODE: Return empty string if controller not available
+        });
+        
+        // PSEUDOCODE: Check if specific weather is active
+        currentStory.BindExternalFunction("IsWeather", (string weatherProfileName) =>
+        {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                return CelestialWeatherSystemLogic.Instance.IsWeatherActive(weatherProfileName);
+            }
+            return false; // PSEUDOCODE: Return false if controller not available
+        });
+        
+        // PSEUDOCODE: Set timed weather (temporary weather that reverts)
+        currentStory.BindExternalFunction("SetTimedWeather", (string weatherProfileName, int durationSevenths) =>
+        {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
+                
+                if (foundProfile != null && durationSevenths > 0)
+                {
+                    CelestialWeatherSystemLogic.Instance.SetTimedWeatherProfile(foundProfile, durationSevenths, ignoreEchoValidation: true);
+                    LogStory($"Timed weather '{foundProfile.weatherDisplayName}' set for {durationSevenths} sevenths");
+                    return true;
+                }
+                else
+                {
+                    LogStory($"Failed to set timed weather: profile '{weatherProfileName}' not found or invalid duration");
+                    return false;
+                }
+            }
+            return false;
         });
         
         LogStory("External functions bound");               // PSEUDOCODE: Confirm all functions are bound

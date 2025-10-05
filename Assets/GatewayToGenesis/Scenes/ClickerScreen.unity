@@ -1867,6 +1867,8 @@ GameObject:
   m_Component:
   - component: {fileID: 175149198}
   - component: {fileID: 175149199}
+  - component: {fileID: 175149201}
+  - component: {fileID: 175149200}
   m_Layer: 0
   m_Name: EnvironmentLogic
   m_TagString: Untagged
@@ -1901,7 +1903,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerSeventh: 10
+  secondsPerSeventh: 5
   slowMotionFactor: 3
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
@@ -1934,6 +1936,45 @@ MonoBehaviour:
   - Edging
   canTrackTime: 1
   isTimePaused: 0
+--- !u!114 &175149200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175149197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bec1f2a579233c4db767d4cfa63fe15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  globalLight: {fileID: 619394801}
+  autoFindGlobalLight: 0
+  showDebugInfo: 1
+  logPhaseChanges: 1
+--- !u!114 &175149201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175149197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de275f853e2438489dae06c4834906f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activeWeatherProfile: {fileID: 11400000, guid: 2ac768a1cdededb46a9a0606b0587d10, type: 2}
+  defaultWeatherProfile: {fileID: 11400000, guid: 2ac768a1cdededb46a9a0606b0587d10, type: 2}
+  enableProceduralWeather: 1
+  proceduralWeatherPool: []
+  maxConsecutiveRetentions: 20
+  probabilityDecayPerRetention: 2
+  weatherCooldownSevenths: 3
+  fallbackWeather: {fileID: 11400000, guid: 2ac768a1cdededb46a9a0606b0587d10, type: 2}
+  logWeatherChanges: 1
+  showDebugInfo: 1
+  visualLogic: {fileID: 175149200}
 --- !u!1 &182629041
 GameObject:
   m_ObjectHideFlags: 0
@@ -19929,13 +19970,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33e4780569d45e645834a3f1fe501028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableAllGameLogicLogging: 0
-  enableAllEventSystemLogicLogging: 0
-  enableAllGovernmentLogicLogging: 0
-  enableAllEnvironmentLogicLogging: 0
+  _enableAllGameLogicLogging: 0
+  _enableAllEventSystemLogicLogging: 0
+  _enableAllGovernmentLogicLogging: 0
+  _enableAllEnvironmentLogicLogging: 1
   enableGameUnitsLogicLogging: 0
   enablePopGrowthLogicLogging: 0
+  enableGameTechnologySlotLogging: 0
+  enableGameProductionSlotLogging: 0
   enableTimeSystemLogicLogging: 0
+  enableCelestialWeatherSystemLogicLogging: 0
+  enableCelestialWeatherVisualLogicLogging: 0
+  enableGameAssetValidatorLogging: 0
   enableEventSystemLogicLogging: 0
   enableEventVolumeManagerLogging: 0
   enableEventScreenManagerLogging: 0

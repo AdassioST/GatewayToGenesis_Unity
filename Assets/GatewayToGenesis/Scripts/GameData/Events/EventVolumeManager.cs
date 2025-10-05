@@ -251,9 +251,56 @@ public class EventVolumeManager : MonoBehaviour
             return PopGrowthLogic.Instance?.trueDeaths ?? 0;
         });
         
+        // Weather Management
+        story.BindExternalFunction("ChangeWeather", (string weatherProfileName) => {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
+                if (foundProfile != null)
+                {
+                    CelestialWeatherSystemLogic.Instance.SetWeatherProfile(foundProfile, ignoreEchoValidation: true);
+                    return true;
+                }
+            }
+            return false;
+        });
+        
+        story.BindExternalFunction("GetCurrentWeather", () => {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                return CelestialWeatherSystemLogic.Instance.GetCurrentWeatherName();
+            }
+            return "";
+        });
+        
+        story.BindExternalFunction("IsWeather", (string weatherProfileName) => {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                return CelestialWeatherSystemLogic.Instance.IsWeatherActive(weatherProfileName);
+            }
+            return false;
+        });
+        
+        story.BindExternalFunction("SetTimedWeather", (string weatherProfileName, int durationSevenths) => {
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
+                if (foundProfile != null && durationSevenths > 0)
+                {
+                    CelestialWeatherSystemLogic.Instance.SetTimedWeatherProfile(foundProfile, durationSevenths, ignoreEchoValidation: true);
+                    return true;
+                }
+            }
+            return false;
+        });
+        
         // Utility Functions
         story.BindExternalFunction("Log", (string message) => {
             Debug.Log($"[Ink] {message}");
+        });
+        
+        story.BindExternalFunction("Random", (int min, int max) => {
+            return Random.Range(min, max + 1);
         });
     }
     

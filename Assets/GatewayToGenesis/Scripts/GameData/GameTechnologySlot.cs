@@ -71,7 +71,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         if (technologyTreeLogic == null)
         {
-            technologyTreeLogic = FindObjectOfType<TechnologyTreeLogic>(); // Find the instance at runtime
+            technologyTreeLogic = FindFirstObjectByType<TechnologyTreeLogic>(); // Find the instance at runtime
         }
 
         InitializeTechnology(gameUnit);
@@ -79,22 +79,19 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
     private void InitializeTechnologyDataDictionary()
     {
-        technologyDataDictionary = new Dictionary<string, TechnologyData>();
-
-        // Load all TechnologyData from Resources
-        TechnologyData[] technologyDataArray = Resources.LoadAll<TechnologyData>("Technology");
-
-        foreach (var techData in technologyDataArray)
+        // Only initialize once (prevent duplicate calls from multiple slots)
+        if (technologyDataDictionary != null && technologyDataDictionary.Count > 0)
         {
-            if (!technologyDataDictionary.ContainsKey(techData.name))
-            {
-                technologyDataDictionary.Add(techData.name, techData);
-            }
-            else
-            {
-                Debug.LogWarning($"Duplicate TechnologyData found for {techData.name}, Skipping");
-            }
+            return;
         }
+        
+        // Use centralized validator for technology loading
+        technologyDataDictionary = GameAssetValidator.GetAllTechnologies();
+        
+        GameLoggingSystem.Instance.LogEvent(
+            $"Initialized technology dictionary with {technologyDataDictionary.Count} technologies from centralized validator",
+            "GameTechnologySlot"
+        );
     }
 
     private void InitializeTechnologyData()
@@ -217,7 +214,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         {
             StatManager.Instance.ChangeSatisfactionPoints(technologyData.satisfactionPoints, $"Technology {gameUnit.name}");
         }
-
+        
         // Refresh visibility directly after unlocking
         if (technologyTreeLogic != null)
         {

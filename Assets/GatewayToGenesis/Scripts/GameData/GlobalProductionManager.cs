@@ -127,6 +127,12 @@ public class GlobalProductionManager : MonoBehaviour
             {
                 GovernmentLogic.Instance.ApplyPendingBonusesToResource(resourceName, resourceSlot.gameUnit.section);
             }
+            
+            // Apply any pending weather bonuses to this new resource
+            if (CelestialWeatherSystemLogic.Instance != null)
+            {
+                CelestialWeatherSystemLogic.Instance.ApplyPendingBonusesToResource(resourceName, resourceSlot.gameUnit.section);
+            }
         }
     }
 
@@ -242,6 +248,12 @@ public class GlobalProductionManager : MonoBehaviour
     {
         if (persistentMalusBySource.TryGetValue(resourceName, out var dict)) return dict;
         return new Dictionary<string, float>();
+    }
+
+    // Expose resource slots for external access
+    public List<GameResourceSlot> GetAllResourceSlots()
+    {
+        return new List<GameResourceSlot>(resourceSlots);
     }
 
     // Remove ALL modifiers (percentage and persistent flat, bonus and malus) that originated from a specific source

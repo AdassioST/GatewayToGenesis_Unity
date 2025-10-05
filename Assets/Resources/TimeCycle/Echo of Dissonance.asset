@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce7c7a1a8813dc74bb5ba362b46b5a6b, type: 3}
-  m_Name: Echo of Disonance
+  m_Name: Echo of Dissonance
   m_EditorClassIdentifier: 
-  unitName: Echo of Disonance
+  unitName: Echo of Dissonance
   description: The Catharsis
   icon: {fileID: 0}

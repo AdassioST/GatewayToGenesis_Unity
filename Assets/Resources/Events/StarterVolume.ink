@@ -4,9 +4,8 @@
 # title: The Lost Caravan
 # description: A beacon of hope or an omen of ruin? The wind carries whispers of wagon wheels and laughter, but also something darker beneath the surface.
 # conditions: technology:Reconstruction; no_event_in_sevenths:2
-# consequences: score:caravan_encountered +1
+# consequences: score:caravan_encountered +1; weather:clear
 # cooldown: 8
-# screen_flow: splash,verse,chorus,verse,verse,verse,verse,verse,verse,outro
 # event_type:Crisis
 # priority: 0
 
@@ -205,7 +204,7 @@ The wind carries the distant sound of wagon wheels, and somewhere beyond the hor
 # title: The Weeping Princess
 # description: A mystical encounter with a sorrowful spirit who seeks redemption through the offering of sustenance and compassion.
 # conditions: resource:Food >= 8
-# consequences: score:weeping_princess_encounter +1
+# consequences: score:weeping_princess_encounter +1; weather:Weeping Sky, permanent
 # cooldown: 3
 # event_type:Mystical
 # priority: 0

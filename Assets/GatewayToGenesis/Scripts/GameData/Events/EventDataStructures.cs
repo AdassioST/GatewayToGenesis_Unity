@@ -327,7 +327,8 @@ public class EventConsequence
         ClickPowerChange, // Static click power change for a single resource
         ClickPowerPercentChange, // Percent click power change for a single resource
         ClickPowerChangeSection, // Static click power change for all resources in a section
-        ClickPowerPercentChangeSection // Percent click power change for all resources in a section
+        ClickPowerPercentChangeSection, // Percent click power change for all resources in a section
+        WeatherChange // Change weather profile (targetName = weather profile name or "clear", value = 0 for procedural, 1 for permanent)
     }
     
     public ConsequenceType type;

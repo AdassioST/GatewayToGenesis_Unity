@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Ink.Runtime;
@@ -1038,13 +1039,48 @@ public class InkDrivenEventSetup : MonoBehaviour
     private EventConsequence ParseSingleConsequence(string str)
     {
         string[] parts = str.Split(':');
-        if (parts.Length != 2) return null;
+        if (parts.Length < 2) return null;
+        
         string type = parts[0].Trim();
         string body = parts[1].Trim();
+        
+        // Handle weather: convention
+        if (type.ToLower() == "weather")
+        {
+            // Check if this is a clear command
+            if (string.Equals(body, "clear", StringComparison.OrdinalIgnoreCase))
+            {
+                return new EventConsequence 
+                { 
+                    type = EventConsequence.ConsequenceType.WeatherChange, 
+                    targetName = "clear", 
+                    value = 0,
+                    durationSevenths = 0
+                };
+            }
+            
+            // Check if body contains "permanent"
+            bool isPermanent = body.ToLower().Contains("permanent");
+            
+            // Extract weather profile name (remove "permanent" and any commas if present)
+            string weatherProfile = body.Replace("permanent", "").Replace(",", "").Trim();
+            
+            return new EventConsequence 
+            { 
+                type = EventConsequence.ConsequenceType.WeatherChange, 
+                targetName = weatherProfile, 
+                value = isPermanent ? 1 : 0, // 1 = permanent, 0 = procedural
+                durationSevenths = 0
+            };
+        }
+        
+        // Handle enlightened technology special case
         if (body.Contains("enlightened"))
         {
             return new EventConsequence { type = EventConsequence.ConsequenceType.TechnologyEnlightened, targetName = body.Replace("enlightened", "").Trim(), value = 0 };
         }
+        
+        // Default parsing for other consequence types
         // Optional duration: allow syntax "... value; duration:sevenths:N"
         // Basic parse: extract final numeric token as value; remaining body is target
         int last = body.LastIndexOf(' ');
@@ -1083,6 +1119,7 @@ public class InkDrivenEventSetup : MonoBehaviour
             case "click_power_percent": return EventConsequence.ConsequenceType.ClickPowerPercentChange;
             case "click_power_section": return EventConsequence.ConsequenceType.ClickPowerChangeSection;
             case "click_power_percent_section": return EventConsequence.ConsequenceType.ClickPowerPercentChangeSection;
+            case "weather": return EventConsequence.ConsequenceType.WeatherChange;
             default: return EventConsequence.ConsequenceType.ScoreChange;
         }
     }

@@ -16,20 +16,15 @@ public class SectionData : ScriptableObject
     // Static initializer to load all SectionData at startup
     public static void InitializeSectionDataDictionary()
     {
-        sectionDataDictionary = new Dictionary<string, SectionData>();
-
-        SectionData[] sectionDataArray = Resources.LoadAll<SectionData>("Sections");
-
-        foreach (var sectionData in sectionDataArray)
+        // Use centralized validator for section loading
+        sectionDataDictionary = GameAssetValidator.GetAllSections();
+        
+        if (GameLoggingSystem.Instance != null)
         {
-            if (!sectionDataDictionary.ContainsKey(sectionData.name))
-            {
-                sectionDataDictionary.Add(sectionData.name, sectionData);
-            }
-            else
-            {
-                Debug.LogWarning($"Duplicate SectionData found for {sectionData.name}, skipping.");
-            }
+            GameLoggingSystem.Instance.LogEvent(
+                $"Initialized section dictionary with {sectionDataDictionary.Count} sections from centralized validator",
+                "SectionData"
+            );
         }
     }
 

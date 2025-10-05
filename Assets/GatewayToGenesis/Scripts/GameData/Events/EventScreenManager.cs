@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,10 +54,10 @@ public class EventScreenManager : MonoBehaviour
 
     private void Awake()
     {
-        eventSystem = FindObjectOfType<EventSystemLogic>();
-        inkManager = FindObjectOfType<InkStoryManager>();
-        volumeManager = FindObjectOfType<EventVolumeManager>();
-        progressiveRevealLogic = FindObjectOfType<ProgressiveSentenceRevealLogic>();
+        eventSystem = FindFirstObjectByType<EventSystemLogic>();
+        inkManager = FindFirstObjectByType<InkStoryManager>();
+        volumeManager = FindFirstObjectByType<EventVolumeManager>();
+        progressiveRevealLogic = FindFirstObjectByType<ProgressiveSentenceRevealLogic>();
     }
 
     private void OnDestroy()
@@ -1312,6 +1313,7 @@ public class EventScreenManager : MonoBehaviour
             case "click_power_percent": return EventConsequence.ConsequenceType.ClickPowerPercentChange;
             case "click_power_section": return EventConsequence.ConsequenceType.ClickPowerChangeSection;
             case "click_power_percent_section": return EventConsequence.ConsequenceType.ClickPowerPercentChangeSection;
+            case "weather": return EventConsequence.ConsequenceType.WeatherChange;
             default: return EventConsequence.ConsequenceType.ScoreChange;
         }
     }
@@ -2077,6 +2079,22 @@ public class EventScreenManager : MonoBehaviour
                     string sign = c.value >= 0 ? "+" : "-";
                     string dur = c.durationSevenths > 0 ? $" (For {c.durationSevenths} Sevenths)" : string.Empty;
                     sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% For Section {c.targetName}{dur}");
+                    break;
+                }
+                case EventConsequence.ConsequenceType.WeatherChange:
+                {
+                    if (string.Equals(c.targetName, "clear", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sb.AppendLine("- The Winds Have Fallen Silent");
+                    }
+                    else if (c.value == 1) // Permanent weather
+                    {
+                        sb.AppendLine($"- The Weather Has Permanently Changed To {c.targetName}");
+                    }
+                    else // Normal/temporary weather
+                    {
+                        sb.AppendLine($"- The Weather Has Changed To {c.targetName}");
+                    }
                     break;
                 }
                 default:

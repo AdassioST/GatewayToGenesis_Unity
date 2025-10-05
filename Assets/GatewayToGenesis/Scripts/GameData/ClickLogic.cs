@@ -29,7 +29,7 @@ public class ClickLogic : MonoBehaviour
     {
         if (gameUnitsLogic == null)
         {
-            gameUnitsLogic = FindObjectOfType<GameUnitsLogic>();
+            gameUnitsLogic = FindFirstObjectByType<GameUnitsLogic>();
         }
 
         buttonImage = GetComponent<Image>();
