@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Rites of Harvest
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: bb75dda441e78374890496085d3c7802, type: 2}
+  isEventTech: 0
+  tier: 2
+  satisfactionPoints: 0
+  techRequirements:
+  - Woodcraft Mastery
+  - Efficient Rations
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 35
+  enlightenedConditions: []
+  techUnlockables:
+  - {fileID: 11400000, guid: 7972761754dd3dd4a92d2059e4e94daa, type: 2}
+  - {fileID: 11400000, guid: 21c3bacde34ecf04a83f3f43eb5710af, type: 2}

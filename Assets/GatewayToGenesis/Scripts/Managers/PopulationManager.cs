@@ -28,9 +28,9 @@ public class PopulationManager : MonoBehaviour
          InvokeRepeating("Starvation", 2.0f, 5.0f);
     }
     void Update(){
-        AddPopulation();
-        UpdateClickPower();
-        checkVagabonds();   
+        //AddPopulation();
+        //UpdateClickPower();
+        //checkVagabonds();   
     }
 
 
@@ -104,7 +104,7 @@ public class PopulationManager : MonoBehaviour
 
            FoodOverflow(foodOverflow);
             food.setAmount(food.getAmount() + food.placeholder - food.threshhold); 
-            Debug.Log("Vagabonds is now: " + activeVagabonds);
+            //Debug.Log("Vagabonds is now: " + activeVagabonds);
             activeVagabonds++;
         }
         else if(activeVagabonds !=0 && housing.getAmount() !=0){

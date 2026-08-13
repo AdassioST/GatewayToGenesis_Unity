@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56fa04d4184ec8340a3828b6259f319b, type: 3}
+  m_Name: Ancient Windmill
+  m_EditorClassIdentifier: 
+  name: Ancient Windmill
+  type: Workshop
+  section: The Great Fields
+  description: '"Are we really eating peaches?"'
+  icon: {fileID: 21300000, guid: 1c3bbd4bf4a5f6f4d8d78163f754215e, type: 3}

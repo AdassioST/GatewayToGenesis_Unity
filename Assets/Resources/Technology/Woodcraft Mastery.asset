@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Woodcraft Mastery
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: d2143c4d05e5cd9479e7bccd40186243, type: 2}
+  isEventTech: 0
+  tier: 1
+  satisfactionPoints: 0
+  techRequirements:
+  - Reconstruction
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 25
+  enlightenedConditions: []
+  techUnlockables:
+  - {fileID: 11400000, guid: d17450aef6e9d2746ab07af3580450f9, type: 2}
+  - {fileID: 11400000, guid: ed4a4e0598c0c1e42a80536fd47a8b2f, type: 2}

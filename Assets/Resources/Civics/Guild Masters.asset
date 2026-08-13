@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d34633109d8b90489ba60bb30bfc151, type: 3}
+  m_Name: Guild Masters
+  m_EditorClassIdentifier: 
+  civicName: Guild Masters
+  description: A master craftsman whose creations are said to hold magical properties.
+    His workshops produce not just tools, but works of art that enhance the entire
+    civilization.
+  icon: {fileID: 21300000, guid: 666c2718808a7c748a1a27dba45563e9, type: 3}
+  rarity: 0
+  tier: 0
+  grantsCouncilPosition: 0
+  councilPositionName: 
+  allowAnyLegendClass: 0
+  allowedLegendClasses: 02000000
+  effects:
+  - effectType: 4
+    modifierValue: 10
+    modifierType: 1
+    targetStat: Elderwood
+    conditionStat: 
+    scope: 0
+  - effectType: 9
+    modifierValue: 13
+    modifierType: 1
+    targetStat: 
+    conditionStat: 
+    scope: 0
+  requirements:
+  - requirementType: 1
+    requirementTarget: symphony
+    requiredValue: 8
+    comparison: 1
+  conflictingCivics: []
+  requiredCivics: []
+  satisfactionPenalty: 0
+  moralePenaltyPerSeventh: 0
+  removalPenaltyDuration: 0

@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+When creating new files or systems try to follow consistency patterns of the current structure of the project. Review other core system files, like EventSystemLogic.cs and its subset of EventVolumeManager.cs, InkDrivenEventSetup.cs, InkStoryManager.cs, etc to understand their names and how they are structured. For main files try adding Logic suffix where we are dealing with logic or a main "brain" script for functionality. Ex:
+
+GameUnitsLogic
+TimeSystemLogic
+EventSystemLogic
+GovernmentLogic
