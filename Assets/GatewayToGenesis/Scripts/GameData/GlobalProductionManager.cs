@@ -12,26 +12,38 @@ public class GlobalProductionManager : MonoBehaviour
     public List<GameTechnologySlot> technologySlots = new List<GameTechnologySlot>();
 
     // Dictionaries to store global values for each resource type
+    [System.NonSerialized]
     public Dictionary<string, float> netProductionRates = new Dictionary<string, float>();
 
+    [System.NonSerialized]
     public Dictionary<string, float> positiveModifiers = new Dictionary<string, float>();
+    [System.NonSerialized]
     public Dictionary<string, float> negativeModifiers = new Dictionary<string, float>();
 
+    [System.NonSerialized]
     public Dictionary<string, float> persistentPositiveModifiers = new Dictionary<string, float>();
+    [System.NonSerialized]
     public Dictionary<string, float> persistentNegativeModifiers = new Dictionary<string, float>();
+    [System.NonSerialized]
     public Dictionary<string, float> percentagePositiveModifiers = new Dictionary<string, float>();
+    [System.NonSerialized]
     public Dictionary<string, float> percentageNegativeModifiers = new Dictionary<string, float>();
 
+    [System.NonSerialized]
     public Dictionary<string, List<string>> modifierSourceDict = new Dictionary<string, List<string>>();
 
     // Per-resource percentage modifiers tracked by source (event/tech/etc.).
     // Bonuses and maluses are tracked separately so a single source can contribute both.
     // Values are positive magnitudes. Only ONE entry per (resource, source) is stored per polarity.
+    [System.NonSerialized]
     private Dictionary<string, Dictionary<string, float>> percentageBonusBySource = new Dictionary<string, Dictionary<string, float>>();
+    [System.NonSerialized]
     private Dictionary<string, Dictionary<string, float>> percentageMalusBySource = new Dictionary<string, Dictionary<string, float>>();
 
     // Persistent flat modifiers tracked by source
+    [System.NonSerialized]
     private Dictionary<string, Dictionary<string, float>> persistentBonusBySource = new Dictionary<string, Dictionary<string, float>>();
+    [System.NonSerialized]
     private Dictionary<string, Dictionary<string, float>> persistentMalusBySource = new Dictionary<string, Dictionary<string, float>>();
 
     public float techTier = 1f, costBalance = 0.05f;

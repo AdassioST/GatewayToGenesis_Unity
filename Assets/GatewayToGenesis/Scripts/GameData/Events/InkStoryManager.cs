@@ -36,7 +36,7 @@ public class InkStoryManager : MonoBehaviour
         // PSEUDOCODE: Get references to external systems for Ink function bindings
         eventSystem = GetComponent<EventSystemLogic>();      // PSEUDOCODE: Get event system from same GameObject
         
-        // PSEUDOCODE: Get system references from EventSystemLogic to avoid FindObjectOfType calls
+        // PSEUDOCODE: Get system references from EventSystemLogic to avoid FindAnyObjectByType calls
         if (eventSystem != null)
         {
             statManager = eventSystem.GetStatManager();      // PSEUDOCODE: Get stats manager from EventSystemLogic
@@ -44,9 +44,9 @@ public class InkStoryManager : MonoBehaviour
         }
         else
         {
-            // PSEUDOCODE: Fallback to FindFirstObjectByType if EventSystemLogic not found
-            statManager = FindFirstObjectByType<StatManager>();   // PSEUDOCODE: Find stats manager in scene
-            gameUnitsLogic = FindFirstObjectByType<GameUnitsLogic>(); // PSEUDOCODE: Find resource manager in scene
+            // PSEUDOCODE: Fallback to FindAnyObjectByType if EventSystemLogic not found
+            statManager = FindAnyObjectByType<StatManager>();   // PSEUDOCODE: Find stats manager in scene
+            gameUnitsLogic = FindAnyObjectByType<GameUnitsLogic>(); // PSEUDOCODE: Find resource manager in scene
         }
     }
     

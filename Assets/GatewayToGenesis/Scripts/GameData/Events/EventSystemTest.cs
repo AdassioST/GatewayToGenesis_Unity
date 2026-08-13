@@ -199,7 +199,7 @@ public class EventSystemTest : MonoBehaviour
     [ContextMenu("Open Event Tab (Toggle)")]
     public void ToggleEventTab()
     {
-        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
+        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.ToggleEventTab();

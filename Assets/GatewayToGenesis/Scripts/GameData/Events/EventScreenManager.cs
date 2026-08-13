@@ -54,10 +54,10 @@ public class EventScreenManager : MonoBehaviour
 
     private void Awake()
     {
-        eventSystem = FindFirstObjectByType<EventSystemLogic>();
-        inkManager = FindFirstObjectByType<InkStoryManager>();
-        volumeManager = FindFirstObjectByType<EventVolumeManager>();
-        progressiveRevealLogic = FindFirstObjectByType<ProgressiveSentenceRevealLogic>();
+        eventSystem = FindAnyObjectByType<EventSystemLogic>();
+        inkManager = FindAnyObjectByType<InkStoryManager>();
+        volumeManager = FindAnyObjectByType<EventVolumeManager>();
+        progressiveRevealLogic = FindAnyObjectByType<ProgressiveSentenceRevealLogic>();
     }
 
     private void OnDestroy()

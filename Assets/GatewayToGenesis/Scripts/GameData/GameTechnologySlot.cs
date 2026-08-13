@@ -71,7 +71,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
         if (technologyTreeLogic == null)
         {
-            technologyTreeLogic = FindFirstObjectByType<TechnologyTreeLogic>(); // Find the instance at runtime
+            technologyTreeLogic = FindAnyObjectByType<TechnologyTreeLogic>(); // Find the instance at runtime
         }
 
         InitializeTechnology(gameUnit);

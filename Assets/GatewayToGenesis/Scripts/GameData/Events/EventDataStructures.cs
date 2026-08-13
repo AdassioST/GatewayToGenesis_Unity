@@ -44,8 +44,8 @@ public class StoryNode
     [Header("Screen Flow")]
     public List<ScreenFlowStep> screenFlow = new List<ScreenFlowStep>(); // How screens progress through this story
     
-    // UI metadata for controlling UI elements from Ink
-    public Dictionary<string, string> uiMetadata = new Dictionary<string, string>();
+    // UI metadata for controlling UI elements from Ink (runtime-only, populated from Ink parsing)
+    [System.NonSerialized] public Dictionary<string, string> uiMetadata = new Dictionary<string, string>();
 }
 
 /// <summary>

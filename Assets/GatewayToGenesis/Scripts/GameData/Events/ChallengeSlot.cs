@@ -35,7 +35,7 @@ public class ChallengeSlot : MonoBehaviour
     
     private void Start()
     {
-        statManager = FindFirstObjectByType<StatManager>();
+        statManager = FindAnyObjectByType<StatManager>();
         UpdateChallengeDisplay();
     }
     

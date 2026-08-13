@@ -66,7 +66,7 @@ public class VitalSelectionWindow : MonoBehaviour
 
     private TabBuilderLogic FindStorageTab()
     {
-        TabBuilderLogic[] allTabs = FindObjectsByType<TabBuilderLogic>(FindObjectsSortMode.None);
+        TabBuilderLogic[] allTabs = FindObjectsByType<TabBuilderLogic>();
         foreach (TabBuilderLogic tab in allTabs)
         {
             if (tab.tabType == TabBuilderLogic.TabType.Storage)

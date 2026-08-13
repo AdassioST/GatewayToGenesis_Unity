@@ -41,7 +41,7 @@ public class EventSystemLogic : MonoBehaviour
         {
             if (instance == null)
             {
-                instance = FindFirstObjectByType<EventSystemLogic>();
+                instance = FindAnyObjectByType<EventSystemLogic>();
                 if (instance == null)
                 {
                     GameObject go = new GameObject("EventSystem");
@@ -206,7 +206,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find system references if not assigned in editor
         if (gameUnitsLogic == null)
         {
-            gameUnitsLogic = FindFirstObjectByType<GameUnitsLogic>(); // Find resource manager if not assigned
+            gameUnitsLogic = FindAnyObjectByType<GameUnitsLogic>(); // Find resource manager if not assigned
             if (gameUnitsLogic != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned GameUnitsLogic reference", "EventSystemLogic"); // Boss announces the assignment
@@ -215,7 +215,7 @@ public class EventSystemLogic : MonoBehaviour
         
         if (statManager == null)
         {
-            statManager = FindFirstObjectByType<StatManager>(); // Find stats manager if not assigned
+            statManager = FindAnyObjectByType<StatManager>(); // Find stats manager if not assigned
             if (statManager != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned StatManager reference", "EventSystemLogic"); // Boss announces the assignment
@@ -225,7 +225,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find time system reference if not assigned in editor
         if (timeSystem == null)
         {
-            timeSystem = FindFirstObjectByType<TimeSystemLogic>(); // Find time system if not assigned
+            timeSystem = FindAnyObjectByType<TimeSystemLogic>(); // Find time system if not assigned
             if (timeSystem != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned TimeSystemLogic reference", "EventSystemLogic"); // Boss announces the assignment
@@ -235,7 +235,7 @@ public class EventSystemLogic : MonoBehaviour
         // PSEUDOCODE: Find volume manager reference if not assigned in editor
         if (volumeManager == null)
         {
-            volumeManager = FindFirstObjectByType<EventVolumeManager>(); // Find volume manager if not assigned
+            volumeManager = FindAnyObjectByType<EventVolumeManager>(); // Find volume manager if not assigned
             if (volumeManager != null)
             {
                 GameLoggingSystem.Instance.LogEvent("Auto-assigned EventVolumeManager reference", "EventSystemLogic"); // Boss announces the assignment
@@ -381,7 +381,7 @@ public class EventSystemLogic : MonoBehaviour
         }
         
         // Remember tab states and hide all tabs for the event
-        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
+        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.RememberTabStatesAndHideForEvent();
@@ -609,7 +609,7 @@ public class EventSystemLogic : MonoBehaviour
         GameLoggingSystem.Instance.LogEvent($"Event started - slow motion remains active until completion", "EventSystemLogic");
         
         // Switch to event tab
-        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
+        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.SwitchToEventTab();
@@ -870,7 +870,7 @@ public class EventSystemLogic : MonoBehaviour
         }
         
         // Restore previous tab states and HUD visibility
-        TabHotkeys hotkeys = FindFirstObjectByType<TabHotkeys>();
+        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
         if (hotkeys != null)
         {
             hotkeys.RestoreTabStatesAfterEvent();

@@ -12,6 +12,7 @@ public class GameUnitsLogic : MonoBehaviour
     [SerializeField] public TabBuilderLogic productionTab;
     [SerializeField] public TabBuilderLogic researchTab;
 
+    [System.NonSerialized]
     public Dictionary<GameTechnologySlot, Dictionary<string, float>> technologyProgress = new();
     // Cache of adjusted base costs per technology slot (after Discovery Efficiency integer-rounded reduction)
     private Dictionary<GameTechnologySlot, List<float>> adjustedTechCosts = new();
@@ -23,6 +24,7 @@ public class GameUnitsLogic : MonoBehaviour
 
     [SerializeField] private GameObject HUD, expandibleHUD, buildingMaterialButton;
 
+    [System.NonSerialized]
     public Dictionary<string, Dictionary<string, float>> storageBreakdown = new Dictionary<string, Dictionary<string, float>>();
     
     // Production efficiency modifiers by building type and section

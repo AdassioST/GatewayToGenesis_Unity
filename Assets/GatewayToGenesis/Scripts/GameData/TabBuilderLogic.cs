@@ -233,7 +233,7 @@ public class TabBuilderLogic : MonoBehaviour
 
     private void RefreshVitalSelectionWindowIfOpen(GameUnit newResource)
     {
-        VitalSelectionWindow vitalWindow = FindFirstObjectByType<VitalSelectionWindow>();
+        VitalSelectionWindow vitalWindow = FindAnyObjectByType<VitalSelectionWindow>();
         if (vitalWindow != null && vitalWindow.gameObject.activeSelf)
         {
             // Directly create the new slot in the VitalSelectionWindow

@@ -134,9 +134,9 @@ public class ChorusScreenManager : MonoBehaviour
     
     private void Awake()
     {
-        eventSystem = FindFirstObjectByType<EventSystemLogic>();
-        inkManager = FindFirstObjectByType<InkStoryManager>();
-        statManager = FindFirstObjectByType<StatManager>();
+        eventSystem = FindAnyObjectByType<EventSystemLogic>();
+        inkManager = FindAnyObjectByType<InkStoryManager>();
+        statManager = FindAnyObjectByType<StatManager>();
         
         // Debug logging removed for cleaner output
     }
@@ -149,7 +149,7 @@ public class ChorusScreenManager : MonoBehaviour
 
     private void OnEnable()
     {
-        if (statManager == null) statManager = FindFirstObjectByType<StatManager>();
+        if (statManager == null) statManager = FindAnyObjectByType<StatManager>();
         if (statManager != null)
         {
             statManager.OnPillarChanged += HandlePillarChanged;

@@ -107,7 +107,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         // Auto-find global light if needed
         if (globalLight == null && autoFindGlobalLight)
         {
-            globalLight = FindFirstObjectByType<Light2D>();
+            globalLight = FindAnyObjectByType<Light2D>();
             if (globalLight != null)
             {
                 GameLoggingSystem.Instance.LogEvent($"Auto-found Light2D: {globalLight.name}", "CelestialWeatherVisualLogic");
