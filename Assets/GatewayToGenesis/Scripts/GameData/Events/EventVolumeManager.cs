@@ -1,591 +1,231 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Ink.Runtime;
-using System.Linq; // Added for .Any()
 
 /// <summary>
-/// Manages Event Volumes (DLC-style story collections) loaded from Ink masterfiles
+/// Holds the event volumes (one per compiled Ink story), picks which story to offer, and moves a running
+/// story from knot to knot. Screen types follow the knot naming convention (see <see cref="EventScript.ScreenTypeOf"/>).
+///
+/// Each volume also has a live Ink story bound to the game (<see cref="InkFunctions.Bind"/>). When a knot is
+/// shown, its Ink logic runs once on that story, so functions like ~ ModifyStat("morale", 5) take effect when
+/// the player reaches them. Text comes from <see cref="EventStoryIndex"/>.
 /// </summary>
-public class EventVolumeManager : MonoBehaviour
+public class EventVolumeManager : SingletonBehaviour<EventVolumeManager>
 {
+    private const LogChannel Log = LogChannel.Events;
+
     [Header("Event Volumes")]
     [SerializeField] private List<EventVolume> eventVolumes = new List<EventVolume>();
-    
+
     [Header("Current State")]
     [SerializeField] private EventVolume currentVolume;
     [SerializeField] private StoryNode currentStoryNode;
     [SerializeField] private int currentScreenIndex = 0;
-    
-    private Dictionary<string, Story> volumeStories = new Dictionary<string, Story>();
-    private Dictionary<string, EventVolume> volumeLookup = new Dictionary<string, EventVolume>();
-    private Dictionary<string, StoryNode> storyNodeLookup = new Dictionary<string, StoryNode>();
-    
-    private void Awake()
+
+    private readonly Dictionary<string, Story> volumeStories = new Dictionary<string, Story>();
+    private readonly Dictionary<string, StoryNode> storyNodeLookup = new Dictionary<string, StoryNode>();
+    private readonly Dictionary<StoryNode, EventVolume> volumeOfNode = new Dictionary<StoryNode, EventVolume>();
+    private readonly List<StoryNode> candidates = new List<StoryNode>();
+
+    protected override void OnSingletonAwake()
     {
-        InitializeVolumeLookups();
-        LoadAllVolumeStories();
+        // Volumes assigned in the Inspector; Ink-built volumes arrive through AddVolume.
+        foreach (var volume in eventVolumes) RegisterVolume(volume);
     }
-    
-    /// <summary>
-    /// Initialize lookup dictionaries for fast access
-    /// </summary>
-    private void InitializeVolumeLookups()
+
+    // ===== VOLUMES =====
+
+    /// <summary>Add a volume (ignored when already present). Its story is indexed if it was not yet.</summary>
+    public void AddVolume(EventVolume volume)
     {
-        volumeLookup.Clear();
-        storyNodeLookup.Clear();
-        
-        foreach (EventVolume volume in eventVolumes)
+        if (volume == null || eventVolumes.Contains(volume)) return;
+        eventVolumes.Add(volume);
+        RegisterVolume(volume);
+    }
+
+    private void RegisterVolume(EventVolume volume)
+    {
+        if (volume == null) return;
+        foreach (var node in volume.storyNodes)
         {
-            volumeLookup[volume.volumeName] = volume;
-            
-            foreach (StoryNode storyNode in volume.storyNodes)
-            {
-                string key = $"{volume.volumeName}.{storyNode.nodeName}";
-                storyNodeLookup[key] = storyNode;
-            }
+            storyNodeLookup[$"{volume.volumeName}.{node.nodeName}"] = node;
+            volumeOfNode[node] = volume;
         }
 
-        Debug.Log($"[EventVolumeManager] Initialized lookups: volumes={eventVolumes.Count}, storyNodes={storyNodeLookup.Count}");
-    }
-    
-    /// <summary>
-    /// Load all Ink stories for all volumes
-    /// </summary>
-    private void LoadAllVolumeStories()
-    {
-        volumeStories.Clear();
-        
-        foreach (EventVolume volume in eventVolumes)
+        if (volume.inkMasterfile == null)
         {
-            if (volume.inkMasterfile != null)
-            {
-                Story story = new Story(volume.inkMasterfile.text);
-                volumeStories[volume.volumeName] = story;
-                
-                // Bind external functions for this story
-                BindExternalFunctions(story);
-
-                Debug.Log($"[EventVolumeManager] Loaded story for volume '{volume.volumeName}' (text starts with '{(volume.inkMasterfile.text.Length>1?volume.inkMasterfile.text[0]:'?')}')");
-            }
-            else
-            {
-                Debug.LogWarning($"[EventVolumeManager] Volume '{volume.volumeName}' has no masterfile assigned");
-            }
-
+            GameLog.Warning($"Volume '{volume.volumeName}' has no compiled Ink assigned.", Log);
+            return;
         }
+        if (!EventStoryIndex.IsIndexed(volume.inkMasterfile.name)) EventStoryIndex.IndexStory(volume.inkMasterfile.text, volume.inkMasterfile.name);
+        try
+        {
+            var story = new Story(volume.inkMasterfile.text);
+            InkFunctions.Bind(story);
+            volumeStories[volume.volumeName] = story;
+        }
+        catch (System.Exception e)
+        {
+            GameLog.Warning($"Volume '{volume.volumeName}': Ink story could not be created ({e.Message}).", Log);
+        }
+        GameLog.Event($"Registered volume '{volume.volumeName}' with {volume.storyNodes.Count} stories", Log);
     }
-    
+
+    // ===== CHOOSING A STORY =====
+
     /// <summary>
-    /// Bind C# functions to Ink story for external function calls
-    /// </summary>
-    private void BindExternalFunctions(Story story)
-    {
-        // Event Score Management
-        story.BindExternalFunction("ModifyEventScore", (string scoreName, int change) => {
-            EventSystemLogic.Instance?.ModifyEventScore(scoreName, change);
-        });
-        
-        story.BindExternalFunction("GetEventScore", (string scoreName) => {
-            return EventSystemLogic.Instance?.GetEventScore(scoreName) ?? 0;
-        });
-        
-        // Resource Management
-        story.BindExternalFunction("ModifyResource", (string resourceName, int change) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            if (gameUnitsLogic != null)
-            {
-                gameUnitsLogic.ChangeResourceFromName(resourceName, change, false);
-            }
-        });
-        
-        story.BindExternalFunction("GetResourceAmount", (string resourceName) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            return gameUnitsLogic?.GetResourceAmount(resourceName) ?? 0;
-        });
-        
-        // Production Unit Management
-        story.BindExternalFunction("ModifyProductionUnit", (string unitName, int change) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            if (gameUnitsLogic != null)
-            {
-                gameUnitsLogic.ChangeProductionUnitFromName(unitName, change);
-            }
-        });
-        
-        story.BindExternalFunction("BuildProductionUnit", (string unitName) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            return gameUnitsLogic?.BuildProductionUnit(unitName) ?? false;
-        });
-        
-        // Technology Management
-                    story.BindExternalFunction("TriggerTechnologyEnlightened", (string technologyName) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            if (gameUnitsLogic != null && gameUnitsLogic.researchTab != null)
-            {
-                GameObject techSlotObj = gameUnitsLogic.researchTab.slots.Find(slot => slot.name == technologyName);
-                if (techSlotObj != null)
-                {
-                    GameTechnologySlot techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
-                    if (techSlot != null)
-                    {
-                        techSlot.enlightenedCompleted = true;
-                        techSlot.RefreshTechnologyUI();
-                    }
-                }
-            }
-        });
-        
-        story.BindExternalFunction("CheckTechnology", (string technologyName) => {
-            GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-            if (gameUnitsLogic != null && gameUnitsLogic.researchTab != null)
-            {
-                GameObject techSlotObj = gameUnitsLogic.researchTab.slots.Find(slot => slot.name == technologyName);
-                if (techSlotObj != null)
-                {
-                    GameTechnologySlot techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
-                    return techSlot != null && techSlot.isUnlocked;
-                }
-            }
-            return false;
-        });
-        
-        // Time System
-        story.BindExternalFunction("GetCurrentSeventh", () => {
-            TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-            return timeSystem?.CurrentSeventh ?? 1;
-        });
-        
-        story.BindExternalFunction("GetCurrentPhase", () => {
-            TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-            return timeSystem?.CurrentPhase ?? 1;
-        });
-        
-        story.BindExternalFunction("GetCurrentEcho", () => {
-            TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-            return timeSystem?.CurrentEcho ?? 1;
-        });
-        
-        story.BindExternalFunction("GetCurrentCycle", () => {
-            TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-            return timeSystem?.CurrentCycle ?? 1;
-        });
-        
-        story.BindExternalFunction("IsRitualSeventh", () => {
-            TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-            return timeSystem?.CurrentSeventh == 21;
-        });
-        
-        // Stat Management
-        story.BindExternalFunction("ModifyStat", (string statName, int change) => {
-            StatManager statManager = EventSystemLogic.Instance?.GetStatManager();
-            if (statManager != null)
-            {
-                int currentValue = statManager.GetStatValue(statName);
-                statManager.UpdateStat(statName, currentValue + change);
-            }
-        });
-        
-        story.BindExternalFunction("GetStatValue", (string statName) => {
-            StatManager statManager = EventSystemLogic.Instance?.GetStatManager();
-            return statManager?.GetStatValue(statName) ?? 0;
-        });
-        
-        // Population Management
-        story.BindExternalFunction("ModifyPopulation", (int change) => {
-            if (PopGrowthLogic.Instance != null)
-            {
-                // Only allow population removal (negative values)
-                if (change < 0)
-                {
-                    PopGrowthLogic.Instance.ModifyPopulation(change);
-                }
-                else
-                {
-                    Debug.LogWarning($"ModifyPopulation called with positive value {change}. Use ModifyVagrants instead to add people.");
-                }
-            }
-        });
-        
-        story.BindExternalFunction("GetPopulation", () => {
-            return PopGrowthLogic.Instance?.population ?? 0;
-        });
-        
-        story.BindExternalFunction("ModifyHousing", (int change) => {
-            if (PopGrowthLogic.Instance != null)
-            {
-                PopGrowthLogic.Instance.ModifyHousing(change);
-            }
-        });
-        
-        story.BindExternalFunction("GetHousing", () => {
-            return PopGrowthLogic.Instance?.housing ?? 0;
-        });
-        
-        story.BindExternalFunction("ModifyVagrants", (int change) => {
-            if (PopGrowthLogic.Instance != null)
-            {
-                PopGrowthLogic.Instance.ModifyVagrants(change);
-            }
-        });
-        
-        story.BindExternalFunction("GetVagrants", () => {
-            return PopGrowthLogic.Instance?.vagrants ?? 0;
-        });
-        
-        story.BindExternalFunction("ProcessEventDeaths", (int deathCount) => {
-            if (PopGrowthLogic.Instance != null)
-            {
-                PopGrowthLogic.Instance.ProcessEventDeaths(deathCount);
-            }
-        });
-        
-        story.BindExternalFunction("GetDeaths", () => {
-            return PopGrowthLogic.Instance?.deaths ?? 0;
-        });
-        
-        story.BindExternalFunction("GetVagrantDeaths", () => {
-            return PopGrowthLogic.Instance?.vagrantDeaths ?? 0;
-        });
-        
-        story.BindExternalFunction("GetTrueDeaths", () => {
-            return PopGrowthLogic.Instance?.trueDeaths ?? 0;
-        });
-        
-        // Weather Management
-        story.BindExternalFunction("ChangeWeather", (string weatherProfileName) => {
-            if (CelestialWeatherSystemLogic.Instance != null)
-            {
-                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
-                if (foundProfile != null)
-                {
-                    CelestialWeatherSystemLogic.Instance.SetWeatherProfile(foundProfile, ignoreEchoValidation: true);
-                    return true;
-                }
-            }
-            return false;
-        });
-        
-        story.BindExternalFunction("GetCurrentWeather", () => {
-            if (CelestialWeatherSystemLogic.Instance != null)
-            {
-                return CelestialWeatherSystemLogic.Instance.GetCurrentWeatherName();
-            }
-            return "";
-        });
-        
-        story.BindExternalFunction("IsWeather", (string weatherProfileName) => {
-            if (CelestialWeatherSystemLogic.Instance != null)
-            {
-                return CelestialWeatherSystemLogic.Instance.IsWeatherActive(weatherProfileName);
-            }
-            return false;
-        });
-        
-        story.BindExternalFunction("SetTimedWeather", (string weatherProfileName, int durationSevenths) => {
-            if (CelestialWeatherSystemLogic.Instance != null)
-            {
-                WeatherProfileSO foundProfile = CelestialWeatherSystemLogic.FindWeatherProfile(weatherProfileName);
-                if (foundProfile != null && durationSevenths > 0)
-                {
-                    CelestialWeatherSystemLogic.Instance.SetTimedWeatherProfile(foundProfile, durationSevenths, ignoreEchoValidation: true);
-                    return true;
-                }
-            }
-            return false;
-        });
-        
-        // Utility Functions
-        story.BindExternalFunction("Log", (string message) => {
-            Debug.Log($"[Ink] {message}");
-        });
-        
-        story.BindExternalFunction("Random", (int min, int max) => {
-            return Random.Range(min, max + 1);
-        });
-    }
-    
-    /// <summary>
-    /// Find the best available story node across all volumes
+    /// The story to offer now: among unlocked stories whose conditions hold and that are off cooldown, one of
+    /// the highest priority, picked at random. Null when none qualifies.
     /// </summary>
     public StoryNode FindBestAvailableStory()
     {
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Finding best available story from {eventVolumes.Count} volumes", "EventVolumeManager");
-        
-        // Check if there are any story nodes at all
-        int totalStoryNodes = eventVolumes.Sum(v => v.storyNodes.Count);
-        if (totalStoryNodes == 0)
+        candidates.Clear();
+        int best = int.MinValue;
+        foreach (var volume in eventVolumes)
         {
-            GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] No story nodes found in any volume - no events available", "EventVolumeManager");
-            return null;
-        }
-        
-        // Check if PopGrowthLogic is available for population-related conditions
-        bool hasPopulationConditions = eventVolumes.Any(v => 
-            v.storyNodes.Any(sn => sn.storyConditions.Any(c => 
-                c.type == EventCondition.ConditionType.PopulationCheck ||
-                c.type == EventCondition.ConditionType.HousingCheck ||
-                c.type == EventCondition.ConditionType.VagrantsCheck ||
-                c.type == EventCondition.ConditionType.DeathsCheck ||
-                c.type == EventCondition.ConditionType.VagrantDeathsCheck)));
-                
-        if (hasPopulationConditions && PopGrowthLogic.Instance == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] Some stories have population conditions but PopGrowthLogic.Instance is null - waiting for system to be ready", "EventVolumeManager");
-            return null;
-        }
-        
-        StoryNode bestStory = null;
-        int highestPriority = -1;
-        List<StoryNode> samePriorityCandidates = new List<StoryNode>();
-        EventVolume bestVolume = null;
-        
-        foreach (EventVolume volume in eventVolumes)
-        {
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking volume '{volume.volumeName}' (unlocked: {volume.isUnlocked})", "EventVolumeManager");
-            
-            if (!IsVolumeAvailable(volume)) 
+            if (!IsVolumeAvailable(volume)) continue;
+            foreach (var node in volume.storyNodes)
             {
-                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is not available", "EventVolumeManager");
-                continue;
-            }
-            
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Volume '{volume.volumeName}' is available, checking {volume.storyNodes.Count} story nodes", "EventVolumeManager");
-            
-            foreach (StoryNode storyNode in volume.storyNodes)
-            {
-                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking story node '{storyNode.nodeName}' (unlocked: {storyNode.isUnlocked}, priority: {storyNode.priority})", "EventVolumeManager");
-                
-                if (!storyNode.isUnlocked) 
+                if (node == null || !node.isUnlocked || !AreStoryConditionsMet(node)) continue;
+                if (node.priority > best)
                 {
-                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is locked", "EventVolumeManager");
-                    continue;
+                    best = node.priority;
+                    candidates.Clear();
                 }
-                
-                if (AreStoryConditionsMet(storyNode))
-                {
-                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' meets conditions with priority {storyNode.priority}", "EventVolumeManager");
-                    
-                    if (storyNode.priority > highestPriority)
-                    {
-                        // New highest priority - clear previous candidates and start fresh
-                        highestPriority = storyNode.priority;
-                        samePriorityCandidates.Clear();
-                        samePriorityCandidates.Add(storyNode);
-                        bestVolume = volume;
-                        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] New highest priority: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
-                    }
-                    else if (storyNode.priority == highestPriority)
-                    {
-                        // Same priority - add to candidates for random selection
-                        samePriorityCandidates.Add(storyNode);
-                        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Added to same priority candidates: '{storyNode.nodeName}' (priority {storyNode.priority})", "EventVolumeManager");
-                    }
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' did not meet conditions", "EventVolumeManager");
-
-                }
+                if (node.priority == best) candidates.Add(node);
             }
         }
-        
-        // Randomly select from highest priority candidates
-        if (samePriorityCandidates.Count > 0)
-        {
-            int randomIndex = Random.Range(0, samePriorityCandidates.Count);
-            bestStory = samePriorityCandidates[randomIndex];
-            currentVolume = bestVolume;
-            
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Randomly selected from {samePriorityCandidates.Count} candidates: '{bestStory.nodeName}' (priority {highestPriority})", "EventVolumeManager");
+        if (candidates.Count == 0) return null;
 
-        }
-        
-        GameLoggingSystem.Instance.LogEvent(bestStory != null
-            ? $"[EventVolumeManager] Selected best story '{bestStory.nodeName}' (priority {highestPriority})"
-            : "[EventVolumeManager] No available story found", "EventVolumeManager");
-
-        return bestStory;
+        var chosen = candidates[Random.Range(0, candidates.Count)];
+        GameLog.Event($"Available: {candidates.Count} stor{(candidates.Count == 1 ? "y" : "ies")} at priority {best}; chose '{chosen.nodeName}'", Log);
+        return chosen;
     }
-    
-    /// <summary>
-    /// Check if a volume is available based on its conditions
-    /// </summary>
-    private bool IsVolumeAvailable(EventVolume volume)
+
+    private static bool IsVolumeAvailable(EventVolume volume)
     {
-        if (!volume.isUnlocked) return false;
-        
-        foreach (EventCondition condition in volume.volumeConditions)
+        if (volume == null || !volume.isUnlocked) return false;
+        foreach (var condition in volume.volumeConditions)
         {
             if (!condition.Evaluate()) return false;
         }
-        
         return true;
     }
-    
-    /// <summary>
-    /// Check if all conditions for a story node are met
-    /// </summary>
-    private bool AreStoryConditionsMet(StoryNode storyNode)
+
+    private static bool AreStoryConditionsMet(StoryNode node)
     {
-        // Check cooldown FIRST before evaluating other conditions
-        if (storyNode.cooldownSevenths > 0)
+        var events = EventSystemLogic.Instance;
+        if (node.cooldownSevenths > 0 && events != null && events.IsEventOnCooldown(node.nodeName, node.cooldownSevenths)) return false;
+        foreach (var condition in node.storyConditions)
         {
-            EventSystemLogic eventSystem = EventSystemLogic.Instance;
-            if (eventSystem != null && eventSystem.IsEventOnCooldown(storyNode.nodeName, storyNode.cooldownSevenths))
-            {
-                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' is on cooldown - skipping", "EventVolumeManager");
-
-                return false; // Event is on cooldown, don't allow it to trigger
-            }
+            if (!condition.Evaluate()) return false;
         }
-        
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Checking conditions for story '{storyNode.nodeName}' - {storyNode.storyConditions.Count} conditions to evaluate", "EventVolumeManager");
-        
-        if (storyNode.storyConditions.Count == 0)
-        {
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has no conditions - allowing trigger", "EventVolumeManager");
-
-            return true;
-        }
-        
-        // Check if PopGrowthLogic is available for population-related conditions
-        bool hasPopulationConditions = storyNode.storyConditions.Any(c => 
-            c.type == EventCondition.ConditionType.PopulationCheck ||
-            c.type == EventCondition.ConditionType.HousingCheck ||
-            c.type == EventCondition.ConditionType.VagrantsCheck ||
-            c.type == EventCondition.ConditionType.DeathsCheck ||
-            c.type == EventCondition.ConditionType.VagrantDeathsCheck);
-            
-        if (hasPopulationConditions && PopGrowthLogic.Instance == null)
-        {
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' has population conditions but PopGrowthLogic.Instance is null - blocking trigger", "EventVolumeManager");
-
-            return false;
-        }
-        
-        foreach (EventCondition condition in storyNode.storyConditions)
-        {
-            bool result = condition.Evaluate();
-            GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Condition check for '{storyNode.nodeName}': {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue} => {result}", "EventVolumeManager");
-
-            if (!result) 
-            {
-                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Story '{storyNode.nodeName}' blocked by condition: {condition.type} {condition.targetName} {condition.comparison} {condition.requiredValue}", "EventVolumeManager");
-
-                return false;
-            }
-        }
-        
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] All conditions met for story '{storyNode.nodeName}' - allowing trigger", "EventVolumeManager");
-
         return true;
     }
-    
-    /// <summary>
-    /// Start a story node
-    /// </summary>
+
+    /// <summary>Unlock a story authored with "# locked: true" (the unlock_event consequence). False when not found.</summary>
+    public bool UnlockStory(string nodeName)
+    {
+        var node = FindStoryNode(nodeName);
+        if (node == null) return false;
+        if (!node.isUnlocked) GameLog.Event($"Story '{node.nodeName}' unlocked", Log);
+        node.isUnlocked = true;
+        return true;
+    }
+
+    /// <summary>A story by knot name in any volume.</summary>
+    public StoryNode FindStoryNode(string nodeName)
+    {
+        if (string.IsNullOrEmpty(nodeName)) return null;
+        foreach (var volume in eventVolumes)
+        {
+            foreach (var node in volume.storyNodes)
+            {
+                if (string.Equals(node.nodeName, nodeName, System.StringComparison.OrdinalIgnoreCase)) return node;
+            }
+        }
+        return null;
+    }
+
+    // ===== RUNNING A STORY =====
+
+    /// <summary>Start a story at its first screen. The volume is looked up from the story when not given.</summary>
     public void StartStory(StoryNode storyNode, EventVolume volume)
     {
+        if (storyNode == null) return;
+        if (volumeOfNode.TryGetValue(storyNode, out var owner)) volume = owner;
         currentStoryNode = storyNode;
         currentVolume = volume;
         currentScreenIndex = 0;
-        
-        // Load the story's Ink content
-        if (volumeStories.ContainsKey(volume.volumeName))
-        {
-            Story story = volumeStories[volume.volumeName];
-            story.ChoosePathString(storyNode.nodeName);
-        }
-        
-        // Start the screen flow
         ExecuteNextScreen();
     }
-    
-    /// <summary>
-    /// Execute the next screen in the current story's flow
-    /// </summary>
+
+    /// <summary>Show the next step of the story's opening flow (the splash); completes the story when there is none.</summary>
     public void ExecuteNextScreen()
     {
-        // Dynamic overrides are deprecated; flow now navigates directly by knot. Preserve for legacy no-op.
-
         if (currentStoryNode == null || currentScreenIndex >= currentStoryNode.screenFlow.Count)
         {
             CompleteStory();
             return;
         }
-        
-        ScreenFlowStep step = currentStoryNode.screenFlow[currentScreenIndex];
-        
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Processing ScreenFlowStep: type={step.flowType}, id={step.screenId}, inkKnot={step.inkKnot}", "EventVolumeManager");
-        
-        // Create EventScreen from ScreenFlowStep
-        EventScreen screen = new EventScreen
+        var step = currentStoryNode.screenFlow[currentScreenIndex++];
+        Show(new EventScreen
         {
             screenType = ConvertFlowTypeToScreenType(step.flowType),
             screenId = step.screenId,
             displayDuration = step.displayDuration,
             waitForInput = step.waitForInput,
             inkKnot = step.inkKnot
-        };
-        
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] Created EventScreen: type={screen.screenType}, id={screen.screenId}, inkKnot={screen.inkKnot}", "EventVolumeManager");
-        
-        // Execute the screen
-        EventSystemLogic.Instance?.ExecuteScreen(screen);
-        
-        currentScreenIndex++;
+        });
     }
 
-    // Deprecated override API retained as no-ops to avoid breaking references
-    public void SetNextScreensOverride(System.Collections.Generic.IEnumerable<ScreenFlowStep> steps) {}
-
-    /// <summary>
-    /// Advance the static flow index by the specified number of steps, to avoid duplicating the just-overridden screen.
-    /// </summary>
-    public void AdvanceStaticFlow(int steps = 1)
-    {
-        // Deprecated with direct navigation; keep no-op for compatibility
-    }
-
-    /// <summary>
-    /// Navigate directly to a specific Ink knot by name and render its corresponding screen.
-    /// </summary>
+    /// <summary>Show a knot on the screen its name implies; an empty knot completes the story.</summary>
     public void NavigateToKnot(string knotName)
     {
-        if (string.IsNullOrEmpty(knotName))
+        string knot = EventScript.TopLevelKnot(knotName);
+        if (string.IsNullOrEmpty(knot))
         {
             CompleteStory();
             return;
         }
-        // Normalize to top-level knot name to avoid internal path suffixes
-        string normalized = InkDrivenEventSetup.NormalizeKnotName(knotName) ?? knotName;
-        // Choose screen type based on naming convention (prefix match to avoid accidental contains)
-        var lower = normalized.ToLower();
-        ScreenType type = ScreenType.Verse;
-        if (lower.EndsWith("_chorus") || lower.Contains("_chorus_")) type = ScreenType.Chorus;
-        else if (lower.EndsWith("_outro") || lower.Contains("_outro_")) type = ScreenType.Outro;
-        else if (lower.EndsWith("_bridge") || lower.Contains("_bridge_")) type = ScreenType.Bridge;
-        // Build and execute screen
-        var screen = new EventScreen
-        {
-            screenType = type,
-            screenId = normalized + "_screen",
-            inkKnot = normalized,
-            waitForInput = true
-        };
-        GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] NavigateToKnot: knot='{normalized}', inferredType={type}", "EventVolumeManager");
+        if (!EventStoryIndex.TryGet(knot, out _)) GameLog.Warning($"Knot '{knot}' is not in any compiled story; the screen will be empty.", Log);
+        var type = EventScript.ScreenTypeOf(knot);
+        GameLog.Event($"Navigate → '{knot}' ({type})", Log);
+        Show(new EventScreen { screenType = type, screenId = knot + "_screen", inkKnot = knot, waitForInput = true });
+    }
 
+    private void Show(EventScreen screen)
+    {
+        RunKnotLogic(screen.inkKnot);
         EventSystemLogic.Instance?.ExecuteScreen(screen);
     }
-    
-    /// <summary>
-    /// Convert ScreenFlowStep.FlowType to ScreenType
-    /// </summary>
-    private ScreenType ConvertFlowTypeToScreenType(ScreenFlowStep.FlowType flowType)
+
+    // Run the knot's Ink once on the live story (functions with effects fire now); stop where the knot ends.
+    private void RunKnotLogic(string knot)
+    {
+        var story = GetCurrentStory();
+        if (story == null || string.IsNullOrEmpty(knot)) return;
+        try
+        {
+            story.ChoosePathString(knot);
+            for (int guard = 0; guard < 512 && story.canContinue; guard++)
+            {
+                string top = EventScript.TopLevelKnot(story.state.currentPathString);
+                if (!string.IsNullOrEmpty(top) && top != knot) break;
+                story.Continue();
+                if (story.currentChoices.Count > 0) break;
+            }
+        }
+        catch (System.Exception e)
+        {
+            GameLog.Warning($"Ink logic in '{knot}' failed: {e.Message}", Log);
+        }
+    }
+
+    private static ScreenType ConvertFlowTypeToScreenType(ScreenFlowStep.FlowType flowType)
     {
         switch (flowType)
         {
-            case ScreenFlowStep.FlowType.Splash: return ScreenType.Splash;
             case ScreenFlowStep.FlowType.Verse: return ScreenType.Verse;
             case ScreenFlowStep.FlowType.Chorus: return ScreenType.Chorus;
             case ScreenFlowStep.FlowType.Bridge: return ScreenType.Bridge;
@@ -593,103 +233,36 @@ public class EventVolumeManager : MonoBehaviour
             default: return ScreenType.Splash;
         }
     }
-    
+
     /// <summary>
-    /// Complete the current story and apply consequences
+    /// End the running story; the one way a story ends (EventSystemLogic then applies its consequences, resumes
+    /// time and restores the HUD). A second call for the same story is ignored.
     /// </summary>
     public void CompleteStory()
     {
-        if (currentStoryNode == null || currentVolume == null)
+        if (currentStoryNode == null)
         {
-            Debug.LogWarning("[EventVolumeManager] Cannot complete story: no active story or volume");
+            GameLog.Warning("CompleteStory called with no story running.", Log);
             return;
         }
-
-        Debug.Log($"[EventVolumeManager] Completing story: {currentStoryNode.storyTitle}");
-
-        // Notify event system that story is complete - it will handle everything else
-        if (EventSystemLogic.Instance != null)
-        {
-            EventSystemLogic.Instance.OnStoryCompleted();
-        }
-        else
-        {
-            Debug.LogError("[EventVolumeManager] EventSystemLogic.Instance is null!");
-        }
-
-        GameLoggingSystem.Instance.LogEvent("[EventVolumeManager] Story completion delegated to EventSystemLogic", "EventVolumeManager");
-    }
-    
-
-    
-    /// <summary>
-    /// Add a volume to the manager
-    /// </summary>
-    public void AddVolume(EventVolume volume)
-    {
-        if (!eventVolumes.Contains(volume))
-        {
-            eventVolumes.Add(volume);
-            InitializeVolumeLookups();
-            
-            if (volume.inkMasterfile != null)
-            {
-                Story story = new Story(volume.inkMasterfile.text);
-                volumeStories[volume.volumeName] = story;
-                BindExternalFunctions(story);
-
-                GameLoggingSystem.Instance.LogEvent($"[EventVolumeManager] AddVolume loaded story for '{volume.volumeName}'", "EventVolumeManager");
-            }
-            else
-            {
-                Debug.LogWarning($"[EventVolumeManager] AddVolume: '{volume.volumeName}' has null masterfile");
-
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Get a story by volume and node name
-    /// </summary>
-    public StoryNode GetStoryNode(string volumeName, string nodeName)
-    {
-        string key = $"{volumeName}.{nodeName}";
-        return storyNodeLookup.ContainsKey(key) ? storyNodeLookup[key] : null;
-    }
-    
-    /// <summary>
-    /// Get the current story's Ink story
-    /// </summary>
-    public Story GetCurrentStory()
-    {
-        if (currentVolume != null && volumeStories.ContainsKey(currentVolume.volumeName))
-        {
-            return volumeStories[currentVolume.volumeName];
-        }
-        return null;
-    }
-    
-    /// <summary>
-    /// Get the current story node
-    /// </summary>
-    public StoryNode GetCurrentStoryNode()
-    {
-        return currentStoryNode;
+        currentStoryNode = null;
+        currentScreenIndex = 0;
+        if (EventSystemLogic.Instance != null) EventSystemLogic.Instance.OnStoryCompleted();
+        else GameLog.Error("EventSystemLogic is missing; the story cannot complete.", Log);
     }
 
-    /// <summary>
-    /// Get the current volume
-    /// </summary>
-    public EventVolume GetCurrentVolume()
-    {
-        return currentVolume;
-    }
-    
-    /// <summary>
-    /// Get the current screen index for debugging purposes
-    /// </summary>
-    public int GetCurrentScreenIndex()
-    {
-        return currentScreenIndex;
-    }
-} 
+    // ===== ACCESSORS =====
+
+    public StoryNode GetStoryNode(string volumeName, string nodeName) => storyNodeLookup.TryGetValue($"{volumeName}.{nodeName}", out var node) ? node : null;
+
+    /// <summary>The live (game-bound) Ink story of the current volume.</summary>
+    public Story GetCurrentStory() => currentVolume != null && currentVolume.volumeName != null && volumeStories.TryGetValue(currentVolume.volumeName, out var story) ? story : null;
+
+    public StoryNode GetCurrentStoryNode() => currentStoryNode;
+
+    public EventVolume GetCurrentVolume() => currentVolume;
+
+    public int GetCurrentScreenIndex() => currentScreenIndex;
+
+    public IReadOnlyList<EventVolume> GetVolumes() => eventVolumes;
+}

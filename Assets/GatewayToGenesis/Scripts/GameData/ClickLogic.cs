@@ -1,11 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>Button behaviour for HUD slots: gather a resource, build a production unit or start research.</summary>
 public class ClickLogic : MonoBehaviour
 {
     public GameUnitsLogic gameUnitsLogic;
+
     public enum ClickMode
     {
         AddResource,
@@ -18,28 +18,27 @@ public class ClickLogic : MonoBehaviour
     public string activeResource;
 
     [SerializeField] Sprite affordableSprite, unaffordableSprite;
+    [Tooltip("Seconds between affordability checks for build buttons.")]
+    [SerializeField] private float affordabilityRefreshSeconds = 0.2f;
 
     private Image buttonImage;
-
     private GameProductionSlot productionSlot;
-
     public GameTechnologySlot technologySlot;
+    private float nextAffordabilityCheck;
 
     private void Start()
     {
-        if (gameUnitsLogic == null)
-        {
-            gameUnitsLogic = FindAnyObjectByType<GameUnitsLogic>();
-        }
-
+        if (gameUnitsLogic == null) gameUnitsLogic = GameUnitsLogic.Instance;
         buttonImage = GetComponent<Image>();
-
         productionSlot = GetComponent<GameProductionSlot>();
+        if (productionSlot == null) productionSlot = GetComponentInParent<GameProductionSlot>();
         technologySlot = GetComponent<GameTechnologySlot>();
     }
 
     private void Update()
     {
+        if (currentMode != ClickMode.BuildProductionUnit || Time.unscaledTime < nextAffordabilityCheck) return;
+        nextAffordabilityCheck = Time.unscaledTime + affordabilityRefreshSeconds;
         RefreshButtonAppearance();
     }
 
@@ -47,58 +46,31 @@ public class ClickLogic : MonoBehaviour
     {
         if (gameUnitsLogic == null)
         {
-            Debug.LogError("GameUnitsLogic is not assigned in ", this);
+            Debug.LogError("GameUnitsLogic is not assigned", this);
             return;
         }
 
         switch (currentMode)
         {
             case ClickMode.AddResource:
-                gameUnitsLogic.ChangeResourceFromName(activeResource, 0, true);
+                if (!string.IsNullOrEmpty(activeResource)) gameUnitsLogic.ChangeResourceFromName(activeResource, 0, true);
                 break;
 
             case ClickMode.BuildProductionUnit:
-                GameProductionSlot productionSlot = GetComponentInParent<GameProductionSlot>();
-                string productionUnitName = productionSlot.gameUnit?.name;
-
-                if (!string.IsNullOrEmpty(productionUnitName))
-                {
-                    gameUnitsLogic.BuildProductionUnit(productionUnitName);
-                }
+                string productionUnitName = productionSlot != null && productionSlot.gameUnit != null ? productionSlot.gameUnit.name : null;
+                if (!string.IsNullOrEmpty(productionUnitName) && gameUnitsLogic.BuildProductionUnit(productionUnitName)) RefreshButtonAppearance();
                 break;
 
             case ClickMode.UnlockTechnology:
-                GameTechnologySlot gameTechnologySlot = GetComponent<GameTechnologySlot>();
-
-                if (!technologySlot.isUnlocked && !technologySlot.alreadyClicked)
-                {
-                    gameUnitsLogic.StartTechnologyProgress(technologySlot);
-                }
+                if (technologySlot != null && !technologySlot.isUnlocked && !technologySlot.alreadyClicked) gameUnitsLogic.StartTechnologyProgress(technologySlot);
                 break;
-
-            default:
-                Debug.LogWarning("Unhandled ClickMode: " + currentMode);
-                break;
-        }
-        
-        // Ensure click power is maintained at minimum values after processing clicks
-        if (currentMode == ClickMode.AddResource && !string.IsNullOrEmpty(activeResource))
-        {
-            var resourceSlot = gameUnitsLogic.GetResourceSlotFromName(activeResource);
-            if (resourceSlot != null)
-            {
-                resourceSlot.EnsureMinimumClickPower();
-            }
         }
     }
 
     private void RefreshButtonAppearance()
     {
-        if (currentMode != ClickMode.BuildProductionUnit || productionSlot == null || buttonImage == null)
-            return;
-
-        bool canAfford = gameUnitsLogic.CanBuildProductionUnit(productionSlot.gameUnit.name);
-        buttonImage.sprite = canAfford ? affordableSprite : unaffordableSprite;
+        if (productionSlot == null || productionSlot.gameUnit == null || buttonImage == null || gameUnitsLogic == null) return;
+        buttonImage.sprite = gameUnitsLogic.CanBuildProductionUnit(productionSlot.gameUnit.name) ? affordableSprite : unaffordableSprite;
     }
 
     public void SetActiveResource(string resourceName)

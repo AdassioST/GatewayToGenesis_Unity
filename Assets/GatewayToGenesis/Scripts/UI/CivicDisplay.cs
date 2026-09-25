@@ -4,7 +4,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Displays a single civic in the government tab
 /// </summary>
-public class CivicDisplay : MonoBehaviour
+public class CivicDisplay : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private Image civicIcon;
@@ -44,6 +44,8 @@ public class CivicDisplay : MonoBehaviour
     {
         return civicData;
     }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Civic(civicData, data);
     
     /// <summary>
     /// Get the civic tier

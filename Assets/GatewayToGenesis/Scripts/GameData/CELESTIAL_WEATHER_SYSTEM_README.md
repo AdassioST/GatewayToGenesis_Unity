@@ -44,7 +44,7 @@ The **Celestial Weather Controller** is a percentage-based atmospheric system th
 │  INPUTS:                                                       │
 │  ├─ TimeSystemLogic (cycle percentage, events)                │
 │  ├─ WeatherProfileSO (configuration data)                     │
-│  └─ GameAssetValidator (centralized asset loading)            │
+│  └─ GameCatalog (centralized asset loading)                   │
 │                                                                │
 │  PROCESSING:                                                   │
 │  ├─ Percentage calculation (0-100% of cycle)                  │
@@ -125,28 +125,29 @@ Light2D, ParticleSystems, Game Effects
 
 ---
 
-### **3. WeatherCondition.cs** (87 lines embedded in WeatherProfileSO.cs)
+### **3. WeatherCondition** (embedded in WeatherProfileSO.cs)
 **Location:** Inside `WeatherProfileSO.cs`
 
 **Responsibilities:**
-- Condition evaluation for weather availability
-- Integration with game state systems
+- Condition evaluation for weather availability, read through `GameValues` (the same values event
+  conditions and civic requirements use); `WeatherCondition.DomainOf` maps each type to its domain
+- Targets are checked at start-up by `ContentValidator` (a TechnologyCheck must name a real technology)
 
 **Condition Types:**
-- `CycleCheck` - Cycle number requirements
-- `TechnologyCheck` - Technology unlock gates
-- `EventScoreCheck` - Event witness requirements
-- `EchoCheck` - Seasonal restrictions
+- `CycleCheck` - Cycle number compared with `requiredValue` (domain `cycle`)
+- `TechnologyCheck` - Technology is researched; `requiredValue`/`comparison` are ignored (domain `technology`)
+- `EventScoreCheck` - Event score compared with `requiredValue` (domain `score`)
+- Echo restrictions are not conditions: use the profile's **Required Echoes** list
 
 ---
 
-### **4. GameAssetValidator.cs** (710 lines)
-**Location:** `Assets/GatewayToGenesis/Scripts/GameData/GameAssetValidator.cs`
+### **4. GameCatalog + ContentValidator** (Scripts/Core)
+**Location:** `Scripts/Core/Catalog/GameCatalog.cs`, `Scripts/Core/Validation/ContentValidator.cs`
 
 **Responsibilities:**
-- Centralized asset validation
-- Weather profile caching and lookup
-- Resource/Section/Tech/Civic validation
+- `GameCatalog.Weather` loads every profile once; `GameCatalog.FindWeather` matches asset or display name
+- `ContentValidator` checks every weather effect at start-up with the same rules used to apply it
+- The same catalogs serve resources, sections, technologies, civics and legends
 
 **Key Features:**
 - O(1) cached lookups
@@ -935,7 +936,7 @@ public class MyWeatherScript : MonoBehaviour
     
     void OnWeatherChanged(WeatherProfileSO newWeather)
     {
-        Debug.Log($"Weather changed to: {newWeather.weatherDisplayName}");
+        GameLog.Event($"Weather changed to: {newWeather.weatherDisplayName}", LogChannel.Weather);
     }
 }
 ```
@@ -1294,13 +1295,13 @@ Variation (if Blizzard absent for long periods):
 ---
 
 ### **Problem: Weather Validation Error**
-**Symptoms:** `[GameAssetValidator] Weather profile 'X' not found`
+**Symptoms:** `[CelestialWeatherSystemLogic] Weather profile 'X' not found in Resources/WeatherProfiles.`
 
 **Solutions:**
 1. Ensure profile is in `Resources/WeatherProfiles/` folder
 2. Check spelling matches exactly (case-insensitive but must match name)
 3. Verify it's saved as `.asset` file
-4. Check GameAssetValidator cache: Call `GameAssetValidator.GetAllWeatherProfileNames()`
+4. List what was loaded: `CelestialWeatherSystemLogic.GetAllWeatherProfileNames()`
 
 ---
 
@@ -1310,7 +1311,7 @@ Variation (if Blizzard absent for long periods):
 **Solutions:**
 1. Check GlobalProductionManager exists in scene
 2. Check StatManager exists in scene
-3. Verify resource names match exactly (use GameAssetValidator)
+3. Read the start-up `[ContentValidator]` warnings: they name any effect whose target does not exist
 4. Check console for effect application logs
 5. Verify effects are configured in WeatherProfileSO inspector
 
@@ -1345,7 +1346,7 @@ Variation (if Blizzard absent for long periods):
 - CelestialWeatherSystemLogic.cs: 1,518 lines
 - CelestialWeatherVisualLogic.cs: 626 lines
 - WeatherProfileSO.cs: 458 lines
-- GameAssetValidator.cs: 710 lines (shared)
+- Shared: GameCatalog, EffectRouter, ContentValidator (Scripts/Core)
 - Total: ~3,312 lines
 
 **Features:**
@@ -1526,10 +1527,9 @@ Press Play → See real-time weather stats in top-left
 
 ### **Console Logging:**
 
-**Enable in GameLoggingSystem:**
-```
-Environment Logic → Enable Celestial Weather Controller Logging: ✓
-```
+**Enable in GameLoggingSystem:** tick `Weather` in *Enabled Channels* (`WeatherVisuals` for lighting and phases).
+The selection rules themselves (retention, variation boost, candidacy, weighted pick) are `WeatherRules`, tested in
+`GameRulesTests`.
 
 **Logs Include:**
 - Weather retention success/failure
@@ -1660,7 +1660,7 @@ Expected Duration:
 // In Unity Console or custom debug script:
 CelestialWeatherSystemLogic.Instance.ForceProceduralWeatherChange();
 CelestialWeatherSystemLogic.Instance.ResetToProceduralWeather();
-GameAssetValidator.GetValidationReport(); // Shows all loaded assets
+ContentValidator.ValidateAll(force: true); // Re-check all content and log problems
 ```
 
 ---

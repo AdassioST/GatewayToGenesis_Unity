@@ -1,1412 +1,556 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using Ink.Runtime;
 using DG.Tweening;
 
 /// <summary>
-/// Core event system for managing narrative events with Ink integration
+/// Narrative event flow: decides when a story is offered, runs it, and applies its consequences.
+///
+///   time tick → <see cref="CheckForAvailableEvents"/> → notification (time slows) → player opens it →
+///   <see cref="TriggerStory"/> (time pauses) → screens add consequences → <see cref="OnStoryCompleted"/>
+///
+/// Consequences that are modifiers (production %, click power) are applied through <see cref="EffectRouter"/>.
+/// Permanent ones accumulate under "Event: {title}"; timed ones get their own source and are removed with
+/// <see cref="EffectRouter.RemoveSource"/> when they expire, so expiry always restores the exact previous state.
 /// </summary>
-public class EventSystemLogic : MonoBehaviour
+public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
 {
-    // ===== THE BOSS'S OFFICE =====
-    // This is where the boss (EventSystem) keeps track of everything
+    private const LogChannel Log = LogChannel.Events;
+    private const string DarkMoraleScore = "dark_morale";
 
     [Header("Event Data")]
-    [SerializeField] private List<EventScore> eventScores = new List<EventScore>(); // The scoreboard tracking player progress
-    
-    [Header("System References")]
-    [SerializeField] private GameUnitsLogic gameUnitsLogic; // Direct reference to resource/production manager
-    [SerializeField] private StatManager statManager; // Direct reference to stats manager
-    [SerializeField] private TimeSystemLogic timeSystem; // Direct reference to time system
-    [SerializeField] private EventVolumeManager volumeManager; // Direct reference to volume manager
-    
+    [SerializeField] private List<EventScore> eventScores = new List<EventScore>();
+
+    // Read on use: scene singletons register in Awake, in no guaranteed order.
+    private static GameUnitsLogic GameUnits => GameUnitsLogic.Instance;
+    private static StatManager Stats => StatManager.Instance;
+    private static TimeSystemLogic TimeSystem => TimeSystemLogic.Instance;
+    private static EventVolumeManager Volumes => EventVolumeManager.Instance;
+
     [Header("Event Notification System")]
-    [SerializeField] private Transform eventsContainer; // Container for event notifications in HUD
-    [SerializeField] private GameObject eventNotificationPrefab; // Prefab for event notifications
-    
-    // Track current notification to prevent stacking
-    private GameObject currentNotification;
-    
-    // Track how the current event was triggered
+    [SerializeField] private Transform eventsContainer;
+    [SerializeField] private GameObject eventNotificationPrefab;
+
+    [Header("Rules")]
+    [Tooltip("Satisfaction lost when a story triggered by the dark_morale score completes.")]
+    [SerializeField] private int darkMoraleSatisfactionPenalty = 15;
+    [Tooltip("Seventh changes to wait after loading before any event may trigger.")]
+    [SerializeField] private int warmupSevenths = 1;
+
+    /// <summary>True while a story is being told (time is paused).</summary>
+    public bool isEventActive { get; private set; }
+
+    private StoryNode currentStoryNode;
     private string currentEventTriggerSource = "unknown";
-    
-    // ===== THE BOSS'S ID CARD =====
-    // Singleton pattern - makes sure there's only ONE boss in the whole game
-    private static EventSystemLogic instance;
-    public static EventSystemLogic Instance
+    private GameObject currentNotification;
+    private int seventhChangeCount;
+    private int seventhsSinceLastEvent;
+
+    // Sevenths since each story last completed, keyed by node name.
+    private readonly Dictionary<string, int> eventCooldowns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    // Completions keyed by node name and by title, for WitnessEvent conditions and the "event_completed" value.
+    private readonly Dictionary<string, int> completionCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    private readonly List<EventConsequence> cumulativeConsequences = new List<EventConsequence>();
+
+    private class TimedEffect
     {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindAnyObjectByType<EventSystemLogic>();
-                if (instance == null)
-                {
-                    GameObject go = new GameObject("EventSystem");
-                    instance = go.AddComponent<EventSystemLogic>();
-                }
-            }
-            return instance;
-        }
-    }
-    
-    // ===== THE BOSS'S CURRENT TASK =====
-    // What story is the boss currently telling?
-    private StoryNode currentStoryNode; // The story node currently being executed
-    public bool isEventActive = false; // Is the boss busy telling a story?
-    
-    // ===== THE BOSS'S FIRST TIME EXPERIENCE =====
-    // Track if this is the very first time the system has processed time changes
-    // Start with 0 so first change makes it 1, allowing events on the second seventh change
-    private int seventhChangeCount = 0; // Count of seventh changes, 0 = no events, 1+ = events allowed
-    
-    // ===== THE BOSS'S EVENT SPACING TRACKER =====
-    // Track how many sevenths have passed since the last event completed
-    private int seventhsSinceLastEvent = 0; // Count of sevenths since last event completion
-    
-    // ===== THE BOSS'S EVENT COOLDOWN TRACKER =====
-    // Track when each specific event was last completed (for individual cooldowns)
-    private Dictionary<string, int> eventCooldowns = new Dictionary<string, int>(); // Key: event name, Value: sevenths since that event
-    
-    // ===== THE BOSS'S HELPERS =====
-    // The boss has two helpers: the story teller and the magic book keeper
-    private EventScreenManager screenManager; // The story teller who shows the pages
-    private InkStoryManager inkManager; // The magic book keeper who provides the text
-    
-    // ===== THE BOSS STARTS WORK =====
-    // When the game starts, the boss sets up their office and hires their helpers
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-            // Ensure this GameObject is a root object before marking as persistent
-            if (transform.parent != null)
-            {
-                transform.SetParent(null);
-            }
-            DontDestroyOnLoad(gameObject); // Boss stays even when scenes change
-            InitializeEventSystem(); // Boss hires their helpers
-        }
-        else if (instance != this)
-        {
-            Destroy(gameObject); // Only one boss allowed!
-        }
-    }
-    
-    // ===== THE BOSS STARTS THEIR DAILY ROUTINE =====
-    // The boss starts checking for stories every second
-    private void Start()
-    {
-        // PSEUDOCODE: No longer need arbitrary time loop - events trigger based on time system
-        // StartCoroutine(EventCheckLoop()); // Boss starts their daily routine
-    }
-    
-    // ===== THE BOSS'S TIME-BASED EVENT TRIGGERS =====
-    // PSEUDOCODE: The boss now responds to the magical time system instead of arbitrary intervals
-    
-    // PSEUDOCODE: Check for events when seventh changes
-    private void OnSeventhChanged(int newSeventh)
-    {
-        // Increment the seventh change count
-        seventhChangeCount++;
-        
-        // Increment the sevenths since last event counter (if no event is currently active)
-        if (!isEventActive)
-        {
-            seventhsSinceLastEvent++;
-            GameLoggingSystem.Instance.LogEvent($"Seventh {newSeventh} - sevenths since last event: {seventhsSinceLastEvent}", "EventSystemLogic");
-        }
-        else
-        {
-            GameLoggingSystem.Instance.LogEvent($"Seventh {newSeventh} - event active, sevenths counter frozen at: {seventhsSinceLastEvent}", "EventSystemLogic");
-        }
-        
-        // Increment all individual event cooldowns
-        var cooldownKeys = new List<string>(eventCooldowns.Keys);
-        foreach (string eventName in cooldownKeys)
-        {
-            eventCooldowns[eventName]++;
-        }
-        
-        // Events are only allowed after the first seventh change (when count reaches 1)
-        if (seventhChangeCount < 1)
-        {
-            GameLoggingSystem.Instance.LogEvent($"Seventh {newSeventh} - change count {seventhChangeCount}, skipping event check (system initialization protection)", "EventSystemLogic");
-            return;
-        }
-        
-        if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
-        {
-            GameLoggingSystem.Instance.LogEvent($"Seventh changed to {newSeventh} - change count {seventhChangeCount}, checking for events", "EventSystemLogic"); // Boss announces time change
-            CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
-        }
-    }
-    
-    // PSEUDOCODE: Check for events when phase changes
-    private void OnPhaseChanged(int newPhase)
-    {
-        if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
-        {
-            GameLoggingSystem.Instance.LogEvent($"Phase changed to {newPhase} - checking for events", "EventSystemLogic"); // Boss announces time change
-            CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
-        }
-    }
-    
-    // PSEUDOCODE: Check for events when echo changes
-    private void OnEchoChanged(int newEcho)
-    {
-        if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
-        {
-            GameLoggingSystem.Instance.LogEvent($"Echo changed to {newEcho} - checking for events", "EventSystemLogic"); // Boss announces time change
-            CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
-        }
-    }
-    
-    // PSEUDOCODE: Check for events when cycle changes
-    private void OnCycleChanged(int newCycle)
-    {
-        if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cycle changed to {newCycle} - checking for events", "EventSystemLogic"); // Boss announces time change
-            CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
-        }
-    }
-    
-    // PSEUDOCODE: Check for events on ritual sevenths (special magical moments)
-    private void OnRitualSeventh(int ritualSeventh)
-    {
-        if (!isEventActive && AreSystemsReady()) // Only check if boss isn't already telling a story and systems are ready
-        {
-            GameLoggingSystem.Instance.LogEvent($"Ritual Seventh {ritualSeventh} - checking for special events", "EventSystemLogic"); // Boss announces ritual
-            CheckForAvailableEvents(); // CHOOSE BETWEEN POSSIBLE EVENTS
-        }
-    }
-    
-    // ===== THE BOSS HIRES THEIR HELPERS =====
-    // The boss finds and hires the story teller and magic book keeper
-    private void InitializeEventSystem()
-    {
-        // Hire the story teller (EventScreenManager)
-        screenManager = GetComponent<EventScreenManager>();
-        if (screenManager == null)
-        {
-            screenManager = gameObject.AddComponent<EventScreenManager>(); // Create if doesn't exist
-        }
-        
-        // Hire the magic book keeper (InkStoryManager)
-        inkManager = GetComponent<InkStoryManager>();
-        if (inkManager == null)
-        {
-            inkManager = gameObject.AddComponent<InkStoryManager>(); // Create if doesn't exist
-        }
-        
-        // PSEUDOCODE: Find system references if not assigned in editor
-        if (gameUnitsLogic == null)
-        {
-            gameUnitsLogic = FindAnyObjectByType<GameUnitsLogic>(); // Find resource manager if not assigned
-            if (gameUnitsLogic != null)
-            {
-                GameLoggingSystem.Instance.LogEvent("Auto-assigned GameUnitsLogic reference", "EventSystemLogic"); // Boss announces the assignment
-            }
-        }
-        
-        if (statManager == null)
-        {
-            statManager = FindAnyObjectByType<StatManager>(); // Find stats manager if not assigned
-            if (statManager != null)
-            {
-                GameLoggingSystem.Instance.LogEvent("Auto-assigned StatManager reference", "EventSystemLogic"); // Boss announces the assignment
-            }
-        }
-        
-        // PSEUDOCODE: Find time system reference if not assigned in editor
-        if (timeSystem == null)
-        {
-            timeSystem = FindAnyObjectByType<TimeSystemLogic>(); // Find time system if not assigned
-            if (timeSystem != null)
-            {
-                GameLoggingSystem.Instance.LogEvent("Auto-assigned TimeSystemLogic reference", "EventSystemLogic"); // Boss announces the assignment
-            }
-        }
-        
-        // PSEUDOCODE: Find volume manager reference if not assigned in editor
-        if (volumeManager == null)
-        {
-            volumeManager = FindAnyObjectByType<EventVolumeManager>(); // Find volume manager if not assigned
-            if (volumeManager != null)
-            {
-                GameLoggingSystem.Instance.LogEvent("Auto-assigned EventVolumeManager reference", "EventSystemLogic"); // Boss announces the assignment
-            }
-        }
-        
-        // PSEUDOCODE: Subscribe to time system events for thematic event triggering
-        if (timeSystem != null)
-        {
-            // Wait for all systems to be ready before subscribing to time events
-            StartCoroutine(WaitForSystemsAndSubscribeToTimeEvents());
-            GameLoggingSystem.Instance.LogEvent("Started coroutine to wait for systems and subscribe to time events", "EventSystemLogic");
-        }
-        else
-        {
-            GameLoggingSystem.Instance.LogEvent("Time system not found - cannot subscribe to time events", "EventSystemLogic");
-        }
-        
-        GameLoggingSystem.Instance.LogEvent("Event System Logic initialized", "EventSystemLogic"); // Boss announces they're ready for work
-    }
-    
-    /// <summary>
-    /// Wait for all systems to be ready before subscribing to time system events
-    /// </summary>
-    private IEnumerator WaitForSystemsAndSubscribeToTimeEvents()
-    {
-        // Wait for all systems to be ready
-        while (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent("Waiting for systems to be ready...", "EventSystemLogic");
-            yield return new WaitForSeconds(0.1f); // Check every 0.1 seconds
-        }
-        
-        GameLoggingSystem.Instance.LogEvent("All systems ready - subscribing to time system events", "EventSystemLogic");
-        
-        // Now subscribe to time system events
-        timeSystem.OnPhaseChange += OnPhaseChanged; // PSEUDOCODE: Check events when phase changes
-        timeSystem.OnEchoChange += OnEchoChanged; // PSEUDOCODE: Check events when echo changes
-        timeSystem.OnCycleChange += OnCycleChanged; // PSEUDOCODE: Check events when cycle changes
-        timeSystem.OnRitualSeventh += OnRitualSeventh; // PSEUDOCODE: Check events on ritual sevenths
-        timeSystem.OnSeventhChange += OnSeventhChanged; // Check events when seventh changes
-        GameLoggingSystem.Instance.LogEvent("Subscribed to time system events", "EventSystemLogic");
-    }
-    
-    /// <summary>
-    /// Check if all required systems are ready for events
-    /// </summary>
-    private bool AreSystemsReady()
-    {
-        if (PopGrowthLogic.Instance == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("PopGrowthLogic.Instance is null - population system not ready", "EventSystemLogic");
-            return false;
-        }
-        
-        if (gameUnitsLogic == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("GameUnitsLogic is null - resource system not ready", "EventSystemLogic");
-            return false;
-        }
-        
-        if (statManager == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("StatManager is null - stats system not ready", "EventSystemLogic");
-            return false;
-        }
-        
-        if (timeSystem == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("TimeSystemLogic is null - time system not ready", "EventSystemLogic");
-            return false;
-        }
-        
-        if (volumeManager == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("EventVolumeManager is null - event system not ready", "EventSystemLogic");
-            return false;
-        }
-        
-        return true;
-    }
-    
-    /// <summary>
-    /// Check all volumes and trigger the highest priority story that meets conditions
-    /// </summary>
-    private void CheckForAvailableEvents()
-    {
-        if (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent("Systems not ready - cannot check for events", "EventSystemLogic");
-            return;
-        }
-        
-        // Prevent new events if there's already a notification pending (anti-stacking)
-        if (currentNotification != null)
-        {
-            GameLoggingSystem.Instance.LogEvent("Event notification already pending - skipping new event check", "EventSystemLogic");
-            return;
-        }
-        
-        StoryNode bestStory = volumeManager.FindBestAvailableStory(); // Find the best story to tell
-        
-        if (bestStory != null) // Did we find a story to tell?
-        {
-            // Determine the trigger source for this event
-            currentEventTriggerSource = DetermineEventTriggerSource(bestStory);
-            
-            GameLoggingSystem.Instance.LogEvent($"Event '{bestStory.storyTitle}' triggered by: {currentEventTriggerSource}", "EventSystemLogic");
-            
-            CreateEventNotification(bestStory); // Create notification instead of instantly triggering
-        }
-    }
-    
-    // ===== THE BOSS STARTS TELLING A STORY =====
-    // The boss picks up a storybook and starts reading it to the player
-    /// <summary>
-    /// Trigger a specific story node
-    /// </summary>
-    public void TriggerStory(StoryNode storyNode)
-    {
-        if (isEventActive) // Is the boss already telling a story?
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cannot trigger story {storyNode.storyTitle}: another event is active", "EventSystemLogic");
-            return; // Boss is busy, can't start another story
-        }
-        
-        if (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cannot trigger story {storyNode.storyTitle}: systems not ready", "EventSystemLogic");
-            return;
-        }
-        
-        currentStoryNode = storyNode; // Remember which story we're telling
-        isEventActive = true; // Mark that boss is now busy
-        
-        GameLoggingSystem.Instance.LogEvent($"Triggering story: {storyNode.storyTitle}", "EventSystemLogic"); // Boss announces they're starting
-        
-        // Pause time when event starts
-        if (timeSystem != null)
-        {
-            timeSystem.PauseTime(true);
-            GameLoggingSystem.Instance.LogEvent("Time paused for event", "EventSystemLogic");
-        }
-        
-        // Remember tab states and hide all tabs for the event
-        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
-        if (hotkeys != null)
-        {
-            hotkeys.RememberTabStatesAndHideForEvent();
-        }
-        
-        // Start the story through the volume manager
-        if (volumeManager != null)
-        {
-            volumeManager.StartStory(storyNode, volumeManager.GetCurrentVolume());
-        }
-    }
-    
-    // ===== THE BOSS SHOWS ONE PAGE AT A TIME =====
-    // The boss shows one page, waits for the player to finish, then turns to the next page
-    /// <summary>
-    /// Execute a single screen
-    /// </summary>
-    public void ExecuteScreen(EventScreen screen)
-    {
-        GameLoggingSystem.Instance.LogEvent($"Executing screen: {screen.screenType}", "EventSystemLogic");
-        screenManager.ShowScreen(screen);
-    }
-    
-    // ===== THE BOSS'S SCOREBOARD =====
-    // The boss keeps track of how far the player has gotten in each story
-    // Event Score Management
-    public void ModifyEventScore(string scoreName, int change)
-    {
-        EventScore score = GetOrCreateEventScore(scoreName); // Find or create the score
-        score.value += change; // Add or subtract from the score
-        GameLoggingSystem.Instance.LogEvent($"Event score '{scoreName}' changed by {change} (new value: {score.value})", "EventSystemLogic"); // Boss announces the change
-    }
-    
-    public int GetEventScore(string scoreName)
-    {
-        EventScore score = GetEventScoreByName(scoreName); // Find the score
-        return score?.value ?? 0; // Return the value, or 0 if not found
-    }
-    
-    private EventScore GetOrCreateEventScore(string scoreName)
-    {
-        EventScore score = GetEventScoreByName(scoreName); // Try to find existing score
-        if (score == null) // If score doesn't exist
-        {
-            score = new EventScore { name = scoreName, value = 0 }; // Create new score starting at 0
-            eventScores.Add(score); // Add it to the scoreboard
-        }
-        return score;
-    }
-    
-    private EventScore GetEventScoreByName(string scoreName)
-    {
-        return eventScores.Find(s => s.name == scoreName); // Find score by name
-    }
-    
-    // ===== THE BOSS'S CONSEQUENCE TRACKER =====
-    // The boss keeps track of all consequences that happen during a story
-    private List<EventConsequence> cumulativeConsequences = new List<EventConsequence>();
-    // Timed consequences tracked with remaining sevenths
-    private class TimedConsequence
-    {
-        public EventConsequence consequence;
+        public string source;
         public int remainingSevenths;
     }
-    private List<TimedConsequence> activeTimed = new List<TimedConsequence>();
-    
-    /// <summary>
-    /// Add a consequence to the cumulative list (called during story flow)
-    /// </summary>
-    public void AddConsequence(EventConsequence consequence)
+    private readonly List<TimedEffect> activeTimed = new List<TimedEffect>();
+    private int timedEffectCounter;
+
+    private EventScreenManager screenManager;
+    private bool subscribedToTime;
+
+    // ===== LIFECYCLE =====
+
+    protected override void OnSingletonAwake()
     {
-        if (consequence != null)
+        // Explicit == null throughout: Unity's fake-null objects defeat ?? and ?.
+        screenManager = GetComponent<EventScreenManager>();
+        if (screenManager == null) screenManager = gameObject.AddComponent<EventScreenManager>();
+    }
+
+    private void Start() => StartCoroutine(SubscribeWhenReady());
+
+    private IEnumerator SubscribeWhenReady()
+    {
+        var wait = new WaitForSeconds(0.1f);
+        while (!AreSystemsReady()) yield return wait;
+
+        TimeSystem.OnSeventhChange += OnSeventhChanged;
+        TimeSystem.OnPhaseChange += OnTimeMilestone;
+        TimeSystem.OnEchoChange += OnTimeMilestone;
+        TimeSystem.OnCycleChange += OnTimeMilestone;
+        TimeSystem.OnRitualSeventh += OnTimeMilestone;
+        subscribedToTime = true;
+        GameLog.Event("Event system ready", Log);
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        if (!subscribedToTime || TimeSystem == null) return;
+        TimeSystem.OnSeventhChange -= OnSeventhChanged;
+        TimeSystem.OnPhaseChange -= OnTimeMilestone;
+        TimeSystem.OnEchoChange -= OnTimeMilestone;
+        TimeSystem.OnCycleChange -= OnTimeMilestone;
+        TimeSystem.OnRitualSeventh -= OnTimeMilestone;
+    }
+
+    private bool AreSystemsReady() => PopGrowthLogic.Instance != null && GameUnits != null && Stats != null && TimeSystem != null && Volumes != null;
+
+    // ===== TIME TRIGGERS =====
+
+    private void OnSeventhChanged(int newSeventh)
+    {
+        seventhChangeCount++;
+        if (!isEventActive) seventhsSinceLastEvent++;
+        foreach (var key in eventCooldowns.Keys.ToList()) eventCooldowns[key]++;
+
+        TickTimedEffects();
+        if (seventhChangeCount > warmupSevenths) CheckForAvailableEvents();
+    }
+
+    // Phase, echo, cycle and ritual changes are further chances for a story to trigger.
+    private void OnTimeMilestone(int _)
+    {
+        if (seventhChangeCount > warmupSevenths) CheckForAvailableEvents();
+    }
+
+    /// <summary>Offer the best available story as a notification (never more than one pending).</summary>
+    private void CheckForAvailableEvents()
+    {
+        if (isEventActive || currentNotification != null || !AreSystemsReady()) return;
+        var story = Volumes.FindBestAvailableStory();
+        if (story == null) return;
+        currentEventTriggerSource = DetermineEventTriggerSource(story);
+        GameLog.Event($"Offering '{story.storyTitle}' (trigger: {currentEventTriggerSource})", Log);
+        CreateEventNotification(story);
+    }
+
+    /// <summary>Check for events now (debug tools, scripted moments). Respects the start-up warm-up.</summary>
+    public void TriggerEventCheck()
+    {
+        if (seventhChangeCount <= warmupSevenths)
         {
-            cumulativeConsequences.Add(consequence);
-            GameLoggingSystem.Instance.LogEvent($"Added consequence: {consequence.type} {consequence.targetName} {consequence.value}", "EventSystemLogic");
+            GameLog.Event($"Event check skipped: still warming up ({seventhChangeCount}/{warmupSevenths} sevenths)", Log);
+            return;
         }
+        CheckForAvailableEvents();
+        EnsureSlowMotionConsistency();
     }
-    
-    /// <summary>
-    /// Get all cumulative consequences for display
-    /// </summary>
-    public List<EventConsequence> GetCumulativeConsequences()
-    {
-        return new List<EventConsequence>(cumulativeConsequences);
-    }
-    
-    /// <summary>
-    /// Clear all cumulative consequences (called when story ends)
-    /// </summary>
-    public void ClearCumulativeConsequences()
-    {
-        cumulativeConsequences.Clear();
-        GameLoggingSystem.Instance.LogEvent("Cleared cumulative consequences", "EventSystemLogic");
-    }
-    
-    // ===== THE BOSS'S PUBLIC OFFICE =====
-    // Other parts of the game can ask the boss questions or give them new stories
-    
-    /// <summary>
-    /// Create an event notification instead of instantly triggering the event
-    /// </summary>
+
+    // ===== NOTIFICATIONS =====
+
     private void CreateEventNotification(StoryNode storyNode)
     {
         if (eventsContainer == null || eventNotificationPrefab == null)
         {
-            GameLoggingSystem.Instance.LogEvent("Cannot create event notification: missing container or prefab reference", "EventSystemLogic");
+            GameLog.Warning("Event notification container or prefab is not assigned.", Log);
             return;
         }
-        
-        // Check if we already have a notification - prevent stacking
-        if (currentNotification != null)
-        {
-            GameLoggingSystem.Instance.LogEvent($"Event notification already exists for: {currentNotification.name}, skipping new event: {storyNode.storyTitle}", "EventSystemLogic");
-            return;
-        }
-        
-        // Create the notification GameObject
-        GameObject notification = Instantiate(eventNotificationPrefab, eventsContainer);
-        currentNotification = notification; // Track the current notification
-        
-        // Set up the notification with story data
-        SetupEventNotification(notification, storyNode);
-        
-        // Enable slow motion time while event is pending
-        if (TimeSystemLogic.Instance != null)
-        {
-            TimeSystemLogic.Instance.EnableSlowMotion();
-        }
-        
-        GameLoggingSystem.Instance.LogEvent($"Created event notification for: {storyNode.storyTitle}", "EventSystemLogic");
-    }
-    
-    /// <summary>
-    /// Setup the event notification with story data and fade-in animation
-    /// </summary>
-    private void SetupEventNotification(GameObject notification, StoryNode storyNode)
-    {
-        // Store the story node reference for when notification is clicked
+
+        var notification = Instantiate(eventNotificationPrefab, eventsContainer);
         notification.name = $"EventNotification_{storyNode.storyTitle}";
-        
-        // Set up fade-in animation
-        CanvasGroup canvasGroup = notification.GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            canvasGroup = notification.AddComponent<CanvasGroup>();
-        }
-        
-        // Start at 0 alpha and fade in over 1 second
+        currentNotification = notification;
+        notification.AddComponent<EventNotificationData>().storyNode = storyNode;
+
+        var canvasGroup = notification.GetComponent<CanvasGroup>();
+        if (canvasGroup == null) canvasGroup = notification.AddComponent<CanvasGroup>();
         canvasGroup.alpha = 0f;
-        canvasGroup.DOFade(1f, 1f).SetEase(DG.Tweening.Ease.OutQuad);
-        
-        // Store story reference for the button click
-        var storyReference = notification.AddComponent<EventNotificationData>();
-        storyReference.storyNode = storyNode;
-        
-        // Automatically set up the button click handler
-        SetupNotificationButton(notification);
-    }
-    
-    /// <summary>
-    /// Automatically set up the notification button click handler
-    /// </summary>
-    private void SetupNotificationButton(GameObject notification)
-    {
-        // Find the button component in the notification
-        UnityEngine.UI.Button button = notification.GetComponentInChildren<UnityEngine.UI.Button>();
-        if (button == null)
+        canvasGroup.DOFade(1f, 1f).SetEase(Ease.OutQuad);
+
+        var button = notification.GetComponentInChildren<UnityEngine.UI.Button>();
+        if (button != null)
         {
-            GameLoggingSystem.Instance.LogEvent("EventNotification prefab must have a Button component for click handling", "EventSystemLogic");
-            return;
-        }
-        
-        // Clear any existing listeners and add our handler
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => StartEventFromNotification(notification));
-        
-        GameLoggingSystem.Instance.LogEvent("EventNotification button click handler configured automatically", "EventSystemLogic");
-    }
-    
-    /// <summary>
-    /// Start the event from notification (called by notification button click)
-    /// </summary>
-    public void StartEventFromNotification(GameObject notification)
-    {
-        var storyReference = notification.GetComponent<EventNotificationData>();
-        if (storyReference?.storyNode == null)
-        {
-            GameLoggingSystem.Instance.LogEvent("Cannot start event: notification has no story reference", "EventSystemLogic");
-            return;
-        }
-        
-        // Fade out the notification
-        CanvasGroup canvasGroup = notification.GetComponent<CanvasGroup>();
-        if (canvasGroup != null)
-        {
-            canvasGroup.DOFade(0f, 0.5f).SetEase(DG.Tweening.Ease.InQuad)
-                .OnComplete(() => {
-                    if (notification != null)
-                    {
-                        Destroy(notification);
-                    }
-                    // Clear the current notification reference
-                    if (currentNotification == notification)
-                    {
-                        currentNotification = null;
-                        // Note: Slow motion remains active during the event
-                    }
-                });
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => StartEventFromNotification(notification));
         }
         else
         {
-            Destroy(notification);
-            // Clear the current notification reference
-            if (currentNotification == notification)
-            {
-                currentNotification = null;
-                // Note: Slow motion remains active during the event
-            }
+            GameLog.Warning("The event notification prefab needs a Button to be opened.", Log);
         }
-        
-        // Start the actual event
-        TriggerStory(storyReference.storyNode);
-        
-        // Keep slow motion active during the event (will be disabled when event completes)
-        GameLoggingSystem.Instance.LogEvent($"Event started - slow motion remains active until completion", "EventSystemLogic");
-        
-        // Switch to event tab
-        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
-        if (hotkeys != null)
-        {
-            hotkeys.SwitchToEventTab();
-        }
-        
-        GameLoggingSystem.Instance.LogEvent($"Started event from notification: {storyReference.storyNode.storyTitle}", "EventSystemLogic");
+
+        TimeSystemLogic.Instance?.EnableSlowMotion();
     }
-    
-    // Public API
-    public void AddVolume(EventVolume volume)
+
+    /// <summary>Open the story behind a notification (its button calls this). A notification opens once.</summary>
+    public void StartEventFromNotification(GameObject notification)
     {
-        if (volumeManager != null)
-        {
-            volumeManager.AddVolume(volume); // Add the new volume to the manager
-            GameLoggingSystem.Instance.LogEvent($"Added volume: {volume.volumeName}", "EventSystemLogic"); // Boss announces the new volume
-        }
-    }
-    
-    public bool IsEventActive()
-    {
-        return isEventActive; // Tell others if the boss is currently telling a story
-    }
-    
-    public StoryNode GetCurrentStoryNode() => currentStoryNode;
-    
-    /// <summary>
-    /// Get the trigger source of the current event
-    /// </summary>
-    public string GetCurrentEventTriggerSource() => currentEventTriggerSource;
-    
-    /// <summary>
-    /// Get the number of sevenths since the last event completed
-    /// </summary>
-    public int GetSeventhsSinceLastEvent() => seventhsSinceLastEvent;
-    
-    /// <summary>
-    /// Check if a specific event is on cooldown
-    /// </summary>
-    public bool IsEventOnCooldown(string eventName, int requiredCooldown)
-    {
-        if (requiredCooldown <= 0) return false; // No cooldown required
-        
-        if (!eventCooldowns.ContainsKey(eventName))
-        {
-            // Event has never been completed, not on cooldown
-            return false;
-        }
-        
-        int seventhsSinceEvent = eventCooldowns[eventName];
-        bool onCooldown = seventhsSinceEvent < requiredCooldown;
-        
-        if (onCooldown)
-        {
-            GameLoggingSystem.Instance.LogEvent($"Event '{eventName}' is on cooldown: {seventhsSinceEvent}/{requiredCooldown} sevenths", "EventSystemLogic");
-        }
-        
-        return onCooldown;
-    }
-    
-    /// <summary>
-    /// Reset the cooldown for a specific event (called when event completes)
-    /// </summary>
-    private void ResetEventCooldown(string eventName)
-    {
-        eventCooldowns[eventName] = 0;
-        GameLoggingSystem.Instance.LogEvent($"Event '{eventName}' cooldown reset to 0", "EventSystemLogic");
-    }
-    
-    // Public accessors for system references
-    public StatManager GetStatManager() => statManager;
-    public GameUnitsLogic GetGameUnitsLogic() => gameUnitsLogic;
-    public TimeSystemLogic GetTimeSystem() => timeSystem;
-    public EventVolumeManager GetVolumeManager() => volumeManager;
-    public EventScreenManager GetScreenManager() => screenManager;
-    
-    /// <summary>
-    /// Public method to manually trigger event checking (for testing and debugging)
-    /// </summary>
-    public void TriggerEventCheck()
-    {
-        if (isEventActive) // If boss is busy, don't check for new events
-        {
-            return;
-        }
-        
-        if (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent("Systems not ready - cannot check for events", "EventSystemLogic");
-            return;
-        }
-        
-        // Respect system initialization - don't trigger events until first seventh change has passed
-        if (seventhChangeCount < 1)
-        {
-            GameLoggingSystem.Instance.LogEvent($"System not yet initialized (change count: {seventhChangeCount}) - skipping event check until first seventh change passes", "EventSystemLogic");
-            return;
-        }
-        
-        // Check for available events
-        CheckForAvailableEvents();
-        
-        // Log current time state for debugging
-        if (TimeSystemLogic.Instance != null)
-        {
-            float effectiveTime = TimeSystemLogic.Instance.GetEffectiveSecondsPerSeventh();
-            float baseTime = TimeSystemLogic.Instance.BaseSecondsPerSeventh;
-            float progress = TimeSystemLogic.Instance.GetSeventhProgress();
-            float remaining = TimeSystemLogic.Instance.GetRemainingSecondsToSeventh();
-            
-            if (effectiveTime > baseTime)
-            {
-                GameLoggingSystem.Instance.LogEvent($"Time is in SLOW MOTION: {baseTime}s → {effectiveTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s", "EventSystemLogic");
-            }
-            else
-            {
-                GameLoggingSystem.Instance.LogEvent($"Time is NORMAL: {baseTime}s per seventh | Progress: {progress:P1} | Remaining: {remaining:F1}s", "EventSystemLogic");
-            }
-        }
-        
-        // Ensure slow motion state is consistent with event state
-        EnsureSlowMotionConsistency();
-    }
-    
-    /// <summary>
-    /// Manually trigger a specific event with a custom trigger source
-    /// Useful for testing, special events, or scripted sequences
-    /// </summary>
-    /// <param name="storyNode">The story node to trigger</param>
-    /// <param name="triggerSource">Custom trigger source description</param>
-    public void TriggerSpecificEvent(StoryNode storyNode, string triggerSource = "manual")
-    {
-        if (isEventActive)
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cannot trigger specific event: another event is active", "EventSystemLogic");
-            return;
-        }
-        
-        if (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cannot trigger specific event: systems not ready", "EventSystemLogic");
-            return;
-        }
-        
-        // Set the trigger source for this manually triggered event
-        currentEventTriggerSource = triggerSource;
-        
-        GameLoggingSystem.Instance.LogEvent($"Manually triggering event '{storyNode.storyTitle}' with source: {triggerSource}", "EventSystemLogic");
-        
-        // Start the event directly
+        var data = notification != null ? notification.GetComponent<EventNotificationData>() : null;
+        var storyNode = data != null ? data.storyNode : null;
+        if (storyNode == null) return;
+        data.storyNode = null; // a second click while it fades out does nothing
+        var button = notification.GetComponentInChildren<UnityEngine.UI.Button>();
+        if (button != null) button.interactable = false;
+
+        if (currentNotification == notification) currentNotification = null;
+        var canvasGroup = notification.GetComponent<CanvasGroup>();
+        if (canvasGroup != null) canvasGroup.DOFade(0f, 0.5f).SetEase(Ease.InQuad).OnComplete(() => { if (notification != null) Destroy(notification); });
+        else Destroy(notification);
+
         TriggerStory(storyNode);
+        var hotkeys = TabHotkeys.Instance;
+        if (hotkeys != null) hotkeys.SwitchToEventTab();
     }
-    
-    /// <summary>
-    /// Ensure slow motion state is consistent with current event state
-    /// </summary>
+
+    // Slow motion is on exactly while a notification waits and no story runs.
     private void EnsureSlowMotionConsistency()
     {
-        if (TimeSystemLogic.Instance == null) return;
-        
-        bool shouldHaveSlowMotion = currentNotification != null && !isEventActive;
-        bool currentlyHasSlowMotion = TimeSystemLogic.Instance.GetEffectiveSecondsPerSeventh() > TimeSystemLogic.Instance.BaseSecondsPerSeventh;
-        
-        if (shouldHaveSlowMotion && !currentlyHasSlowMotion)
-        {
-            // Should have slow motion but doesn't - enable it
-            TimeSystemLogic.Instance.EnableSlowMotion();
-            GameLoggingSystem.Instance.LogEvent("Slow motion consistency check: re-enabled slow motion for pending notification", "EventSystemLogic");
-        }
-        else if (!shouldHaveSlowMotion && currentlyHasSlowMotion)
-        {
-            // Shouldn't have slow motion but does - disable it
-            TimeSystemLogic.Instance.DisableSlowMotion();
-            GameLoggingSystem.Instance.LogEvent("Slow motion consistency check: disabled slow motion (no pending notifications)", "EventSystemLogic");
-        }
+        var time = TimeSystemLogic.Instance;
+        if (time == null) return;
+        bool shouldBeSlow = currentNotification != null && !isEventActive;
+        bool isSlow = time.GetEffectiveSecondsPerSeventh() > time.BaseSecondsPerSeventh;
+        if (shouldBeSlow && !isSlow) time.EnableSlowMotion();
+        else if (!shouldBeSlow && isSlow) time.DisableSlowMotion();
     }
-    
+
+    // ===== STORY FLOW =====
+
+    /// <summary>Start telling a story: pauses time and hides the HUD tabs.</summary>
+    public void TriggerStory(StoryNode storyNode)
+    {
+        if (storyNode == null || isEventActive || !AreSystemsReady())
+        {
+            GameLog.Event($"Cannot start '{storyNode?.storyTitle}': {(isEventActive ? "another event is active" : "systems not ready")}", Log);
+            return;
+        }
+        currentStoryNode = storyNode;
+        isEventActive = true;
+        TimeSystem.PauseTime(true);
+        var hotkeys = TabHotkeys.Instance;
+        if (hotkeys != null) hotkeys.RememberTabStatesAndHideForEvent();
+
+        // A story's own consequences (its "# consequences:" tag) apply however it ends.
+        ClearCumulativeConsequences();
+        if (storyNode.storyConsequences != null) foreach (var consequence in storyNode.storyConsequences) AddConsequence(consequence);
+
+        Volumes.StartStory(storyNode, Volumes.GetCurrentVolume());
+        GameLog.Event($"Story started: {storyNode.storyTitle}", Log);
+    }
+
+    /// <summary>Start a specific story immediately with a custom trigger label (tests, scripted moments).</summary>
+    public void TriggerSpecificEvent(StoryNode storyNode, string triggerSource = "manual")
+    {
+        if (isEventActive || storyNode == null) return;
+        currentEventTriggerSource = triggerSource;
+        TriggerStory(storyNode);
+    }
+
+    public void ExecuteScreen(EventScreen screen) => screenManager.ShowScreen(screen);
+
     /// <summary>
-    /// Called when a story completes to resume time and clean up
+    /// End the story: apply its consequences, resume time and restore the HUD. Reached through
+    /// <see cref="EventVolumeManager.CompleteStory"/>; runs once per story.
     /// </summary>
     public void OnStoryCompleted()
     {
-        GameLoggingSystem.Instance.LogEvent("Story completed - resuming time and cleaning up", "EventSystemLogic");
-        
-        // Apply satisfaction penalty only for events triggered by dark_morale conditions
-        if (currentStoryNode != null && IsEventTriggeredByDarkMorale(currentStoryNode))
+        if (!isEventActive && currentStoryNode == null)
         {
-            if (StatManager.Instance != null)
-            {
-                StatManager.Instance.ChangeSatisfactionPoints(-15, $"Dark Morale Event: {currentStoryNode.storyTitle}");
-            }
+            GameLog.Warning("OnStoryCompleted called with no story running; ignored.", Log);
+            return;
         }
-        
-        // Hide the current event screen first
-        if (screenManager != null)
+        var story = currentStoryNode;
+        if (screenManager != null) screenManager.HideCurrentScreen();
+
+        if (story != null && IsEventTriggeredByDarkMorale(story) && darkMoraleSatisfactionPenalty != 0)
         {
-            screenManager.HideCurrentScreen();
-            GameLoggingSystem.Instance.LogEvent("Event screen hidden", "EventSystemLogic");
+            StatManager.Instance?.ChangeSatisfactionPoints(-Mathf.Abs(darkMoraleSatisfactionPenalty), $"Dark Morale Event: {story.storyTitle}");
         }
-        
-        // Apply cumulative consequences from the entire story flow
-        if (cumulativeConsequences.Count > 0)
-        {
-            if (AreSystemsReady())
-            {
-                GameLoggingSystem.Instance.LogEvent($"Applying {cumulativeConsequences.Count} cumulative consequences from story flow", "EventSystemLogic");
-                foreach (EventConsequence consequence in cumulativeConsequences)
-                {
-                    if (IsTimedEligible(consequence) && consequence.durationSevenths > 0)
-                    {
-                        // Apply once and register for expiration
-                        ApplyConsequence(consequence);
-                        activeTimed.Add(new TimedConsequence { consequence = consequence, remainingSevenths = consequence.durationSevenths });
-                    }
-                    else
-                    {
-                        ApplyConsequence(consequence);
-                    }
-                }
-                
-                // Ensure all resources maintain their minimum click power after applying consequences
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
-                    GameLoggingSystem.Instance.LogEvent("Validated all resource click power minimums after applying consequences", "EventSystemLogic");
-                }
-                
-                // Trigger immediate council recalculation to reflect event consequence effects
-                if (GovernmentLogic.Instance != null)
-                {
-                    GovernmentLogic.Instance.ProcessAllSeatBonuses();
-                    GameLoggingSystem.Instance.LogEvent("Triggered immediate council recalculation after applying event consequences", "EventSystemLogic");
-                }
-            }
-            else
-            {
-                GameLoggingSystem.Instance.LogEvent($"Cannot apply cumulative consequences: systems not ready", "EventSystemLogic");
-            }
-        }
-        
-        // Clear the cumulative consequences for the next story
+
+        string title = story != null ? story.storyTitle : "Event";
+        foreach (var consequence in cumulativeConsequences) ApplyConsequence(consequence, title);
         ClearCumulativeConsequences();
-        
-        // Resume time when event ends
-        if (timeSystem != null)
+
+        if (TimeSystem != null) TimeSystem.PauseTime(false);
+        TimeSystemLogic.Instance?.DisableSlowMotion();
+        var hotkeys = TabHotkeys.Instance;
+        if (hotkeys != null) hotkeys.RestoreTabStatesAfterEvent();
+
+        if (story != null)
         {
-            timeSystem.PauseTime(false);
-            GameLoggingSystem.Instance.LogEvent("Time resumed after event", "EventSystemLogic");
-            // Ensure we are subscribed to seventh changes for timed expirations
-            timeSystem.OnSeventhChange -= OnTimedSeventh; // avoid dup
-            timeSystem.OnSeventhChange += OnTimedSeventh;
+            eventCooldowns[story.nodeName ?? title] = 0;
+            RecordCompletion(story.nodeName);
+            if (!string.Equals(story.nodeName, story.storyTitle, StringComparison.OrdinalIgnoreCase)) RecordCompletion(story.storyTitle);
         }
-        
-        // Disable slow motion time when event completes
-        if (TimeSystemLogic.Instance != null)
-        {
-            TimeSystemLogic.Instance.DisableSlowMotion();
-            GameLoggingSystem.Instance.LogEvent("Slow motion disabled - event completed", "EventSystemLogic");
-        }
-        
-        // Restore previous tab states and HUD visibility
-        TabHotkeys hotkeys = FindAnyObjectByType<TabHotkeys>();
-        if (hotkeys != null)
-        {
-            hotkeys.RestoreTabStatesAfterEvent();
-            GameLoggingSystem.Instance.LogEvent("Tab states and HUD restored", "EventSystemLogic");
-        }
-        else
-        {
-            GameLoggingSystem.Instance.LogEvent("ERROR: TabHotkeys not found for restoration", "EventSystemLogic");
-        }
-        
-        // Reset event state
+
         isEventActive = false;
-        
-        // Reset the cooldown for this specific event
-        if (currentStoryNode != null)
-        {
-            ResetEventCooldown(currentStoryNode.nodeName);
-        }
-        
         currentStoryNode = null;
-        
-        // Set the sevenths counter to -1 to avoid issues in logic
+        // The next seventh brings this back to 0.
         seventhsSinceLastEvent = -1;
+        GameLog.Event($"Story completed: {title}", Log);
     }
+
+    private void RecordCompletion(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return;
+        completionCounts.TryGetValue(key, out int count);
+        completionCounts[key] = count + 1;
+    }
+
+    // ===== CONSEQUENCES =====
+
+    /// <summary>Queue a consequence; everything queued is applied when the story completes.</summary>
+    public void AddConsequence(EventConsequence consequence)
+    {
+        if (consequence == null) return;
+        cumulativeConsequences.Add(consequence);
+        GameLog.Event($"Queued consequence: {consequence.type} {consequence.targetName} {consequence.value}{(consequence.durationSevenths > 0 ? $" for {consequence.durationSevenths} sevenths" : "")}", Log);
+    }
+
+    public List<EventConsequence> GetCumulativeConsequences() => new List<EventConsequence>(cumulativeConsequences);
+
+    public void ClearCumulativeConsequences() => cumulativeConsequences.Clear();
 
     /// <summary>
-    /// Determine what triggered this event by analyzing its conditions
+    /// Modifier consequences as effects. Production changes are % output of a resource or section;
+    /// click power changes are flat or % of a resource or section.
     /// </summary>
-    /// <param name="storyNode">The story node to analyze</param>
-    /// <returns>String describing the trigger source</returns>
-    private string DetermineEventTriggerSource(StoryNode storyNode)
-    {
-        if (storyNode == null) return "unknown";
-        
-        // Check for dark_morale score conditions first (highest priority)
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.ScoreCheck && 
-                string.Equals(condition.targetName, "dark_morale", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return $"dark_morale_score_{condition.requiredValue}";
-            }
-        }
-        
-        // Check for time-based triggers
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.SeventhCheck ||
-                condition.type == EventCondition.ConditionType.PhaseCheck ||
-                condition.type == EventCondition.ConditionType.EchoCheck ||
-                condition.type == EventCondition.ConditionType.CycleCheck ||
-                condition.type == EventCondition.ConditionType.RitualSeventhCheck)
-            {
-                return $"time_based_{condition.type}";
-            }
-        }
-        
-        // Check for resource-based triggers
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.ResourceCheck)
-            {
-                return $"resource_{condition.targetName}_{condition.comparison}_{condition.requiredValue}";
-            }
-        }
-        
-        // Check for technology-based triggers
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.TechnologyCheck)
-            {
-                return $"technology_{condition.targetName}";
-            }
-        }
-        
-        // Check for stat-based triggers
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.StatCheck)
-            {
-                return $"stat_{condition.targetName}_{condition.comparison}_{condition.requiredValue}";
-            }
-        }
-        
-        // Check for population-based triggers
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.PopulationCheck ||
-                condition.type == EventCondition.ConditionType.HousingCheck ||
-                condition.type == EventCondition.ConditionType.VagrantsCheck ||
-                condition.type == EventCondition.ConditionType.DeathsCheck)
-            {
-                return $"population_{condition.type}_{condition.comparison}_{condition.requiredValue}";
-            }
-        }
-        
-        // Check for no-event-in-sevenths conditions
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.NoEventInSeventhsCheck)
-            {
-                return $"no_events_{condition.requiredValue}_sevenths";
-            }
-        }
-        
-        return "unknown_trigger";
-    }
-
-    /// <summary>
-    /// Check if an event was triggered by dark_morale conditions
-    /// </summary>
-    /// <param name="storyNode">The story node to check</param>
-    /// <returns>True if the event was triggered by dark_morale conditions</returns>
-    private bool IsEventTriggeredByDarkMorale(StoryNode storyNode)
-    {
-        if (storyNode == null) return false;
-        
-        // Check if this event has conditions that depend on dark_morale score
-        foreach (var condition in storyNode.storyConditions)
-        {
-            if (condition.type == EventCondition.ConditionType.ScoreCheck && 
-                string.Equals(condition.targetName, "dark_morale", System.StringComparison.OrdinalIgnoreCase))
-            {
-                // This event requires a certain dark_morale score to trigger
-                // If it's triggering, it means dark_morale conditions were met
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private bool IsTimedEligible(EventConsequence c)
+    public static bool TryGetEffect(EventConsequence c, out GameEffect effect)
     {
         switch (c.type)
         {
             case EventConsequence.ConsequenceType.ProductionPercentChange:
+                effect = new GameEffect(GameEffectType.ResourceModifier, c.value, ModifierType.Percentage, c.targetName, ScopeType.Individual);
+                return true;
             case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
+                effect = new GameEffect(GameEffectType.ResourceModifier, c.value, ModifierType.Percentage, c.targetName, ScopeType.Section);
+                return true;
             case EventConsequence.ConsequenceType.ClickPowerChange:
+                effect = new GameEffect(GameEffectType.ClickPowerBonus, c.value, ModifierType.Add, c.targetName, ScopeType.Individual);
+                return true;
             case EventConsequence.ConsequenceType.ClickPowerPercentChange:
+                effect = new GameEffect(GameEffectType.ClickPowerBonus, c.value, ModifierType.Percentage, c.targetName, ScopeType.Individual);
+                return true;
             case EventConsequence.ConsequenceType.ClickPowerChangeSection:
+                effect = new GameEffect(GameEffectType.ClickPowerBonus, c.value, ModifierType.Add, c.targetName, ScopeType.Section);
+                return true;
             case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
+                effect = new GameEffect(GameEffectType.ClickPowerBonus, c.value, ModifierType.Percentage, c.targetName, ScopeType.Section);
                 return true;
             default:
+                effect = default;
                 return false;
         }
     }
 
-    private void OnTimedSeventh(int currentSeventh)
+    private void ApplyConsequence(EventConsequence consequence, string storyTitle)
     {
-        if (activeTimed.Count == 0) return;
-        
-        bool anyConsequencesReverted = false;
-        
-        // Decrement and expire any that hit 0; for expiration we remove the same effect
-        for (int i = activeTimed.Count - 1; i >= 0; i--)
-        {
-            var t = activeTimed[i];
-            t.remainingSevenths = Mathf.Max(0, t.remainingSevenths - 1);
-            if (t.remainingSevenths == 0)
-            {
-                RevertTimedConsequence(t.consequence);
-                activeTimed.RemoveAt(i);
-                anyConsequencesReverted = true;
-            }
-        }
-        
-        // Ensure all resources maintain their minimum click power after processing timed consequences
-        if (gameUnitsLogic != null)
-        {
-            gameUnitsLogic.EnsureAllResourceClickPowerMinimums();
-        }
-        
-        // Trigger immediate council recalculation if any timed consequences were reverted
-        if (anyConsequencesReverted && GovernmentLogic.Instance != null)
-        {
-            GovernmentLogic.Instance.ProcessAllSeatBonuses();
-        }
-    }
+        if (consequence == null) return;
 
-    private void RevertTimedConsequence(EventConsequence c)
-    {
-        // Revert by removing the source entry used when applying (story title)
-        string source = currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence";
-        switch (c.type)
+        if (TryGetEffect(consequence, out var effect))
         {
-            case EventConsequence.ConsequenceType.ProductionPercentChange:
-                if (GlobalProductionManager.Instance != null)
-                {
-                    bool isPositive = c.value >= 0;
-                    GlobalProductionManager.Instance.AdjustPercentageModifier(c.targetName, Mathf.Abs(c.value), isPositive, false, source);
-                }
-                break;
-            case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
-                if (GlobalProductionManager.Instance != null)
-                {
-                    bool isPositive = c.value >= 0;
-                    GlobalProductionManager.Instance.AdjustPercentageModifierForSection(c.targetName, Mathf.Abs(c.value), isPositive, false, source);
-                }
-                break;
-            case EventConsequence.ConsequenceType.ClickPowerChange:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPower(c.targetName, -c.value);
-                }
-                break;
-            case EventConsequence.ConsequenceType.ClickPowerPercentChange:
-                if (gameUnitsLogic != null)
-                {
-                    // Revert percentage by inverse factor
-                    float revertPercent = -c.value;
-                    gameUnitsLogic.AdjustClickPowerPercent(c.targetName, revertPercent);
-                }
-                break;
-            case EventConsequence.ConsequenceType.ClickPowerChangeSection:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPowerForSection(c.targetName, -c.value);
-                }
-                break;
-            case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
-                if (gameUnitsLogic != null)
-                {
-                    float revertSectionPercent = -c.value;
-                    gameUnitsLogic.AdjustClickPowerPercentForSection(c.targetName, revertSectionPercent);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    
-    /// <summary>
-    /// Apply a single consequence from a completed story
-    /// </summary>
-    private void ApplyConsequence(EventConsequence consequence)
-    {
-        if (!AreSystemsReady())
-        {
-            GameLoggingSystem.Instance.LogEvent($"Cannot apply consequence {consequence.type}: systems not ready", "EventSystemLogic");
+            if (consequence.durationSevenths > 0)
+            {
+                string source = $"Event: {storyTitle} #{++timedEffectCounter}";
+                if (EffectRouter.Apply(effect, source)) activeTimed.Add(new TimedEffect { source = source, remainingSevenths = consequence.durationSevenths });
+            }
+            else
+            {
+                EffectRouter.Apply(effect, $"Event: {storyTitle}");
+            }
             return;
         }
-        
+
+        var pop = PopGrowthLogic.Instance;
         switch (consequence.type)
         {
             case EventConsequence.ConsequenceType.ScoreChange:
                 ModifyEventScore(consequence.targetName, consequence.value);
                 break;
-                
             case EventConsequence.ConsequenceType.StatChange:
-                if (statManager != null)
-                {
-                    int currentValue = statManager.GetStatValue(consequence.targetName);
-                    statManager.UpdateStat(consequence.targetName, currentValue + consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply StatChange consequence: StatManager is null", "EventSystemLogic");
-                }
+                if (Stats != null) Stats.ModifyStat(consequence.targetName, consequence.value);
                 break;
-                
             case EventConsequence.ConsequenceType.ResourceChange:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.ChangeResourceFromName(consequence.targetName, consequence.value, false);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ResourceChange consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
+                if (GameUnits != null) GameUnits.ChangeResourceFromName(consequence.targetName, consequence.value, false);
                 break;
-                
             case EventConsequence.ConsequenceType.ProductionUnitChange:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.ChangeProductionUnitFromName(consequence.targetName, consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ProductionUnitChange consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
+                if (GameUnits != null) GameUnits.ChangeProductionUnitFromName(consequence.targetName, consequence.value);
                 break;
-            
-            case EventConsequence.ConsequenceType.ProductionPercentChange:
-                if (GlobalProductionManager.Instance != null)
-                {
-                    // Positive value increases production; negative decreases
-                    bool isPositive = consequence.value >= 0;
-                    float amount = Mathf.Abs(consequence.value);
-                    // Add a persistent percentage modifier, tracked by event name for source
-                    GlobalProductionManager.Instance.AdjustPercentageModifier(
-                        consequence.targetName,
-                        amount,
-                        isPositive,
-                        true,
-                        currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence"
-                    );
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ProductionPercentChange consequence: GlobalProductionManager.Instance is null", "EventSystemLogic");
-                }
-                break;
-
-            case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
-                if (GlobalProductionManager.Instance != null)
-                {
-                    bool isPositive = consequence.value >= 0;
-                    float amount = Mathf.Abs(consequence.value);
-                    GlobalProductionManager.Instance.AdjustPercentageModifierForSection(
-                        consequence.targetName,
-                        amount,
-                        isPositive,
-                        true,
-                        currentStoryNode != null ? currentStoryNode.storyTitle : "EventConsequence"
-                    );
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ProductionPercentChangeSection consequence: GlobalProductionManager.Instance is null", "EventSystemLogic");
-                }
-                break;
-
-            case EventConsequence.ConsequenceType.ClickPowerChange:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPower(consequence.targetName, consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ClickPowerChange consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
-                break;
-
-            case EventConsequence.ConsequenceType.ClickPowerPercentChange:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPowerPercent(consequence.targetName, consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ClickPowerPercentChange consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
-                break;
-
-            case EventConsequence.ConsequenceType.ClickPowerChangeSection:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPowerForSection(consequence.targetName, consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ClickPowerChangeSection consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
-                break;
-
-            case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
-                if (gameUnitsLogic != null)
-                {
-                    gameUnitsLogic.AdjustClickPowerPercentForSection(consequence.targetName, consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply ClickPowerPercentChangeSection consequence: GameUnitsLogic is null", "EventSystemLogic");
-                }
-                break;
-                
             case EventConsequence.ConsequenceType.TechnologyEnlightened:
-                if (gameUnitsLogic != null && gameUnitsLogic.researchTab != null)
-                {
-                    GameObject techSlotObj = gameUnitsLogic.researchTab.slots.Find(slot => slot.name == consequence.targetName);
-                    if (techSlotObj != null)
-                    {
-                        GameTechnologySlot techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
-                        if (techSlot != null)
-                        {
-                            techSlot.enlightenedCompleted = true;
-                            // Visually reflect enlightened progress immediately
-                            techSlot.researchProgress = Mathf.Max(techSlot.researchProgress, Mathf.Clamp01(techSlot.enlightenedBonusPercent));
-                            techSlot.RefreshTechnologyUI();
-                            techSlot.UpdateProgressUI();
-                            // Ensure enlightened technologies become visible regardless of prerequisites
-                            if (techSlot.technologyTreeLogic != null)
-                            {
-                                techSlot.technologyTreeLogic.DetermineTechnologyVisibility(techSlot);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply TechnologyEnlightened consequence: GameUnitsLogic or researchTab is null", "EventSystemLogic");
-                }
+                EnlightenTechnology(consequence.targetName);
                 break;
-                
             case EventConsequence.ConsequenceType.PopulationChange:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    // Population can only be REMOVED (negative values)
-                    // Positive values are not allowed - use VagrantsChange instead
-                    if (consequence.value < 0)
-                    {
-                        PopGrowthLogic.Instance.ModifyPopulation(consequence.value);
-                    }
-                    else
-                    {
-                        GameLoggingSystem.Instance.LogEvent($"PopulationChange consequence with positive value {consequence.value} is not allowed. Use VagrantsChange instead.", "EventSystemLogic");
-                    }
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply PopulationChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
-                }
+                if (consequence.value < 0) pop?.ModifyPopulation(consequence.value);
+                else GameLog.Warning($"PopulationChange {consequence.value} in '{storyTitle}' ignored: population can only be removed. Use VagrantsChange to add people.", Log);
                 break;
-                
             case EventConsequence.ConsequenceType.HousingChange:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    PopGrowthLogic.Instance.ModifyHousing(consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply HousingChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
-                }
+                pop?.ModifyHousing(consequence.value);
                 break;
-                
             case EventConsequence.ConsequenceType.VagrantsChange:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    PopGrowthLogic.Instance.ModifyVagrants(consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply VagrantsChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
-                }
+                pop?.ModifyVagrants(consequence.value);
                 break;
-                
             case EventConsequence.ConsequenceType.DeathsChange:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    PopGrowthLogic.Instance.ProcessEventDeaths(consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply DeathsChange consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
-                }
+                pop?.ProcessEventDeaths(consequence.value);
                 break;
-                
             case EventConsequence.ConsequenceType.DeathRecordsRevision:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    PopGrowthLogic.Instance.ReviseDeathRecords(consequence.value);
-                }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply DeathRecordsRevision consequence: PopGrowthLogic.Instance is null", "EventSystemLogic");
-                }
+                pop?.ReviseDeathRecords(consequence.value);
                 break;
-                
-            case EventConsequence.ConsequenceType.UnlockEvent:
-                GameLoggingSystem.Instance.LogEvent($"UnlockEvent consequence for '{consequence.targetName}' - this would need to be implemented", "EventSystemLogic");
-                break;
-                
             case EventConsequence.ConsequenceType.WeatherChange:
-                if (CelestialWeatherSystemLogic.Instance != null)
+                ApplyWeatherChange(consequence);
+                break;
+            case EventConsequence.ConsequenceType.UnlockEvent:
+                if (Volumes == null || !Volumes.UnlockStory(consequence.targetName))
                 {
-                    // Check if this is a clear command
-                    if (string.Equals(consequence.targetName, "clear", StringComparison.OrdinalIgnoreCase))
-                    {
-                        CelestialWeatherSystemLogic.Instance.ClearWeather();
-                        GameLoggingSystem.Instance.LogEvent(
-                            "Event cleared all weather - returning to procedural system", 
-                            "EventSystemLogic"
-                        );
-                    }
-                    else
-                    {
-                        // Use centralized weather profile lookup with validation
-                        WeatherProfileSO weatherProfile = CelestialWeatherSystemLogic.FindWeatherProfile(consequence.targetName);
-                        if (weatherProfile != null)
-                        {
-                            // Check if this is permanent (value = 1) or procedural (value = 0)
-                            bool isPermanent = consequence.value == 1;
-                            
-                            if (isPermanent)
-                            {
-                                // Permanent weather - blocks procedural changes
-                                CelestialWeatherSystemLogic.Instance.SetWeatherProfileFromEvent(weatherProfile, isPermanent: true, ignoreEchoValidation: true);
-                                GameLoggingSystem.Instance.LogEvent(
-                                    $"Event changed weather to: {weatherProfile.weatherDisplayName} (permanent)", 
-                                    "EventSystemLogic"
-                                );
-                            }
-                            else
-                            {
-                                // Procedural weather - participates in normal weather system
-                                CelestialWeatherSystemLogic.Instance.SetWeatherProfileFromEvent(weatherProfile, isPermanent: false, ignoreEchoValidation: true);
-                                GameLoggingSystem.Instance.LogEvent(
-                                    $"Event changed weather to: {weatherProfile.weatherDisplayName} (procedural - subject to normal decay)", 
-                                    "EventSystemLogic"
-                                );
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[EventSystemLogic] Weather profile '{consequence.targetName}' not found");
-                        }
-                    }
+                    GameLog.Warning($"unlock_event '{consequence.targetName}' in '{storyTitle}': no such story.", Log);
                 }
-                else
-                {
-                    GameLoggingSystem.Instance.LogEvent($"Cannot apply WeatherChange consequence: CelestialWeatherSystemLogic.Instance is null", "EventSystemLogic");
-                }
+                break;
+            default:
+                GameLog.Error($"Unhandled consequence type {consequence.type} in '{storyTitle}'.", Log);
                 break;
         }
     }
-    
-    // PSEUDOCODE: Cleanup method to unsubscribe from time system events
-    private void OnDestroy()
+
+    private void EnlightenTechnology(string technologyName)
     {
-        if (timeSystem != null)
+        var techSlot = GameUnits != null ? GameUnits.GetTechnologySlot(technologyName) : null;
+        if (techSlot == null)
         {
-            timeSystem.OnPhaseChange -= OnPhaseChanged; // PSEUDOCODE: Unsubscribe from phase changes
-            timeSystem.OnEchoChange -= OnEchoChanged; // PSEUDOCODE: Unsubscribe from echo changes
-            timeSystem.OnCycleChange -= OnCycleChanged; // PSEUDOCODE: Unsubscribe from cycle changes
-            timeSystem.OnRitualSeventh -= OnRitualSeventh; // PSEUDOCODE: Unsubscribe from ritual sevenths
-            timeSystem.OnSeventhChange -= OnSeventhChanged; // Unsubscribe from seventh changes
-            GameLoggingSystem.Instance.LogEvent("Unsubscribed from time system events", "EventSystemLogic");
+            GameLog.Warning($"TechnologyEnlightened: '{technologyName}' is not in the research tab.", Log);
+            return;
+        }
+        techSlot.enlightenedCompleted = true;
+        techSlot.researchProgress = Mathf.Max(techSlot.researchProgress, Mathf.Clamp01(techSlot.enlightenedBonusPercent));
+        techSlot.RefreshTechnologyUI();
+        techSlot.UpdateProgressUI();
+        if (techSlot.technologyTreeLogic != null) techSlot.technologyTreeLogic.DetermineTechnologyVisibility(techSlot);
+    }
+
+    // targetName is a weather profile or "clear"; value 1 makes it permanent, 0 lets procedural weather replace it.
+    private static void ApplyWeatherChange(EventConsequence consequence)
+    {
+        var weather = CelestialWeatherSystemLogic.Instance;
+        if (weather == null) return;
+        if (string.Equals(consequence.targetName, "clear", StringComparison.OrdinalIgnoreCase))
+        {
+            weather.ClearWeather();
+            return;
+        }
+        var profile = CelestialWeatherSystemLogic.FindWeatherProfile(consequence.targetName);
+        if (profile == null)
+        {
+            GameLog.Warning($"WeatherChange: profile '{consequence.targetName}' not found.", Log);
+            return;
+        }
+        weather.SetWeatherProfileFromEvent(profile, isPermanent: consequence.value == 1, ignoreEchoValidation: true);
+    }
+
+    private void TickTimedEffects()
+    {
+        for (int i = activeTimed.Count - 1; i >= 0; i--)
+        {
+            if (--activeTimed[i].remainingSevenths > 0) continue;
+            EffectRouter.RemoveSource(activeTimed[i].source);
+            GameLog.Event($"Timed consequence expired: {activeTimed[i].source}", Log);
+            activeTimed.RemoveAt(i);
         }
     }
+
+    // ===== SCORES, COOLDOWNS, COMPLETIONS =====
+
+    public void ModifyEventScore(string scoreName, int change)
+    {
+        if (string.IsNullOrEmpty(scoreName)) return;
+        var score = eventScores.Find(s => string.Equals(s.name, scoreName, StringComparison.OrdinalIgnoreCase));
+        if (score == null)
+        {
+            score = new EventScore { name = scoreName, value = 0 };
+            eventScores.Add(score);
+        }
+        score.value += change;
+        GameLog.Event($"Score '{scoreName}' {change:+#;-#;0} → {score.value}", Log);
+    }
+
+    public int GetEventScore(string scoreName)
+    {
+        var score = eventScores.Find(s => string.Equals(s.name, scoreName, StringComparison.OrdinalIgnoreCase));
+        return score?.value ?? 0;
+    }
+
+    /// <summary>Every event score recorded so far (diagnostics, saves).</summary>
+    public IReadOnlyList<EventScore> GetEventScores() => eventScores;
+
+    /// <summary>How many times a story (by node name or title) has completed.</summary>
+    public int GetCompletionCount(string storyName) => storyName != null && completionCounts.TryGetValue(storyName, out int count) ? count : 0;
+
+    public bool IsEventOnCooldown(string eventName, int requiredCooldown)
+    {
+        return requiredCooldown > 0 && eventName != null && eventCooldowns.TryGetValue(eventName, out int since) && since < requiredCooldown;
+    }
+
+    public int GetSeventhsSinceLastEvent() => seventhsSinceLastEvent;
+
+    // ===== TRIGGER ANALYSIS =====
+
+    private static readonly EventCondition.ConditionType[] TimeConditions =
+    {
+        EventCondition.ConditionType.SeventhCheck, EventCondition.ConditionType.PhaseCheck, EventCondition.ConditionType.EchoCheck,
+        EventCondition.ConditionType.CycleCheck, EventCondition.ConditionType.RitualSeventhCheck
+    };
+
+    private static readonly EventCondition.ConditionType[] PopulationConditions =
+    {
+        EventCondition.ConditionType.PopulationCheck, EventCondition.ConditionType.HousingCheck, EventCondition.ConditionType.VagrantsCheck,
+        EventCondition.ConditionType.DeathsCheck, EventCondition.ConditionType.VagrantDeathsCheck, EventCondition.ConditionType.TrueDeathsCheck
+    };
+
+    /// <summary>A label for what most likely triggered a story, by condition priority.</summary>
+    private static string DetermineEventTriggerSource(StoryNode storyNode)
+    {
+        var conditions = storyNode?.storyConditions;
+        if (conditions == null) return "unknown";
+        var darkMorale = conditions.FirstOrDefault(IsDarkMoraleCondition);
+        if (darkMorale != null) return $"dark_morale_score_{darkMorale.requiredValue}";
+        var c = conditions.FirstOrDefault(x => TimeConditions.Contains(x.type));
+        if (c != null) return $"time_based_{c.type}";
+        c = conditions.FirstOrDefault(x => x.type == EventCondition.ConditionType.ResourceCheck);
+        if (c != null) return $"resource_{c.targetName}_{c.comparison}_{c.requiredValue}";
+        c = conditions.FirstOrDefault(x => x.type == EventCondition.ConditionType.TechnologyCheck);
+        if (c != null) return $"technology_{c.targetName}";
+        c = conditions.FirstOrDefault(x => x.type == EventCondition.ConditionType.StatCheck);
+        if (c != null) return $"stat_{c.targetName}_{c.comparison}_{c.requiredValue}";
+        c = conditions.FirstOrDefault(x => PopulationConditions.Contains(x.type));
+        if (c != null) return $"population_{c.type}_{c.comparison}_{c.requiredValue}";
+        c = conditions.FirstOrDefault(x => x.type == EventCondition.ConditionType.NoEventInSeventhsCheck);
+        if (c != null) return $"no_events_{c.requiredValue}_sevenths";
+        return "unknown_trigger";
+    }
+
+    private static bool IsDarkMoraleCondition(EventCondition condition) =>
+        condition.type == EventCondition.ConditionType.ScoreCheck && string.Equals(condition.targetName, DarkMoraleScore, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsEventTriggeredByDarkMorale(StoryNode storyNode) => storyNode.storyConditions != null && storyNode.storyConditions.Any(IsDarkMoraleCondition);
+
+    // ===== ACCESSORS =====
+
+    public void AddVolume(EventVolume volume)
+    {
+        if (Volumes != null) Volumes.AddVolume(volume);
+    }
+
+    public bool IsEventActive() => isEventActive;
+
+    public StoryNode GetCurrentStoryNode() => currentStoryNode;
+
+    public string GetCurrentEventTriggerSource() => currentEventTriggerSource;
+
+    public StatManager GetStatManager() => Stats;
+
+    public GameUnitsLogic GetGameUnitsLogic() => GameUnits;
+
+    public TimeSystemLogic GetTimeSystem() => TimeSystem;
+
+    public EventVolumeManager GetVolumeManager() => Volumes;
+
+    public EventScreenManager GetScreenManager() => screenManager;
 }
 
-/// <summary>
-/// Simple component to store story reference in event notification
-/// </summary>
+/// <summary>Stores the story a notification opens.</summary>
 public class EventNotificationData : MonoBehaviour
 {
     public StoryNode storyNode;
-} 
+}

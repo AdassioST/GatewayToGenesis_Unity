@@ -16,6 +16,17 @@ The Event System consists of several interconnected components that work togethe
 - **`EventScreenManager`**: Manages UI display, screen transitions, vignette transparency, and progressive text reveal
 - **`InkDrivenEventSetup`**: Automatically parses Ink files and creates structured story nodes with metadata extraction
 - **`PopGrowthLogic`**: Manages population, housing, vagrants, and dual death tracking systems with event pause integration
+- **`EventScript`**: The authoring grammar (tags, conditions, consequences, `duration:`, choice metadata), parsed in one place
+- **`EventStoryIndex`**: Every knot of every compiled story, precompiled at start-up; screens read it instead of parsing
+- **`ChorusScreenManager`** + **`ChorusRules`**: The chorus drag-and-roll; `ChorusRules` owns the d100, Piety bonus, crits, rare events and costs
+- **`EventText`**: Player-facing wording of consequences and requirements (outro, tooltips, requirement slots)
+- **`EventContentCheck`**: Checks that every resource, section, building, technology, weather and civic a story names exists
+
+> **Validation.** After editing a story, run the EditMode test `ContentTests.AllStoriesValidate` (Window > General >
+> Test Runner). It lists every unknown keyword, bad number, broken knot link, chorus without Idealism/Realism, and
+> misspelled name (for example a section that does not exist) by knot. The same checks run when the game starts and
+> print as warnings in the Console. The grammar summary at the top of `EventScript.cs` is the reference when this
+> guide and the code disagree.
 
 ### **🎨 Screen Flow System**
 Events progress through a structured screen flow system:
@@ -118,7 +129,7 @@ Parsing rules (no redundancy, supports multi-item groups):
   - Paths are captured separately via `success:`, `failure:`, etc.
 
 ### Consequences authoring (reworked)
-- **Chorus**: keep only routing (`success:`, `failure:`, `crit_*:`, `rare_event:`) and gating (`requirements:`) and display-only costs (`requirements:cost:`) in `&C`. Do not put consequences here.
+- **Chorus**: `&C` holds routing (`success:`, `failure:`, `crit_*:`, `rare_event:`), gating (`requirements:`), costs (`requirements:cost:`), consequences that happen whichever way the roll goes (`consequences:`) and per-outcome consequences (`success:consequences:`, `failure:consequences:`, `crit_success:consequences:`, `crit_failure:consequences:`, `rare_event:consequences:`). Costs and the outcome's consequences are queued the moment the roll resolves; everything queued applies when the story completes. The choice tooltip lists each outcome with its current odds.
 - **Verse/Bridge**: put `&C consequences: ...` inline on the button choice for that screen. Example:
   - `* Accept the gifts&C consequences: resource:Aetherlight +225; production_percent:Food +10; score:knowledge_gained +1 -> hollow_caravan_outro`
 
@@ -177,55 +188,66 @@ Implement complex population mechanics:
 
 ## 🔧 **External Function Integration**
 
-### **🎯 Population Management Functions**
+Declare any of these with `EXTERNAL` in your `.ink` file. They are bound for every story by `InkFunctions`
+(`Scripts/GameData/Events/InkFunctions.cs`), the single list of Ink-callable functions. While the event UI
+previews text or simulates choices, functions that change the game do nothing, so previews never have side effects.
+
+### Any game value
 ```ink
-{GetPopulation()}                    # Returns current population
-{GetHousing()}                      # Returns current housing
-{GetVagrants()}                     # Returns current vagrants
-{ModifyPopulation(-3)}              # Remove population (negative only)
-{ModifyHousing(5)}                  # Add housing
-{ModifyVagrants(10)}                # Add vagrants
+EXTERNAL GetValue(domain, target)
+EXTERNAL CheckValue(domain, target, required)
+{GetValue("resource", "Food")}          # any GameValues domain: stat, resource, resource_capacity,
+{CheckValue("stat", "waltz", 12)}       # production_rate, building, technology, clicked, score,
+                                        # event_completed, seventh, phase, echo, cycle, population,
+                                        # housing, free_housing, vagrants, deaths, morale, satisfaction,
+                                        # civic, government, weather ...
 ```
 
-### **🎯 Death Tracking Functions**
+### Stats
 ```ink
-{GetDeaths()}                       # Public death records
-{GetTrueDeaths()}                   # Actual accumulated deaths
-{GetVagrantDeaths()}                # Vagrant death count
-{ProcessEventDeaths(5)}             # Kill population and track deaths
+{GetStat("morale")}  {GetStatValue("waltz")}  {CheckStat("authority", 10)}
+{ModifyStat("waltz", 2)}             # pillars/substats/thresholds change their base; morale shifts
+{ModifyMorale(-5)}                   # losses reduced by Morale Loss Mitigation
 ```
 
-### **🎯 Resource & Technology Functions**
+### Resources, buildings, technologies
 ```ink
-{GetResourceAmount("Food")}         # Check resource amounts
-{ModifyResource("Aetherlight", 30)} # Modify resources
-{CheckTechnology("Rites of Harvest")} # Check technology unlock status
-{TriggerTechnologyEnlightened("Advanced Farming")} # Unlock technology
-{BuildProductionUnit("Farm")}       # Build production unit
+{GetResource("Food")}  {GetResourceAmount("Food")}  {CheckResource("Food", 20)}
+{ModifyResource("Aetherlight", 30)}
+{ModifyProductionUnit("Timber Camp", 1)}
+{BuildProductionUnit("Timber Camp")}          # pays the normal cost; returns true when built
+{CheckTechnology("Horology")}
+{TriggerTechnologyEnlightened("Horology")}    # enlightens (reveals + bonus progress), does not unlock
 ```
 
-### **🎯 Stat Management Functions**
+### Population and deaths
 ```ink
-{GetStatValue("morale")}           # Get current stat value
-{ModifyStat("morale", 10)}         # Modify civilization stat
+{GetPopulation()}  {GetHousing()}  {GetVagrants()}  {GetDeaths()}  {GetTrueDeaths()}  {GetVagrantDeaths()}
+{ModifyPopulation(-3)}               # negative only; each removal is a death
+{ModifyHousing(5)}  {ModifyVagrants(10)}  {ProcessEventDeaths(5)}
 ```
 
-### **🎯 Event Score Functions**
+### Event scores and time
 ```ink
-{GetEventScore("quest_progress")}   # Check event progress
-{ModifyEventScore("ancient_knowledge", 5)} # Advance event scores
+{GetEventScore("quest_progress")}  {CheckEventScore("quest_progress", 2)}  {ModifyEventScore("quest_progress", 1)}
+{GetCurrentSeventh()}  {GetCurrentPhase()}  {GetCurrentEcho()}  {GetCurrentCycle()}  {IsRitualSeventh()}
 ```
 
-### **🎯 Event Triggering Functions**
+### Weather
 ```ink
-{TriggerEvent("Horology")}          # Trigger a specific event by name
+{GetCurrentWeather()}  {IsWeather("Calm Winds")}     # asset or display name
+{ChangeWeather("Boiling Rain")}                        # hard-set weather
+{SetTimedWeather("Boiling Rain", 5)}                   # reverts after 5 sevenths
 ```
 
-### **🎯 Utility Functions**
+### Utility
 ```ink
-{Random(1, 100)}                   # Generate random number between min and max
-{Log("Debug message")}             # Log message for debugging
+{Random(1, 100)}                     # inclusive
+{Log("Debug message")}
 ```
+
+New functions are added once in `InkFunctions.Bind`; new values are usually better exposed through
+`GameValues.Register`, which makes them available to `GetValue` and to every other condition system at once.
 
 ---
 
@@ -630,7 +652,8 @@ Context text above choices...
 
 New: production percentage modifiers
 - Author at verse/bridge button using `production_percent:{ResourceName} +/-{int}`.
-- Example: `production_percent:Food +10` adds a +10% persistent global production bonus for Food; `-15` reduces by 15%.
+- Example: `production_percent:Food +10` adds a permanent +10% Food output bonus (source `Event: {story title}`,
+  shown in the Food tooltip); `-15` reduces by 15%. Completing the same story again adds another +10%.
 - Shown in Outro preview as: `Production +10% for Food`.
 
 Temporary effects (duration in sevenths)
@@ -641,8 +664,11 @@ Temporary effects (duration in sevenths)
   - `click_power_section:{Section}` and `click_power_percent_section:{Section}`
 - Duration is counted in sevenths (in-game time unit). Example:
   - `* Accept&C consequences: production_percent:Food +10; duration:sevenths:6 -> next_knot`
-  - Applies +10% Food production for 6 sevenths, then automatically expires.
-- Only one timed effect with duration is expected per line (design constraint) to avoid ambiguity.
+  - Applies +10% Food production for 6 sevenths, then automatically expires. Each timed effect is tracked on its
+    own, so overlapping stories never cancel each other's effects.
+- Each `duration:` times the consequence written just before it, so one line can carry several timed effects with
+  their own durations: `production_percent:Duskstone +12; duration:sevenths:11; click_power:Elderwood +3; duration:sevenths:5`.
+  A `duration:` with nothing before it is reported as an authoring problem.
 
 Section-wide modifiers
 - Production percent: `production_percent_section:{SectionName} +/-{int}`

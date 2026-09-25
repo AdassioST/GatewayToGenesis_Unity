@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TechUnlockableSlot : MonoBehaviour
+public class TechUnlockableSlot : MonoBehaviour, ITooltipSource
 {
     public Image slot, techIcon;
 
@@ -32,11 +32,8 @@ public class TechUnlockableSlot : MonoBehaviour
     }
     public ProductionUnitData GetProductionUnitDataFromGameUnit(GameUnit gameUnit)
     {
-        // Ensure the production data dictionary is initialized
-        GameProductionSlot.InitializeProductionUnitDataDictionary();
-
-        // Try fetching the associated ProductionUnitData
-        GameProductionSlot.productionUnitDataDictionary.TryGetValue(gameUnit.name, out var data);
-        return data;
+        return gameUnit != null && GameCatalog.ProductionUnits.TryGet(gameUnit.name, out var data) ? data : null;
     }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Unlockable(techUnlockableData, data);
 }

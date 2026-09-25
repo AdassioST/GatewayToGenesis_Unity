@@ -52,7 +52,10 @@ public enum GameEffectType
     HousingBonus,          // Housing capacity bonus (PopGrowthLogic)
     
     // Special effects
-    SpecialAbility         // Unique effects not covered by other types
+    SpecialAbility,        // Unique effects not covered by other types
+
+    // Appended values only: effect types are serialized by index in assets.
+    MoraleModifier         // Shifts current morale while active (council seats)
 }
 
 /// <summary>

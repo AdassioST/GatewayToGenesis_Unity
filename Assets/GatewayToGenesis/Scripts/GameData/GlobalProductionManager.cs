@@ -1,594 +1,351 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-public class GlobalProductionManager : MonoBehaviour
+/// <summary>
+/// Computes the net production rate of every resource.
+///
+///   output(r)      = Σ producers: rate × active units × (1 + efficiency%)      efficiency from GameUnitsLogic.ProductionEfficiency
+///                  + Σ scaling bonuses: per-unit bonus × counted units          GameUnitsLogic.ProductionScaling
+///                  + positive flat modifiers                                    ResourceModifiers (per second)
+///   output(r)     *= 1 + (percent modifiers + morale delta) / 100
+///   consumption(r) = Σ consumers: rate × active units + negative flat modifiers
+///   net(r)         = output(r) - consumption(r)
+///
+/// Every modifier is read through <see cref="ModifierTargets.Resolve"/> (resource, its section, its type,
+/// everything), so bonuses registered before a resource is discovered apply the moment it appears.
+/// Rates are recomputed only when something they depend on changes (plus a slow safety refresh).
+/// </summary>
+public class GlobalProductionManager : SingletonBehaviour<GlobalProductionManager>
 {
-    public static GlobalProductionManager Instance { get; private set; }
+    private const LogChannel Log = LogChannel.Units;
 
     public List<GameResourceSlot> resourceSlots = new List<GameResourceSlot>();
     public List<GameProductionSlot> productionSlots = new List<GameProductionSlot>();
     public List<GameTechnologySlot> technologySlots = new List<GameTechnologySlot>();
 
-    // Dictionaries to store global values for each resource type
-    [System.NonSerialized]
-    public Dictionary<string, float> netProductionRates = new Dictionary<string, float>();
+    [Tooltip("Divides the exponential building cost growth; raise it as tech tiers advance.")]
+    public float techTier = 1f;
+    [Tooltip("Exponential building cost growth per building owned.")]
+    public float costBalance = 0.05f;
+    [Tooltip("Seconds between safety recomputations when nothing reported a change.")]
+    [SerializeField] private float refreshInterval = 0.25f;
 
-    [System.NonSerialized]
-    public Dictionary<string, float> positiveModifiers = new Dictionary<string, float>();
-    [System.NonSerialized]
-    public Dictionary<string, float> negativeModifiers = new Dictionary<string, float>();
+    /// <summary>
+    /// Flat (per second, signed: negative is consumption) and percent output modifiers on resources,
+    /// keyed by resource name or scope (see <see cref="ModifierTargets"/>).
+    /// </summary>
+    public ModifierLedger ResourceModifiers { get; } = new ModifierLedger();
 
-    [System.NonSerialized]
-    public Dictionary<string, float> persistentPositiveModifiers = new Dictionary<string, float>();
-    [System.NonSerialized]
-    public Dictionary<string, float> persistentNegativeModifiers = new Dictionary<string, float>();
-    [System.NonSerialized]
-    public Dictionary<string, float> percentagePositiveModifiers = new Dictionary<string, float>();
-    [System.NonSerialized]
-    public Dictionary<string, float> percentageNegativeModifiers = new Dictionary<string, float>();
+    private readonly Dictionary<string, float> _netRates = new Dictionary<string, float>(System.StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, float> _outputRates = new Dictionary<string, float>(System.StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, float> _consumptionRates = new Dictionary<string, float>(System.StringComparer.OrdinalIgnoreCase);
+    private readonly List<string> _scratchKeys = new List<string>(8);
+    private bool _dirty = true;
+    private float _nextRefresh;
+    private bool _unitsSubscribed;
 
-    [System.NonSerialized]
-    public Dictionary<string, List<string>> modifierSourceDict = new Dictionary<string, List<string>>();
-
-    // Per-resource percentage modifiers tracked by source (event/tech/etc.).
-    // Bonuses and maluses are tracked separately so a single source can contribute both.
-    // Values are positive magnitudes. Only ONE entry per (resource, source) is stored per polarity.
-    [System.NonSerialized]
-    private Dictionary<string, Dictionary<string, float>> percentageBonusBySource = new Dictionary<string, Dictionary<string, float>>();
-    [System.NonSerialized]
-    private Dictionary<string, Dictionary<string, float>> percentageMalusBySource = new Dictionary<string, Dictionary<string, float>>();
-
-    // Persistent flat modifiers tracked by source
-    [System.NonSerialized]
-    private Dictionary<string, Dictionary<string, float>> persistentBonusBySource = new Dictionary<string, Dictionary<string, float>>();
-    [System.NonSerialized]
-    private Dictionary<string, Dictionary<string, float>> persistentMalusBySource = new Dictionary<string, Dictionary<string, float>>();
-
-    public float techTier = 1f, costBalance = 0.05f;
-
-    private void Awake()
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Debug.LogWarning("Duplicate GlobalProductionManager found, destroying the new one.");
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        
-        //MOVE EVENTUALLY FROM HERE TO THE FUTURE GAME STATE MANAGER LOAD/ SAVES
-        SectionData.InitializeSectionDataDictionary();
+        ResourceModifiers.Changed += _ => MarkDirty();
     }
 
     private void Start()
     {
-        InitializeProductionRates();
-        
-        // Ensure all slots are registered after initialization
-        StartCoroutine(EnsureSlotsRegisteredAfterStart());
+        if (StatManager.Instance != null) StatManager.Instance.OnMoraleChanged += OnMoraleChanged;
+        SubscribeToUnitLedgers();
     }
-    
-    private IEnumerator EnsureSlotsRegisteredAfterStart()
+
+    protected override void OnSingletonDestroy()
     {
-        yield return null;
-        EnsureAllSlotsRegistered();
+        if (StatManager.Instance != null) StatManager.Instance.OnMoraleChanged -= OnMoraleChanged;
     }
+
+    private void OnMoraleChanged(int _) => MarkDirty();
+
+    private void SubscribeToUnitLedgers()
+    {
+        var units = GameUnitsLogic.Instance;
+        if (_unitsSubscribed || units == null) return;
+        units.ProductionEfficiency.Changed += _ => MarkDirty();
+        units.ProductionScaling.Changed += _ => MarkDirty();
+        _unitsSubscribed = true;
+    }
+
+    /// <summary>Request a recomputation (cheap; coalesced to at most one per frame).</summary>
+    public void MarkDirty() => _dirty = true;
 
     private void Update()
     {
-        // Pause production changes during active events
-        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
-            return;
-            
-        CalculateGlobalProductionRates();
-        DisableProductionUnitsIfResourceDepleted();
-        EnableProductionUnitsIfResourcesSufficient();
+        UpdateProductionSufficiency();
+        if (_dirty || Time.unscaledTime >= _nextRefresh) Recalculate();
     }
 
-    private void InitializeProductionRates()
-    {
-        foreach (var resourceSlot in resourceSlots)
-        {
-            string resourceName = resourceSlot.gameUnit.name;
-
-            if (!netProductionRates.ContainsKey(resourceName))
-            {
-                netProductionRates[resourceName] = 0f;
-                positiveModifiers[resourceName] = 0f;
-                negativeModifiers[resourceName] = 0f;
-                persistentPositiveModifiers[resourceName] = 0f;
-                persistentNegativeModifiers[resourceName] = 0f;
-                percentagePositiveModifiers[resourceName] = 0f;
-                percentageNegativeModifiers[resourceName] = 0f;
-                if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
-                if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
-                if (!persistentBonusBySource.ContainsKey(resourceName)) persistentBonusBySource[resourceName] = new Dictionary<string, float>();
-                if (!persistentMalusBySource.ContainsKey(resourceName)) persistentMalusBySource[resourceName] = new Dictionary<string, float>();
-            }
-        }
-    }
+    // ===== SLOT REGISTRY =====
 
     public void AddResourceSlot(GameResourceSlot resourceSlot)
     {
-        if (!resourceSlots.Contains(resourceSlot))
-        {
-            resourceSlots.Add(resourceSlot);
-
-            string resourceName = resourceSlot.gameUnit.name;
-
-            if (!netProductionRates.ContainsKey(resourceName))
-            {
-                netProductionRates[resourceName] = 0f;
-                positiveModifiers[resourceName] = 0f;
-                negativeModifiers[resourceName] = 0f;
-                persistentPositiveModifiers[resourceName] = 0f;
-                persistentNegativeModifiers[resourceName] = 0f;
-                percentagePositiveModifiers[resourceName] = 0f;
-                percentageNegativeModifiers[resourceName] = 0f;
-                if (!percentageBonusBySource.ContainsKey(resourceName)) percentageBonusBySource[resourceName] = new Dictionary<string, float>();
-                if (!percentageMalusBySource.ContainsKey(resourceName)) percentageMalusBySource[resourceName] = new Dictionary<string, float>();
-                if (!persistentBonusBySource.ContainsKey(resourceName)) persistentBonusBySource[resourceName] = new Dictionary<string, float>();
-                if (!persistentMalusBySource.ContainsKey(resourceName)) persistentMalusBySource[resourceName] = new Dictionary<string, float>();
-            }
-            
-            // Apply any pending legend bonuses to this new resource
-            if (GovernmentLogic.Instance != null)
-            {
-                GovernmentLogic.Instance.ApplyPendingBonusesToResource(resourceName, resourceSlot.gameUnit.section);
-            }
-            
-            // Apply any pending weather bonuses to this new resource
-            if (CelestialWeatherSystemLogic.Instance != null)
-            {
-                CelestialWeatherSystemLogic.Instance.ApplyPendingBonusesToResource(resourceName, resourceSlot.gameUnit.section);
-            }
-        }
+        if (resourceSlot == null || resourceSlots.Contains(resourceSlot)) return;
+        resourceSlots.Add(resourceSlot);
+        MarkDirty();
     }
 
     public void AddProductionSlot(GameProductionSlot productionSlot)
     {
-        if (!productionSlots.Contains(productionSlot))
-        {
-            productionSlots.Add(productionSlot);
-        }
+        if (productionSlot == null || productionSlots.Contains(productionSlot)) return;
+        productionSlots.Add(productionSlot);
+        MarkDirty();
     }
 
     public void AddTechnologySlot(GameTechnologySlot technologySlot)
     {
-        if (!technologySlots.Contains(technologySlot))
-        {
-            technologySlots.Add(technologySlot);
-        }
+        if (technologySlot != null && !technologySlots.Contains(technologySlot)) technologySlots.Add(technologySlot);
     }
 
     public void RemoveResourceSlot(GameResourceSlot resourceSlot)
     {
-        if (resourceSlots.Contains(resourceSlot))
+        if (resourceSlots.Remove(resourceSlot) && resourceSlot != null && resourceSlot.gameUnit != null)
         {
-            resourceSlots.Remove(resourceSlot);
-
-            string resourceName = resourceSlot.gameUnit.name;
-
-            netProductionRates.Remove(resourceName);
-            positiveModifiers.Remove(resourceName);
-            negativeModifiers.Remove(resourceName);
-            persistentPositiveModifiers.Remove(resourceName);
-            persistentNegativeModifiers.Remove(resourceName);
-            percentagePositiveModifiers.Remove(resourceName);
-            percentageNegativeModifiers.Remove(resourceName);
+            _netRates.Remove(resourceSlot.gameUnit.name);
+            MarkDirty();
         }
     }
 
     public void RemoveProductionSlot(GameProductionSlot productionSlot)
     {
-        if (productionSlots.Contains(productionSlot))
-        {
-            productionSlots.Remove(productionSlot);
-        }
+        if (productionSlots.Remove(productionSlot)) MarkDirty();
     }
 
-    public void RemoveTechnologySlot(GameTechnologySlot technologySlot)
+    public void RemoveTechnologySlot(GameTechnologySlot technologySlot) => technologySlots.Remove(technologySlot);
+
+    public List<GameResourceSlot> GetAllResourceSlots() => new List<GameResourceSlot>(resourceSlots);
+
+    // ===== MODIFIER SHORTCUTS =====
+
+    /// <summary>
+    /// Set a system-owned flat rate on one resource (population food demand, citizen research...).
+    /// Positive is output per second, negative is consumption; 0 removes it.
+    /// </summary>
+    public void SetFlatRate(string resourceName, string source, float perSecond)
     {
-        if (technologySlots.Contains(technologySlot))
-        {
-            technologySlots.Remove(technologySlot);
-        }
+        ResourceModifiers.SetFlat(resourceName, source, perSecond);
     }
 
-    public void AdjustResourceModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
-    {
-        var targetModifiers = isPositive ? persistentPositiveModifiers : persistentNegativeModifiers;
+    /// <summary>Remove every production modifier from <paramref name="source"/>.</summary>
+    public void ClearAllModifiersFromSource(string source) => ResourceModifiers.RemoveSource(source);
 
-        if (!targetModifiers.ContainsKey(resourceName))
-        {
-            targetModifiers[resourceName] = 0f;
-        }
-
-        targetModifiers[resourceName] += isAdd ? modifierAmount : -modifierAmount;
-
-        // Track per-source magnitudes for persistent modifiers
-        var perSourceMap = isPositive ? persistentBonusBySource : persistentMalusBySource;
-        if (!perSourceMap.ContainsKey(resourceName)) perSourceMap[resourceName] = new Dictionary<string, float>();
-        var map = perSourceMap[resourceName];
-        float current = 0f;
-        map.TryGetValue(modifierSource ?? "Unknown", out current);
-        float next = isAdd ? current + modifierAmount : current - modifierAmount;
-        if (next <= 0.0001f) { if (map.ContainsKey(modifierSource)) map.Remove(modifierSource); }
-        else map[modifierSource] = next;
-
-        // Store the source for later use
-        if (!string.IsNullOrEmpty(modifierSource))
-        {
-            if (!modifierSourceDict.ContainsKey(resourceName))
-            {
-                modifierSourceDict[resourceName] = new List<string>();
-            }
-
-            // Ensure the source is added only once
-            if (!modifierSourceDict[resourceName].Contains(modifierSource))
-            {
-                modifierSourceDict[resourceName].Add(modifierSource);
-            }
-        }
-
-        CalculateGlobalProductionRates();
-    }
-
-    // Expose per-source maps for tooltips/UI
-    public IReadOnlyDictionary<string, float> GetPercentageBonusBySource(string resourceName)
-    {
-        if (percentageBonusBySource.TryGetValue(resourceName, out var dict)) return dict;
-        return new Dictionary<string, float>();
-    }
-
-    public IReadOnlyDictionary<string, float> GetPercentageMalusBySource(string resourceName)
-    {
-        if (percentageMalusBySource.TryGetValue(resourceName, out var dict)) return dict;
-        return new Dictionary<string, float>();
-    }
-
-    public IReadOnlyDictionary<string, float> GetPersistentBonusBySource(string resourceName)
-    {
-        if (persistentBonusBySource.TryGetValue(resourceName, out var dict)) return dict;
-        return new Dictionary<string, float>();
-    }
-
-    public IReadOnlyDictionary<string, float> GetPersistentMalusBySource(string resourceName)
-    {
-        if (persistentMalusBySource.TryGetValue(resourceName, out var dict)) return dict;
-        return new Dictionary<string, float>();
-    }
-
-    // Expose resource slots for external access
-    public List<GameResourceSlot> GetAllResourceSlots()
-    {
-        return new List<GameResourceSlot>(resourceSlots);
-    }
-
-    // Remove ALL modifiers (percentage and persistent flat, bonus and malus) that originated from a specific source
-    // across all resources and sections. Also cleans up modifierSourceDict entries.
-    public void ClearAllModifiersFromSource(string modifierSource)
-    {
-        if (string.IsNullOrEmpty(modifierSource)) return;
-
-        // Walk existing resource slots first (ensures aggregated maps remain consistent)
-        foreach (var resourceSlot in resourceSlots)
-        {
-            if (resourceSlot == null || resourceSlot.gameUnit == null) continue;
-            string resourceName = resourceSlot.gameUnit.name;
-
-            // Percentage bonuses
-            if (percentageBonusBySource.TryGetValue(resourceName, out var posMap))
-            {
-                posMap.Remove(modifierSource);
-            }
-            // Percentage maluses
-            if (percentageMalusBySource.TryGetValue(resourceName, out var negMap))
-            {
-                negMap.Remove(modifierSource);
-            }
-
-            // Persistent flat bonuses
-            if (persistentBonusBySource.TryGetValue(resourceName, out var flatPosMap))
-            {
-                if (flatPosMap.TryGetValue(modifierSource, out float flatBonus))
-                {
-                    if (persistentPositiveModifiers.ContainsKey(resourceName))
-                    {
-                        persistentPositiveModifiers[resourceName] = Mathf.Max(0f, persistentPositiveModifiers[resourceName] - flatBonus);
-                    }
-                    flatPosMap.Remove(modifierSource);
-                }
-            }
-            // Persistent flat maluses
-            if (persistentMalusBySource.TryGetValue(resourceName, out var flatNegMap))
-            {
-                if (flatNegMap.TryGetValue(modifierSource, out float flatMalus))
-                {
-                    if (persistentNegativeModifiers.ContainsKey(resourceName))
-                    {
-                        persistentNegativeModifiers[resourceName] = Mathf.Max(0f, persistentNegativeModifiers[resourceName] - flatMalus);
-                    }
-                    flatNegMap.Remove(modifierSource);
-                }
-            }
-
-            // Cleanup source listing for UI/debug
-            if (modifierSourceDict.TryGetValue(resourceName, out var srcList))
-            {
-                srcList.Remove(modifierSource);
-            }
-        }
-
-        // Also scrub any entries for resources not yet instantiated (pre-registered by name)
-        // This prevents stale modifiers from being applied when the resource is later added.
-        foreach (var kv in percentageBonusBySource.ToList())
-        {
-            var perSource = kv.Value;
-            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
-        }
-        foreach (var kv in percentageMalusBySource.ToList())
-        {
-            var perSource = kv.Value;
-            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
-        }
-        foreach (var kv in persistentBonusBySource.ToList())
-        {
-            var perSource = kv.Value;
-            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
-        }
-        foreach (var kv in persistentMalusBySource.ToList())
-        {
-            var perSource = kv.Value;
-            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
-        }
-
-        // Recalculate after cleanup
-        CalculateGlobalProductionRates();
-    }
-
-    public void AdjustPercentageModifier(string resourceName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
-    {
-        if (string.IsNullOrEmpty(resourceName)) return;
-        if (string.IsNullOrEmpty(modifierSource)) modifierSource = "Unknown";
-
-        var dict = isPositive ? percentageBonusBySource : percentageMalusBySource;
-        if (!dict.ContainsKey(resourceName)) dict[resourceName] = new Dictionary<string, float>();
-        var perSource = dict[resourceName];
-        float magnitude = Mathf.Abs(modifierAmount);
-        if (isAdd)
-        {
-            if (!perSource.ContainsKey(modifierSource))
-            {
-                perSource[modifierSource] = magnitude;
-            }
-            // else: do not stack for the same source
-        }
-        else
-        {
-            if (perSource.ContainsKey(modifierSource)) perSource.Remove(modifierSource);
-        }
-
-        // Track sources for optional UI/debug
-        if (!modifierSourceDict.ContainsKey(resourceName))
-        {
-            modifierSourceDict[resourceName] = new List<string>();
-        }
-        if (isAdd)
-        {
-            if (!modifierSourceDict[resourceName].Contains(modifierSource))
-            {
-                modifierSourceDict[resourceName].Add(modifierSource);
-            }
-        }
-        else
-        {
-            modifierSourceDict[resourceName].Remove(modifierSource);
-        }
-
-        CalculateGlobalProductionRates();
-    }
-
-    // Apply a percentage modifier (bonus/malus) to all resources belonging to a section.
-    public void AdjustPercentageModifierForSection(string sectionName, float modifierAmount, bool isPositive, bool isAdd, string modifierSource)
-    {
-        if (string.IsNullOrEmpty(sectionName)) return;
-        foreach (var slot in resourceSlots)
-        {
-            if (slot != null && slot.gameUnit != null && string.Equals(slot.gameUnit.section, sectionName, System.StringComparison.OrdinalIgnoreCase))
-            {
-                AdjustPercentageModifier(slot.gameUnit.name, modifierAmount, isPositive, isAdd, modifierSource);
-            }
-        }
-    }
-
-    private void CalculateGlobalProductionRates()
-    {
-        foreach (var resourceSlot in resourceSlots)
-        {
-            string resourceName = resourceSlot.gameUnit.name;
-
-            positiveModifiers[resourceName] = 0f;
-            negativeModifiers[resourceName] = 0f;
-        }
-
-        // Apply workshop rates
-        foreach (var productionSlot in productionSlots)
-        {
-            var productionUnitData = productionSlot.productionUnitData;
-
-            for (int i = 0; i < productionUnitData.producedResources.Count; i++)
-            {
-                string producedResource = productionUnitData.producedResources[i];
-                float productionRate = productionUnitData.productionRates[i] * productionSlot.amount;
-
-                positiveModifiers[producedResource] += productionRate;
-            }
-
-            for (int i = 0; i < productionUnitData.consumedResources.Count; i++)
-            {
-                string consumedResource = productionUnitData.consumedResources[i];
-                float consumptionRate = productionUnitData.consumeRates[i] * productionSlot.amount;
-
-                negativeModifiers[consumedResource] += consumptionRate;
-            }
-        }
-
-        // Apply persistent modifiers
-        foreach (var resourceName in persistentPositiveModifiers.Keys)
-        {
-            positiveModifiers[resourceName] += persistentPositiveModifiers[resourceName];
-        }
-
-        foreach (var resourceName in persistentNegativeModifiers.Keys)
-        {
-            negativeModifiers[resourceName] += persistentNegativeModifiers[resourceName];
-        }
-        
-        // Apply production scaling bonuses (bonus resources per production unit)
-        if (GameUnitsLogic.Instance != null)
-        {
-            foreach (var resourceSlot in resourceSlots)
-            {
-                string resourceName = resourceSlot.gameUnit.name;
-                float scalingBonus = GameUnitsLogic.Instance.CalculateProductionScalingBonus(resourceName);
-                
-                if (scalingBonus > 0f)
-                {
-                    positiveModifiers[resourceName] += scalingBonus;
-                }
-            }
-        }
-
-        // Apply percentage modifiers
-        foreach (var resourceSlot in resourceSlots)
-        {
-            string resourceName = resourceSlot.gameUnit.name;
-
-            float basePositiveRate = positiveModifiers[resourceName];
-            float baseNegativeRate = negativeModifiers[resourceName];
-
-            // Aggregate percentage modifiers from all sources for this resource
-            float posPercent = 0f;
-            float negPercent = 0f;
-            if (percentageBonusBySource.TryGetValue(resourceName, out var posDict))
-            {
-                foreach (var kv in posDict) posPercent += Mathf.Max(0f, kv.Value);
-            }
-            if (percentageMalusBySource.TryGetValue(resourceName, out var negDict))
-            {
-                foreach (var kv in negDict) negPercent += Mathf.Max(0f, kv.Value);
-            }
-            // Keep legacy aggregated dictionaries up-to-date for UI/debug displays
-            percentagePositiveModifiers[resourceName] = posPercent;
-            percentageNegativeModifiers[resourceName] = negPercent;
-
-            float totalPercent = posPercent - negPercent;
-            // Apply morale-based global production modifier (difference from balance)
-            int moraleDelta = 0;
-            if (StatManager.Instance != null)
-            {
-                moraleDelta = Mathf.RoundToInt(StatManager.Instance.GetMoraleDeltaPercent());
-            }
-            totalPercent += moraleDelta;
-            if (Mathf.Abs(totalPercent) > 0.001f && basePositiveRate != 0f)
-            {
-                basePositiveRate *= (1 + totalPercent / 100f);
-            }
-
-            float netRate = basePositiveRate - baseNegativeRate;
-
-            netProductionRates[resourceName] = netRate;
-
-            resourceSlot.productionRate = netRate;
-        }
-    }
-
-    private void DisableProductionUnitsIfResourceDepleted()
-    {
-        foreach (var productionSlot in productionSlots)
-        {
-            var productionUnitData = productionSlot.productionUnitData;
-            bool isResourceDepleted = false;
-
-            foreach (var resourceName in productionUnitData.consumedResources)
-            {
-                var resourceSlot = resourceSlots.Find(slot => slot.gameUnit.name == resourceName);
-                if (resourceSlot == null || resourceSlot.amount <= 0)
-                {
-                    isResourceDepleted = true;
-                    break;
-                }
-            }
-
-            productionSlot.insufficientProduction = isResourceDepleted;
-        }
-    }
-
-    private void EnableProductionUnitsIfResourcesSufficient()
-    {
-        foreach (var productionSlot in productionSlots)
-        {
-            var productionUnitData = productionSlot.productionUnitData;
-            bool areAllResourcesAvailable = true;
-
-            foreach (var resourceName in productionUnitData.consumedResources)
-            {
-                var resourceSlot = resourceSlots.Find(slot => slot.gameUnit.name == resourceName);
-                if (resourceSlot == null || resourceSlot.amount <= 0)
-                {
-                    areAllResourcesAvailable = false;
-                    break;
-                }
-            }
-
-            productionSlot.insufficientProduction = !areAllResourcesAvailable;
-        }
-    }
+    // ===== QUERIES =====
 
     public float GetNetProductionRate(string resourceName)
     {
-        return netProductionRates.TryGetValue(resourceName, out var rate) ? rate : 0f;
+        if (_dirty) Recalculate();
+        return resourceName != null && _netRates.TryGetValue(resourceName, out float rate) ? rate : 0f;
     }
-    
-    public void EnsureAllSlotsRegistered()
+
+    public bool HasProductionData(string resourceName) => resourceName != null && _netRates.ContainsKey(resourceName);
+
+    public readonly struct BreakdownLine
     {
-        if (GameUnitsLogic.Instance == null) return;
-        
-        // Ensure production slots are registered
-        if (GameUnitsLogic.Instance.productionTab != null)
+        public readonly string label;
+        public readonly float value;
+        public readonly bool isPercent;
+
+        public BreakdownLine(string label, float value, bool isPercent)
         {
-            var allProductionSlots = GameUnitsLogic.Instance.productionTab.slots
-                .Select(slot => slot.GetComponent<GameProductionSlot>())
-                .Where(slot => slot != null);
-            
-            foreach (var productionSlot in allProductionSlots)
-            {
-                if (!productionSlots.Contains(productionSlot))
-                {
-                    AddProductionSlot(productionSlot);
-                }
-            }
-        }
-        
-        // Ensure resource slots are registered
-        if (GameUnitsLogic.Instance.storageTab != null)
-        {
-            var allResourceSlots = GameUnitsLogic.Instance.storageTab.slots
-                .Select(slot => slot.GetComponent<GameResourceSlot>())
-                .Where(slot => slot != null);
-            
-            foreach (var resourceSlot in allResourceSlots)
-            {
-                if (!resourceSlots.Contains(resourceSlot))
-                {
-                    AddResourceSlot(resourceSlot);
-                }
-            }
+            this.label = label;
+            this.value = value;
+            this.isPercent = isPercent;
         }
     }
 
+    /// <summary>Every contribution to a resource's rate, for tooltips. Consumption lines are negative.</summary>
+    public List<BreakdownLine> GetBreakdown(string resourceName)
+    {
+        var lines = new List<BreakdownLine>();
+        var units = GameUnitsLogic.Instance;
+        foreach (var slot in productionSlots)
+        {
+            var data = slot != null ? slot.productionUnitData : null;
+            if (data == null) continue;
+            float efficiency = units != null ? ModifierTargets.Resolve(units.ProductionEfficiency, slot.gameUnit).Percent : 0f;
+            for (int i = 0; i < data.producedResources.Count && i < data.productionRates.Count; i++)
+            {
+                if (!string.Equals(data.producedResources[i], resourceName, System.StringComparison.OrdinalIgnoreCase)) continue;
+                float rate = data.productionRates[i] * slot.amount * (1f + efficiency / 100f);
+                if (rate != 0f) lines.Add(new BreakdownLine(slot.gameUnit.name, rate, false));
+            }
+            for (int i = 0; i < data.consumedResources.Count && i < data.consumeRates.Count; i++)
+            {
+                if (!string.Equals(data.consumedResources[i], resourceName, System.StringComparison.OrdinalIgnoreCase)) continue;
+                float rate = data.consumeRates[i] * slot.amount;
+                if (rate != 0f) lines.Add(new BreakdownLine($"{slot.gameUnit.name} (Consumption)", -rate, false));
+            }
+        }
+
+        float scaling = CalculateScalingBonus(resourceName);
+        if (scaling != 0f) lines.Add(new BreakdownLine("Scaling bonuses", scaling, false));
+
+        FillScopeKeys(resourceName);
+        foreach (var key in _scratchKeys)
+        {
+            foreach (var source in ResourceModifiers.Sources(key))
+            {
+                string label = key == resourceName ? source.Key : $"{source.Key} ({ModifierTargets.Describe(key)})";
+                if (source.Value.Flat != 0f) lines.Add(new BreakdownLine(label, source.Value.Flat, false));
+                if (source.Value.Percent != 0f) lines.Add(new BreakdownLine(label, source.Value.Percent, true));
+            }
+        }
+
+        int moraleDelta = StatManager.Instance != null ? Mathf.RoundToInt(StatManager.Instance.GetMoraleDeltaPercent()) : 0;
+        if (moraleDelta != 0) lines.Add(new BreakdownLine("Morale", moraleDelta, true));
+        return lines;
+    }
+
+    // ===== CALCULATION =====
+
+    private void Recalculate()
+    {
+        _dirty = false;
+        _nextRefresh = Time.unscaledTime + refreshInterval;
+        SubscribeToUnitLedgers();
+
+        _outputRates.Clear();
+        _consumptionRates.Clear();
+        var units = GameUnitsLogic.Instance;
+
+        foreach (var slot in productionSlots)
+        {
+            var data = slot != null ? slot.productionUnitData : null;
+            if (data == null || slot.gameUnit == null) continue;
+            float efficiency = units != null ? ModifierTargets.Resolve(units.ProductionEfficiency, slot.gameUnit).Percent : 0f;
+            float activeUnits = slot.amount;
+            for (int i = 0; i < data.producedResources.Count && i < data.productionRates.Count; i++)
+            {
+                Accumulate(_outputRates, data.producedResources[i], data.productionRates[i] * activeUnits * (1f + efficiency / 100f));
+            }
+            for (int i = 0; i < data.consumedResources.Count && i < data.consumeRates.Count; i++)
+            {
+                Accumulate(_consumptionRates, data.consumedResources[i], data.consumeRates[i] * activeUnits);
+            }
+        }
+
+        float moraleDelta = StatManager.Instance != null ? Mathf.Round(StatManager.Instance.GetMoraleDeltaPercent()) : 0f;
+        foreach (var slot in resourceSlots)
+        {
+            if (slot == null || slot.gameUnit == null) continue;
+            string resource = slot.gameUnit.name;
+
+            float output = Read(_outputRates, resource) + CalculateScalingBonus(resource);
+            float consumption = Read(_consumptionRates, resource);
+            float percent = moraleDelta;
+
+            FillScopeKeys(resource, slot.gameUnit.section, slot.gameUnit.type);
+            foreach (var key in _scratchKeys)
+            {
+                foreach (var source in ResourceModifiers.Sources(key))
+                {
+                    if (source.Value.Flat >= 0f) output += source.Value.Flat;
+                    else consumption -= source.Value.Flat;
+                    percent += source.Value.Percent;
+                }
+            }
+
+            if (output != 0f) output *= Mathf.Max(0f, 1f + percent / 100f);
+            float net = output - consumption;
+            _netRates[resource] = net;
+            slot.productionRate = net;
+        }
+    }
+
+    private static void Accumulate(Dictionary<string, float> table, string key, float amount)
+    {
+        if (string.IsNullOrEmpty(key) || amount == 0f) return;
+        table.TryGetValue(key, out float current);
+        table[key] = current + amount;
+    }
+
+    private static float Read(Dictionary<string, float> table, string key) => table.TryGetValue(key, out float value) ? value : 0f;
+
+    private void FillScopeKeys(string resourceName, string section = null, string type = null)
+    {
+        _scratchKeys.Clear();
+        _scratchKeys.Add(resourceName);
+        if (section == null || type == null)
+        {
+            var unit = GameUnitsLogic.Instance != null ? GameUnitsLogic.Instance.GetResourceSlotFromName(resourceName)?.gameUnit : null;
+            if (unit == null) GameCatalog.Resources.TryGet(resourceName, out unit);
+            if (unit != null)
+            {
+                section ??= unit.section;
+                type ??= unit.type;
+            }
+        }
+        if (!string.IsNullOrEmpty(section)) _scratchKeys.Add(ModifierTargets.Section(section));
+        if (!string.IsNullOrEmpty(type)) _scratchKeys.Add(ModifierTargets.Type(type));
+        _scratchKeys.Add(ModifierTargets.All);
+    }
+
+    /// <summary>Output granted by production scaling rules ("+X resource per counted unit").</summary>
+    private float CalculateScalingBonus(string resourceName)
+    {
+        var units = GameUnitsLogic.Instance;
+        if (units == null) return 0f;
+        float total = 0f;
+        foreach (var key in units.ProductionScaling.Targets)
+        {
+            if (!ProductionScalingKey.TryParse(key, out string resource, out string counter)) continue;
+            if (!string.Equals(resource, resourceName, System.StringComparison.OrdinalIgnoreCase)) continue;
+            float perUnit = units.ProductionScaling.Total(key).Flat;
+            if (perUnit != 0f) total += perUnit * CountFor(counter, resourceName);
+        }
+        return total;
+    }
+
+    private float CountFor(string counter, string resourceName)
+    {
+        if (counter.StartsWith(ProductionScalingKey.ValuePrefix, System.StringComparison.OrdinalIgnoreCase))
+        {
+            string name = counter.Substring(ProductionScalingKey.ValuePrefix.Length);
+            if (GameValues.IsKnownDomain(name)) return GameValues.Get(name, string.Empty);
+            return StatDefinitions.IsKnown(name) ? GameValues.Get("stat", name) : 0f;
+        }
+
+        float count = 0f;
+        bool producersOnly = counter == ProductionScalingKey.Producers;
+        foreach (var slot in productionSlots)
+        {
+            if (slot == null || slot.gameUnit == null || slot.productionUnitData == null) continue;
+            bool counts = producersOnly
+                ? slot.productionUnitData.producedResources.Exists(r => string.Equals(r, resourceName, System.StringComparison.OrdinalIgnoreCase))
+                : ModifierTargets.Covers(counter, slot.gameUnit.name, slot.gameUnit.section, slot.gameUnit.type);
+            if (counts) count += Mathf.Round(slot.maxAmount);
+        }
+        return count;
+    }
+
+    /// <summary>Units whose inputs ran dry drop to reduced output until every consumed resource is available again.</summary>
+    private void UpdateProductionSufficiency()
+    {
+        var units = GameUnitsLogic.Instance;
+        if (units == null) return;
+        foreach (var slot in productionSlots)
+        {
+            if (slot == null || slot.productionUnitData == null) continue;
+            bool depleted = false;
+            foreach (var resourceName in slot.productionUnitData.consumedResources)
+            {
+                var resourceSlot = units.GetResourceSlotFromName(resourceName);
+                if (resourceSlot == null || resourceSlot.amount <= 0f)
+                {
+                    depleted = true;
+                    break;
+                }
+            }
+            if (slot.insufficientProduction != depleted)
+            {
+                slot.insufficientProduction = depleted;
+                slot.UpdateMaxAmount();
+                MarkDirty();
+            }
+        }
+    }
 }

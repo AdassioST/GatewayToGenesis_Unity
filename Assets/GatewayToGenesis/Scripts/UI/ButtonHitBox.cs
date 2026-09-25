@@ -1,19 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>Buttons with this ignore clicks on (nearly) transparent pixels of their image. The sprite needs Read/Write enabled.</summary>
 public class ButtonHitBox : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        this.GetComponent<Image>().alphaHitTestMinimumThreshold = 0.1f;
-    }
+    [SerializeField, Range(0f, 1f)] private float alphaThreshold = 0.1f;
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        
+        if (TryGetComponent(out Image image)) image.alphaHitTestMinimumThreshold = alphaThreshold;
     }
 }

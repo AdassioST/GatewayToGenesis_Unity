@@ -104,203 +104,73 @@ public class EventCondition
         DeathsCheck,        // Check deaths amount
         VagrantDeathsCheck,  // Check vagrant deaths amount
         TrueDeathsCheck,     // Check true deaths amount (cannot be revised)
-        NoEventInSeventhsCheck // Check if no events happened in X sevenths
+        NoEventInSeventhsCheck, // Check if no events happened in X sevenths
+        ValueCheck           // Any other GameValues domain, named by `domain` (building, civic, weather, ...)
     }
-    
+
     public ConditionType type;
     public string targetName; // Score name, stat name, resource name, etc.
     public int requiredValue;
     public ComparisonOperator comparison;
+    [Tooltip("GameValues domain read by ValueCheck conditions (e.g. building, civic, weather, event_completed).")]
+    public string domain;
     
+    /// <summary>GameValues domain each condition type reads (see <see cref="GameValues"/>).</summary>
+    private static readonly System.Collections.Generic.Dictionary<ConditionType, string> Domains = new System.Collections.Generic.Dictionary<ConditionType, string>
+    {
+        { ConditionType.ScoreCheck, "score" },
+        { ConditionType.StatCheck, "stat" },
+        { ConditionType.ResourceCheck, "resource" },
+        { ConditionType.TechnologyCheck, "technology" },
+        { ConditionType.SeventhCheck, "seventh" },
+        { ConditionType.PhaseCheck, "phase" },
+        { ConditionType.EchoCheck, "echo" },
+        { ConditionType.CycleCheck, "cycle" },
+        { ConditionType.RitualSeventhCheck, "ritual_seventh" },
+        { ConditionType.PopulationCheck, "population" },
+        { ConditionType.HousingCheck, "housing" },
+        { ConditionType.VagrantsCheck, "vagrants" },
+        { ConditionType.DeathsCheck, "deaths" },
+        { ConditionType.VagrantDeathsCheck, "vagrant_deaths" },
+        { ConditionType.TrueDeathsCheck, "true_deaths" },
+        { ConditionType.NoEventInSeventhsCheck, "no_event_in_sevenths" },
+    };
+
+    /// <summary>
+    /// True when the condition holds now. Technology and ritual checks are yes/no; "no event in X sevenths"
+    /// means at least X sevenths; every other type compares the whole-number value with <see cref="comparison"/>.
+    /// </summary>
     public bool Evaluate()
     {
+        if (!TryGetCurrentValue(out float value)) return false;
         switch (type)
         {
-            case ConditionType.ScoreCheck:
-                int currentScore = EventSystemLogic.Instance?.GetEventScore(targetName) ?? 0;
-                return CompareValues(currentScore, requiredValue, comparison);
-                
-            case ConditionType.StatCheck:
-                StatManager statManager = EventSystemLogic.Instance?.GetStatManager();
-                if (statManager != null)
-                {
-                    int statValue = statManager.GetStatValue(targetName);
-                    return CompareValues(statValue, requiredValue, comparison);
-                }
-                return false;
-                
-            case ConditionType.ResourceCheck:
-                GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-                if (gameUnitsLogic != null)
-                {
-                    int resourceAmount = gameUnitsLogic.GetResourceAmount(targetName);
-                    return CompareValues(resourceAmount, requiredValue, comparison);
-                }
-                return false;
-                
             case ConditionType.TechnologyCheck:
-                return CheckTechnologyUnlocked(targetName);
-                
-            case ConditionType.SeventhCheck:
-                TimeSystemLogic timeSystem = EventSystemLogic.Instance?.GetTimeSystem();
-                if (timeSystem != null)
-                {
-                    return CompareValues(timeSystem.CurrentSeventh, requiredValue, comparison);
-                }
-                return false;
-                
-            case ConditionType.PhaseCheck:
-                TimeSystemLogic phaseSystem = EventSystemLogic.Instance?.GetTimeSystem();
-                if (phaseSystem != null)
-                {
-                    return CompareValues(phaseSystem.CurrentPhase, requiredValue, comparison);
-                }
-                return false;
-                
-            case ConditionType.EchoCheck:
-                TimeSystemLogic echoSystem = EventSystemLogic.Instance?.GetTimeSystem();
-                if (echoSystem != null)
-                {
-                    return CompareValues(echoSystem.CurrentEcho, requiredValue, comparison);
-                }
-                return false;
-                
-            case ConditionType.CycleCheck:
-                TimeSystemLogic cycleSystem = EventSystemLogic.Instance?.GetTimeSystem();
-                if (cycleSystem != null)
-                {
-                    return CompareValues(cycleSystem.CurrentCycle, requiredValue, comparison);
-                }
-                return false;
-                
             case ConditionType.RitualSeventhCheck:
-                TimeSystemLogic ritualSystem = EventSystemLogic.Instance?.GetTimeSystem();
-                if (ritualSystem != null)
-                {
-                    return ritualSystem.CurrentSeventh == 21; // Ritual seventh is always 21
-                }
-                return false;
-                
-            case ConditionType.PopulationCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int populationAmount = PopGrowthLogic.Instance.population;
-                    return CompareValues(populationAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate PopulationCheck condition");
-                    return false;
-                }
-                
-            case ConditionType.HousingCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int housingAmount = PopGrowthLogic.Instance.housing;
-                    return CompareValues(housingAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate HousingCheck condition");
-                    return false;
-                }
-                
-            case ConditionType.VagrantsCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int vagrantsAmount = PopGrowthLogic.Instance.vagrants;
-                    return CompareValues(vagrantsAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate VagrantsCheck condition");
-                    return false;
-                }
-                
-            case ConditionType.DeathsCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int deathsAmount = PopGrowthLogic.Instance.deaths;
-                    return CompareValues(deathsAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate DeathsCheck condition");
-                    return false;
-                }
-                
-            case ConditionType.VagrantDeathsCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int vagrantDeathsAmount = PopGrowthLogic.Instance.vagrantDeaths;
-                    return CompareValues(vagrantDeathsAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate VagrantDeathsCheck condition");
-                    return false;
-                }
-                
-            case ConditionType.TrueDeathsCheck:
-                if (PopGrowthLogic.Instance != null)
-                {
-                    int trueDeathsAmount = PopGrowthLogic.Instance.trueDeaths;
-                    return CompareValues(trueDeathsAmount, requiredValue, comparison);
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] PopGrowthLogic.Instance is null - cannot evaluate TrueDeathsCheck condition");
-                    return false;
-                }
-                
+                return value >= 1f;
             case ConditionType.NoEventInSeventhsCheck:
-                // Check if no events have happened in the specified number of sevenths
-                if (EventSystemLogic.Instance != null)
-                {
-                    int seventhsSinceLastEvent = EventSystemLogic.Instance.GetSeventhsSinceLastEvent();
-                    // For this condition, we want to check if the time since last event is >= required value
-                    // This means "no event in X sevenths" is true when seventhsSinceLastEvent >= requiredValue
-                    return seventhsSinceLastEvent >= requiredValue;
-                }
-                else
-                {
-                    Debug.LogWarning("[EventDataStructures] EventSystemLogic.Instance is null - cannot evaluate NoEventInSeventhsCheck condition");
-                    return false;
-                }
-                
+                return value >= requiredValue;
             default:
-                return false;
+                return GameValues.Compare(Mathf.Round(value), comparison, requiredValue);
         }
     }
-    
-    private bool CompareValues(int actual, int expected, ComparisonOperator op)
+
+    /// <summary>The domain this condition reads: the type's domain, or <see cref="domain"/> for ValueCheck.</summary>
+    public string Domain => type == ConditionType.ValueCheck ? domain : DomainOf(type);
+
+    /// <summary>The live value this condition compares (false when its system is not in the scene).</summary>
+    public bool TryGetCurrentValue(out float value)
     {
-        switch (op)
-        {
-            case ComparisonOperator.Equals: return actual == expected;
-            case ComparisonOperator.NotEquals: return actual != expected;
-            case ComparisonOperator.GreaterThan: return actual > expected;
-            case ComparisonOperator.LessThan: return actual < expected;
-            case ComparisonOperator.GreaterThanOrEqual: return actual >= expected;
-            case ComparisonOperator.LessThanOrEqual: return actual <= expected;
-            default: return false;
-        }
+        value = 0f;
+        string d = Domain;
+        return !string.IsNullOrEmpty(d) && GameValues.TryGet(d, targetName, out value);
     }
-    
-    private bool CheckTechnologyUnlocked(string technologyName)
-    {
-        GameUnitsLogic gameUnitsLogic = EventSystemLogic.Instance?.GetGameUnitsLogic();
-        if (gameUnitsLogic != null && gameUnitsLogic.researchTab != null)
-        {
-            GameObject techSlotObj = gameUnitsLogic.researchTab.slots.Find(slot => slot.name == technologyName);
-            if (techSlotObj != null)
-            {
-                GameTechnologySlot techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
-                return techSlot != null && techSlot.isUnlocked;
-            }
-        }
-        return false;
-    }
+
+    /// <summary>Whether the condition is a yes/no check rather than a number comparison.</summary>
+    public bool IsYesNo => type == ConditionType.TechnologyCheck || type == ConditionType.RitualSeventhCheck
+        || (type == ConditionType.ValueCheck && (domain == "civic" || domain == "government" || domain == "weather"));
+
+    public static string DomainOf(ConditionType type) => Domains.TryGetValue(type, out var domain) ? domain : null;
 }
 
 /// <summary>
@@ -403,4 +273,51 @@ public enum EventType
     Crisis
 }
 
- 
+/// <summary>
+/// One chorus choice as authored in Ink (see <see cref="EventScript.ParseChorusChoice"/>): its gating
+/// requirements and costs, its pillar challenge and where each outcome leads. Instances live in
+/// <see cref="EventStoryIndex"/> and are shared, so views and rules read them and never write to them.
+/// </summary>
+[System.Serializable]
+public class ChorusChoiceData
+{
+    public string choiceId;    // "idealism", "realism" or "pragmatism"
+    public string title;
+    public string description;
+    public string destinationPath;
+    public string successPath;
+    public string failurePath;
+    public List<EventCondition> requirements = new List<EventCondition>();
+    // Costs gate availability like requirements and are paid when the choice is made.
+    public List<EventCondition> requirementsCost = new List<EventCondition>();
+    public List<EventConsequence> consequences = new List<EventConsequence>(); // Always applied when chosen
+    public List<EventConsequence> successConsequences = new List<EventConsequence>();
+    public List<EventConsequence> failureConsequences = new List<EventConsequence>();
+
+    // Pillar challenge; hasChallenge is false for choices that simply happen ("Time passes...").
+    public bool hasChallenge;
+    public string challengePillar;
+    public int challengeStrength;
+
+    // Extended outcomes
+    public int rareEventPercent; // 0 disables
+    public string rareEventPath;
+    public List<EventConsequence> rareEventConsequences = new List<EventConsequence>();
+    public string critSuccessPath;
+    public string critFailurePath;
+    public List<EventConsequence> critSuccessConsequences = new List<EventConsequence>();
+    public List<EventConsequence> critFailureConsequences = new List<EventConsequence>();
+
+    public bool HasRequirements => requirements.Count > 0 || requirementsCost.Count > 0;
+
+    /// <summary>Every knot this choice can lead to (for validation).</summary>
+    public IEnumerable<string> TargetKnots()
+    {
+        if (!string.IsNullOrEmpty(destinationPath)) yield return destinationPath;
+        if (!string.IsNullOrEmpty(successPath)) yield return successPath;
+        if (!string.IsNullOrEmpty(failurePath)) yield return failurePath;
+        if (!string.IsNullOrEmpty(critSuccessPath)) yield return critSuccessPath;
+        if (!string.IsNullOrEmpty(critFailurePath)) yield return critFailurePath;
+        if (!string.IsNullOrEmpty(rareEventPath)) yield return rareEventPath;
+    }
+}

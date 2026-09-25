@@ -1,131 +1,121 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-public class GlobalCharacterManager : MonoBehaviour
+/// <summary>
+/// The characters walking the settlement: one villager per citizen, spawned and removed by
+/// <see cref="PopGrowthLogic"/>. Characters appear at a random point inside the spawn area's PolygonCollider2D
+/// and unregister themselves when destroyed, so the roster never holds dead entries.
+/// </summary>
+public class GlobalCharacterManager : SingletonBehaviour<GlobalCharacterManager>
 {
-    public static GlobalCharacterManager Instance { get; private set; }
+    private const LogChannel Log = LogChannel.Population;
+    private const string DefaultPopulationChild = "Population";
+    private const int MaxSpawnAttempts = 30;
 
-    [SerializeField] private Transform characterParent; // Parent for organizing characters in the hierarchy
+    [Tooltip("Spawn area. Its PolygonCollider2D is the region characters appear in.")]
+    [SerializeField] private Transform characterParent;
+    [Tooltip("Parent of spawned characters. Defaults to the spawn area's 'Population' child, then the spawn area itself.")]
+    [SerializeField] private Transform populationParent;
 
     [SerializeField] private List<GameUnit> characterUnits; // GameUnits available for characters
     [SerializeField] private GameObject characterPrefab; // A generic prefab for any character
 
-    public List<GameCharacterLogic> activeCharacters = new List<GameCharacterLogic>();
+    private readonly List<GameCharacterLogic> activeCharacters = new List<GameCharacterLogic>();
+    private PolygonCollider2D spawnArea;
 
-    private void Awake()
+    public IReadOnlyList<GameCharacterLogic> ActiveCharacters => activeCharacters;
+
+    public int Count => activeCharacters.Count;
+
+    protected override void OnSingletonAwake()
     {
-        if (Instance != null && Instance != this)
+        if (characterParent == null)
         {
-            Debug.LogWarning("Duplicate GlobalCharacterManager found, destroying the new one.");
-            Destroy(gameObject);
+            GameLog.Warning("No spawn area (characterParent) assigned; no characters will appear.", Log);
             return;
         }
-
-        Instance = this;
+        spawnArea = characterParent.GetComponent<PolygonCollider2D>();
+        if (spawnArea == null) GameLog.Warning($"'{characterParent.name}' has no PolygonCollider2D; no characters will appear.", Log);
+        if (populationParent == null) populationParent = characterParent.Find(DefaultPopulationChild);
+        if (populationParent == null) populationParent = characterParent;
     }
 
-    public void SpawnCharacterFromName(string name)
+    /// <summary>Spawn <paramref name="count"/> characters of the unit named <paramref name="unitName"/> at random points in the spawn area.</summary>
+    public void Spawn(string unitName, int count = 1)
     {
-        // Look for the character prefab in the characterUnits list
-        GameUnit characterUnit = characterUnits.FirstOrDefault(unit => unit.name == name);
-
-        if (characterUnit != null)
+        if (count <= 0 || spawnArea == null) return;
+        var unit = FindUnit(unitName);
+        if (unit == null)
         {
-            // Get the collider component of the "Characters" GameObject
-            PolygonCollider2D characterCollider = characterParent.GetComponent<PolygonCollider2D>();
-
-            if (characterCollider != null)
-            {
-                Vector3 randomPosition = GetRandomSpawnPositionInCollider(characterCollider);
-
-                // Instantiate the character at the random position
-                GameObject character = Instantiate(characterPrefab, randomPosition, Quaternion.identity);
-                character.transform.SetParent(characterParent.Find("Population"));
-
-                GameCharacterLogic characterLogic = character.GetComponent<GameCharacterLogic>();
-
-                if (characterLogic != null)
-                {
-                    characterLogic.gameUnit = characterUnit;
-                    characterLogic.AssignRandomSprite();
-
-                    activeCharacters.Add(characterLogic);
-                }
-            }
-            else
-            {
-                Debug.LogWarning("No collider found on the 'Characters' GameObject.");
-            }
+            GameLog.Warning($"No character unit named '{unitName}' in characterUnits.", Log);
+            return;
         }
-        else
-        {
-            Debug.LogWarning($"Character prefab {name} not found in the GameUnit list.");
-        }
+        for (int i = 0; i < count; i++) Spawn(unit, RandomSpawnPosition());
     }
 
-
-
-    public GameCharacterLogic SpawnCharacterFromUnit(GameUnit unit, Vector3 position)
+    /// <summary>Spawn one character of <paramref name="unit"/> at a world position.</summary>
+    public GameCharacterLogic Spawn(GameUnit unit, Vector3 position)
     {
         if (unit == null || characterPrefab == null)
         {
-            Debug.LogError("Cannot spawn character: GameUnit or characterPrefab is null.");
+            GameLog.Error("Cannot spawn a character: the GameUnit or the character prefab is missing.", Log);
             return null;
         }
 
-        GameObject characterObject = Instantiate(characterPrefab, position, Quaternion.identity, characterParent);
-        GameCharacterLogic characterLogic = characterObject.GetComponent<GameCharacterLogic>();
-
-        if (characterLogic == null)
+        var characterObject = Instantiate(characterPrefab, position, Quaternion.identity, populationParent);
+        if (!characterObject.TryGetComponent(out GameCharacterLogic character))
         {
-            Debug.LogError("Character prefab is missing GameCharacterLogic component.");
+            GameLog.Error($"Character prefab '{characterPrefab.name}' has no GameCharacterLogic component.", Log);
             Destroy(characterObject);
             return null;
         }
 
-        characterLogic.Initialize(unit); // Sets the GameUnit properties
-        activeCharacters.Add(characterLogic);
+        character.Initialize(unit);
+        activeCharacters.Add(character);
+        return character;
+    }
 
-        return characterLogic;
+    /// <summary>Remove up to <paramref name="count"/> characters chosen at random.</summary>
+    public void RemoveRandom(int count)
+    {
+        for (int i = 0; i < count && activeCharacters.Count > 0; i++)
+        {
+            RemoveCharacter(activeCharacters[Random.Range(0, activeCharacters.Count)]);
+        }
     }
 
     public void RemoveCharacter(GameCharacterLogic character, bool destroy = true)
     {
-        if (character == null) return;
-
-        if (activeCharacters.Contains(character))
-        {
-            activeCharacters.Remove(character);
-
-            if (destroy)
-            {
-                Destroy(character.gameObject);
-            }
-        }
+        if (!activeCharacters.Remove(character)) return;
+        if (destroy && character != null) Destroy(character.gameObject);
     }
-    public Vector3 GetRandomSpawnPositionInCollider(PolygonCollider2D spawnAreaCollider)
-    {
-        // Get a random point within the bounds of the PolygonCollider2D
-        Bounds bounds = spawnAreaCollider.bounds;
-        Vector3 randomPoint = new Vector3(
-            Random.Range(bounds.min.x, bounds.max.x),
-            Random.Range(bounds.min.y, bounds.max.y),
-            0); // Assuming you're working in a 2D plane, use 0 for z-axis
 
-        // Ensure the point is inside the collider
-        while (!spawnAreaCollider.OverlapPoint(randomPoint))
+    // Called by a character as it is destroyed, whoever destroyed it.
+    internal void Unregister(GameCharacterLogic character) => activeCharacters.Remove(character);
+
+    private GameUnit FindUnit(string unitName)
+    {
+        if (characterUnits == null) return null;
+        foreach (var unit in characterUnits)
         {
-            randomPoint = new Vector3(
-                Random.Range(bounds.min.x, bounds.max.x),
-                Random.Range(bounds.min.y, bounds.max.y),
-                0); // Keep trying until we get a point inside the polygon collider
+            if (unit != null && string.Equals(unit.name, unitName, StringComparison.OrdinalIgnoreCase)) return unit;
         }
-
-        return randomPoint;
+        return null;
     }
-    public List<GameCharacterLogic> GetActiveCharacters()
+
+    // Rejection sampling inside the polygon's bounds. A disabled or degenerate collider never reports a hit,
+    // so the attempts are capped and the last guess is pulled onto the polygon instead.
+    private Vector3 RandomSpawnPosition()
     {
-        return activeCharacters;
+        Bounds bounds = spawnArea.bounds;
+        Vector2 point = bounds.center;
+        for (int attempt = 0; attempt < MaxSpawnAttempts; attempt++)
+        {
+            point = new Vector2(Random.Range(bounds.min.x, bounds.max.x), Random.Range(bounds.min.y, bounds.max.y));
+            if (spawnArea.OverlapPoint(point)) return point;
+        }
+        return spawnArea.ClosestPoint(point);
     }
 }

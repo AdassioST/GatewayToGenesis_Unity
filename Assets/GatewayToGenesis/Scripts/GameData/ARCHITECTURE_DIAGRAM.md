@@ -1,5 +1,9 @@
 # Celestial Weather System Architecture
 
+Weather-specific architecture. For the project as a whole (effects, ledgers, catalogs), see `Scripts/ARCHITECTURE.md`.
+Weather effects are ordinary `GameEffect`s: changing weather is `EffectRouter.RemoveSource("Weather: {old}")`
+followed by `EffectRouter.ApplySet("Weather: {new}", effects)`.
+
 ## System Overview Diagram
 
 ```
@@ -37,13 +41,11 @@
 │    │  ├── Timed weather system                                       │   │
 │    │  └── Weather pool management                                    │   │
 │    │                                                                  │   │
-│    │  EFFECT MANAGEMENT:                                             │   │
+│    │  EFFECT MANAGEMENT (through EffectRouter):                      │   │
 │    │  ├── RemoveWeatherEffects(old)                                  │   │
-│    │  │   ├── Clear production modifiers                             │   │
-│    │  │   └── Clear stat bonuses                                     │   │
+│    │  │   └── EffectRouter.RemoveSource("Weather: old")              │   │
 │    │  └── ApplyWeatherEffects(new)                                   │   │
-│    │      ├── Route to StatManager                                   │   │
-│    │      └── Route to GlobalProductionManager                       │   │
+│    │      └── EffectRouter.ApplySet("Weather: new", effects)         │   │
 │    │                                                                  │   │
 │    │  TIME SYSTEM INTEGRATION:                                       │   │
 │    │  ├── OnSeventhChange → Check timed weather / procedural        │   │
@@ -84,31 +86,19 @@
                                │
 ┌──────────────────────────────┼─────────────────────────────────────────────┐
 │                              ▼                                             │
-│                    EFFECT TARGETS                                          │
+│                    EFFECT TARGETS (via EffectRouter)                       │
 ├────────────────────────────────────────────────────────────────────────────┤
+│  Each effect type has one handler that writes into the ledger of the       │
+│  system that consumes it, keyed by (target, "Weather: {name}"):            │
 │                                                                            │
-│  ┌──────────────────────────────┐  ┌──────────────────────────────────┐  │
-│  │      StatManager             │  │  GlobalProductionManager         │  │
-│  ├──────────────────────────────┤  ├──────────────────────────────────┤  │
-│  │                              │  │                                  │  │
-│  │ • AddPillarBonus()           │  │ • AdjustPercentageModifier()    │  │
-│  │ • AddSubstatBonus()          │  │ • AdjustPercentageModifier-     │  │
-│  │ • AddDerivedStatBonus()      │  │   ForSection()                  │  │
-│  │ • AddGlobalBonus()           │  │ • ClearAllModifiersFromSource() │  │
-│  │   - maxmorale                │  │                                  │  │
-│  │   - moraleBalance            │  │ Tracks by source:               │  │
-│  │   - satisfactionupgrade-     │  │ • percentageBonusBySource       │  │
-│  │     threshold                │  │ • percentageMalusBySource       │  │
-│  │ • ClearBonusesFromSource()   │  │ • persistentBonusBySource       │  │
-│  │                              │  │ • persistentMalusBySource       │  │
-│  │ Tracks by source:            │  │                                  │  │
-│  │ • pillarBonuses              │  │ Applies to:                     │  │
-│  │ • substatBonuses             │  │ • Resource production rates     │  │
-│  │ • derivedStatBonuses         │  │ • Section-wide modifiers        │  │
-│  │ • globalBonuses              │  │ • Global modifiers              │  │
-│  │                              │  │                                  │  │
-│  └──────────────────────────────┘  └──────────────────────────────────┘  │
+│  • Pillar / Substat / Derived / MaxMorale / MoraleBalance /                │
+│    SatisfactionThreshold / Morale  → StatManager.Modifiers                 │
+│  • ResourceModifier                → GlobalProductionManager.ResourceModifiers
+│  • ProductionModifier / ConstructionCost / ClickPower / ProductionScaling  │
+│                                    → GameUnitsLogic ledgers                │
+│  • HousingBonus                    → PopGrowthLogic.HousingModifiers       │
 │                                                                            │
+│  Removing the weather is one RemoveSource call across every ledger.        │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,78 +106,18 @@
 
 ## Data Flow Example: Storm Weather
 
-### Initial State
 ```
-No active weather, default lighting, no effects
-```
-
-### Weather Change: Activate "Storm"
-
-```
-┌─ SystemLogic.SetWeatherProfileInternal("Storm", isHardSet: false)
-│
-├─ 1. RemoveWeatherEffects(null) → Skip (no previous weather)
-│
+SetWeatherProfileInternal(Storm)
+├─ 1. EffectRouter.RemoveSource("Weather: Calm Winds")     → every ledger drops Calm Winds' entries
 ├─ 2. activeWeatherProfile = Storm
-│
-├─ 3. ApplyWeatherEffects(Storm)
-│  │
-│  ├─ Effect 1: PillarBonus +3 Chorus
-│  │  └─ StatManager.AddPillarBonus("chorus", 3, "Weather:Storm")
-│  │     ├─ pillarBonuses["chorus"]["Weather:Storm"] = 3
-│  │     ├─ Chorus: 10 → 13
-│  │     ├─ Arcane: 5 → 6 (derived from Chorus)
-│  │     └─ Secrecy: 5 → 6 (derived from Chorus)
-│  │
-│  ├─ Effect 2: ResourceModifier -15% all resources
-│  │  └─ For each resource (Food, Wood, Stone, etc.):
-│  │     └─ GlobalProductionManager.AdjustPercentageModifier(...)
-│  │        └─ percentageMalusBySource[resource]["Weather:Storm"] = 15
-│  │        └─ Food: 10/s → 8.5/s (-15%)
-│  │        └─ Wood: 5/s → 4.25/s (-15%)
-│  │        └─ ... (all resources affected)
-│  │
-│  └─ Effect 3: MaxMoraleModifier -10
-│     └─ StatManager.AddGlobalBonus("maxmorale", -10, "Weather:Storm")
-│        └─ globalBonuses["maxmorale"]["Weather:Storm"] = -10
-│        └─ Max Morale: 200 → 190
-│
-├─ 4. visualLogic.OnWeatherChanged(Storm)
-│  │
-│  ├─ Fade out old particles (none)
-│  ├─ activeWeatherProfile = Storm
-│  ├─ UpdateAllParameters()
-│  │  ├─ Sample all curves at currentSeventhPercentage
-│  │  ├─ cachedLightIntensity = 0.523
-│  │  ├─ cachedLightColor = RGB(0.85, 0.85, 0.90) [stormy gray]
-│  │  ├─ cachedFogDensity = 0.35 [foggy]
-│  │  └─ Weather weights: Overcast=0.7, Storm=0.4, Clear=0.1
-│  │
-│  ├─ ApplyLighting()
-│  │  ├─ globalLight.intensity = 0.523
-│  │  └─ globalLight.color = stormy gray
-│  │
-│  └─ SpawnParticleEffect(Storm)
-│     ├─ Instantiate rain particles
-│     ├─ Start at alpha = 0
-│     └─ DOTween fade to alpha = 1 over 1 second
-│
-└─ 5. OnWeatherChanged?.Invoke(Storm) → Notify external listeners
-
-FINAL STATE:
-├─ Weather: Storm (procedural)
-├─ Effects Applied:
-│  ├─ Chorus: 10 → 13 (+3)
-│  ├─ Arcane: 5 → 6 (derived)
-│  ├─ Secrecy: 5 → 6 (derived)
-│  ├─ All resources: -15% production
-│  └─ Max morale: 200 → 190
-├─ Visuals:
-│  ├─ Darker lighting (intensity 0.523)
-│  ├─ Gray-tinted light
-│  ├─ Increased fog (0.35 density)
-│  └─ Rain particles fading in
-└─ Debug displays show all changes
+├─ 3. EffectRouter.ApplySet("Weather: Storm", Storm.effects)
+│     ├─ PillarBonus +3 chorus       → StatManager.Modifiers["chorus"]["Weather: Storm"] = +3
+│     │                                 → Recalculate: Chorus 10→13, Arcane/Secrecy follow
+│     ├─ ResourceModifier -15% Global → ResourceModifiers["*"]["Weather: Storm"] = -15%
+│     │                                 → every resource, including ones discovered later
+│     └─ MaxMoraleModifier -10       → StatManager.Modifiers["maxmorale"]["Weather: Storm"] = -10
+├─ 4. visualLogic.OnWeatherChanged(Storm)                  → curves, lighting, particles
+└─ 5. OnWeatherChanged?.Invoke(Storm)
 ```
 
 ---
@@ -362,55 +292,19 @@ CelestialWeatherVisualLogic.OnSeventhChanged()
 
 ## Effect Application Order
 
-### Dependency Chain
-
-```
-1. PILLARS (Independent)
-   └─ Weather can add bonuses via AddPillarBonus()
-      └─ pillarBonuses["pillar"]["Weather:X"] = value
-
-2. SUBSTATS (Depend on Pillars)
-   └─ Calculated from final pillar values
-   └─ Weather can add bonuses via AddSubstatBonus()
-      └─ substatBonuses["substat"]["Weather:X"] = value
-
-3. DERIVED STATS (Depend on Substats)
-   └─ Calculated from final substat values
-   └─ Weather can add bonuses via AddDerivedStatBonus()
-      └─ derivedStatBonuses["derived"]["Weather:X"] = value
-
-4. PRODUCTION RATES (Independent, but affected by morale)
-   └─ Weather can modify via AdjustPercentageModifier()
-      └─ percentageBonusBySource["resource"]["Weather:X"] = value
-      └─ Applied as: rate *= (1 + totalPercent / 100)
-
-5. GLOBAL STATS (Independent)
-   └─ Weather can modify via AddGlobalBonus()
-      └─ globalBonuses["global"]["Weather:X"] = value
-      └─ Examples: maxmorale, moraleBalance, satisfactionupgradethreshold
-```
-
-**Important**: All effects use the same source name pattern, enabling atomic cleanup!
-
----
+Order does not matter. Stats are recomputed from bases and ledgers in dependency order
+(pillars → substats → derived → thresholds) whenever any stat ledger changes, and production is recomputed
+when its ledgers change. Every weather effect uses the source `Weather: {asset name}`, so removal is atomic.
 
 ## Thread Safety & Cleanup
 
 ### Singleton Pattern
-```csharp
-// Both systems use proper singleton
-if (Instance != null && Instance != this)
-{
-    Debug.LogWarning("Duplicate instance detected");
-    Destroy(gameObject);
-    return;
-}
-Instance = this;
-```
+`CelestialWeatherSystemLogic` derives from `SingletonBehaviour<T>` (first instance wins, later duplicates are
+destroyed); setup lives in `OnSingletonAwake`, teardown in `OnSingletonDestroy`.
 
 ### Event Cleanup
 ```csharp
-// SystemLogic.OnDestroy()
+// SystemLogic.OnSingletonDestroy()
 if (timeSystem != null)
 {
     timeSystem.OnSeventhChange -= OnSeventhChanged;
@@ -529,46 +423,9 @@ OnSeventhPercentageUpdate(float)
 
 **Total**: 40+ public methods, all preserved from original!
 
----
+## Status
 
-## Verification Complete ✅
-
-### Code Health
-- ✅ No linter errors
-- ✅ No compilation errors
-- ✅ No orphaned references
-- ✅ All integrations updated
-- ✅ Clean separation of concerns
-
-### Functionality
-- ✅ Weather selection works
-- ✅ Effects apply correctly
-- ✅ Effects remove correctly
-- ✅ Morale integration works
-- ✅ Production integration works
-- ✅ Visual rendering works
-- ✅ Particle effects work
-
-### Documentation
-- ✅ Migration guide complete
-- ✅ Effect flow documented
-- ✅ API reference complete
-- ✅ Architecture diagrams created
-- ✅ Examples provided
-
----
-
-## 🎉 Final Status: COMPLETE
-
-The Celestial Weather System refactoring is **PRODUCTION-READY**!
-
-**What's Been Achieved**:
-- Clean separation of system logic and visual rendering
-- All external integrations updated and verified
-- Weather effects properly managed across all systems
-- Morale/production/stats fully integrated
-- Zero technical debt from migration
-- Extensive documentation for future maintenance
-
-**Your Next Step**: 
-Open your Unity scene and replace the old component with `CelestialWeatherSystemLogic`. The system will auto-create `CelestialWeatherVisualLogic` and you'll be ready to go! 🚀
+- Weather effects go through the shared effect system; the old per-system application (which re-multiplied
+  click power on every weather change) is gone.
+- `CancelTimedWeather` now behaves exactly like natural expiry (the previous weather returns as procedural).
+- `IsWeatherActive` accepts asset or display names, like every lookup.

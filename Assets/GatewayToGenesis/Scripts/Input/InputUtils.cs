@@ -21,4 +21,14 @@ public static class InputUtils
     public static bool AnyKeyOrClickDown => AnyKeyDown || LeftClickDown || RightClickDown;
 
     public static bool KeyDown(Key key) => Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame;
+
+    /// <summary>
+    /// Developer shortcut: Ctrl + key, only in the editor and development builds. Keeps debug actions from
+    /// colliding with gameplay hotkeys (Q/W/E/R switch tabs) and out of release builds.
+    /// </summary>
+    public static bool DebugKeyDown(Key key)
+    {
+        if (!Debug.isDebugBuild || Keyboard.current == null) return false;
+        return Keyboard.current.ctrlKey.isPressed && Keyboard.current[key].wasPressedThisFrame;
+    }
 }

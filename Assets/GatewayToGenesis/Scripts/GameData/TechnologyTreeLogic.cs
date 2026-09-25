@@ -14,7 +14,11 @@ public class TechnologyTreeLogic : MonoBehaviour
     {
         tabBuilderLogic = GetComponentInParent<TabBuilderLogic>();
 
-        if (!tabBuilderLogic) Debug.LogError("TabBuilderLogic component not found in parent");
+        if (tabBuilderLogic == null)
+        {
+            GameLog.Error("TechnologyTreeLogic needs a TabBuilderLogic in its parents; the tree is not built.", LogChannel.Units);
+            return;
+        }
 
         InitializeTree(eraTechnologies);
 
@@ -31,8 +35,8 @@ public class TechnologyTreeLogic : MonoBehaviour
 
         foreach (var techData in technologies)
         {
-            if (techData == null) 
-            { 
+            if (techData == null || techData.gameUnit == null)
+            {
                 Instantiate(emptySlotPrefab, slots.transform);
 
                 continue;
@@ -44,29 +48,28 @@ public class TechnologyTreeLogic : MonoBehaviour
 
             if (techSlotObj == null) 
             {
-                Debug.LogError($"Slot for {techData.name} not found in the hierarchy.");
+                GameLog.Error($"Technology slot '{techData.gameUnit.name}' was not created under '{slots.name}'.", LogChannel.Units);
 
                 continue;
             }
 
             var techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
+            if (techSlot == null) continue;
 
-            if (techSlot != null) DetermineTechnologyVisibility(techSlot);
+            // Each age has its own tree: the slot refreshes this one, not whichever tree a scene search finds.
+            techSlot.technologyTreeLogic = this;
+            DetermineTechnologyVisibility(techSlot);
         }
 
         DetermineTechnologyVisibilityForAllSlots();
 
-        //Always swap First and Second Tech Slot
-        Transform firstSlot = slots.transform.GetChild(0);
-        Transform secondSlot = slots.transform.GetChild(1);
-
-        firstSlot.SetSiblingIndex(1);
-        secondSlot.SetSiblingIndex(0);
+        // The layout shows the second technology first.
+        if (slots.transform.childCount >= 2) slots.transform.GetChild(1).SetAsFirstSibling();
     }
 
     public void DetermineTechnologyVisibility(GameTechnologySlot techSlot)
     {
-        if (techSlot?.technologyData == null) return;
+        if (techSlot == null || techSlot.technologyData == null) return;
 
         TechnologyData techData = techSlot.technologyData;
 
@@ -154,7 +157,7 @@ public class TechnologyTreeLogic : MonoBehaviour
         {
             var techSlot = slotTransform.GetComponent<GameTechnologySlot>();
 
-            if (techSlot?.technologyData != null) DetermineTechnologyVisibility(techSlot);
+            if (techSlot != null && techSlot.technologyData != null) DetermineTechnologyVisibility(techSlot);
         }
     }
 

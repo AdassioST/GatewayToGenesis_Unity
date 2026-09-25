@@ -8,8 +8,8 @@ The updated Chorus Screen system features:
 - **Smooth alpha transitions** for background elements during token dragging
 - **Hidden background elements** that reveal as choices become invisible
 - **Distance-based alpha changes** - closer to center = lower alpha, further = higher alpha
-- **Base alpha 30%** for all choice backgrounds when not interacting
-- **Alpha increases to 95%** as token gets further from center
+- **Base alpha 35%** for available choice backgrounds when not interacting (15% for locked ones)
+- **Alpha increases to 100%** on the drop area under the token as it moves away from the centre
 
 ## 🏗️ **UI Hierarchy Structure**
 
@@ -53,51 +53,25 @@ ChorusScreen (Empty GameObject)
 
 ## 🔧 **Core Components**
 
-### 1. ChorusScreenManager
-The main coordinator that:
-- Parses choice data from Ink files
-- Manages screen variant selection (FullOutcomes vs TwoChoices)
-- Handles choice resolution and story advancement
-- Manages background alpha transitions during token dragging
+Every rule lives in one place; the components are views over it.
 
-### 2. ChorusChoice
-Individual choice components that:
-- Display choice information (title, description, requirements)
-- Handle hover interactions and alpha transitions
-- Manage requirement checking and challenge slots
-- Become invisible during token drag to reveal background elements
-
-### 3. DecisionToken
-Draggable token that:
-- Tracks distance from screen center
-- Communicates with ChorusScreenManager for alpha updates
-- Triggers choice selection when dropped
-- Returns to center if dropped on invalid area
-
-### 4. ChallengeSlot
-Simplified challenge display with:
-- Pillar icon (Aureus, Regalia, Waltz, Chorus)
-- Visual chance indicator (sprite changes based on percentage)
-- Tooltip-based information display
-
-### 5. PillarDisplay
-Civilization pillar values with:
-- Icon and current amount
-- Tooltip-based name display
-- Automatic updates from StatManager
+| Piece | Role |
+|---|---|
+| `EventStoryIndex` | Holds each chorus knot's choices (`ChorusChoiceData`), parsed once at start-up by `EventScript.ParseChorusChoice`. Shared and read-only. |
+| `ChorusRules` | The d100: success % (pillar ÷ strength), Piety bonus, critical bands, rare events, costs, outcome odds. No Unity code; covered by `EventSystemTests`. |
+| `ChorusScreenManager` | Picks the variant (three choices when Pragmatism exists), binds the cards and drop areas, refreshes them (pillar changes and every 0.5 s), resolves the drop, queues costs and consequences, shows the result card, navigates. |
+| `ChorusChoice` | One card: title, description, a `RequirementSlot` per requirement and cost, the `ChallengeSlot`, the locked overlay, and a tooltip listing every outcome with its current odds and consequences. |
+| `ChorusChoiceBackground` | The drop area for one choice, found by name (`Idealism`, `Realism`, `Pragmatism`, or lower case). Locked choices sit at 15% alpha on the `UIBlock` layer. |
+| `DecisionToken` | Draggable token. Released over an available drop area it makes that choice; anywhere else it springs back. It cannot be dragged once a choice is made. |
+| `ChallengeSlot` | Pillar icon and luck icon (Fated > 90%, Blessed ≥ 60%, Gamble ≥ 40%, Cursed ≥ 10%, else Forsaken), using the same chance as the roll, Piety included. |
+| `RequirementSlot` | Icon plus a green/red panel; tooltip wording from `EventText` ("Needs At Least 5 Population", "Costs 5 Elderwood"). |
 
 ## 🎨 **Alpha Transition System**
 
-### How It Works
-1. **Base State**: All background elements start at 30% alpha
-2. **During Drag**: Choices container becomes invisible, revealing background elements
-3. **Distance Calculation**: Token distance from center determines alpha values
-4. **Smooth Transitions**: DOTween handles all alpha changes with easing
-
-### Alpha Values
-- **Center (0 distance)**: 30% alpha (base)
-- **Edge (max distance)**: 95% alpha (maximum)
-- **Smooth interpolation** between these values based on token position
+1. **Base state**: available drop areas rest at 35% (`baseAlpha`); locked ones at 15% and never change.
+2. **Drag starts**: available cards fade out, their drop areas drop to 15%; locked cards stay readable.
+3. **While dragging**: the drop area under the token brightens towards 100% (`maxAlpha`) with the token's distance from the centre (`maxDistanceForAlpha` on the token); the others return to their resting alpha.
+4. **Drag ends without a choice**: cards fade back in and drop areas return to 35%.
 
 ## 📝 **Ink Integration**
 
@@ -286,74 +260,17 @@ Assign the appropriate sprites for:
 
 ## 🔄 **How the System Works**
 
-### 1. Screen Initialization
-1. `ChorusScreenManager.InitializeChorusScreen()` is called
-2. Ink story is parsed for choice metadata from the chorus knot
-3. Screen variant is selected (FullOutcomes vs TwoChoices)
-4. Choice UI elements are created
-5. Pillar values are displayed
-
-### 2. Token Interaction
-1. Player starts dragging the decision token
-2. `OnTokenDragStarted()` is called
-3. Choices container becomes invisible
-4. Background elements become visible with base alpha
-
-### 3. Alpha Transitions
-1. Token position is tracked during drag
-2. Distance from center is calculated
-3. `UpdateBackgroundAlphaByTokenDistance()` is called
-4. Background alpha is smoothly interpolated based on distance
-
-### 4. Choice Selection
-1. Token is dropped on a valid choice
-2. `OnChoiceSelected()` is called
-3. Challenge is resolved (if applicable)
-4. Story advances to the chosen path
-
-## 🎯 **Key Features**
-
-- **Smooth Visual Feedback**: Alpha transitions provide clear visual indication of choice preference
-- **Efficient Rendering**: Only necessary UI elements are active at any time
-- **Tooltip Integration**: Hover information is displayed through existing tooltip system
-- **Requirement Checking**: Reuses existing `EventCondition` system
-- **Challenge Resolution**: Automatic success/failure calculation based on pillar strengths
-- **Ink Integration**: Seamless parsing of choice metadata from chorus knots
-
-## 🔧 **Customization Options**
-
-### Alpha Transition Curves
-- Modify `alphaTransitionDuration` for faster/slower transitions
-- Adjust `maxDistanceForAlpha` for different screen sizes
-- Change easing functions in DOTween calls
-
-### Visual Feedback
-- Customize chance sprites for different success percentages
-- Modify base and max alpha values
-- Add additional visual effects during transitions
-
-### Choice Behavior
-- Add custom requirement types
-- Implement additional challenge mechanics
-- Customize choice resolution logic
+1. **Open**: `EventScreenManager` instantiates the chorus prefab and, one frame later, calls `ChorusScreenManager.InitializeChorusScreen(screen)`. The choices come from `EventStoryIndex`; the question shown is the knot's last line.
+2. **Availability**: a choice is available when every requirement and cost holds (`ChorusRules.IsAvailable`). This is re-checked when a pillar changes and twice a second while the screen waits, so a requirement met mid-screen unlocks the choice.
+3. **Drop**: `DecisionToken` finds the drop area under the pointer (a `UIBlock` element in front blocks it) and asks it to accept. The manager checks availability again, rolls d100, and adds the Piety bonus (capped at 100).
+4. **Outcome** (checked in this order): rare event on the top `rare_event_percent` rolls; no challenge means "Time passes..."; otherwise success when the roll beats `100 − success%`. A success above 90 is critical and a failure at 10 or below is critical, when those knots are authored.
+5. **Consequences**: costs, then the outcome's consequences, then the choice's own `consequences:` are queued. They apply when the story completes, and the outro lists them with running totals.
+6. **Result card**: it shows the outcome, plus "SAVED BY / TRIGGERED BY ENHANCED ROLL CHANCE!" when Piety changed it. The next input continues to the outcome's knot (or ends the story when there is none).
 
 ## 🐛 **Troubleshooting**
 
-### Common Issues
-1. **Choices not appearing**: Check `chorusChoicePrefab` assignment
-2. **Alpha not changing**: Verify `backgroundImage` references in ChorusChoice components
-3. **Token not draggable**: Ensure `DecisionToken` component is properly configured
-4. **Pillars not updating**: Check `StatManager` reference and pillar type names
-
-### Debug Information
-- Enable debug logging in `ChorusScreenManager`
-- Check console for parsing errors
-- Verify Ink file structure and metadata tags
-
-## 🚀 **Future Enhancements**
-
-- **TwoChoices Variant**: Implement simplified two-choice system
-- **Additional Choice Types**: Support for more than three choices
-- **Advanced Animations**: Particle effects, sound feedback
-- **Save/Load System**: Persist choice history and consequences
-- **Analytics**: Track player choice patterns and preferences 
+- **"No ChorusChoiceBackground named 'idealism'" warning**: the drop areas must be named after the choice (`Idealism`, `Realism`, `Pragmatism`).
+- **"Chorus 'x' has no choices in the story index"**: the knot's choices must start with `Idealism.`, `Realism.` or `Pragmatism.`; run `ContentTests.AllStoriesValidate` for the exact problem.
+- **A choice stays locked**: hover its requirement slots; each tooltip shows the required and the current value.
+- **The token will not drop**: a `UIBlock`-layer element is in front of the drop area, or a choice was already made.
+- **Chance looks wrong**: the challenge slot and the roll both use `ChorusRules`; `EventSystemTests.Odds_MatchTheDisplayedChanceAndCoverEveryRoll` keeps them equal.

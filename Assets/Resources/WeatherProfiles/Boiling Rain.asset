@@ -32,7 +32,7 @@ MonoBehaviour:
   - effectType: 3
     modifierValue: 120
     modifierType: 1
-    targetStat: Vital Resources
+    targetStat: Vital Resource
     conditionStat: 
     scope: 1
   - effectType: 9

@@ -49,6 +49,38 @@ public class CivicData : ScriptableObject
     public int moralePenaltyPerSeventh = 0;
     [Tooltip("Duration in sevenths for removal penalties")]
     public int removalPenaltyDuration = 0;
+
+    // Council seats authored before councilPosition existed stored these at the top level. They are read
+    // here and moved into councilPosition on load; saving the asset persists the migrated form.
+    [SerializeField, HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("councilPositionName")]
+    private string legacyCouncilPositionName;
+    [SerializeField, HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("allowAnyLegendClass")]
+    private bool legacyAllowAnyLegendClass;
+    [SerializeField, HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("allowedLegendClasses")]
+    private LegendClass[] legacyAllowedLegendClasses;
+
+    private void OnEnable() => MigrateLegacyCouncilPosition();
+
+    private void OnValidate() => MigrateLegacyCouncilPosition();
+
+    private void MigrateLegacyCouncilPosition()
+    {
+        bool hasLegacyData = !string.IsNullOrEmpty(legacyCouncilPositionName) || legacyAllowAnyLegendClass
+                             || (legacyAllowedLegendClasses != null && legacyAllowedLegendClasses.Length > 0);
+        if (!hasLegacyData) return;
+
+        if (councilPosition == null) councilPosition = new CivicCouncilPosition();
+        if (string.IsNullOrEmpty(councilPosition.title)) councilPosition.title = legacyCouncilPositionName;
+        bool hasClasses = councilPosition.allowAnyLegendClass || (councilPosition.allowedClasses != null && councilPosition.allowedClasses.Length > 0);
+        if (!hasClasses)
+        {
+            councilPosition.allowAnyLegendClass = legacyAllowAnyLegendClass;
+            councilPosition.allowedClasses = legacyAllowedLegendClasses;
+        }
+        legacyCouncilPositionName = null;
+        legacyAllowAnyLegendClass = false;
+        legacyAllowedLegendClasses = null;
+    }
 }
 
 
@@ -75,205 +107,9 @@ public class CivicEffect
     [Header("Scope Configuration")]
     [Tooltip("Scope of application: Individual (single item), Section (group of similar items), or Global (everything)")]
     public ScopeType scope = ScopeType.Individual; // Scope of application
-    
-    /// <summary>
-    /// Get the automatically generated description for this effect
-    /// </summary>
-    public string GetAutoDescription()
-    {
-        return GenerateEffectDescription();
-    }
-    
-    /// <summary>
-    /// Generate automatic description based on effect type and fields
-    /// </summary>
-    private string GenerateEffectDescription()
-    {
-        switch (effectType)
-        {
-            case GameEffectType.PillarBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string pillarSign = modifierValue > 0 ? "+" : "";
-                    return $"{pillarSign}{modifierValue} {targetStat}";
-                }
-                return $"{modifierValue} Pillar Bonus";
-                
-            case GameEffectType.SubstatBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string substatSign = modifierValue > 0 ? "+" : "";
-                    return $"{substatSign}{modifierValue} {targetStat}";
-                }
-                return $"{modifierValue} Substat Bonus";
-                
-            case GameEffectType.DerivedStatBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string derivedSign = modifierValue > 0 ? "+" : "";
-                    string derivedUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{derivedSign}{modifierValue}{derivedUnit} {targetStat}";
-                }
-                return $"{modifierValue} Derived Stat Bonus";
-                
-            case GameEffectType.ResourceModifier:
-                if (scope == ScopeType.Global)
-                {
-                    string resourceSign = modifierValue > 0 ? "+" : "";
-                    string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{resourceSign}{modifierValue}{resourceUnit} all resources production";
-                }
-                else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                {
-                    string resourceSign = modifierValue > 0 ? "+" : "";
-                    string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{resourceSign}{modifierValue}{resourceUnit} {targetStat} section production";
-                }
-                else if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string resourceSign = modifierValue > 0 ? "+" : "";
-                    string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{resourceSign}{modifierValue}{resourceUnit} {targetStat} production";
-                }
-                return $"{modifierValue} Resource Production";
-                
-            case GameEffectType.ProductionModifier:
-                if (scope == ScopeType.Global)
-                {
-                    string productionSign = modifierValue > 0 ? "+" : "";
-                    string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{productionSign}{modifierValue}{productionUnit} all buildings efficiency";
-                }
-                else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                {
-                    string productionSign = modifierValue > 0 ? "+" : "";
-                    string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{productionSign}{modifierValue}{productionUnit} {targetStat} section efficiency";
-                }
-                else if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string productionSign = modifierValue > 0 ? "+" : "";
-                    string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{productionSign}{modifierValue}{productionUnit} {targetStat} efficiency";
-                }
-                return $"{modifierValue} Production Efficiency";
-                
-            case GameEffectType.ClickPowerBonus:
-                if (scope == ScopeType.Global)
-                {
-                    string clickSign = modifierValue > 0 ? "+" : "";
-                    string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{clickSign}{modifierValue}{clickUnit} all resources click power";
-                }
-                else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                {
-                    string clickSign = modifierValue > 0 ? "+" : "";
-                    string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{clickSign}{modifierValue}{clickUnit} {targetStat} section click power";
-                }
-                else if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string clickSign = modifierValue > 0 ? "+" : "";
-                    string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{clickSign}{modifierValue}{clickUnit} {targetStat} click power";
-                }
-                return $"{modifierValue} Click Power";
-                
-            case GameEffectType.MaxMoraleModifier:
-                string moraleSign = modifierValue > 0 ? "+" : "";
-                return $"{moraleSign}{modifierValue} max morale";
-                
-            case GameEffectType.MoraleBalanceModifier:
-                return $"Morale balance -{modifierValue} (easier to stay positive)";
-                
-            case GameEffectType.SatisfactionThresholdModifier:
-                string satisfactionSign = modifierValue > 0 ? "+" : "";
-                return $"{satisfactionSign}{modifierValue} satisfaction threshold (easier upgrades)";
-                
-            case GameEffectType.HousingBonus:
-                string housingSign = modifierValue > 0 ? "+" : "";
-                string housingUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                return $"{housingSign}{modifierValue}{housingUnit} housing capacity";
-                
-            case GameEffectType.ConstructionCostModifier:
-                if (scope == ScopeType.Global)
-                {
-                    string constructionSign = modifierValue > 0 ? "+" : "";
-                    string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{constructionSign}{modifierValue}{constructionUnit} all buildings construction cost";
-                }
-                else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                {
-                    string constructionSign = modifierValue > 0 ? "+" : "";
-                    string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{constructionSign}{modifierValue}{constructionUnit} {targetStat} section construction cost";
-                }
-                else if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string constructionSign = modifierValue > 0 ? "+" : "";
-                    string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{constructionSign}{modifierValue}{constructionUnit} {targetStat} construction cost";
-                }
-                return $"{modifierValue} Construction Cost Modifier";
-                
-            case GameEffectType.ProductionScalingBonus:
-                if (!string.IsNullOrEmpty(targetStat) && !string.IsNullOrEmpty(conditionStat))
-                {
-                    string scalingSign = modifierValue > 0 ? "+" : "";
-                    return $"{scalingSign}{modifierValue} {targetStat} per {conditionStat}";
-                }
-                else if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string scalingSign = modifierValue > 0 ? "+" : "";
-                    return $"{scalingSign}{modifierValue} {targetStat} per production unit";
-                }
-                return $"{modifierValue} Production Scaling Bonus";
-                
-            case GameEffectType.SpecialAbility:
-                return "Special Ability";
-                
-            default:
-                return "Unknown Effect";
-        }
-    }
-    
-    /// <summary>
-    /// Validate that this effect has all required fields for its type
-    /// </summary>
-    public (bool isValid, string errorMessage) ValidateEffect()
-    {
-        switch (effectType)
-        {
-            case GameEffectType.PillarBonus:
-            case GameEffectType.SubstatBonus:
-            case GameEffectType.DerivedStatBonus:
-                if (string.IsNullOrEmpty(targetStat))
-                {
-                    return (false, $"{effectType} requires a targetStat field");
-                }
-                break;
-                
-            case GameEffectType.ResourceModifier:
-            case GameEffectType.ProductionModifier:
-            case GameEffectType.ClickPowerBonus:
-            case GameEffectType.ConstructionCostModifier:
-                // These can work with either targetStat OR scope
-                if (string.IsNullOrEmpty(targetStat) && scope == ScopeType.Individual)
-                {
-                    return (false, $"{effectType} requires either targetStat field or scope set to Section/Global");
-                }
-                break;
-                
-            case GameEffectType.ProductionScalingBonus:
-                if (string.IsNullOrEmpty(targetStat))
-                {
-                    return (false, $"{effectType} requires a targetStat field (what is produced)");
-                }
-                break;
-        }
-        
-        return (true, "");
-    }
+
+    /// <summary>Player-facing wording (<see cref="GameEffect.Describe"/>). Checked at start-up by ContentValidator.</summary>
+    public string GetAutoDescription() => this.ToEffect().Describe();
 }
 
 
@@ -281,7 +117,9 @@ public class CivicEffect
 
 
 /// <summary>
-/// Requirements for unlocking a civic
+/// A requirement for unlocking a civic. It has no rules of its own: <see cref="ToCondition"/> turns it into the
+/// same <see cref="EventCondition"/> an event would use, so it is evaluated, worded (<see cref="EventText"/>) and
+/// validated (<see cref="EventContentCheck"/>) exactly like event requirements.
 /// </summary>
 [System.Serializable]
 public class CivicRequirement
@@ -289,123 +127,53 @@ public class CivicRequirement
     [Header("Requirement Configuration")]
     public RequirementType requirementType;
     public string requirementTarget; // Stat name, government type, or civic name
+    [Tooltip("Compared as a whole number, like event requirements.")]
     public float requiredValue; // Required value
     public ComparisonType comparison; // How to compare the values
     
     /// <summary>
-    /// Get the automatically generated description for this requirement
+    /// The equivalent event condition. Null for <see cref="RequirementType.EraUnlock"/>: eras do not exist yet, so
+    /// that requirement always passes (ContentValidator reports it).
     /// </summary>
+    public EventCondition ToCondition()
+    {
+        var op = GameValues.ToOperator(comparison);
+        int value = Mathf.RoundToInt(requiredValue);
+        switch (requirementType)
+        {
+            case RequirementType.PillarStat:
+            case RequirementType.SubstatStat:
+                return new EventCondition { type = EventCondition.ConditionType.StatCheck, targetName = requirementTarget, requiredValue = value, comparison = op };
+            case RequirementType.GovernmentType:
+                return Value("government", requirementTarget, 1, ComparisonOperator.GreaterThanOrEqual);
+            case RequirementType.CivicPresent:
+                return Value("civic", requirementTarget, 1, ComparisonOperator.GreaterThanOrEqual);
+            case RequirementType.CivicAbsent:
+                return Value("civic", requirementTarget, 0, ComparisonOperator.Equals);
+            case RequirementType.SatisfactionLevel:
+                return Value("satisfaction", null, value, op);
+            case RequirementType.MoraleLevel:
+                return Value("morale", null, value, op);
+            default:
+                return null;
+        }
+    }
+    
+    private static EventCondition Value(string domain, string target, int value, ComparisonOperator op) =>
+        new EventCondition { type = EventCondition.ConditionType.ValueCheck, domain = domain, targetName = target, requiredValue = value, comparison = op };
+    
+    /// <summary>True when the requirement holds now.</summary>
+    public bool IsMet()
+    {
+        var condition = ToCondition();
+        return condition == null || condition.Evaluate();
+    }
+    
+    /// <summary>Player-facing wording, e.g. "Needs At Least 10 Regalia" (<see cref="EventText.DescribeRequirement"/>).</summary>
     public string GetAutoDescription()
     {
-        return GenerateRequirementDescription();
-    }
-    
-    /// <summary>
-    /// Generate automatic description based on requirement type and fields
-    /// </summary>
-    private string GenerateRequirementDescription()
-    {
-        string comparisonText = GetComparisonText();
-        
-        switch (requirementType)
-        {
-            case RequirementType.PillarStat:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"{requirementTarget} {comparisonText} {requiredValue}";
-                }
-                return $"Pillar stat {comparisonText} {requiredValue}";
-                
-            case RequirementType.SubstatStat:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"{requirementTarget} {comparisonText} {requiredValue}";
-                }
-                return $"Substat {comparisonText} {requiredValue}";
-                
-            case RequirementType.GovernmentType:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"Government type: {requirementTarget}";
-                }
-                return "Specific government type required";
-                
-            case RequirementType.CivicPresent:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"Requires civic: {requirementTarget}";
-                }
-                return "Requires specific civic";
-                
-            case RequirementType.CivicAbsent:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"Cannot have civic: {requirementTarget}";
-                }
-                return "Cannot have specific civic";
-                
-            case RequirementType.EraUnlock:
-                if (!string.IsNullOrEmpty(requirementTarget))
-                {
-                    return $"Requires era: {requirementTarget}";
-                }
-                return "Requires specific era";
-                
-            case RequirementType.SatisfactionLevel:
-                return $"Satisfaction level {comparisonText} {requiredValue}";
-                
-            case RequirementType.MoraleLevel:
-                return $"Morale level {comparisonText} {requiredValue}";
-                
-            default:
-                return "Unknown requirement";
-        }
-    }
-    
-    /// <summary>
-    /// Get human-readable comparison text
-    /// </summary>
-    private string GetComparisonText()
-    {
-        switch (comparison)
-        {
-            case ComparisonType.GreaterThan: return ">";
-            case ComparisonType.GreaterEqual: return ">=";
-            case ComparisonType.Equal: return "=";
-            case ComparisonType.LessEqual: return "<=";
-            case ComparisonType.LessThan: return "<";
-            case ComparisonType.NotEqual: return "!=";
-            default: return "?";
-        }
-    }
-    
-    /// <summary>
-    /// Validate that this requirement has all required fields for its type
-    /// </summary>
-    public (bool isValid, string errorMessage) ValidateRequirement()
-    {
-        switch (requirementType)
-        {
-            case RequirementType.PillarStat:
-            case RequirementType.SubstatStat:
-                if (string.IsNullOrEmpty(requirementTarget))
-                {
-                    return (false, $"{requirementType} requires a requirementTarget field");
-                }
-                break;
-                
-            case RequirementType.GovernmentType:
-            case RequirementType.CivicPresent:
-            case RequirementType.CivicAbsent:
-            case RequirementType.EraUnlock:
-                if (string.IsNullOrEmpty(requirementTarget))
-                {
-                    return (false, $"{requirementType} requires a requirementTarget field");
-                }
-                break;
-        }
-        
-        return (true, "");
+        var condition = ToCondition();
+        return condition != null ? EventText.DescribeRequirement(condition) : $"Needs The {EventText.Humanize(requirementTarget)} Era";
     }
 }
 
@@ -490,139 +258,9 @@ public class CivicSeatBonus
     public string targetStat;
     public float modifierValue;
     public ModifierType modifierType;
-    public bool requiresLegend = true;
-    
-    /// <summary>
-    /// Get the automatically generated description for this bonus
-    /// </summary>
-    public string GetAutoDescription()
-    {
-        return GenerateBonusDescription();
-    }
-    
-    /// <summary>
-    /// Generate automatic description based on bonus type and fields
-    /// </summary>
-    private string GenerateBonusDescription()
-    {
-        switch (bonusType)
-        {
-            case SeatBonusType.PillarBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string pillarSign = modifierValue > 0 ? "+" : "";
-                    string pillarUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{pillarSign}{modifierValue}{pillarUnit} {targetStat}";
-                }
-                return $"{modifierValue} Pillar Bonus";
-                
-            case SeatBonusType.SubstatBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string substatSign = modifierValue > 0 ? "+" : "";
-                    string substatUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{substatSign}{modifierValue}{substatUnit} {targetStat}";
-                }
-                return $"{modifierValue} Substat Bonus";
-                
-            case SeatBonusType.DerivedStatBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string derivedSign = modifierValue > 0 ? "+" : "";
-                    string derivedUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{derivedSign}{modifierValue}{derivedUnit} {targetStat}";
-                }
-                return $"{modifierValue} Derived Stat Bonus";
-                
-            case SeatBonusType.ResourceModifier:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string resourceSign = modifierValue > 0 ? "+" : "";
-                    string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{resourceSign}{modifierValue}{resourceUnit} {targetStat} production";
-                }
-                return $"{modifierValue} Resource Production";
-                
-            case SeatBonusType.ProductionModifier:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string productionSign = modifierValue > 0 ? "+" : "";
-                    string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{productionSign}{modifierValue}{productionUnit} {targetStat} efficiency";
-                }
-                return $"{modifierValue} Production Efficiency";
-                
-            case SeatBonusType.ClickPowerBonus:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string clickSign = modifierValue > 0 ? "+" : "";
-                    string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{clickSign}{modifierValue}{clickUnit} {targetStat} click power";
-                }
-                return $"{modifierValue} Click Power";
-                
-            case SeatBonusType.MaxMoraleModifier:
-                string moraleSign = modifierValue > 0 ? "+" : "";
-                return $"{moraleSign}{modifierValue} max morale";
-                
-            case SeatBonusType.MoraleBalanceModifier:
-                return $"Morale balance -{modifierValue} (easier to stay positive)";
-                
-            case SeatBonusType.SatisfactionThresholdModifier:
-                string satisfactionSign = modifierValue > 0 ? "+" : "";
-                return $"{satisfactionSign}{modifierValue} satisfaction threshold (easier upgrades)";
-                
-            case SeatBonusType.HousingBonus:
-                string housingSign = modifierValue > 0 ? "+" : "";
-                string housingUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                return $"{housingSign}{modifierValue}{housingUnit} housing capacity";
-                
-            case SeatBonusType.ConstructionCostModifier:
-                if (!string.IsNullOrEmpty(targetStat))
-                {
-                    string constructionSign = modifierValue > 0 ? "+" : "";
-                    string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{constructionSign}{modifierValue}{constructionUnit} {targetStat} construction cost";
-                }
-                return $"{modifierValue} Construction Cost Modifier";
-                
-            case SeatBonusType.SpecialAbility:
-                return "Special Ability";
-                
-            default:
-                return "Unknown Bonus";
-        }
-    }
-    
-    /// <summary>
-    /// Validate that this bonus has all required fields for its type
-    /// </summary>
-    public (bool isValid, string errorMessage) ValidateBonus()
-    {
-        switch (bonusType)
-        {
-            case SeatBonusType.PillarBonus:
-            case SeatBonusType.SubstatBonus:
-            case SeatBonusType.DerivedStatBonus:
-                if (string.IsNullOrEmpty(targetStat))
-                {
-                    return (false, $"{bonusType} requires a targetStat field");
-                }
-                break;
-                
-            case SeatBonusType.ResourceModifier:
-            case SeatBonusType.ProductionModifier:
-            case SeatBonusType.ClickPowerBonus:
-            case SeatBonusType.ConstructionCostModifier:
-                if (string.IsNullOrEmpty(targetStat))
-                {
-                    return (false, $"{bonusType} requires a targetStat field");
-                }
-                break;
-        }
-        
-        return (true, "");
-    }
+
+    /// <summary>Player-facing wording (<see cref="SeatBonus.Describe"/>, the same rule as default seats).</summary>
+    public string GetAutoDescription() => SeatBonus.Describe(bonusType, this.ToEffect());
 }
 
 

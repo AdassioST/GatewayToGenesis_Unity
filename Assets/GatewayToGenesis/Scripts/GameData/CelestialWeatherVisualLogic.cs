@@ -9,6 +9,7 @@ using DG.Tweening;
 /// </summary>
 public class CelestialWeatherVisualLogic : MonoBehaviour
 {
+    private const LogChannel Log = LogChannel.WeatherVisuals;
     #region Celestial Phase Definition
     public enum CelestialPhase
     {
@@ -37,7 +38,6 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
     
     [Header("Debug Visualization")]
     [SerializeField] private bool showDebugInfo = true;
-    [SerializeField] private bool logPhaseChanges = true;
     #endregion
     
     #region Private State
@@ -99,7 +99,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         timeSystem = TimeSystemLogic.Instance;
         if (timeSystem == null)
         {
-            Debug.LogError("[CelestialWeatherVisualLogic] TimeSystemLogic not found! Visual system cannot function.");
+            GameLog.Error("TimeSystemLogic not found! Visual system cannot function.", Log);
             enabled = false;
             return;
         }
@@ -110,13 +110,13 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
             globalLight = FindAnyObjectByType<Light2D>();
             if (globalLight != null)
             {
-                GameLoggingSystem.Instance.LogEvent($"Auto-found Light2D: {globalLight.name}", "CelestialWeatherVisualLogic");
+                GameLog.Event($"Auto-found Light2D: {globalLight.name}", Log);
             }
         }
         
         if (globalLight == null)
         {
-            Debug.LogWarning("[CelestialWeatherVisualLogic] Global Light is NULL - lighting will not work!");
+            GameLog.Warning("Global Light is NULL - lighting will not work!", Log);
         }
         
         // Subscribe to time system events
@@ -138,15 +138,12 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         
         isInitialized = true;
         
-        GameLoggingSystem.Instance.LogEvent("Celestial Weather Visual Logic initialized", "CelestialWeatherVisualLogic");
+        GameLog.Event("Celestial Weather Visual Logic initialized", Log);
         
         // Log initial lighting state
         if (globalLight != null && activeWeatherProfile != null)
         {
-            GameLoggingSystem.Instance.LogEvent(
-                $"Initial lighting: intensity={cachedLightIntensity:F3}, color=({cachedLightColor.r:F2},{cachedLightColor.g:F2},{cachedLightColor.b:F2})",
-                "CelestialWeatherVisualLogic"
-            );
+            GameLog.Event($"Initial lighting: intensity={cachedLightIntensity:F3}, color=({cachedLightColor.r:F2},{cachedLightColor.g:F2},{cachedLightColor.b:F2})", Log);
         }
     }
     
@@ -214,13 +211,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
             previousPhase = currentPhase;
             currentPhase = newPhase;
             
-            if (logPhaseChanges)
-            {
-                GameLoggingSystem.Instance.LogEvent(
-                    $"Phase changed: {previousPhase} → {currentPhase} at {currentSeventhPercentage:F2}% of seventh {timeSystem.CurrentSeventh}",
-                    "CelestialWeatherVisualLogic"
-                );
-            }
+            GameLog.Event($"Phase changed: {previousPhase} → {currentPhase} at {currentSeventhPercentage:F2}% of seventh {timeSystem.CurrentSeventh}", Log);
             
             OnPhaseChange?.Invoke(currentPhase);
         }
@@ -297,10 +288,10 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
             float originalTotal = activeWeatherProfile.GetTotalPhasePercentage();
             if (Mathf.Abs(originalTotal - 100f) > 0.01f)
             {
-                GameLoggingSystem.Instance.LogEvent(
+                GameLog.Event(
                     $"Weather '{activeWeatherProfile.weatherDisplayName}' phase percentages normalized: " +
                     $"{originalTotal:F1}% → 100.0%",
-                    "CelestialWeatherVisualLogic"
+                    Log
                 );
             }
         }
@@ -488,10 +479,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
                 });
         }
         
-        GameLoggingSystem.Instance.LogEvent(
-            $"Spawned particle effect for weather: {profile.weatherDisplayName}",
-            "CelestialWeatherVisualLogic"
-        );
+        GameLog.Event($"Spawned particle effect for weather: {profile.weatherDisplayName}", Log);
     }
     
     /// <summary>
@@ -622,10 +610,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
             SpawnParticleEffect(newProfile);
         }
         
-        GameLoggingSystem.Instance.LogEvent(
-            $"Visual effects updated for weather: {newProfile.weatherDisplayName}",
-            "CelestialWeatherVisualLogic"
-        );
+        GameLog.Event($"Visual effects updated for weather: {newProfile.weatherDisplayName}", Log);
     }
     #endregion
     
@@ -689,7 +674,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
     public void SetGlobalLight(Light2D light)
     {
         globalLight = light;
-        GameLoggingSystem.Instance.LogEvent($"Global light manually set to: {(light != null ? light.name : "null")}", "CelestialWeatherVisualLogic");
+        GameLog.Event($"Global light manually set to: {(light != null ? light.name : "null")}", Log);
     }
     
     public void MarkParametersForUpdate()

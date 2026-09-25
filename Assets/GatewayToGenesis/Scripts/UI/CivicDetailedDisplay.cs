@@ -5,7 +5,7 @@ using TMPro;
 /// <summary>
 /// Displays detailed seat information in the civic pool for seat replacement
 /// </summary>
-public class CivicDetailedDisplay : MonoBehaviour
+public class CivicDetailedDisplay : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private Image seatIcon;
@@ -121,6 +121,8 @@ public class CivicDetailedDisplay : MonoBehaviour
     {
         return seatTitle;
     }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.SeatOption(seatTitle, data);
     
     /// <summary>
     /// Refresh the display (called when data changes)

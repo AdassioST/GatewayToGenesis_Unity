@@ -1,51 +1,30 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Accrues a resource slot's net production once per second. Paused while an event is active,
+/// matching the rest of the simulation.
+/// </summary>
 public class ProductionLogic : MonoBehaviour
 {
-    private IGameUnitSlot unitSlot;
+    [SerializeField] private float tickSeconds = 1f;
 
-    void Start()
+    private GameResourceSlot resourceSlot;
+
+    private void Start()
     {
-        unitSlot = GetComponent<IGameUnitSlot>();
-
-        if (unitSlot != null)
-        {
-            InvokeRepeating("PassiveProduction", 0.1f, 1f);
-        }
+        resourceSlot = GetComponent<GameResourceSlot>();
+        if (resourceSlot != null) InvokeRepeating(nameof(PassiveProduction), 0.1f, tickSeconds);
     }
-
-    void Update() { }
 
     private void PassiveProduction()
     {
-        // Pause production during active events
-        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive())
-            return;
-            
-        if (unitSlot is GameResourceSlot resourceSlot)
+        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive()) return;
+        if (resourceSlot == null || resourceSlot.productionRate == 0f) return;
+        float oldAmount = resourceSlot.amount;
+        resourceSlot.ChangeAmount(resourceSlot.productionRate * tickSeconds);
+        if (PopGrowthLogic.Instance != null && resourceSlot.gameUnit != null && resourceSlot.gameUnit.role == ResourceRole.Food)
         {
-            ChangeUnitAmount(resourceSlot.productionRate);
-        }
-    }
-
-    public void ChangeUnitAmount(float amount)
-    {
-        if (unitSlot == null) return;
-
-        if (unitSlot is GameResourceSlot resourceSlot)
-        {
-            resourceSlot.amount = Mathf.Clamp(resourceSlot.amount + amount, 0f, resourceSlot.maxAmount);
-            resourceSlot.RefreshProductionAmount();
-        }
-
-        if (unitSlot is GameProductionSlot productionSlot)
-        {
-            float newAmount = productionSlot.maxAmount + amount;
-            productionSlot.maxAmount = Mathf.Max(0f, newAmount);
-            
-            productionSlot.RefreshProductionAmount();
+            PopGrowthLogic.Instance.HandleExternalFoodChange(oldAmount, resourceSlot.amount);
         }
     }
 }

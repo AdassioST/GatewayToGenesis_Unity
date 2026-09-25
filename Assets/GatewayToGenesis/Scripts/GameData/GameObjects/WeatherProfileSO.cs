@@ -14,7 +14,8 @@ public enum EchoType
 }
 
 /// <summary>
-/// Simplified condition system for weather availability (subset of EventCondition)
+/// A weather availability condition. Values are read through <see cref="GameValues"/>, like event
+/// conditions and civic requirements; the serialized fields stay as authored.
 /// </summary>
 [System.Serializable]
 public class WeatherCondition
@@ -31,61 +32,27 @@ public class WeatherCondition
     public int requiredValue;     // Required value for checks
     public ComparisonOperator comparison = ComparisonOperator.GreaterThanOrEqual;
     
-    /// <summary>
-    /// Evaluate this weather condition
-    /// </summary>
-    public bool Evaluate()
+    /// <summary>The <see cref="GameValues"/> domain each condition reads (a guard test covers every type).</summary>
+    public static string DomainOf(ConditionType type)
     {
         switch (type)
         {
-            case ConditionType.CycleCheck:
-                TimeSystemLogic timeSystem = TimeSystemLogic.Instance;
-                if (timeSystem != null)
-                {
-                    return CompareValues(timeSystem.CurrentCycle, requiredValue, comparison);
-                }
-                return false;
-                
-            case ConditionType.TechnologyCheck:
-                return CheckTechnologyUnlocked(targetName);
-                
-            case ConditionType.EventScoreCheck:
-                int score = EventSystemLogic.Instance?.GetEventScore(targetName) ?? 0;
-                return CompareValues(score, requiredValue, comparison);
-                
-                
-            default:
-                return false;
+            case ConditionType.CycleCheck: return "cycle";
+            case ConditionType.TechnologyCheck: return "technology";
+            case ConditionType.EventScoreCheck: return "score";
+            default: return null;
         }
     }
-    
-    private bool CompareValues(int actual, int expected, ComparisonOperator op)
+
+    /// <summary>
+    /// True when the condition holds now; false when its system is not in the scene yet. A technology check
+    /// only asks "is it researched?" (requiredValue and comparison are ignored); the others compare the value.
+    /// </summary>
+    public bool Evaluate()
     {
-        switch (op)
-        {
-            case ComparisonOperator.Equals: return actual == expected;
-            case ComparisonOperator.NotEquals: return actual != expected;
-            case ComparisonOperator.GreaterThan: return actual > expected;
-            case ComparisonOperator.LessThan: return actual < expected;
-            case ComparisonOperator.GreaterThanOrEqual: return actual >= expected;
-            case ComparisonOperator.LessThanOrEqual: return actual <= expected;
-            default: return false;
-        }
-    }
-    
-    private bool CheckTechnologyUnlocked(string technologyName)
-    {
-        GameUnitsLogic gameUnitsLogic = GameUnitsLogic.Instance;
-        if (gameUnitsLogic != null && gameUnitsLogic.researchTab != null)
-        {
-            GameObject techSlotObj = gameUnitsLogic.researchTab.slots.Find(slot => slot.name == technologyName);
-            if (techSlotObj != null)
-            {
-                GameTechnologySlot techSlot = techSlotObj.GetComponent<GameTechnologySlot>();
-                return techSlot != null && techSlot.isUnlocked;
-            }
-        }
-        return false;
+        string domain = DomainOf(type);
+        if (type == ConditionType.TechnologyCheck) return GameValues.Get(domain, targetName) >= 1f;
+        return GameValues.Evaluate(domain, targetName, comparison, requiredValue);
     }
 }
 
@@ -119,205 +86,9 @@ public class WeatherProfileSO : ScriptableObject
         [Header("Scope Configuration")]
         [Tooltip("Scope of application: Individual (single item), Section (group of similar items), or Global (everything)")]
         public ScopeType scope = ScopeType.Individual; // Scope of application
-        
-        /// <summary>
-        /// Get the automatically generated description for this effect
-        /// </summary>
-        public string GetAutoDescription()
-        {
-            return GenerateEffectDescription();
-        }
-        
-        /// <summary>
-        /// Generate automatic description based on effect type and fields
-        /// </summary>
-        private string GenerateEffectDescription()
-        {
-            switch (effectType)
-            {
-                case GameEffectType.PillarBonus:
-                    if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string pillarSign = modifierValue > 0 ? "+" : "";
-                        return $"{pillarSign}{modifierValue} {targetStat}";
-                    }
-                    return $"{modifierValue} Pillar Bonus";
-                    
-                case GameEffectType.SubstatBonus:
-                    if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string substatSign = modifierValue > 0 ? "+" : "";
-                        return $"{substatSign}{modifierValue} {targetStat}";
-                    }
-                    return $"{modifierValue} Substat Bonus";
-                    
-                case GameEffectType.DerivedStatBonus:
-                    if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string derivedSign = modifierValue > 0 ? "+" : "";
-                        string derivedUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{derivedSign}{modifierValue}{derivedUnit} {targetStat}";
-                    }
-                    return $"{modifierValue} Derived Stat Bonus";
-                    
-                case GameEffectType.ResourceModifier:
-                    if (scope == ScopeType.Global)
-                    {
-                        string resourceSign = modifierValue > 0 ? "+" : "";
-                        string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{resourceSign}{modifierValue}{resourceUnit} all resources production";
-                    }
-                    else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                    {
-                        string resourceSign = modifierValue > 0 ? "+" : "";
-                        string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{resourceSign}{modifierValue}{resourceUnit} {targetStat} section production";
-                    }
-                    else if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string resourceSign = modifierValue > 0 ? "+" : "";
-                        string resourceUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{resourceSign}{modifierValue}{resourceUnit} {targetStat} production";
-                    }
-                    return $"{modifierValue} Resource Production";
-                    
-                case GameEffectType.ProductionModifier:
-                    if (scope == ScopeType.Global)
-                    {
-                        string productionSign = modifierValue > 0 ? "+" : "";
-                        string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{productionSign}{modifierValue}{productionUnit} all buildings efficiency";
-                    }
-                    else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                    {
-                        string productionSign = modifierValue > 0 ? "+" : "";
-                        string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{productionSign}{modifierValue}{productionUnit} {targetStat} section efficiency";
-                    }
-                    else if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string productionSign = modifierValue > 0 ? "+" : "";
-                        string productionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{productionSign}{modifierValue}{productionUnit} {targetStat} efficiency";
-                    }
-                    return $"{modifierValue} Production Efficiency";
-                    
-                case GameEffectType.ClickPowerBonus:
-                    if (scope == ScopeType.Global)
-                    {
-                        string clickSign = modifierValue > 0 ? "+" : "";
-                        string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{clickSign}{modifierValue}{clickUnit} all resources click power";
-                    }
-                    else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                    {
-                        string clickSign = modifierValue > 0 ? "+" : "";
-                        string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{clickSign}{modifierValue}{clickUnit} {targetStat} section click power";
-                    }
-                    else if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string clickSign = modifierValue > 0 ? "+" : "";
-                        string clickUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{clickSign}{modifierValue}{clickUnit} {targetStat} click power";
-                    }
-                    return $"{modifierValue} Click Power";
-                    
-                case GameEffectType.MaxMoraleModifier:
-                    string moraleSign = modifierValue > 0 ? "+" : "";
-                    return $"{moraleSign}{modifierValue} max morale";
-                    
-                case GameEffectType.MoraleBalanceModifier:
-                    return $"Morale balance -{modifierValue} (easier to stay positive)";
-                    
-                case GameEffectType.SatisfactionThresholdModifier:
-                    string satisfactionSign = modifierValue > 0 ? "+" : "";
-                    return $"{satisfactionSign}{modifierValue} satisfaction threshold (easier upgrades)";
-                    
-                case GameEffectType.HousingBonus:
-                    string housingSign = modifierValue > 0 ? "+" : "";
-                    string housingUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                    return $"{housingSign}{modifierValue}{housingUnit} housing capacity";
-                    
-                case GameEffectType.ConstructionCostModifier:
-                    if (scope == ScopeType.Global)
-                    {
-                        string constructionSign = modifierValue > 0 ? "+" : "";
-                        string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{constructionSign}{modifierValue}{constructionUnit} all buildings construction cost";
-                    }
-                    else if (scope == ScopeType.Section && !string.IsNullOrEmpty(targetStat))
-                    {
-                        string constructionSign = modifierValue > 0 ? "+" : "";
-                        string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{constructionSign}{modifierValue}{constructionUnit} {targetStat} section construction cost";
-                    }
-                    else if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string constructionSign = modifierValue > 0 ? "+" : "";
-                        string constructionUnit = modifierType == ModifierType.Percentage ? "%" : "";
-                        return $"{constructionSign}{modifierValue}{constructionUnit} {targetStat} construction cost";
-                    }
-                    return $"{modifierValue} Construction Cost Modifier";
-                    
-                case GameEffectType.ProductionScalingBonus:
-                    if (!string.IsNullOrEmpty(targetStat) && !string.IsNullOrEmpty(conditionStat))
-                    {
-                        string scalingSign = modifierValue > 0 ? "+" : "";
-                        return $"{scalingSign}{modifierValue} {targetStat} per {conditionStat}";
-                    }
-                    else if (!string.IsNullOrEmpty(targetStat))
-                    {
-                        string scalingSign = modifierValue > 0 ? "+" : "";
-                        return $"{scalingSign}{modifierValue} {targetStat} per production unit";
-                    }
-                    return $"{modifierValue} Production Scaling Bonus";
-                    
-                case GameEffectType.SpecialAbility:
-                    return "Special Ability";
-                    
-                default:
-                    return "Unknown Effect";
-            }
-        }
-        
-        /// <summary>
-        /// Validate that this effect has all required fields for its type
-        /// </summary>
-        public (bool isValid, string errorMessage) ValidateEffect()
-        {
-            switch (effectType)
-            {
-                case GameEffectType.PillarBonus:
-                case GameEffectType.SubstatBonus:
-                case GameEffectType.DerivedStatBonus:
-                    if (string.IsNullOrEmpty(targetStat))
-                    {
-                        return (false, $"{effectType} requires a targetStat field");
-                    }
-                    break;
-                    
-                case GameEffectType.ResourceModifier:
-                case GameEffectType.ProductionModifier:
-                case GameEffectType.ClickPowerBonus:
-                case GameEffectType.ConstructionCostModifier:
-                    // These can work with either targetStat OR scope
-                    if (string.IsNullOrEmpty(targetStat) && scope == ScopeType.Individual)
-                    {
-                        return (false, $"{effectType} requires either targetStat field or scope set to Section/Global");
-                    }
-                    break;
-                    
-                case GameEffectType.ProductionScalingBonus:
-                    if (string.IsNullOrEmpty(targetStat))
-                    {
-                        return (false, $"{effectType} requires a targetStat field (what is produced)");
-                    }
-                    break;
-            }
-            
-            return (true, "");
-        }
+
+        /// <summary>Player-facing wording (<see cref="GameEffect.Describe"/>). Checked at start-up by ContentValidator.</summary>
+        public string GetAutoDescription() => this.ToEffect().Describe();
     }
     #endregion
     
@@ -643,43 +414,6 @@ public class WeatherProfileSO : ScriptableObject
     }
     
     /// <summary>
-    /// Get all available echo types for the inspector dropdown
-    /// Static method to provide echo types for UI/validation
-    /// </summary>
-    public static List<EchoType> GetAvailableEchoTypes()
-    {
-        return new List<EchoType>
-        {
-            EchoType.Resonance,
-            EchoType.Crescendo,
-            EchoType.Dissonance,
-            EchoType.Silence
-        };
-    }
-    
-    /// <summary>
-    /// Validate that all required echoes are valid echo types
-    /// </summary>
-    public bool ValidateRequiredEchoes()
-    {
-        if (requiredEchoes == null || requiredEchoes.Count == 0)
-            return true; // Empty list is valid (available in all echoes)
-            
-        var validEchoTypes = GetAvailableEchoTypes();
-        
-        foreach (EchoType echoType in requiredEchoes)
-        {
-            if (!validEchoTypes.Contains(echoType))
-            {
-                Debug.LogWarning($"[WeatherProfileSO] Invalid echo type '{echoType}' in requiredEchoes for '{weatherDisplayName}'. Valid echoes: {string.Join(", ", validEchoTypes)}");
-                return false;
-            }
-        }
-        
-        return true;
-    }
-    
-    /// <summary>
     /// Check if all availability conditions are met for this weather
     /// </summary>
     public bool AreConditionsMet()
@@ -691,7 +425,7 @@ public class WeatherProfileSO : ScriptableObject
         
         foreach (var condition in availabilityConditions)
         {
-            if (!condition.Evaluate())
+            if (condition != null && !condition.Evaluate())
             {
                 return false; // Any failed condition blocks availability
             }
@@ -701,20 +435,11 @@ public class WeatherProfileSO : ScriptableObject
     }
     
     /// <summary>
-    /// Check if this weather is available for procedural selection (all conditions including echo)
-    /// Single source of truth - only checks availabilityConditions
-    /// </summary>
-    public bool IsAvailableForProcedural(int currentEcho)
-    {
-        return AreConditionsMet(); // Conditions include echo checks
-    }
-    
-    /// <summary>
     /// Get unique modifier source name for tracking
     /// </summary>
     public string GetModifierSourceName()
     {
-        return $"Weather:{name}";
+        return $"Weather: {name}";
     }
     
     /// <summary>
@@ -751,93 +476,42 @@ public class WeatherProfileSO : ScriptableObject
     {
         return effects.Count > 0;
     }
-    
-    /// <summary>
-    /// Validate that curves are set up for seamless seventh transitions
-    /// Returns true if all curves have matching start/end values (100% matches 0%)
-    /// </summary>
+
+    /// <summary>Curves whose value at 100% must match 0%, so one seventh flows into the next without a jump.</summary>
+    private IEnumerable<(string label, AnimationCurve curve)> SeamlessCurves()
+    {
+        yield return ("Light", lightIntensityCurve);
+        yield return ("Color", colorTemperatureCurve);
+        yield return ("Moon", moonVisibilityCurve);
+        yield return ("Sky", skyBrightnessCurve);
+        yield return ("Stars", starVisibilityCurve);
+    }
+
+    private const float SeamlessTolerance = 0.01f;
+
+    /// <summary>True when every seamless curve ends where it starts (within 0.01). Reports nothing; see <see cref="GetCurveSeamlessStatus"/>.</summary>
     public bool ValidateSeamlessCurves()
     {
-        float tolerance = 0.01f; // Allow small floating point differences
-        
-        // Check light intensity curve
-        float lightStart = lightIntensityCurve.Evaluate(0f);
-        float lightEnd = lightIntensityCurve.Evaluate(100f);
-        if (Mathf.Abs(lightStart - lightEnd) > tolerance)
+        foreach (var (_, curve) in SeamlessCurves())
         {
-            Debug.LogWarning($"[WeatherProfileSO] {name}: Light intensity curve not seamless (0%={lightStart:F3}, 100%={lightEnd:F3})");
-            return false;
+            if (curve != null && Mathf.Abs(curve.Evaluate(0f) - curve.Evaluate(100f)) > SeamlessTolerance) return false;
         }
-        
-        // Check color temperature curve
-        float colorStart = colorTemperatureCurve.Evaluate(0f);
-        float colorEnd = colorTemperatureCurve.Evaluate(100f);
-        if (Mathf.Abs(colorStart - colorEnd) > tolerance)
-        {
-            Debug.LogWarning($"[WeatherProfileSO] {name}: Color temperature curve not seamless (0%={colorStart:F3}, 100%={colorEnd:F3})");
-            return false;
-        }
-        
-        // Check moon visibility curve
-        float moonStart = moonVisibilityCurve.Evaluate(0f);
-        float moonEnd = moonVisibilityCurve.Evaluate(100f);
-        if (Mathf.Abs(moonStart - moonEnd) > tolerance)
-        {
-            Debug.LogWarning($"[WeatherProfileSO] {name}: Moon visibility curve not seamless (0%={moonStart:F3}, 100%={moonEnd:F3})");
-            return false;
-        }
-        
-        // Check sky brightness curve
-        float skyStart = skyBrightnessCurve.Evaluate(0f);
-        float skyEnd = skyBrightnessCurve.Evaluate(100f);
-        if (Mathf.Abs(skyStart - skyEnd) > tolerance)
-        {
-            Debug.LogWarning($"[WeatherProfileSO] {name}: Sky brightness curve not seamless (0%={skyStart:F3}, 100%={skyEnd:F3})");
-            return false;
-        }
-        
-        // Check star visibility curve
-        float starStart = starVisibilityCurve.Evaluate(0f);
-        float starEnd = starVisibilityCurve.Evaluate(100f);
-        if (Mathf.Abs(starStart - starEnd) > tolerance)
-        {
-            Debug.LogWarning($"[WeatherProfileSO] {name}: Star visibility curve not seamless (0%={starStart:F3}, 100%={starEnd:F3})");
-            return false;
-        }
-        
-        return true; // All curves are seamless
+        return true;
     }
-    
-    /// <summary>
-    /// Get a summary of curve seamless status for debugging
-    /// </summary>
+
+    /// <summary>Start → end of every seamless curve, one per line, for the warning when a curve is not seamless.</summary>
     public string GetCurveSeamlessStatus()
     {
-        List<string> status = new List<string>();
-        
-        float lightStart = lightIntensityCurve.Evaluate(0f);
-        float lightEnd = lightIntensityCurve.Evaluate(100f);
-        status.Add($"Light: {lightStart:F3} → {lightEnd:F3} (diff: {Mathf.Abs(lightStart - lightEnd):F3})");
-        
-        float colorStart = colorTemperatureCurve.Evaluate(0f);
-        float colorEnd = colorTemperatureCurve.Evaluate(100f);
-        status.Add($"Color: {colorStart:F3} → {colorEnd:F3} (diff: {Mathf.Abs(colorStart - colorEnd):F3})");
-        
-        float moonStart = moonVisibilityCurve.Evaluate(0f);
-        float moonEnd = moonVisibilityCurve.Evaluate(100f);
-        status.Add($"Moon: {moonStart:F3} → {moonEnd:F3} (diff: {Mathf.Abs(moonStart - moonEnd):F3})");
-        
-        float skyStart = skyBrightnessCurve.Evaluate(0f);
-        float skyEnd = skyBrightnessCurve.Evaluate(100f);
-        status.Add($"Sky: {skyStart:F3} → {skyEnd:F3} (diff: {Mathf.Abs(skyStart - skyEnd):F3})");
-        
-        float starStart = starVisibilityCurve.Evaluate(0f);
-        float starEnd = starVisibilityCurve.Evaluate(100f);
-        status.Add($"Stars: {starStart:F3} → {starEnd:F3} (diff: {Mathf.Abs(starStart - starEnd):F3})");
-        
+        var status = new List<string>();
+        foreach (var (label, curve) in SeamlessCurves())
+        {
+            if (curve == null) continue;
+            float start = curve.Evaluate(0f), end = curve.Evaluate(100f);
+            status.Add($"{label}: {start:F3} → {end:F3} (diff: {Mathf.Abs(start - end):F3})");
+        }
         return string.Join("\n", status);
     }
-    
+
     /// <summary>
     /// Get normalized phase durations that sum to exactly 100%
     /// If percentages don't sum to 100%, applies normalization rules:
@@ -931,7 +605,7 @@ public class WeatherProfileSO : ScriptableObject
     }
     
     /// <summary>
-    /// Validate that phase percentages are reasonable
+    /// Validate that phase percentages are reasonable (checked at start-up by ContentValidator)
     /// </summary>
     public bool ValidatePhasePercentages()
     {
@@ -939,27 +613,5 @@ public class WeatherProfileSO : ScriptableObject
         return total >= 50f && total <= 150f; // Allow some tolerance for manual adjustment
     }
     
-    /// <summary>
-    /// Validate all weather profile settings
-    /// </summary>
-    public bool ValidateWeatherProfile()
-    {
-        bool isValid = true;
-        
-        // Validate phase percentages
-        if (!ValidatePhasePercentages())
-        {
-            Debug.LogWarning($"[WeatherProfileSO] Invalid phase percentages for '{weatherDisplayName}'. Total: {GetTotalPhasePercentage()}%");
-            isValid = false;
-        }
-        
-        // Validate required echoes
-        if (!ValidateRequiredEchoes())
-        {
-            isValid = false;
-        }
-        
-        return isValid;
-    }
     #endregion
 }

@@ -3,57 +3,60 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
+/// <summary>
+/// Production-tab slot for one building or unit type.
+/// <see cref="maxAmount"/> is how many are built; <see cref="amount"/> is how many are effectively
+/// producing (reduced while their inputs are missing).
+/// </summary>
+public class GameProductionSlot : MonoBehaviour, IGameUnitSlot, ITooltipSource
 {
-    // INTERFACES
     public GameUnit gameUnit { get; set; }
-    public float clickPower { get; set; } = 0.0f;
-    public float amount { get; set; }
-    public float maxAmount { get; set; }
 
-    // VARIABLES
-    public bool insufficientProduction;
+    [Tooltip("Share of built units that keep producing while an input resource is depleted.")]
+    [SerializeField] private float insufficientOutputShare = 0.25f;
+
+    private float _built;
+    private bool _insufficientProduction;
+
+    /// <summary>Number of units built.</summary>
+    public float maxAmount
+    {
+        get => _built;
+        set
+        {
+            if (Mathf.Approximately(_built, value)) return;
+            _built = value;
+            UpdateMaxAmount();
+        }
+    }
+
+    /// <summary>Units effectively producing this frame.</summary>
+    public float amount { get; private set; }
+
+    /// <summary>Set by GlobalProductionManager when a consumed resource runs out.</summary>
+    public bool insufficientProduction
+    {
+        get => _insufficientProduction;
+        set
+        {
+            if (_insufficientProduction == value) return;
+            _insufficientProduction = value;
+            UpdateMaxAmount();
+        }
+    }
 
     public ProductionUnitData productionUnitData;
 
     public Image icon;
     public TMP_Text amountText, nameText, typeText;
 
+    /// <summary>Last price paid for the final build requirement (display only).</summary>
     public float incrementalCost;
-    public float activeBuildingsAmount;
 
-
-    // Dictionary to store ProductionUnitData by GameUnit name
-    public static Dictionary<string, ProductionUnitData> productionUnitDataDictionary;
-
-    private void Update()
-    {
-        if (gameUnit != null && productionUnitData != null)
-        {
-            UpdateMaxAmount();
-        }
-    }
-
-    // Initialize the slot with its GameUnit and associated data
     public void InitializeSlot(GameUnit newGameUnit)
     {
-        if (productionUnitDataDictionary == null)
-        {
-            InitializeProductionUnitDataDictionary();
-        }
-
         gameUnit = newGameUnit;
-
-        // Assign the correct ProductionUnitData
-        if (productionUnitDataDictionary.ContainsKey(gameUnit.name))
-        {
-            productionUnitData = productionUnitDataDictionary[gameUnit.name];
-        }
-        else
-        {
-            Debug.LogWarning($"No ProductionUnitData found for {gameUnit.name}");
-        }
-
+        productionUnitData = GameCatalog.ProductionUnits.Get(newGameUnit.name, nameof(GameProductionSlot));
         InitialiseProductionUnit(newGameUnit);
     }
 
@@ -64,136 +67,44 @@ public class GameProductionSlot : MonoBehaviour, IGameUnitSlot
         RefreshProductionAmount();
     }
 
+    /// <summary>Recompute the effective producing count and notify production.</summary>
     public void UpdateMaxAmount()
     {
-        if (insufficientProduction)
-        {
-            amount = maxAmount * 0.25f;
-
-            // ADD HERE INSUFFICIENT AMOUNT EVENT TRIGGER
-        }
-        else
-        {
-            amount = maxAmount;
-        }
-
+        amount = _insufficientProduction ? _built * insufficientOutputShare : _built;
+        GlobalProductionManager.Instance?.MarkDirty();
         RefreshProductionAmount();
     }
 
     public void RefreshProductionAmount()
     {
-        amountText.text = Mathf.Round(maxAmount).ToString();
-        nameText.text = gameUnit.name.ToString();
-        typeText.text = gameUnit.type.ToString();
+        if (gameUnit == null) return;
+        amountText.text = Mathf.Round(_built).ToString();
+        nameText.text = gameUnit.name;
+        typeText.text = gameUnit.type;
     }
 
-    public static void InitializeProductionUnitDataDictionary()
-    {
-        // Only initialize once (prevent duplicate calls from multiple slots)
-        if (productionUnitDataDictionary != null && productionUnitDataDictionary.Count > 0)
-        {
-            return;
-        }
-        
-        // Use centralized validator for production unit loading
-        productionUnitDataDictionary = GameAssetValidator.GetAllProductionUnits();
-        
-        if (GameLoggingSystem.Instance != null)
-        {
-            GameLoggingSystem.Instance.LogEvent(
-                $"Initialized production unit dictionary with {productionUnitDataDictionary.Count} units from centralized validator",
-                "GameProductionSlot"
-            );
-        }
-    }
-
-    public float CalculateIncrementalCost(string resourceName, float baseAmount)
-    {
-        bool isUnit = gameUnit.type == "Unit";
-
-        float incrementalCost = baseAmount;
-
-        if (!isUnit)
-        {
-            incrementalCost *= Mathf.Exp((GlobalProductionManager.Instance.costBalance / GlobalProductionManager.Instance.techTier) * amount);
-        }
-
-        return incrementalCost;
-    }
-
-    /// <summary>
-    /// Get the effective production rate for this unit considering all modifiers
-    /// </summary>
-    /// <param name="resourceIndex">Index of the resource in producedResources list</param>
-    /// <returns>Effective production rate with modifiers applied</returns>
+    /// <summary>Output per unit of one produced resource, including production efficiency modifiers.</summary>
     public float GetEffectiveProductionRate(int resourceIndex)
     {
-        if (productionUnitData == null || resourceIndex < 0 || resourceIndex >= productionUnitData.productionRates.Count)
-            return 0f;
-        
-        float baseRate = productionUnitData.productionRates[resourceIndex];
-        
-        if (GameUnitsLogic.Instance != null)
-        {
-            return GameUnitsLogic.Instance.GetEffectiveProductionRate(productionUnitData, baseRate);
-        }
-        
-        return baseRate;
+        if (productionUnitData == null || resourceIndex < 0 || resourceIndex >= productionUnitData.productionRates.Count) return 0f;
+        float efficiency = GameUnitsLogic.Instance != null ? GameUnitsLogic.Instance.GetProductionEfficiencyPercent(gameUnit) : 0f;
+        return productionUnitData.productionRates[resourceIndex] * (1f + efficiency / 100f);
     }
-    
-    /// <summary>
-    /// Get the effective construction cost for this unit considering all modifiers
-    /// </summary>
-    /// <param name="resourceIndex">Index of the resource in buildResourceRequirements list</param>
-    /// <returns>Effective construction cost with modifiers applied</returns>
-    public float GetEffectiveConstructionCost(int resourceIndex)
-    {
-        if (productionUnitData == null || resourceIndex < 0 || resourceIndex >= productionUnitData.buildRequirementsAmount.Count)
-            return 0f;
-        
-        float baseCost = productionUnitData.buildRequirementsAmount[resourceIndex];
-        
-        if (GameUnitsLogic.Instance != null)
-        {
-            return GameUnitsLogic.Instance.GetEffectiveConstructionCost(productionUnitData, baseCost);
-        }
-        
-        return baseCost;
-    }
-    
-    /// <summary>
-    /// Get a summary of all active modifiers affecting this production unit
-    /// </summary>
-    /// <returns>Formatted string showing active modifiers</returns>
+
+    /// <summary>Price of the next unit for one build requirement.</summary>
+    public float GetEffectiveConstructionCost(int resourceIndex) => GameUnitsLogic.Instance != null ? GameUnitsLogic.Instance.GetBuildCost(this, resourceIndex) : 0f;
+
+    /// <summary>Active efficiency and cost modifiers, e.g. "Production: +10%, Cost -15%".</summary>
     public string GetModifierSummary()
     {
         if (GameUnitsLogic.Instance == null || gameUnit == null) return "";
-        
         var summary = new List<string>();
-        
-        // Production efficiency modifiers
-        float productionModifier = GameUnitsLogic.Instance.GetProductionEfficiencyModifier(gameUnit.type, gameUnit.section);
-        if (productionModifier != 0f)
-        {
-            string sign = productionModifier > 0 ? "+" : "";
-            summary.Add($"Production: {sign}{productionModifier:F1}%");
-        }
-        
-        // Construction cost modifiers
-        float costModifier = GameUnitsLogic.Instance.GetConstructionCostModifier(gameUnit.type, gameUnit.section);
-        if (costModifier != 0f)
-        {
-            string effect = costModifier > 0 ? "Cost +" : "Cost -";
-            summary.Add($"{effect}{Mathf.Abs(costModifier):F1}%");
-        }
-        
-        if (summary.Count > 0)
-        {
-            return string.Join(", ", summary);
-        }
-        
-        return "";
+        float production = GameUnitsLogic.Instance.GetProductionEfficiencyPercent(gameUnit);
+        if (production != 0f) summary.Add($"Production: {(production > 0 ? "+" : "")}{production:F1}%");
+        float cost = GameUnitsLogic.Instance.GetConstructionCostPercent(gameUnit);
+        if (cost != 0f) summary.Add($"Cost {(cost > 0 ? "+" : "-")}{Mathf.Abs(cost):F1}%");
+        return string.Join(", ", summary);
     }
 
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Production(this, data);
 }
-

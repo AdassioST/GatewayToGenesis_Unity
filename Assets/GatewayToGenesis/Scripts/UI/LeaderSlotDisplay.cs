@@ -6,7 +6,7 @@ using TMPro; // Added for TMP_Text
 /// <summary>
 /// Displays a single leader slot in the leader pool
 /// </summary>
-public class LeaderSlotDisplay : MonoBehaviour
+public class LeaderSlotDisplay : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private Image leaderSprite;
@@ -161,7 +161,7 @@ public class LeaderSlotDisplay : MonoBehaviour
         {
             int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(targetSeatIndex);
             string seatName = (targetSeatIndex == -1) ? "Head of State" : $"Seat {targetSeatIndex}";
-            GameLoggingSystem.Instance.LogEvent($"Cannot assign legend - {seatName} is on cooldown for {remainingCooldown} more sevenths", "LeaderSlotDisplay");
+            GameLog.Event($"Cannot assign legend - {seatName} is on cooldown for {remainingCooldown} more sevenths", LogChannel.GovernmentUI);
             return;
         }
         
@@ -175,6 +175,8 @@ public class LeaderSlotDisplay : MonoBehaviour
     {
         return legendData;
     }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Legend(legendData, data);
     
     /// <summary>
     /// Get the target seat index

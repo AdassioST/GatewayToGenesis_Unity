@@ -1,170 +1,119 @@
-using JetBrains.Annotations;
-using System.Collections.Generic;
 using TMPro;
-using Unity.Loading;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// The tooltip box: one text section per <see cref="TooltipData"/> field, hidden when empty. It follows the
+/// pointer, flipping sides near the screen edges, and caps its width (via the layout element) only when a
+/// line would be wider than the preferred width. Content and size change only in <see cref="Show"/>.
+/// </summary>
 public class TooltipSlot : MonoBehaviour
 {
-    public float timer { get; private set; }
-
-    public Vector2 offset;
-
     [SerializeField] private LayoutElement layoutElement;
 
     [SerializeField] private GameObject titleSection, descriptionSection, typeSection, productionModifiersSection, storageBreakdownSection, resourceRequirementsSection, effectsSection, techRequirementsSection;
 
     public TextMeshProUGUI title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements;
 
-    private List<TextMeshProUGUI> textElements;
-
     public RectTransform rectTransform;
 
-    private void Start()
-    {
+    private const float BannerWidth = 650f;
+    private static readonly Vector2 PointerOffset = new Vector2(20f, -5f);
 
-        rectTransform = GetComponent<RectTransform>();
-        textElements = new List<TextMeshProUGUI> { title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements };
-    }
-    private void Update()
-    {
-        ResizeTooltip();
-        AdjustTooltipPosition();
-    }
-    private void AdjustTooltipPosition()
-    {
-        Vector2 mousePosition = InputUtils.MousePosition;
-        Vector2 tooltipSize = rectTransform.sizeDelta * rectTransform.lossyScale;
+    private TextMeshProUGUI[] _texts;
+    private float _defaultWidth;
+    private TextAlignmentOptions _defaultTitleAlignment;
+    private bool _initialized;
 
-        Vector2 screenSize = new Vector2(Screen.width, Screen.height);
+    private void Awake() => Initialize();
+
+    private void Initialize()
+    {
+        if (_initialized) return;
+        _initialized = true;
+        if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
+        _texts = new[] { title, description, productionModifiers, type, storageBreakdown, resourceRequirements, effects, techRequirements };
+        _defaultWidth = layoutElement != null ? layoutElement.preferredWidth : 0f;
+        _defaultTitleAlignment = title != null ? title.alignment : TextAlignmentOptions.Left;
+    }
+
+    private void LateUpdate() => FollowPointer();
+
+    /// <summary>Show <paramref name="data"/>: fill every section, hide the empty ones, and resize.</summary>
+    public void Show(TooltipData data)
+    {
+        Initialize();
+        bool banner = data.style == TooltipStyle.Banner;
+        if (title != null) title.alignment = banner ? TextAlignmentOptions.Center : _defaultTitleAlignment;
+        if (layoutElement != null) layoutElement.preferredWidth = banner ? BannerWidth : _defaultWidth;
+
+        Set(title, titleSection, data.title);
+        Set(description, descriptionSection, data.description);
+        Set(type, typeSection, banner ? null : data.type);
+        Set(resourceRequirements, resourceRequirementsSection, data.requirements);
+        Set(productionModifiers, productionModifiersSection, data.modifiers);
+        Set(storageBreakdown, storageBreakdownSection, data.breakdown);
+        Set(effects, effectsSection, data.effects);
+        Set(techRequirements, techRequirementsSection, data.prerequisites);
+
+        Resize();
+        FollowPointer();
+    }
+
+    private static void Set(TextMeshProUGUI label, GameObject section, string text)
+    {
+        bool visible = !string.IsNullOrEmpty(text);
+        if (label != null) label.text = visible ? text : string.Empty;
+        if (section != null) section.SetActive(visible);
+    }
+
+    // Wrap at the preferred width only when some line is wider than it; short tooltips stay compact.
+    private void Resize()
+    {
+        if (layoutElement == null) return;
+        bool wrap = false;
+        foreach (var text in _texts)
+        {
+            if (text == null || !text.gameObject.activeInHierarchy || string.IsNullOrEmpty(text.text)) continue;
+            if (text.GetPreferredValues(text.text).x >= layoutElement.preferredWidth)
+            {
+                wrap = true;
+                break;
+            }
+        }
+        layoutElement.enabled = wrap;
+    }
+
+    private void FollowPointer()
+    {
+        if (rectTransform == null) return;
+        Vector2 pointer = InputUtils.MousePosition;
+        Vector2 size = rectTransform.sizeDelta * rectTransform.lossyScale;
 
         Vector2 pivot = new Vector2(0f, 1f);
-        Vector2 offset = new Vector2(20f, -5f);
-
-        if (mousePosition.x + tooltipSize.x > screenSize.x) // Too far right
+        Vector2 offset = PointerOffset;
+        if (pointer.x + size.x > Screen.width)
         {
-            pivot.x = 1f; // Move to the left
+            pivot.x = 1f;
             offset.x = -10f;
         }
-
-        if (mousePosition.y - tooltipSize.y < 0) // Too far down
+        if (pointer.y - size.y < 0f)
         {
-            pivot.y = 0f; // Move up
+            pivot.y = 0f;
             offset.y = 5f;
         }
-
-        if (mousePosition.x - tooltipSize.x < 0) // Too far left
+        if (pointer.x - size.x < 0f)
         {
-            pivot.x = 0f; // Back to right
-            offset.x = 20f;
+            pivot.x = 0f;
+            offset.x = PointerOffset.x;
         }
-
-        if (mousePosition.y + tooltipSize.y > screenSize.y) // Too far up
+        if (pointer.y + size.y > Screen.height)
         {
-            pivot.y = 1f; // Back to down
-            offset.y = -5f;
+            pivot.y = 1f;
+            offset.y = PointerOffset.y;
         }
 
         rectTransform.pivot = pivot;
-        transform.position = mousePosition + offset;
+        transform.position = pointer + offset;
     }
-    public void ResizeTooltip()
-    {
-        bool shouldEnableLayout = false;
-
-        foreach (TextMeshProUGUI textElement in textElements)
-        {
-            if (textElement != null && textElement.text != null)
-            {
-                if (textElement.preferredWidth >= layoutElement.preferredWidth)
-                {
-                    shouldEnableLayout = true;
-
-                    break;
-                }
-            }
-        }
-
-        layoutElement.enabled = shouldEnableLayout;
-    }
-
-    public void InitializeTooltipData(TooltipData data)
-    {
-        title.text = data.tooltipTitle;
-        description.text = data.tooltipDescription;
-        type.text = data.type;
-
-        resourceRequirements.text = data.resourceRequirements;
-        productionModifiers.text = data.productionModifiers;
-
-        storageBreakdown.text = data.storageBreakdown;
-
-        effects.text = data.productionEffects;
-        techRequirements.text = data.techRequirements;
-
-        //ADAPT LOGIC TO CHANGE ON SECTIONS
-        if(data.type != null)
-        {
-            if (SectionData.sectionDataDictionary != null && SectionData.sectionDataDictionary.ContainsKey(data.type))
-            {
-
-                title.alignment = TextAlignmentOptions.Center;
-                layoutElement.preferredWidth = 650f;
-
-                type.text = "";
-            }
-        }
-
-        titleSection.SetActive(!string.IsNullOrEmpty(data.tooltipTitle));
-        descriptionSection.SetActive(!string.IsNullOrEmpty(data.tooltipDescription));
-        typeSection.SetActive(!string.IsNullOrEmpty(data.type));
-
-        resourceRequirementsSection.SetActive(!string.IsNullOrEmpty(data.resourceRequirements));
-        productionModifiersSection.SetActive(!string.IsNullOrEmpty(data.productionModifiers));
-
-        storageBreakdownSection.SetActive(!string.IsNullOrEmpty(data.storageBreakdown));
-
-        effectsSection.SetActive(!string.IsNullOrEmpty(data.productionEffects));
-        techRequirementsSection.SetActive(!string.IsNullOrEmpty(data.techRequirements));
-
-    }
-
-    public void Lock()
-    {
-        // Lock the tooltip (e.g., allow hover over keywords inside the tooltip)
-        // This can be customized as per your requirement
-
-        //Debug.Log("Tooltip locked");
-    }
-
-    public void UpdateTooltipData(TooltipData data)
-    {
-        if (!string.IsNullOrEmpty(data.productionModifiers))
-        {
-            productionModifiers.text = data.productionModifiers;
-            productionModifiersSection.SetActive(true);
-        }
-
-        if (!string.IsNullOrEmpty(data.resourceRequirements))
-        {
-            resourceRequirements.text = data.resourceRequirements;
-            resourceRequirementsSection.SetActive(true);
-        }
-
-        if (!string.IsNullOrEmpty(data.productionEffects))
-        {
-            effects.text = data.productionEffects;
-            effectsSection.SetActive(true);
-        }
-
-        if (!string.IsNullOrEmpty(data.techRequirements))
-        {
-            techRequirements.text = data.techRequirements;
-            techRequirementsSection.SetActive(true);
-        }
-
-    }
-
-
 }

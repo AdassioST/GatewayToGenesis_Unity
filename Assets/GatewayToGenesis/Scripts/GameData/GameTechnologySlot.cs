@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using static UnityEngine.Mesh;
 
-public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
+public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot, ITooltipSource
 {
     // INTERFACES
     public GameUnit gameUnit { get; set; }
@@ -31,8 +30,6 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
 
     private GameUnitsLogic gameUnitsLogic;
 
-    // Static dictionary to hold TechnologyData
-    private static Dictionary<string, TechnologyData> technologyDataDictionary;
 
     [SerializeField] private GameObject techUnlockableSlotPrefab, techUnlockables;
     
@@ -58,60 +55,28 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
     {
         gameUnitsLogic = GameUnitsLogic.Instance;
 
-        // Initialize the technology data dictionary if not already done
-        if (technologyDataDictionary == null)
-        {
-            InitializeTechnologyDataDictionary();
-        }
-
         if (gameUnit != null)
         {
             InitializeTechnologyData();
         }
 
-        if (technologyTreeLogic == null)
-        {
-            technologyTreeLogic = FindAnyObjectByType<TechnologyTreeLogic>(); // Find the instance at runtime
-        }
+        // Set by the tree that built this slot; a slot placed by hand uses the tree above it.
+        if (technologyTreeLogic == null) technologyTreeLogic = GetComponentInParent<TechnologyTreeLogic>();
 
         InitializeTechnology(gameUnit);
-    }
-
-    private void InitializeTechnologyDataDictionary()
-    {
-        // Only initialize once (prevent duplicate calls from multiple slots)
-        if (technologyDataDictionary != null && technologyDataDictionary.Count > 0)
-        {
-            return;
-        }
-        
-        // Use centralized validator for technology loading
-        technologyDataDictionary = GameAssetValidator.GetAllTechnologies();
-        
-        GameLoggingSystem.Instance.LogEvent(
-            $"Initialized technology dictionary with {technologyDataDictionary.Count} technologies from centralized validator",
-            "GameTechnologySlot"
-        );
     }
 
     private void InitializeTechnologyData()
     {
         if (gameUnit == null) return;
 
-        // Fetch the TechnologyData from the dictionary
-        if (technologyDataDictionary.ContainsKey(gameUnit.name))
-        {
-            technologyData = technologyDataDictionary[gameUnit.name];
-            researchCost = technologyData.resourceAmount[0];
+        technologyData = GameCatalog.Technologies.Get(gameUnit.name, nameof(GameTechnologySlot));
+        if (technologyData == null) return;
 
-            if (technologyData.enlightenedConditions.Count > 0)
-            {
-                enlightenedText.text = technologyData.enlightenedConditions[0].description;
-            }
-        }
-        else
+        researchCost = technologyData.resourceAmount.Count > 0 ? technologyData.resourceAmount[0] : 0f;
+        if (technologyData.enlightenedConditions.Count > 0 && enlightenedText != null)
         {
-            Debug.LogWarning($"No TechnologyData found for {gameUnit.name}. Make sure the data is loaded correctly.");
+            enlightenedText.text = technologyData.enlightenedConditions[0].description;
         }
     }
 
@@ -152,7 +117,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
                 }
                 else
                 {
-                    Debug.LogWarning("UnlockSlot prefab is missing the UnlockSlot component.");
+                    GameLog.Warning("The tech unlockable slot prefab has no TechUnlockableSlot component.", LogChannel.Units);
                 }
             }
         }
@@ -204,13 +169,13 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
             StatManager.Instance.ChangeSatisfactionPoints(-25, $"Crisis Technology {gameUnit.name}");
         }
 
-        foreach (var unlockable in technologyData.techUnlockables)
+        if (technologyData != null)
         {
-            gameUnitsLogic.HandleTechUnlockable(unlockable, this);
+            foreach (var unlockable in technologyData.techUnlockables) gameUnitsLogic.HandleTechUnlockable(unlockable, this);
         }
 
         // Apply satisfaction effects from the technology
-        if (technologyData.satisfactionPoints != 0 && StatManager.Instance != null)
+        if (technologyData != null && technologyData.satisfactionPoints != 0 && StatManager.Instance != null)
         {
             StatManager.Instance.ChangeSatisfactionPoints(technologyData.satisfactionPoints, $"Technology {gameUnit.name}");
         }
@@ -229,6 +194,8 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         progressBar.fillAmount = researchProgress; // Update the ProgressBar fill amount
     }
 
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Technology(this, data);
+
     /// <summary>
     /// Trigger an event when an event technology is unlocked
     /// </summary>
@@ -240,11 +207,11 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot
         if (EventSystemLogic.Instance != null)
         {
             EventSystemLogic.Instance.TriggerEventCheck();
-            Debug.Log($"[GameTechnologySlot] Event technology '{technologyName}' unlocked - triggering event check");
+            GameLog.Event($"Event technology '{technologyName}' unlocked; checking for events", LogChannel.Units);
         }
         else
         {
-            Debug.LogWarning($"[GameTechnologySlot] EventSystemLogic.Instance is null - cannot trigger event for '{technologyName}'");
+            GameLog.Warning($"EventSystemLogic is missing; event technology '{technologyName}' cannot trigger events.", LogChannel.Units);
         }
     }
 

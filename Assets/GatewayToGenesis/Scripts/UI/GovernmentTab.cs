@@ -8,7 +8,7 @@ using TMPro;
 /// Main UI controller for the Government Tab
 /// Displays Head of State, Council Seats, equipped Civics, and manages leader/civic assignment
 /// </summary>
-public class GovernmentTab : MonoBehaviour
+public class GovernmentTab : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private CanvasGroup displayCanvasGroup;
@@ -219,7 +219,7 @@ public class GovernmentTab : MonoBehaviour
         
         spawnedCivics.Add(civicObj);
         
-        GameLoggingSystem.Instance.LogEvent($"Spawned Civic '{civic.civicName}' (Tier: {civic.tier}) in {targetContainer.name}", "GovernmentTab");
+        GameLog.Event($"Spawned Civic '{civic.civicName}' (Tier: {civic.tier}) in {targetContainer.name}", LogChannel.GovernmentUI);
     }
 
     private void RefreshCouncilSeats()
@@ -258,26 +258,6 @@ public class GovernmentTab : MonoBehaviour
         }
         
         spawnedSeats.Add(seatObj);
-    }
-
-    private void RefreshHeadOfState()
-    {
-        if (headOfStateContainer == null) return;
-        
-        // Clear existing head of state display
-        foreach (Transform child in headOfStateContainer)
-        {
-            Destroy(child.gameObject);
-        }
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            var headOfState = GovernmentLogic.Instance.GetCouncilSeat(-1);
-            if (headOfState != null)
-            {
-                UpdateHeadOfStateDisplay(headOfState);
-            }
-        }
     }
 
     private void UpdateHeadOfStateDisplay(CouncilSeat headOfState)
@@ -405,7 +385,7 @@ public class GovernmentTab : MonoBehaviour
             }
             
             // Log the organization for debugging
-            GameLoggingSystem.Instance.LogEvent($"Organizing {availableLegends.Count} available legends for seat {selectedSeatIndex}: {unequippedLegends.Count} unequipped, {equippedLegends.Count} equipped", "GovernmentTab");
+            GameLog.Event($"Organizing {availableLegends.Count} available legends for seat {selectedSeatIndex}: {unequippedLegends.Count} unequipped, {equippedLegends.Count} equipped", LogChannel.GovernmentUI);
             
             // Spawn unequipped legends first (priority)
             foreach (var legend in unequippedLegends)
@@ -525,12 +505,12 @@ public class GovernmentTab : MonoBehaviour
         // Debug logging to help troubleshoot
         if (targetContainer == null)
         {
-            Debug.LogWarning($"[GovernmentTab] No container found for {tier} tier civics. Falling back to civicPoolContent.");
+            GameLog.Warning($"No container found for {tier} tier civics. Falling back to civicPoolContent.", LogChannel.GovernmentUI);
             targetContainer = civicPoolContent;
         }
         else
         {
-            GameLoggingSystem.Instance.LogEvent($"Using {tier} container: {targetContainer.name}", "GovernmentTab");
+            GameLog.Event($"Using {tier} container: {targetContainer.name}", LogChannel.GovernmentUI);
         }
         
         return targetContainer;
@@ -567,7 +547,7 @@ public class GovernmentTab : MonoBehaviour
         // Head of State cannot be replaced with civics
         if (selectedSeatIndex == -1)
         {
-            Debug.LogWarning("[GovernmentTab] Cannot replace Head of State with civics");
+            GameLog.Warning("Cannot replace Head of State with civics", LogChannel.GovernmentUI);
             return;
         }
         
@@ -577,7 +557,7 @@ public class GovernmentTab : MonoBehaviour
             var availableSeats = GovernmentLogic.Instance.GetAvailableSeatTitles();
             if (!availableSeats.Contains(seatTitle))
             {
-                Debug.LogWarning($"[GovernmentTab] Seat '{seatTitle}' is no longer available. Refreshing civic pool to remove orphaned UI objects.");
+                GameLog.Warning($"Seat '{seatTitle}' is no longer available. Refreshing civic pool to remove orphaned UI objects.", LogChannel.GovernmentUI);
                 
                 // Refresh the civic pool to clean up orphaned CivicDetailed objects
                 RefreshCivicPool();
@@ -708,4 +688,13 @@ public class GovernmentTab : MonoBehaviour
             UpdateHeadOfStateDisplay(seat);
         }
     }
-} 
+
+    /// <summary>Tooltips inside the Head of State container: the portrait shows the legend, the rest the seat.</summary>
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data)
+    {
+        if (headOfStateContainer == null || !trigger.transform.IsChildOf(headOfStateContainer)) return false;
+        var seat = GovernmentLogic.Instance != null ? GovernmentLogic.Instance.GetCouncilSeat(GovernmentLogic.HeadOfStateIndex) : null;
+        if (seat == null) return false;
+        return trigger.transform == headOfStateContainer.Find("Sprite") ? TooltipContent.SeatPortrait(seat, data) : TooltipContent.Seat(seat, data);
+    }
+}

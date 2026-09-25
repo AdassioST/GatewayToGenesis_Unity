@@ -1,138 +1,138 @@
 using UnityEngine;
-using System.Collections;
-using System;
 using DG.Tweening;
 
-public class TooltipSystemLogic : MonoBehaviour
+/// <summary>
+/// Owns the one tooltip box. <see cref="TooltipTrigger"/>s ask to be shown on hover; the box is created once
+/// and reused, fades in and out, and while it is open its content is rebuilt a few times a second (and at
+/// once on <see cref="RefreshAllTooltips"/>), so live numbers stay current without every trigger polling.
+/// A trigger that is disabled or destroyed while shown takes the box down with it.
+/// </summary>
+public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
 {
-    public static TooltipSystemLogic Instance { get; private set; }
-
     [SerializeField] private TooltipSlot tooltipSlotPrefab;
+    [Tooltip("Seconds between content refreshes while a tooltip is open.")]
+    [SerializeField] private float refreshInterval = 0.25f;
 
-    public TooltipSlot currentTooltipSlot;
-    public TooltipData currentTooltipData;
+    private const float FadeInSeconds = 0.095f;
+    private const float FadeOutSeconds = 0.075f;
 
-    private Coroutine tooltipCoroutine;
-    
-    public bool isTooltipActive = false;
+    private TooltipSlot _slot;
+    private CanvasGroup _slotGroup;
+    private TooltipTrigger _current;
+    private readonly TooltipData _data = new TooltipData();
+    private float _nextRefresh;
 
-    public static event Action<TooltipData> OnTooltipShown;
-    public static event Action<TooltipData> OnTooltipHidden;
+    public bool isTooltipActive => _current != null;
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    /// <summary>The trigger whose tooltip is open, if any.</summary>
+    public TooltipTrigger Current => _current;
 
     private void Update()
     {
-        // Listen for hover over UI and trigger tooltips dynamically
-        if (isTooltipActive && currentTooltipSlot != null)
+        if (_current == null) return;
+        if (!_current.isActiveAndEnabled)
         {
-            // Check if tooltip timer should lock
-            if (tooltipCoroutine == null && Time.time - tooltipSlotPrefab.timer > 2f)
-            {
-                LockTooltip();
-            }
+            HideTooltip();
+            return;
         }
+        if (Time.unscaledTime >= _nextRefresh) Rebuild();
     }
 
-
-    public void ShowTooltip(TooltipData data)
+    /// <summary>Show <paramref name="trigger"/>'s tooltip, replacing any other.</summary>
+    public void Show(TooltipTrigger trigger)
     {
-        if (currentTooltipSlot != null)
+        if (trigger == null) return;
+        if (trigger.TryBuild(_data)) ShowBuilt(trigger);
+        else if (trigger == _current) HideTooltip();
+    }
+
+    // _data already holds trigger's content.
+    private void ShowBuilt(TooltipTrigger trigger)
+    {
+        bool wasHidden = _current == null;
+        _current = trigger;
+        EnsureSlot();
+        if (_slot == null) return;
+        _slot.Show(_data);
+        _nextRefresh = Time.unscaledTime + refreshInterval;
+        if (wasHidden) FadeIn();
+    }
+
+    /// <summary>The pointer left <paramref name="trigger"/>: hide, or hand over to the trigger now under the pointer.</summary>
+    public void Exit(TooltipTrigger trigger, GameObject nowHovered)
+    {
+        if (trigger != _current) return;
+        var next = nowHovered != null ? nowHovered.GetComponentInParent<TooltipTrigger>() : null;
+        if (next != null && next != trigger && next.TryBuild(_data))
         {
-            // Smooth fade out old tooltip before destroying (guard against race conditions)
-            var oldSlot = currentTooltipSlot;
-            CanvasGroup oldCg = oldSlot.GetComponent<CanvasGroup>();
-            if (oldCg == null) oldCg = oldSlot.gameObject.AddComponent<CanvasGroup>();
-            // Kill any existing tweens on this target to avoid operating on destroyed refs
-            DOTween.Kill(oldCg, complete: false);
-            oldCg.DOFade(0f, 0.075f).SetEase(Ease.OutQuad).OnComplete(() => {
-                if (oldSlot != null)
-                {
-                    Destroy(oldSlot.gameObject);
-                }
-            });
+            ShowBuilt(next);
+            return;
         }
+        HideTooltip();
+    }
 
-        currentTooltipSlot = Instantiate(tooltipSlotPrefab);
-        currentTooltipSlot.InitializeTooltipData(data);
-        currentTooltipSlot.transform.SetParent(transform);
-        // Smooth fade in
-        CanvasGroup cg = currentTooltipSlot.GetComponent<CanvasGroup>();
-        if (cg == null) cg = currentTooltipSlot.gameObject.AddComponent<CanvasGroup>();
-        DOTween.Kill(cg, complete: false);
-        cg.alpha = 0f;
-        cg.DOFade(1f, 0.095f).SetEase(Ease.OutQuad);
-
-        currentTooltipData = data; // Store the active tooltip data
-
-        isTooltipActive = true;
-
-        OnTooltipShown?.Invoke(data);
-
-        tooltipCoroutine = StartCoroutine(TooltipTimer());
+    /// <summary>A trigger is going away; take its tooltip down.</summary>
+    public void Release(TooltipTrigger trigger)
+    {
+        if (trigger == _current) HideTooltip();
     }
 
     public void HideTooltip()
     {
-        if (currentTooltipSlot != null)
-        {
-            var oldSlot = currentTooltipSlot;
-            CanvasGroup cg = oldSlot.GetComponent<CanvasGroup>();
-            if (cg == null) cg = oldSlot.gameObject.AddComponent<CanvasGroup>();
-            DOTween.Kill(cg, complete: false);
-            cg.DOFade(0f, 0.075f).SetEase(Ease.OutQuad).OnComplete(() => {
-                if (oldSlot != null)
-                {
-                    Destroy(oldSlot.gameObject);
-                }
-            });
-        }
-
-        // Prevent null reference by ensuring we only invoke when necessary
-        if (currentTooltipData != null)
-        {
-            OnTooltipHidden?.Invoke(currentTooltipData);
-        }
-
-        isTooltipActive = false;
-        currentTooltipData = null;
+        _current = null;
+        if (_slot == null || _slotGroup == null) return;
+        DOTween.Kill(_slotGroup);
+        var slot = _slot;
+        _slotGroup.DOFade(0f, FadeOutSeconds).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(slot.gameObject)
+            .OnComplete(() => { if (_current == null && slot != null) slot.gameObject.SetActive(false); });
     }
 
-
-    private void LockTooltip()
-    {
-        if (currentTooltipSlot != null)
-        {
-            currentTooltipSlot.Lock();
-        }
-    }
-
-
-    private IEnumerator TooltipTimer()
-    {
-        yield return new WaitForSeconds(2f);  // Wait for 2 seconds before locking the tooltip
-        LockTooltip();
-    }
-
-    public void RefreshTooltip(TooltipData data)
-    {
-        if (currentTooltipSlot != null && isTooltipActive)
-        {
-            currentTooltipSlot.UpdateTooltipData(data);
-        }
-    }
-
+    /// <summary>Game state changed: rebuild the open tooltip now.</summary>
     public void RefreshAllTooltips()
     {
-        if (isTooltipActive && currentTooltipSlot != null)
-        {
-            // Refresh the tooltip if it's active
-
-            currentTooltipSlot.UpdateTooltipData(currentTooltipData);
-        }
+        if (_current != null) Rebuild();
     }
 
+    /// <summary>Rebuild the open tooltip if it belongs to <paramref name="trigger"/>.</summary>
+    public void RefreshIfShowing(TooltipTrigger trigger)
+    {
+        if (trigger != null && trigger == _current) Rebuild();
+    }
+
+    private void Rebuild()
+    {
+        _nextRefresh = Time.unscaledTime + refreshInterval;
+        if (_current == null || _slot == null) return;
+        if (_current.TryBuild(_data)) _slot.Show(_data);
+        else HideTooltip();
+    }
+
+    private void EnsureSlot()
+    {
+        if (_slot == null)
+        {
+            if (tooltipSlotPrefab == null)
+            {
+                GameLog.Error("TooltipSystemLogic has no tooltip slot prefab assigned.", LogChannel.UI);
+                return;
+            }
+            // Instantiated at the root and then parented keeping its world scale, as the box has always been sized.
+            _slot = Instantiate(tooltipSlotPrefab);
+            _slot.transform.SetParent(transform);
+            _slotGroup = _slot.GetComponent<CanvasGroup>();
+            if (_slotGroup == null) _slotGroup = _slot.gameObject.AddComponent<CanvasGroup>();
+            _slotGroup.blocksRaycasts = false;
+            _slotGroup.interactable = false;
+            _slotGroup.alpha = 0f;
+        }
+        _slot.gameObject.SetActive(true);
+        _slot.transform.SetAsLastSibling();
+    }
+
+    private void FadeIn()
+    {
+        DOTween.Kill(_slotGroup);
+        _slotGroup.alpha = 0f;
+        _slotGroup.DOFade(1f, FadeInSeconds).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(_slot.gameObject);
+    }
 }

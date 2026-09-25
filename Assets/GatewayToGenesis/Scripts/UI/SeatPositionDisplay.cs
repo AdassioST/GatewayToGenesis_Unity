@@ -2,12 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
-using System.Collections.Generic;
 
 /// <summary>
 /// Displays a single council seat position in the government tab
 /// </summary>
-public class SeatPositionDisplay : MonoBehaviour
+public class SeatPositionDisplay : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI titleText;
@@ -142,7 +141,7 @@ public class SeatPositionDisplay : MonoBehaviour
             if (IsOnCooldown())
             {
                 int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(seatIndex);
-                GameLoggingSystem.Instance.LogEvent($"Seat {seatIndex} ({councilSeat.GetEffectiveTitle()}) is on cooldown for {remainingCooldown} more sevenths", "SeatPositionDisplay");
+                GameLog.Event($"Seat {seatIndex} ({councilSeat.GetEffectiveTitle()}) is on cooldown for {remainingCooldown} more sevenths", LogChannel.GovernmentUI);
                 return;
             }
             
@@ -182,49 +181,18 @@ public class SeatPositionDisplay : MonoBehaviour
     {
         UpdateDisplay();
     }
-    
+
     /// <summary>
-    /// Get legend data for sprite tooltip (returns null if no legend assigned)
+    /// The portrait shows the seated legend (or an assign prompt), the indicators explain themselves, and
+    /// everything else on the seat shows the seat.
     /// </summary>
-    public LegendData GetLegendData()
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data)
     {
-        return councilSeat?.assignedLegend;
+        if (councilSeat == null) return false;
+        var target = trigger.gameObject;
+        if (spriteImage != null && target == spriteImage.gameObject) return TooltipContent.SeatPortrait(councilSeat, data);
+        if (activeIndicator != null && target == activeIndicator.gameObject) return TooltipContent.SeatActivity(councilSeat, data);
+        if (cooldownIndicator != null && target == cooldownIndicator.gameObject) return TooltipContent.SeatCooldownIndicator(councilSeat, data);
+        return TooltipContent.Seat(councilSeat, data);
     }
-    
-    /// <summary>
-    /// Get seat info for title tooltip (always shows seat details)
-    /// </summary>
-    public (string title, string description, string type, string effects) GetSeatTooltipData()
-    {
-        if (councilSeat == null) return ("", "", "", "");
-        
-        // Always show seat information for title hover
-        string allowedClasses;
-        if (councilSeat.allowedLegendClasses == null || councilSeat.allowedLegendClasses.Count == 0)
-        {
-            allowedClasses = "Any/All Classes";
-        }
-        else if (councilSeat.allowedLegendClasses.Count == 6) // All 6 classes
-        {
-            allowedClasses = "Any/All Classes";
-        }
-        else
-        {
-            allowedClasses = string.Join(" - ", councilSeat.allowedLegendClasses);
-        }
-        
-        // Add seat bonuses as Assignment Effects
-        string assignmentEffects = "";
-        if (councilSeat.seatBonuses != null && councilSeat.seatBonuses.Count > 0)
-        {
-            var effectDescriptions = new List<string>();
-            foreach (var bonus in councilSeat.seatBonuses)
-            {
-                effectDescriptions.Add("- " + bonus.GetAutoDescription());
-            }
-            assignmentEffects = "\n<b>Assignment Effects:</b>\n" + string.Join("\n", effectDescriptions);
-        }
-        
-        return (councilSeat.GetEffectiveTitle(), councilSeat.roleplayDescription, $"<b>Allowed Classes:</b>\n{allowedClasses}", assignmentEffects);
-    }
-} 
+}

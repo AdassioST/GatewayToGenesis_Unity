@@ -6,9 +6,14 @@
 - Morale affects: global production efficiency, population growth food thresholds, and the `dark_morale` score for dark-event pressure. Future hooks for military and religion are planned.
 
 ## Where it lives
-- `StatManager` (`Assets/GatewayToGenesis/Scripts/Managers/StatManager.cs`)
+- `StatManager` (`Assets/GatewayToGenesis/Scripts/GameData/StatManager.cs`)
   - Holds `morale`, `moralebalance`, clamps, and seventh-based oscillation.
-  - Exposes morale via the same `UpdateStat`/`GetStatValue`/`CheckStat` pathways used elsewhere.
+  - Exposes morale via the same `ModifyStat`/`GetStatValue`/`CheckStat` pathways used elsewhere.
+  - Every morale change (events, Ink, `stat:morale` consequences) goes through `ApplyMoraleShift`: losses are
+    reduced by Morale Loss Mitigation (`moraleLossMod`%), gains are boosted by `moraleGainBalanceFactor` of it.
+  - Effects can modify max morale, the morale balance and displayed morale; see `EFFECTS_SYSTEM_README.md`.
+    A balance modifier moves the reference used for production, growth, satisfaction and dark morale, but not
+    the resting point morale drifts towards, which is what makes it a lasting bonus.
   - Helpers: `GetMorale()`, `GetMoraleBalance()`, `GetMoraleDeltaPercent()`, `ApplyMoraleShift(...)`, `OnMoraleChanged`.
 - `GlobalProductionManager` (`Assets/GatewayToGenesis/Scripts/GameData/GlobalProductionManager.cs`)
   - Adds a global morale percent modifier to all resources’ positive production.
@@ -31,8 +36,9 @@
 
 ## Seventh-based oscillation (Waltz-controlled)
 Runs on each `OnSeventhChange` tick:
-- If `morale > moraleBalance`: morale decreases by `ceil(Waltz × aboveBalanceRecoveryFactor)`.
-- If `morale < moraleBalance`: morale increases by `Waltz`.
+The resting point is the base `moraleBalance` (before modifiers).
+- If `morale > rest`: morale decreases by `ceil(Waltz × aboveBalanceRecoveryFactor)`, never below the rest.
+- If `morale < rest`: morale increases by `max(1, round(Waltz × moraleRecoveryMod))` (Euphony-driven), never above the rest.
 - Always clamped to `[minMorale, maxMorale]`.
 
 This creates: prosperity linger (slow decay above balance) and eager recovery (fast rise below balance).
@@ -76,7 +82,7 @@ Authoring guidance:
   - `int GetMorale()`
   - `int GetMoraleBalance()`
   - `float GetMoraleDeltaPercent()` — morale minus balance, as a percent-like delta.
-  - `void UpdateStat("morale", newValue)` — set morale.
+  - `void ModifyStat("morale", delta)` — shift morale (same as `ApplyMoraleShift(delta)`).
   - `void ApplyMoraleShift(int amount, string source = null, bool temporary = false, int durationSevenths = 0)` — optional timed/persistent shifts by source.
   - `event Action<int> OnMoraleChanged`
 - From Ink (external):

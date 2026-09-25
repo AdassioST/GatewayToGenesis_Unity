@@ -17,3 +17,4 @@ MonoBehaviour:
   section: Academia
   description: '"Eureka!"'
   icon: {fileID: 21300000, guid: c3d418ca090fe174e86dcc71d9ff4e93, type: 3}
+  role: 2

@@ -1,103 +1,76 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class GameResourceSlot : MonoBehaviour, IGameUnitSlot
+/// <summary>Storage-tab slot for one resource: current amount, capacity and net rate.</summary>
+public class GameResourceSlot : MonoBehaviour, IGameUnitSlot, ITooltipSource
 {
-    //INTERFACES
     public GameUnit gameUnit { get; set; }
-    
-    // Click power with validation - cannot go below base value
-    private float _clickPower = 1.0f;
-    public float clickPower 
-    { 
-        get => _clickPower;
-        set => _clickPower = ValidateClickPower(value);
-    }
-    
+
+    /// <summary>Current stock, always within [0, maxAmount].</summary>
     public float amount { get; set; }
     public float maxAmount { get; set; } = 200f;
 
-    //VARIABLES
-    public float productionRate = 0, baseClickPower = 1f;
+    /// <summary>Net rate per second, written by GlobalProductionManager.</summary>
+    public float productionRate = 0;
+    /// <summary>Click power before upgrades and modifiers; effective power never drops below it.</summary>
+    public float baseClickPower = 1f;
 
     public Image icon, fill;
 
     public TMP_Text amountText, productionRateText;
 
     private Color originalProductionRateColor;
+    private bool _initialized;
 
-    /// <summary>
-    /// Validates click power to ensure it never goes below base value
-    /// </summary>
-    private float ValidateClickPower(float newValue)
-    {
-        // Ensure click power never goes below base value
-        float minAllowed = Mathf.Max(0.001f, baseClickPower); // Prevent 0 click power
-        return Mathf.Max(minAllowed, newValue);
-    }
-
-    /// <summary>
-    /// Ensures current click power is at least at base value
-    /// </summary>
-    public void EnsureMinimumClickPower()
-    {
-        if (_clickPower < baseClickPower)
-        {
-            _clickPower = ValidateClickPower(baseClickPower);
-        }
-    }
-
-    /// <summary>
-    /// Resets click power to base value
-    /// </summary>
-    public void ResetClickPowerToBase()
-    {
-        _clickPower = ValidateClickPower(baseClickPower);
-    }
+    /// <summary>Effective click power (see <see cref="GameUnitsLogic.GetEffectiveClickPower"/>).</summary>
+    public float clickPower => GameUnitsLogic.Instance != null ? GameUnitsLogic.Instance.GetEffectiveClickPower(this) : baseClickPower;
 
     public void Start()
     {
         InitialiseResource(gameUnit);
     }
-    
+
     public void InitialiseResource(GameUnit newResource)
     {
+        if (newResource == null) return;
         gameUnit = newResource;
         icon.sprite = newResource.icon;
-        clickPower = baseClickPower; // This will now use the validated setter
-
-        originalProductionRateColor = productionRateText.color;
-
+        if (!_initialized)
+        {
+            originalProductionRateColor = productionRateText.color;
+            _initialized = true;
+        }
         RefreshProductionAmount();
+    }
+
+    /// <summary>Add (or remove, when negative) stock, clamped to capacity, and refresh the display.</summary>
+    public float ChangeAmount(float delta)
+    {
+        float before = amount;
+        amount = Mathf.Clamp(amount + delta, 0f, maxAmount);
+        RefreshProductionAmount();
+        return amount - before;
     }
 
     public void RefreshProductionAmount()
     {
+        if (gameUnit == null || GameUnitsLogic.Instance == null) return;
         amountText.text = GameUnitsLogic.Instance.FormatValue(amount);
         productionRateText.text = GameUnitsLogic.Instance.FormatValue(productionRate) + "/s";
 
-        // For Food, visualize progress toward growth threshold rather than storage cap
-        if (string.Equals(gameUnit.name, "Food", System.StringComparison.OrdinalIgnoreCase) && PopGrowthLogic.Instance != null)
+        // Food shows progress towards the next population growth instead of storage.
+        if (gameUnit.role == ResourceRole.Food && PopGrowthLogic.Instance != null)
         {
-            float threshold = Mathf.Max(1f, PopGrowthLogic.Instance.foodThreshold);
-            fill.fillAmount = Mathf.Clamp01(amount / threshold);
+            fill.fillAmount = Mathf.Clamp01(amount / Mathf.Max(1f, PopGrowthLogic.Instance.GetEffectiveFoodThreshold()));
         }
         else
         {
-            fill.fillAmount = amount / maxAmount;
+            fill.fillAmount = maxAmount > 0f ? amount / maxAmount : 0f;
         }
 
-        if (productionRate < 0)
-        {
-            productionRateText.color = Color.red;
-        }
-        else
-        {
-            productionRateText.color = originalProductionRateColor;
-        }
+        if (_initialized) productionRateText.color = productionRate < 0 ? Color.red : originalProductionRateColor;
     }
 
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Resource(this, trigger, data);
 }

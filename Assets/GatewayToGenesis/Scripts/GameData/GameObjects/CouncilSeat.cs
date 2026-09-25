@@ -25,7 +25,6 @@ public class CouncilSeat
     [Header("Assignment")]
     public LegendData assignedLegend; // Currently assigned legend (null if empty)
     public int seventhsUntilActive = 0; // Sevenths remaining until effects activate
-    public bool bonusesProcessed = false; // Flag to prevent duplicate bonus processing
     
     [Header("Civic Integration")]
     public CivicData sourceCivic; // Civic that created this seat (null for default seats)
@@ -44,16 +43,13 @@ public class CouncilSeat
     }
     
     /// <summary>
-    /// Check if a legend can be assigned to this seat
+    /// The one eligibility rule for seating a legend: the Head of State takes any legend marked
+    /// canBeHeadOfState; every other seat takes the classes it allows.
     /// </summary>
     public bool CanAssignLegend(LegendData legend)
     {
         if (legend == null) return false;
-        
-        // Head of State can be any class if allowed
-        if (isHeadOfState && legend.canBeHeadOfState) return true;
-        
-        // Check if legend class is compatible with seat
+        if (isHeadOfState) return legend.canBeHeadOfState;
         return allowedLegendClasses.Contains(legend.legendClass);
     }
     
@@ -65,7 +61,6 @@ public class CouncilSeat
         if (!CanAssignLegend(legend)) return false;
         
         assignedLegend = legend;
-        bonusesProcessed = false; // Reset bonus processing flag for new assignment
         // seventhsUntilActive will be set by LegendLeaderLogic based on seventhsForActivation
         return true;
     }
@@ -77,7 +72,6 @@ public class CouncilSeat
     {
         assignedLegend = null;
         seventhsUntilActive = 0;
-        bonusesProcessed = false; // Reset bonus processing flag
     }
     
     /// <summary>
@@ -92,14 +86,8 @@ public class CouncilSeat
         return seatTitle;
     }
     
-    /// <summary>
-    /// Check if this seat is active (has assigned legend and sevenths completed)
-    /// </summary>
-    public bool IsActive()
-    {
-        // Must have an assigned legend AND the activation timer must be complete
-        return assignedLegend != null && seventhsUntilActive <= 0;
-    }
+    /// <summary>True once the seated legend has finished activating and its own bonuses apply (the seat's bonuses apply from the moment it is seated).</summary>
+    public bool IsActive() => CouncilRules.LegendBonusesApply(assignedLegend != null, seventhsUntilActive);
     
     /// <summary>
     /// Process one seventh (decrease activation timer)
@@ -124,69 +112,15 @@ public class SeatBonus
     public float modifierValue; // Value to add/multiply
     public ModifierType modifierType;
     public string description; // Human-readable description of the bonus
-    public bool requiresLegend = true; // Whether this bonus requires an assigned legend
+
+    /// <summary>The authored <see cref="description"/> if there is one, otherwise the effect's own wording.</summary>
+    public string GetAutoDescription() => !string.IsNullOrEmpty(description) ? description : Describe(bonusType, this.ToEffect());
 
     /// <summary>
-    /// Get auto-generated description for this bonus (matching legend/civic format)
+    /// Wording of a seat bonus (default seats and civic seats): <see cref="GameEffect.Describe"/>, except the
+    /// CivicBonus marker, which has no effect of its own.
     /// </summary>
-    public string GetAutoDescription()
-    {
-        if (!string.IsNullOrEmpty(description))
-        {
-            return description;
-        }
-
-        return bonusType switch
-        {
-            SeatBonusType.PillarBonus => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue} {targetStat}"
-                : $"{modifierValue} Pillar Bonus",
-                
-            SeatBonusType.SubstatBonus => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue} {targetStat}"
-                : $"{modifierValue} Substat Bonus",
-                
-            SeatBonusType.DerivedStatBonus => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} {targetStat}"
-                : $"{modifierValue} Derived Stat Bonus",
-                
-            SeatBonusType.ResourceModifier => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} {targetStat} production"
-                : $"{modifierValue} Resource Production",
-                
-            SeatBonusType.ProductionModifier => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} {targetStat} efficiency"
-                : $"{modifierValue} Production Efficiency",
-                
-            SeatBonusType.ClickPowerBonus => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} {targetStat} click power"
-                : $"{modifierValue} Click Power",
-                
-            SeatBonusType.MaxMoraleModifier => $"{(modifierValue > 0 ? "+" : "")}{modifierValue} max morale",
-            
-            SeatBonusType.MoraleModifier => $"{(modifierValue > 0 ? "+" : "")}{modifierValue} morale",
-            
-            SeatBonusType.MoraleBalanceModifier => $"Morale balance -{modifierValue} (easier to stay positive)",
-            
-            SeatBonusType.SatisfactionModifier => $"{(modifierValue > 0 ? "+" : "")}{modifierValue} satisfaction effectiveness",
-            
-            SeatBonusType.SatisfactionThresholdModifier => $"{(modifierValue > 0 ? "+" : "")}{modifierValue} satisfaction threshold (easier upgrades)",
-            
-            SeatBonusType.HousingBonus => $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} housing capacity",
-            
-            SeatBonusType.ProductionScalingBonus => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue} {targetStat} per production unit"
-                : $"{modifierValue} Production Scaling Bonus",
-                
-            SeatBonusType.ConstructionCostModifier => !string.IsNullOrEmpty(targetStat) 
-                ? $"{(modifierValue > 0 ? "+" : "")}{modifierValue}{(modifierType == ModifierType.Percentage ? "%" : "")} {targetStat} construction cost"
-                : $"{modifierValue} Construction Cost Modifier",
-                
-            SeatBonusType.SpecialAbility => "Special Ability",
-            SeatBonusType.CivicBonus => "Civic Bonus",
-            _ => "Unknown Bonus"
-        };
-    }
+    public static string Describe(SeatBonusType type, in GameEffect effect) => type == SeatBonusType.CivicBonus ? "Civic Bonus" : effect.Describe();
 }
 
 /// <summary>

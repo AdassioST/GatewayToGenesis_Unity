@@ -1,510 +1,199 @@
 using System.Collections.Generic;
-using UnityEngine;
-using TMPro;
 using System.Text;
-
-public enum ChoiceValidationType
-{
-	None,
-	Requirements,
-	Challenge,
-	Both
-}
+using TMPro;
+using UnityEngine;
 
 /// <summary>
-/// UI component for a single Chorus decision choice.
-/// Provides the API used by ChorusScreenManager and ChorusChoiceBackground.
+/// One chorus choice card, a view over a <see cref="ChorusChoiceData"/> from the story index: title and
+/// description, a <see cref="RequirementSlot"/> per requirement and cost, the pillar <see cref="ChallengeSlot"/>,
+/// a locked overlay, and a tooltip listing each outcome with its current odds and consequences. Selecting it
+/// hands the choice to <see cref="ChorusScreenManager"/>, which checks, rolls and applies it.
 /// </summary>
 public class ChorusChoice : MonoBehaviour
 {
-	[Header("Optional UI References")]
-	[SerializeField] private TMP_Text titleText;
-	[SerializeField] private TMP_Text descriptionText;
+    [Header("Optional UI References")]
+    [SerializeField] private TMP_Text titleText;
+    [SerializeField] private TMP_Text descriptionText;
 
-	[Header("Requirements UI")]
-	[SerializeField] private Transform requirementsContainer;
-	[SerializeField] private GameObject requirementSlotPrefab;
+    [Header("Requirements UI")]
+    [SerializeField] private Transform requirementsContainer;
+    [SerializeField] private GameObject requirementSlotPrefab;
 
-	[Header("Challenge UI")]
-	[SerializeField] private Transform challengeContainer;
-	[SerializeField] private GameObject challengeSlotPrefab;
+    [Header("Challenge UI")]
+    [SerializeField] private Transform challengeContainer;
+    [SerializeField] private GameObject challengeSlotPrefab;
 
-	[Header("Lock Overlay")]
-	[SerializeField] private GameObject lockedOverlay; // Assign per choice (Idealism/Locked, etc.)
+    [Header("Lock Overlay")]
+    [SerializeField] private GameObject lockedOverlay;
 
-	// Backing fields
-	private string choiceId;
-	private string title;
-	private string description;
-	private string hoverDescription;
-	private string destinationPath;
-	private string successPath;
-	private string failurePath;
-	private ChoiceValidationType validationType = ChoiceValidationType.None;
-	private List<EventCondition> requirements = new List<EventCondition>();
-	private List<EventConsequence> successConsequences = new List<EventConsequence>();
-	private List<EventConsequence> failureConsequences = new List<EventConsequence>();
-	private List<EventConsequence> consequences = new List<EventConsequence>();
-	private bool hasChallenge = false;
-	private ChallengeSlot challengeSlot;
+    private const LogChannel Log = LogChannel.EventScreens;
 
-	private ChorusScreenManager screenManager;
+    private readonly List<RequirementSlot> requirementSlots = new List<RequirementSlot>();
+    private ChallengeSlot challengeSlot;
+    private ChorusScreenManager screenManager;
 
-	// Public API required by other components
-	public string ChoiceId => choiceId;
-	public string Title => title;
-	public string Description => description;
-	public string HoverDescription => hoverDescription;
-	public string DestinationPath => destinationPath;
-	public string SuccessPath => successPath;
-	public string FailurePath => failurePath;
-	public ChoiceValidationType ValidationType => validationType;
-	public bool HasChallenge => hasChallenge;
-	public List<EventCondition> Requirements => requirements;
-	public List<EventConsequence> SuccessConsequences => successConsequences;
-	public List<EventConsequence> FailureConsequences => failureConsequences;
-	public List<EventConsequence> Consequences => consequences;
-	public ChallengeSlot Challenge => challengeSlot;
+    /// <summary>The choice shown (shared with the story index; never modified here).</summary>
+    public ChorusChoiceData Data { get; private set; }
 
-	private void Awake()
-	{
-		screenManager = GetComponentInParent<ChorusScreenManager>();
-	}
+    public string ChoiceId => Data != null ? Data.choiceId : null;
 
-	// Signature expected by ChorusScreenManager.UpdateChoiceObject
-	public void InitializeChoice(
-		string choiceId,
-		string title,
-		string description,
-		string hoverDescription,
-		List<EventCondition> requirements,
-		object _unused,
-		string destinationPath,
-		int _choiceIndex,
-		string successPath,
-		string failurePath,
-		ChoiceValidationType validationType,
-		List<EventConsequence> successConsequences,
-		List<EventConsequence> failureConsequences,
-		List<EventConsequence> consequences)
-	{
-		this.choiceId = choiceId;
-		this.title = title;
-		this.description = description;
-		this.hoverDescription = hoverDescription;
-		this.destinationPath = destinationPath;
-		this.successPath = successPath;
-		this.failurePath = failurePath;
-		this.validationType = validationType;
-		this.requirements = requirements ?? new List<EventCondition>();
-		this.successConsequences = successConsequences ?? new List<EventConsequence>();
-		this.failureConsequences = failureConsequences ?? new List<EventConsequence>();
-		this.consequences = consequences ?? new List<EventConsequence>();
+    private void Awake()
+    {
+        screenManager = GetComponentInParent<ChorusScreenManager>();
+    }
 
-		if (titleText != null) titleText.text = this.title ?? string.Empty;
-		if (descriptionText != null) descriptionText.text = this.description ?? string.Empty;
+    /// <summary>Show <paramref name="data"/>; <paramref name="pillarIcon"/> is the challenge pillar's icon.</summary>
+    public void Bind(ChorusChoiceData data, Sprite pillarIcon)
+    {
+        Data = data;
+        if (titleText != null) titleText.text = data != null ? data.title : string.Empty;
+        if (descriptionText != null) descriptionText.text = data != null ? data.description : string.Empty;
+        BuildRequirementSlots();
+        BuildChallenge(pillarIcon);
+        RefreshTooltip();
+    }
 
-		if (requirements != null && requirements.Count > 0)
-		{
-			GameLoggingSystem.Instance.LogEvent($"[ChorusChoice] {name} building {requirements.Count} requirement slots for choiceId='{this.choiceId}'", "ChorusScreenManager");
-		}
-		else
-		{
-			GameLoggingSystem.Instance.LogEvent($"[ChorusChoice] {name} has no requirements for choiceId='{this.choiceId}'", "ChorusScreenManager");
-		}
-		BuildRequirementSlots();
-		AttachOrUpdateConsequencesTooltip();
-	}
+    /// <summary>Refresh requirement colours, challenge odds and the outcome tooltip (game state changed).</summary>
+    public void RefreshChoice()
+    {
+        if (Data == null) return;
+        foreach (var slot in requirementSlots)
+        {
+            if (slot != null) slot.RefreshRequirementStatus();
+        }
+        if (challengeSlot != null) challengeSlot.RefreshChallengeDisplay();
+        RefreshTooltip();
+    }
 
-	public void ConfigureChallenge(string pillarType, int requiredStrength, Sprite icon)
-	{
-		hasChallenge = !string.IsNullOrEmpty(pillarType) && requiredStrength > 0;
-		if (!hasChallenge)
-		{
-			if (challengeSlot != null)
-			{
-				Destroy(challengeSlot.gameObject);
-				challengeSlot = null;
-			}
-			return;
-		}
-		EnsureChallengeSlotInstance();
-		if (challengeSlot != null)
-		{
-			challengeSlot.InitializeChallenge(pillarType, requiredStrength, icon);
-		}
-	}
+    /// <summary>Make this choice. True when the chorus accepted it (available and no choice made yet).</summary>
+    public bool SelectChoice()
+    {
+        if (screenManager == null) screenManager = GetComponentInParent<ChorusScreenManager>();
+        return screenManager != null && screenManager.OnChoiceSelected(this);
+    }
 
-	public void RefreshChoice()
-	{
-		// Refresh requirement statuses
-		if (requirementsContainer != null)
-		{
-			var slots = requirementsContainer.GetComponentsInChildren<RequirementSlot>(true);
-			foreach (var rs in slots)
-			{
-				rs.RefreshRequirementStatus();
-			}
-		}
-		// Refresh challenge visuals with current StatManager runtime values
-		if (challengeSlot != null)
-		{
-			challengeSlot.RefreshChallengeDisplay();
-		}
-		// Refresh consequences tooltip (for updated new totals)
-		AttachOrUpdateConsequencesTooltip();
-	}
+    /// <summary>Show or hide the lock; the card itself stays fully readable.</summary>
+    public void SetLockedOverlay(bool isLocked)
+    {
+        if (lockedOverlay != null) lockedOverlay.SetActive(isLocked);
+        var group = GetComponent<CanvasGroup>();
+        if (group != null) group.alpha = 1f;
+    }
 
-	public void SelectChoice()
-	{
-		if (screenManager == null) screenManager = GetComponentInParent<ChorusScreenManager>();
-		if (screenManager != null)
-		{
-			screenManager.OnChoiceSelected(this);
-		}
-	}
+    // ===== REQUIREMENTS AND CHALLENGE =====
 
-	public void SetLockedOverlay(bool isLocked)
-	{
-		if (lockedOverlay != null)
-		{
-			lockedOverlay.SetActive(isLocked);
-		}
-		// Ensure choice content remains fully visible regardless of lock state (overlay handles lock visuals)
-		var cg = GetComponent<CanvasGroup>();
-		if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
-		cg.alpha = 1f;
-	}
+    private void BuildRequirementSlots()
+    {
+        requirementSlots.Clear();
+        if (requirementsContainer == null) return;
+        for (int i = requirementsContainer.childCount - 1; i >= 0; i--)
+        {
+            Destroy(requirementsContainer.GetChild(i).gameObject);
+        }
+        if (Data == null || !Data.HasRequirements) return;
+        if (requirementSlotPrefab == null)
+        {
+            GameLog.Warning($"{name}: '{Data.title}' has requirements but no requirement slot prefab is assigned.", Log);
+            return;
+        }
+        foreach (var requirement in Data.requirements) AddRequirementSlot(requirement, false);
+        foreach (var cost in Data.requirementsCost) AddRequirementSlot(cost, true);
+    }
 
-	private void BuildRequirementSlots()
-	{
-		if (requirementsContainer == null || requirementSlotPrefab == null)
-		{
-			if (requirements != null && requirements.Count > 0)
-			{
-				Debug.LogWarning($"[ChorusChoice] {name}: Requirements present but missing container or slot prefab. containerNull={(requirementsContainer==null)}, prefabNull={(requirementSlotPrefab==null)}");
-			}
-			return;
-		}
-		// Clear
-		for (int i = requirementsContainer.childCount - 1; i >= 0; i--)
-		{
-			Destroy(requirementsContainer.GetChild(i).gameObject);
-		}
-		// Build
-		foreach (var cond in requirements)
-		{
-			var go = Instantiate(requirementSlotPrefab, requirementsContainer);
-			var rs = go.GetComponent<RequirementSlot>();
-			if (rs != null)
-			{
-				rs.InitializeRequirement(cond);
-				// RequirementSlot handles its own tooltip setup in UpdateRequirementDisplay()
-			}
-		}
-	}
+    private void AddRequirementSlot(EventCondition condition, bool isCost)
+    {
+        if (condition == null) return;
+        var slot = Instantiate(requirementSlotPrefab, requirementsContainer).GetComponent<RequirementSlot>();
+        if (slot == null) return;
+        slot.InitializeRequirement(condition, isCost);
+        requirementSlots.Add(slot);
+    }
 
-	private void AttachOrUpdateConsequencesTooltip()
-	{
-		// Build tooltip content
-		BuildChoiceConsequencesTooltip(out string title, out string desc);
+    private void BuildChallenge(Sprite pillarIcon)
+    {
+        if (Data == null || !Data.hasChallenge)
+        {
+            if (challengeSlot != null) Destroy(challengeSlot.gameObject);
+            challengeSlot = null;
+            return;
+        }
+        if (challengeSlot == null)
+        {
+            if (challengeContainer == null) challengeContainer = transform.Find("ChallengeContainer");
+            if (challengeContainer == null || challengeSlotPrefab == null)
+            {
+                GameLog.Warning($"{name}: '{Data.title}' has a challenge but no challenge container or slot prefab is assigned.", Log);
+                return;
+            }
+            for (int i = challengeContainer.childCount - 1; i >= 0; i--)
+            {
+                Destroy(challengeContainer.GetChild(i).gameObject);
+            }
+            challengeSlot = Instantiate(challengeSlotPrefab, challengeContainer).GetComponentInChildren<ChallengeSlot>(true);
+            if (challengeSlot == null)
+            {
+                GameLog.Warning($"{name}: the challenge slot prefab has no ChallengeSlot component.", Log);
+                return;
+            }
+        }
+        challengeSlot.InitializeChallenge(Data.challengePillar, Data.challengeStrength, pillarIcon);
+    }
 
-		// If there's nothing to show, avoid adding a trigger
-		if (string.IsNullOrEmpty(desc))
-		{
-			var existing = GetComponent<TooltipTrigger>();
-			if (existing != null && existing.useCustomTooltip && string.IsNullOrEmpty(existing.customTitle) && string.IsNullOrEmpty(existing.customDescription))
-			{
-				// Leave as-is to avoid flicker; no-op
-			}
-			return;
-		}
+    // ===== OUTCOME TOOLTIP =====
 
-		var trig = GetComponent<TooltipTrigger>();
-		if (trig == null) trig = gameObject.AddComponent<TooltipTrigger>();
-		trig.useCustomTooltip = true;
-		trig.customTitle = title;
-		trig.customDescription = desc;
-		trig.customType = string.Empty;
-	}
+    private void RefreshTooltip()
+    {
+        string outcomes = Data != null ? DescribeOutcomes(Data) : string.Empty;
+        var trigger = GetComponent<TooltipTrigger>();
+        if (string.IsNullOrEmpty(outcomes))
+        {
+            if (trigger != null) trigger.enabled = false;
+            return;
+        }
+        if (trigger == null) trigger = gameObject.AddComponent<TooltipTrigger>();
+        trigger.enabled = true;
+        trigger.SetCustom("Consequences", outcomes);
+    }
 
-	private void BuildChoiceConsequencesTooltip(out string title, out string description)
-	{
-		title = "Consequences";
-		var sb = new StringBuilder();
+    /// <summary>
+    /// What choosing <paramref name="choice"/> does: costs and unconditional consequences first, then each
+    /// outcome that can happen with its current odds (the same numbers the roll uses).
+    /// </summary>
+    public static string DescribeOutcomes(ChorusChoiceData choice)
+    {
+        var upfront = ChorusRules.CostConsequences(choice);
+        upfront.AddRange(choice.consequences);
+        bool rolls = choice.hasChallenge || (choice.rareEventPercent > 0 && !string.IsNullOrEmpty(choice.rareEventPath));
+        if (!rolls)
+        {
+            var all = new List<EventConsequence>(upfront);
+            all.AddRange(choice.successConsequences);
+            return EventText.DescribeConsequences(all);
+        }
 
-		bool hasSuccess = successConsequences != null && successConsequences.Count > 0;
-		bool hasFailure = failureConsequences != null && failureConsequences.Count > 0;
-		bool hasDirect = consequences != null && consequences.Count > 0;
+        var stats = StatManager.Instance;
+        float bonus = stats != null ? stats.GetSavingRollChancePercentCapped() : 0f;
+        int pillar = choice.hasChallenge && stats != null ? stats.GetPillarValue(choice.challengePillar) : 0;
+        var odds = ChorusRules.OutcomeOdds(choice, bonus, pillar);
 
-		if (hasSuccess || hasFailure)
-		{
-			if (hasSuccess)
-			{
-				sb.AppendLine("On Success:");
-				sb.Append(BuildConsequencesPreviewText(successConsequences));
-			}
-			if (hasFailure)
-			{
-				if (hasSuccess) sb.AppendLine();
-				sb.AppendLine("On Failure:");
-				sb.Append(BuildConsequencesPreviewText(failureConsequences));
-			}
-		}
-		else if (hasDirect)
-		{
-			sb.Append(BuildConsequencesPreviewText(consequences));
-		}
+        var sb = new StringBuilder();
+        if (upfront.Count > 0) sb.AppendLine("<b>When Chosen:</b>").AppendLine(EventText.DescribeConsequences(upfront));
+        AppendOutcome(sb, "Rare Event", ChorusOutcome.RareEvent, choice.rareEventConsequences, odds, upfront);
+        AppendOutcome(sb, "Critical Success", ChorusOutcome.CriticalSuccess, choice.critSuccessConsequences, odds, upfront);
+        AppendOutcome(sb, "On Success", ChorusOutcome.Success, choice.successConsequences, odds, upfront);
+        AppendOutcome(sb, "Otherwise", ChorusOutcome.TimePasses, choice.successConsequences, odds, upfront);
+        AppendOutcome(sb, "On Failure", ChorusOutcome.Failure, choice.failureConsequences, odds, upfront);
+        AppendOutcome(sb, "Critical Failure", ChorusOutcome.CriticalFailure, choice.critFailureConsequences, odds, upfront);
+        return sb.ToString().TrimEnd();
+    }
 
-		description = sb.ToString().TrimEnd();
-	}
-
-	// Local copy of the preview builder to avoid cross-class dependency
-	private string BuildConsequencesPreviewText(List<EventConsequence> consequences)
-	{
-		if (consequences == null || consequences.Count == 0) return string.Empty;
-
-		var sb = new StringBuilder();
-		foreach (var c in consequences)
-		{
-			switch (c.type)
-			{
-				case EventConsequence.ConsequenceType.ResourceChange:
-				{
-					int current = EventSystemLogic.Instance?.GetGameUnitsLogic()?.GetResourceAmount(c.targetName) ?? 0;
-					int next = current + c.value;
-					string verb = c.value >= 0 ? "Gained" : "Lost";
-					sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} x {c.targetName} (New Total {Mathf.Max(next,0)})");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ScoreChange:
-				{
-					int current = EventSystemLogic.Instance?.GetEventScore(c.targetName) ?? 0;
-					int next = current + c.value;
-					string verb = c.value >= 0 ? "Gained" : "Lost";
-					string display = FormatScoreDisplayName(c.targetName);
-					sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} x {display} (New Total {next})");
-					break;
-				}
-				case EventConsequence.ConsequenceType.StatChange:
-				{
-					StatManager sm = EventSystemLogic.Instance?.GetStatManager();
-					int current = sm != null ? sm.GetStatValue(c.targetName) : 0;
-					int next = current + c.value;
-					string verb = c.value >= 0 ? "Gained" : "Lost";
-					sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} {c.targetName} (New Total {next})");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ProductionUnitChange:
-				{
-					GameUnitsLogic gul = EventSystemLogic.Instance?.GetGameUnitsLogic();
-					int current = 0;
-					if (gul != null && gul.productionTab != null)
-					{
-						GameObject slotObj = gul.productionTab.slots.Find(s => s.name == c.targetName);
-						if (slotObj != null)
-						{
-							GameProductionSlot ps = slotObj.GetComponent<GameProductionSlot>();
-							if (ps != null)
-							{
-								current = Mathf.RoundToInt(ps.maxAmount);
-							}
-						}
-					}
-					int next = current + c.value;
-					string verb = c.value >= 0 ? "Gained" : "Lost";
-					sb.AppendLine($"- You've {verb} {Mathf.Abs(c.value)} x {c.targetName} (New Total {Mathf.Max(next,0)})");
-					break;
-				}
-				case EventConsequence.ConsequenceType.TechnologyEnlightened:
-				{
-					sb.AppendLine($"- You've Gained Enlightenment on {c.targetName}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.UnlockEvent:
-				{
-					sb.AppendLine($"- You've Unlocked event {c.targetName}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.PopulationChange:
-				{
-					if (PopGrowthLogic.Instance != null)
-					{
-						int current = PopGrowthLogic.Instance.population;
-						int next = current + c.value;
-						sb.AppendLine($"- {Mathf.Abs(c.value)} population have been killed (New Total {Mathf.Max(next, 0)})");
-					}
-					else
-					{
-						sb.AppendLine($"- {Mathf.Abs(c.value)} population have been killed");
-					}
-					break;
-				}
-				case EventConsequence.ConsequenceType.HousingChange:
-				{
-					if (PopGrowthLogic.Instance != null)
-					{
-						int current = PopGrowthLogic.Instance.housing;
-						int next = current + c.value;
-						if (c.value > 0)
-							sb.AppendLine($"- {c.value} new housing units have been gained (New Total {Mathf.Max(next, 0)})");
-						else
-							sb.AppendLine($"- {Mathf.Abs(c.value)} housing units have been lost (New Total {Mathf.Max(next, 0)})");
-					}
-					else
-					{
-						if (c.value > 0) sb.AppendLine($"- {c.value} new housing units have been gained");
-						else sb.AppendLine($"- {Mathf.Abs(c.value)} housing units have been lost");
-					}
-					break;
-				}
-				case EventConsequence.ConsequenceType.VagrantsChange:
-				{
-					if (PopGrowthLogic.Instance != null)
-					{
-						int current = PopGrowthLogic.Instance.vagrants;
-						int next = current + c.value;
-						if (c.value > 0)
-							sb.AppendLine($"- {c.value} new vagrants have arrived (New Total {Mathf.Max(next, 0)})");
-						else
-							sb.AppendLine($"- {Mathf.Abs(c.value)} vagrants have been killed (New Total {Mathf.Max(next, 0)})");
-					}
-					else
-					{
-						if (c.value > 0) sb.AppendLine($"- {c.value} new vagrants have arrived");
-						else sb.AppendLine($"- {Mathf.Abs(c.value)} vagrants have been killed");
-					}
-					break;
-				}
-				case EventConsequence.ConsequenceType.DeathsChange:
-				{
-					if (PopGrowthLogic.Instance != null)
-					{
-						int current = PopGrowthLogic.Instance.deaths;
-						int next = current + c.value;
-						if (c.value > 0)
-							sb.AppendLine($"- {c.value} additional deaths have been recorded (New Total {Mathf.Max(next, 0)})");
-						else
-							sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the historical records (New Total {Mathf.Max(next, 0)})");
-					}
-					else
-					{
-						if (c.value > 0) sb.AppendLine($"- {c.value} additional deaths have been recorded");
-						else sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the historical records");
-					}
-					break;
-				}
-				case EventConsequence.ConsequenceType.DeathRecordsRevision:
-				{
-					if (PopGrowthLogic.Instance != null)
-					{
-						int current = PopGrowthLogic.Instance.deaths;
-						int next = current + c.value;
-						if (c.value < 0)
-							sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the public records (New Total {Mathf.Max(next, 0)})");
-						else
-							sb.AppendLine($"- {c.value} additional deaths have been added to the public records (New Total {Mathf.Max(next, 0)})");
-					}
-					else
-					{
-						if (c.value < 0) sb.AppendLine($"- {Mathf.Abs(c.value)} deaths have been wiped from the public records");
-						else sb.AppendLine($"- {c.value} additional deaths have been added to the public records");
-					}
-					break;
-				}
-				case EventConsequence.ConsequenceType.ProductionPercentChange:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ProductionPercentChangeSection:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Production {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ClickPowerChange:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for {c.targetName}{dur}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ClickPowerPercentChange:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for {c.targetName}{dur}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ClickPowerChangeSection:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)} for section {c.targetName}{dur}");
-					break;
-				}
-				case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
-				{
-					string sign = c.value >= 0 ? "+" : "-";
-					string dur = c.durationSevenths > 0 ? $" (for {c.durationSevenths} sevenths)" : string.Empty;
-					sb.AppendLine($"- Click Power {sign}{Mathf.Abs(c.value)}% for section {c.targetName}{dur}");
-					break;
-				}
-				default:
-				{
-					sb.AppendLine($"- Unknown consequence type: {c.type} for {c.targetName} (value: {c.value})");
-					break;
-				}
-			}
-		}
-
-		return sb.ToString();
-	}
-
-	// Centralized formatter for Event Score display names
-	private string FormatScoreDisplayName(string raw)
-	{
-		if (string.IsNullOrEmpty(raw)) return string.Empty;
-		string spaced = raw.Replace('_', ' ');
-		string lower = spaced.ToLower();
-		return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(lower);
-	}
-
-	private void EnsureChallengeSlotInstance()
-	{
-		if (challengeSlot != null) return;
-		if (challengeContainer == null)
-		{
-			var t = transform.Find("ChallengeContainer");
-			if (t != null) challengeContainer = t;
-		}
-		if (challengeContainer == null)
-		{
-			Debug.LogWarning($"[ChorusChoice] {name}: Missing challengeContainer reference");
-			return;
-		}
-		if (challengeSlotPrefab == null)
-		{
-			Debug.LogWarning($"[ChorusChoice] {name}: Missing challengeSlotPrefab reference");
-			return;
-		}
-		for (int i = challengeContainer.childCount - 1; i >= 0; i--)
-		{
-			Destroy(challengeContainer.GetChild(i).gameObject);
-		}
-		var go = Instantiate(challengeSlotPrefab, challengeContainer);
-		challengeSlot = go.GetComponent<ChallengeSlot>();
-		if (challengeSlot == null)
-		{
-			challengeSlot = go.GetComponentInChildren<ChallengeSlot>(true);
-			if (challengeSlot == null)
-			{
-				Debug.LogWarning($"[ChorusChoice] {name}: ChallengeSlot component not found on prefab or its children");
-			}
-		}
-	}
+    private static void AppendOutcome(StringBuilder sb, string label, ChorusOutcome outcome, List<EventConsequence> consequences,
+        Dictionary<ChorusOutcome, int> odds, List<EventConsequence> upfront)
+    {
+        if (!odds.TryGetValue(outcome, out int percent) || percent <= 0) return;
+        string lines = EventText.DescribeConsequences(consequences, true, upfront);
+        if (sb.Length > 0) sb.AppendLine();
+        sb.AppendLine($"<b>{label} ({percent}%):</b>");
+        sb.AppendLine(string.IsNullOrEmpty(lines) ? "- No Immediate Effect" : lines);
+    }
 }

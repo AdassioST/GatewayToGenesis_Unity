@@ -1,23 +1,26 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TimeSystemLogic : MonoBehaviour
+/// <summary>
+/// Game calendar: 21 sevenths per phase, 3 phases per echo, 4 echoes per cycle.
+/// The 21st seventh of each phase is the Ritual Seventh.
+/// While an event is pending, time runs slower by <see cref="slowMotionFactor"/>.
+/// </summary>
+public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
 {
-    public static TimeSystemLogic Instance { get; private set; }
+    private const LogChannel Log = LogChannel.Time;
 
-    [SerializeField] private float secondsPerSeventh = 180f; // 1 Seventh = 3 minutes
-    [SerializeField] private float slowMotionFactor = 3f; // Time slows down by this factor when events are pending
-    
-    // Public accessor for the base time value
-    public float BaseSecondsPerSeventh => secondsPerSeventh;
-    private float timeSinceLastSeventh = 0f;
-    
-    // Track slow motion periods to properly scale accumulated time
-    private float slowMotionTimeAccumulated = 0f;
-    private bool wasInSlowMotion = false;
+    public const int SeventhsPerPhase = 21;
+    public const int PhasesPerEcho = 3;
+    public const int EchoesPerCycle = 4;
+
+    [SerializeField] private float secondsPerSeventh = 180f;
+    [Tooltip("While an event notification is pending, time passes this many times slower.")]
+    [SerializeField] private float slowMotionFactor = 3f;
 
     [SerializeField] private TMP_Text cycleText, echoText, seventhText;
     [SerializeField] private Image phaseImage;
@@ -25,83 +28,63 @@ public class TimeSystemLogic : MonoBehaviour
 
     [SerializeField] private TimeUnit[] echoes, phases;
 
+    [SerializeField] private List<string> cycleNames;
+
+    public bool canTrackTime, isTimePaused = true;
+
+    public float BaseSecondsPerSeventh => secondsPerSeventh;
+
     public int CurrentCycle { get; private set; } = 1;
     public int CurrentEcho { get; private set; } = 1;
     public int CurrentPhase { get; private set; } = 1;
     public int CurrentSeventh { get; private set; } = 1;
 
+    public bool IsRitualSeventh => CurrentSeventh == SeventhsPerPhase;
+
     public event Action<int> OnPhaseChange, OnEchoChange, OnCycleChange, OnRitualSeventh, OnSeventhChange;
 
+    private float timeSinceLastSeventh;
     private int totalPhaseIndex;
-
-    [SerializeField] private List<string> cycleNames;
-
-    private string currentCycleName;
-
+    private string currentCycleName = "Overture";
     private Color originalColor;
+    private bool isSlowMotionActive;
 
-    public bool canTrackTime, isTimePaused = true;
-    private bool isSlowMotionActive = false;
-
-    private void Awake()
+    /// <summary>
+    /// Run <paramref name="onReady"/> with the time system as soon as it exists (immediately if it already does).
+    /// Replaces per-system "wait for TimeSystemLogic" coroutines.
+    /// </summary>
+    public static void WhenReady(MonoBehaviour owner, Action<TimeSystemLogic> onReady)
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null)
         {
-            Debug.LogWarning("Duplicate TimeSystemLogic found, destroying the new one.");
-            Destroy(gameObject);
+            onReady(Instance);
             return;
         }
+        if (owner != null && owner.isActiveAndEnabled) owner.StartCoroutine(WaitForInstance(onReady));
+    }
 
-        Instance = this;
+    private static IEnumerator WaitForInstance(Action<TimeSystemLogic> onReady)
+    {
+        while (Instance == null) yield return null;
+        onReady(Instance);
     }
 
     private void Start()
     {
-        currentCycleName = "Overture"; // The first cycle name
-
-        originalColor = seventhText.color;
-
+        if (seventhText != null) originalColor = seventhText.color;
         UpdateUI();
-
     }
 
     private void Update()
     {
-        if (!isTimePaused)
+        if (!isTimePaused && canTrackTime)
         {
-            // Handle time accumulation with proper slow motion scaling
-            if (isSlowMotionActive)
-            {
-                // In slow motion: accumulate time at reduced rate
-                slowMotionTimeAccumulated += Time.deltaTime / slowMotionFactor;
-                timeSinceLastSeventh += Time.deltaTime / slowMotionFactor;
-                wasInSlowMotion = true;
-            }
-            else
-            {
-                // Normal time: accumulate normally
-                if (wasInSlowMotion)
-                {
-                    // Transitioning from slow motion: convert accumulated slow motion time back to normal time
-                    // The accumulated time was scaled down by slowMotionFactor, so we need to scale it back up
-                    float convertedTime = slowMotionTimeAccumulated * slowMotionFactor;
-                    timeSinceLastSeventh += convertedTime;
-                    GameLoggingSystem.Instance.LogEvent($"Slow motion ended: converted {slowMotionTimeAccumulated:F2}s slow motion → {convertedTime:F2}s normal time, total time: {timeSinceLastSeventh:F2}s", "TimeSystemLogic");
-                    slowMotionTimeAccumulated = 0f;
-                    wasInSlowMotion = false;
-                }
-                else
-                {
-                    // Always normal time
-                    timeSinceLastSeventh += Time.deltaTime;
-                }
-            }
+            timeSinceLastSeventh += Time.deltaTime / (isSlowMotionActive ? Mathf.Max(1f, slowMotionFactor) : 1f);
         }
 
-        // Check if we've reached the threshold for the next seventh
-        if (timeSinceLastSeventh >= secondsPerSeventh && canTrackTime)
+        if (canTrackTime && timeSinceLastSeventh >= secondsPerSeventh)
         {
-            timeSinceLastSeventh = 0f;
+            timeSinceLastSeventh -= secondsPerSeventh;
             IncrementSeventh();
         }
     }
@@ -109,22 +92,17 @@ public class TimeSystemLogic : MonoBehaviour
     private void IncrementSeventh()
     {
         CurrentSeventh++;
-
-        if (CurrentSeventh > 21) // Transition to next phase
+        if (CurrentSeventh > SeventhsPerPhase)
         {
             CurrentSeventh = 1;
             IncrementPhase();
         }
-        else if (CurrentSeventh == 21) // Ritual Seventh
+        else if (CurrentSeventh == SeventhsPerPhase)
         {
             OnRitualSeventh?.Invoke(CurrentSeventh);
         }
 
         OnSeventhChange?.Invoke(CurrentSeventh);
-        
-        // Reset slow motion tracking when seventh changes to prevent accumulation across boundaries
-        ResetSlowMotionTracking($"Seventh {CurrentSeventh}");
-        
         UpdateUI();
     }
 
@@ -132,162 +110,103 @@ public class TimeSystemLogic : MonoBehaviour
     {
         CurrentPhase++;
         totalPhaseIndex++;
-
-        if (CurrentPhase > 3) // Transition to next echo
+        if (CurrentPhase > PhasesPerEcho)
         {
             CurrentPhase = 1;
             IncrementEcho();
         }
-
-        if (totalPhaseIndex >= phases.Length) // Reset the totalPhaseIndex at the end of the cycle
-            totalPhaseIndex = 0;
-
-        // Reset slow motion tracking when phase changes to prevent accumulation across boundaries
-        ResetSlowMotionTracking($"Phase {CurrentPhase}");
-
+        if (phases == null || totalPhaseIndex >= phases.Length) totalPhaseIndex = 0;
         OnPhaseChange?.Invoke(CurrentPhase);
     }
 
     private void IncrementEcho()
     {
         CurrentEcho++;
-
-        if (CurrentEcho > 4) // Transition to next cycle
+        if (CurrentEcho > EchoesPerCycle)
         {
             CurrentEcho = 1;
             IncrementCycle();
         }
-
-        // Reset slow motion tracking when echo changes to prevent accumulation across boundaries
-        ResetSlowMotionTracking($"Echo {CurrentEcho}");
-
         OnEchoChange?.Invoke(CurrentEcho);
     }
 
     private void IncrementCycle()
     {
         CurrentCycle++;
-        currentCycleName = CurrentCycle == 1 ? "Overture" : cycleNames[UnityEngine.Random.Range(0, cycleNames.Count)];
-        
-        // Reset slow motion tracking when cycle changes to prevent accumulation across boundaries
-        ResetSlowMotionTracking($"Cycle {CurrentCycle} ({currentCycleName})");
-        
+        if (cycleNames != null && cycleNames.Count > 0) currentCycleName = cycleNames[UnityEngine.Random.Range(0, cycleNames.Count)];
+        GameLog.Event($"Cycle {CurrentCycle} ({currentCycleName}) begins", Log);
         OnCycleChange?.Invoke(CurrentCycle);
     }
 
     public void UpdateUI()
     {
-        if (!expandible.activeSelf || !HUD.activeSelf) return;
+        if (expandible == null || HUD == null || !expandible.activeSelf || !HUD.activeSelf) return;
 
-        // Update Cycle Text
-        cycleText.text = $"Cycle {CurrentCycle} ◦ {currentCycleName}";
+        if (cycleText != null) cycleText.text = $"Cycle {CurrentCycle} ◦ {currentCycleName}";
 
-        // Update Echo Text
-        if (CurrentEcho - 1 < echoes.Length)
+        if (echoes != null && CurrentEcho - 1 < echoes.Length && echoText != null)
         {
-            echoText.text = echoes[CurrentEcho - 1].unitName;
-            echoText.GetComponentInParent<TooltipTrigger>().customTitle = echoes[CurrentEcho - 1].description;
-
+            var echo = echoes[CurrentEcho - 1];
+            echoText.text = echo.unitName;
+            SetTooltip(echoText, echo.description, null);
         }
 
-        // Update Phase Image
-        if (totalPhaseIndex < phases.Length)
+        if (phases != null && totalPhaseIndex < phases.Length && phaseImage != null)
         {
-            phaseImage.sprite = phases[totalPhaseIndex].icon;
-
-            phaseImage.GetComponentInParent<TooltipTrigger>().customTitle = phases[totalPhaseIndex].unitName;
-            phaseImage.GetComponentInParent<TooltipTrigger>().customDescription = phases[totalPhaseIndex].description;
+            var phase = phases[totalPhaseIndex];
+            phaseImage.sprite = phase.icon;
+            SetTooltip(phaseImage, phase.unitName, phase.description);
         }
 
-        // Update Seventh Text and Color
-        seventhText.text = CurrentSeventh.ToString();
+        if (seventhText != null)
+        {
+            seventhText.text = CurrentSeventh.ToString();
+            seventhText.color = IsRitualSeventh ? Color.red : originalColor;
+            SetTooltip(seventhText, IsRitualSeventh ? "Ritual Seventh" : "Seventh", IsRitualSeventh ? "The world has perfectly attuned!" : "The minimum unit of time tracking.");
+        }
+    }
 
-        seventhText.color = CurrentSeventh == 21 ? Color.red : originalColor;
-
-        seventhText.GetComponentInParent<TooltipTrigger>().customTitle = CurrentSeventh == 21 ? "Ritual Seventh" : "Seventh";
-        seventhText.GetComponentInParent<TooltipTrigger>().customDescription = CurrentSeventh == 21 ? "The world has perfectly attuned!" : "The minimum unit of time tracking.";
+    private static void SetTooltip(Component anchor, string title, string description)
+    {
+        var tooltip = anchor.GetComponentInParent<TooltipTrigger>();
+        if (tooltip == null) return;
+        tooltip.SetCustom(title, description ?? tooltip.customDescription, tooltip.customType);
     }
 
     public void PauseTime(bool pause)
     {
         if (!canTrackTime) return;
-
         isTimePaused = pause;
-
         UpdateUI();
     }
-    
-    /// <summary>
-    /// Enable slow motion time (when events are pending)
-    /// </summary>
+
+    /// <summary>Slow time down while an event is waiting for the player.</summary>
     public void EnableSlowMotion()
     {
-        if (!isSlowMotionActive)
-        {
-            isSlowMotionActive = true;
-            wasInSlowMotion = true;
-            GameLoggingSystem.Instance.LogEvent($"Slow motion enabled - time will pass {slowMotionFactor}x slower", "TimeSystemLogic");
-        }
+        if (isSlowMotionActive) return;
+        isSlowMotionActive = true;
+        GameLog.Event($"Slow motion on: time passes {slowMotionFactor}x slower", Log);
     }
-    
-    /// <summary>
-    /// Disable slow motion time (when events are handled)
-    /// </summary>
+
     public void DisableSlowMotion()
     {
-        if (isSlowMotionActive)
-        {
-            isSlowMotionActive = false;
-            GameLoggingSystem.Instance.LogEvent("Slow motion disabled - time returns to normal speed", "TimeSystemLogic");
-        }
+        if (!isSlowMotionActive) return;
+        isSlowMotionActive = false;
+        GameLog.Event("Slow motion off", Log);
     }
-    
-    /// <summary>
-    /// Get the effective seconds per seventh (considering slow motion)
-    /// </summary>
-    public float GetEffectiveSecondsPerSeventh()
-    {
-        if (isSlowMotionActive)
-        {
-            return secondsPerSeventh * slowMotionFactor;
-        }
-        return secondsPerSeventh;
-    }
-    
-    /// <summary>
-    /// Get current time progress towards next seventh (0.0 to 1.0)
-    /// </summary>
-    public float GetSeventhProgress()
-    {
-        return timeSinceLastSeventh / secondsPerSeventh;
-    }
-    
-    /// <summary>
-    /// Get remaining seconds until next seventh
-    /// </summary>
+
+    public bool IsSlowMotionActive => isSlowMotionActive;
+
+    /// <summary>Real seconds a full seventh takes right now.</summary>
+    public float GetEffectiveSecondsPerSeventh() => isSlowMotionActive ? secondsPerSeventh * slowMotionFactor : secondsPerSeventh;
+
+    /// <summary>Progress through the current seventh, 0 to 1.</summary>
+    public float GetSeventhProgress() => secondsPerSeventh > 0f ? Mathf.Clamp01(timeSinceLastSeventh / secondsPerSeventh) : 0f;
+
+    /// <summary>Real seconds until the next seventh at the current speed.</summary>
     public float GetRemainingSecondsToSeventh()
     {
-        if (isSlowMotionActive)
-        {
-            // In slow motion, calculate remaining time considering the slowdown
-            float remainingNormalTime = secondsPerSeventh - timeSinceLastSeventh;
-            return remainingNormalTime * slowMotionFactor;
-        }
-        return secondsPerSeventh - timeSinceLastSeventh;
+        float remaining = Mathf.Max(0f, secondsPerSeventh - timeSinceLastSeventh);
+        return isSlowMotionActive ? remaining * slowMotionFactor : remaining;
     }
-    
-    /// <summary>
-    /// Reset slow motion tracking to prevent accumulation across time boundaries
-    /// </summary>
-    private void ResetSlowMotionTracking(string boundaryName)
-    {
-        if (wasInSlowMotion)
-        {
-            GameLoggingSystem.Instance.LogEvent($"{boundaryName} changed - resetting slow motion tracking", "TimeSystemLogic");
-            slowMotionTimeAccumulated = 0f;
-            wasInSlowMotion = false;
-        }
-    }
-    
 }
-
