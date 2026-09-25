@@ -10,6 +10,9 @@ public class ResourceSO : ScriptableObject
     //Datos del Excel
     [SerializeField] int id = 1, tier = 1;
 
+    public int Id => id;
+    public int Tier => tier;
+
     public string resourceName = "", resourceType = "", resourceDescription = "";
 
     public bool hasSpecialProperties;

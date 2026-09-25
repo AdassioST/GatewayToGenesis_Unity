@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Central manager for all civic systems including acquisition, removal, effects, and council management
@@ -136,14 +137,14 @@ public class CivicManager : MonoBehaviour
     private void Update()
     {
         
-        if (Input.GetKeyDown(KeyCode.U))
+        if (InputUtils.KeyDown(Key.U))
         {
             // Test unlocking a civic
             bool success = UnlockCivic("Innovation Council", "Debug Input");
             GameLoggingSystem.Instance.LogEvent($"Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
         }
         
-        if (Input.GetKeyDown(KeyCode.R))
+        if (InputUtils.KeyDown(Key.R))
         {
             // Test removing a civic - only if it's actually active
             if (IsCivicActive("Innovation Council"))
@@ -157,14 +158,14 @@ public class CivicManager : MonoBehaviour
             }
         }
         
-        if (Input.GetKeyDown(KeyCode.G))
+        if (InputUtils.KeyDown(Key.G))
         {
             // Test unlocking Guild Masters
             bool success = UnlockCivic("Guild Masters", "Debug Input");
             GameLoggingSystem.Instance.LogEvent($"Debug unlock attempt: {(success ? "SUCCESS" : "FAILED")}", "CivicManager");
         }
         
-        if (Input.GetKeyDown(KeyCode.F))
+        if (InputUtils.KeyDown(Key.F))
         {
             // Test unlocking Military Academy
             bool success = UnlockCivic("Military Academy", "Debug Input");

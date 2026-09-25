@@ -11,10 +11,10 @@ public class VitalSelectionWindow : MonoBehaviour
     private void Update()
     {
         // Close window if click is outside this window's RectTransform
-        if (Input.GetMouseButtonDown(0))
+        if (InputUtils.LeftClickDown)
         {
             RectTransform windowRect = GetComponent<RectTransform>();
-            if (!RectTransformUtility.RectangleContainsScreenPoint(windowRect, Input.mousePosition, null))
+            if (!RectTransformUtility.RectangleContainsScreenPoint(windowRect, InputUtils.MousePosition, null))
             {
                 gameObject.SetActive(false);
             }

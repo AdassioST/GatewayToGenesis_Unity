@@ -1485,7 +1485,7 @@ public class EventScreenManager : MonoBehaviour
         // Wait until any key or mouse button is pressed or screen is destroyed
         while (currentScreen != null)
         {
-            if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+            if (InputUtils.AnyKeyOrClickDown)
             {
                 OnBridgeContinuePressed();
                 yield break;

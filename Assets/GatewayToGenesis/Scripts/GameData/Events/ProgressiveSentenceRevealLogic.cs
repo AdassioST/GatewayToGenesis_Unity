@@ -109,7 +109,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
     /// </summary>
     private void CheckForSkipInput()
     {
-        if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+        if (InputUtils.AnyKeyOrClickDown)
         {
             float currentTime = Time.time;
             
@@ -779,7 +779,7 @@ public class ProgressiveSentenceRevealLogic : MonoBehaviour
             // Check if skip was triggered from Update
             if (skipTriggered) yield break;
             
-            if (Input.anyKeyDown || Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+            if (InputUtils.AnyKeyOrClickDown)
             {
                 // Wait for cooldown to prevent accidental rapid inputs
                 yield return new WaitForSeconds(inputCooldown);

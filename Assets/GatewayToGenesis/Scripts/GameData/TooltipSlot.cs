@@ -34,7 +34,7 @@ public class TooltipSlot : MonoBehaviour
     }
     private void AdjustTooltipPosition()
     {
-        Vector2 mousePosition = Input.mousePosition;
+        Vector2 mousePosition = InputUtils.MousePosition;
         Vector2 tooltipSize = rectTransform.sizeDelta * rectTransform.lossyScale;
 
         Vector2 screenSize = new Vector2(Screen.width, Screen.height);

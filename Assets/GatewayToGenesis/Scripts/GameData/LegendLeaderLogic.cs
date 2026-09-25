@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Manages legend leaders, their assignments to council seats, and the application of combined bonuses
@@ -72,7 +73,7 @@ public class LegendLeaderLogic : MonoBehaviour
     private void Update()
     {
         // Debug input for testing legend system
-        if (Input.GetKeyDown(KeyCode.L))
+        if (InputUtils.KeyDown(Key.L))
         {
             PrintLegendInfo();
         }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Configuration template for default council seats
@@ -288,7 +289,7 @@ public class GovernmentLogic : MonoBehaviour
     private void Update()
     {
         // Debug input to recalculate government type
-        if (Input.GetKeyDown(KeyCode.G))
+        if (InputUtils.KeyDown(Key.G))
         {
             CalculateGovernmentCoordinates();
             DetermineGovernmentType();

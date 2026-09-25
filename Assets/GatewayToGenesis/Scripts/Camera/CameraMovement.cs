@@ -64,7 +64,7 @@ public class CameraMovement : MonoBehaviour
 
     private void HandleZoom()
     {
-        float scrollInput = Input.mouseScrollDelta.y;
+        float scrollInput = InputUtils.MouseScrollDelta.y;
 
         if (scrollInput != 0)
         {
@@ -84,7 +84,7 @@ public class CameraMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        Vector3 mousePos = Input.mousePosition;
+        Vector3 mousePos = InputUtils.MousePosition;
 
         float moveX = CalculateEdgeMovement(mousePos.x, screenSize.x, edgeX);
         float moveY = CalculateEdgeMovement(mousePos.y, screenSize.y, edgeY);
@@ -111,7 +111,7 @@ public class CameraMovement : MonoBehaviour
         {
             PointerEventData pointerData = new PointerEventData(EventSystem.current)
             {
-                position = Input.mousePosition
+                position = InputUtils.MousePosition
             };
 
             List<RaycastResult> results = new List<RaycastResult>();

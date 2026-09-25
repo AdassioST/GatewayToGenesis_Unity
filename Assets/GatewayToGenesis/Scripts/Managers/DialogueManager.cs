@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using Ink.Runtime;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 
 public class DialogueManager : MonoBehaviour
@@ -13,9 +14,7 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] private Decision decision;
     [SerializeField] private StatManager statManager;
     private static DialogueManager instance;
-    private bool canContinueToNextLine = false;
     public string path;
-    private bool canChoose=false;
 
     [Header("Choices UI")]
     [SerializeField] private GameObject[] choices;
@@ -53,7 +52,7 @@ public class DialogueManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
+        if (InputUtils.KeyDown(Key.T))
         {
             decisionPanel.SetActive(true);
             JumpToKnot(decision._name);

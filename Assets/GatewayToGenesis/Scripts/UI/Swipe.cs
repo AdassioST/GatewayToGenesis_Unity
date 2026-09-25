@@ -20,7 +20,7 @@ public class Swipe : MonoBehaviour, IBeginDragHandler, IEndDragHandler,IDragHand
     public void OnDrag(PointerEventData eventData)
     {
         
-        card.transform.position= Input.mousePosition;
+        card.transform.position = eventData.position;
 
         if (card.transform.position.x > pos.x + 200)
         {

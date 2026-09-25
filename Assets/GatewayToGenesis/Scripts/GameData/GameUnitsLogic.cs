@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameUnitsLogic : MonoBehaviour
 {
@@ -59,7 +60,7 @@ public class GameUnitsLogic : MonoBehaviour
     private void Update()
     {
         // Debug input for testing modifier systems
-        if (Input.GetKeyDown(KeyCode.M))
+        if (InputUtils.KeyDown(Key.M))
         {
             PrintAllModifiers();
         }

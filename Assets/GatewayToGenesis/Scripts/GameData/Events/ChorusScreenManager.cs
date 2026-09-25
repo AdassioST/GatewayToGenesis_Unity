@@ -2026,7 +2026,7 @@ public class ChorusScreenManager : MonoBehaviour
     private IEnumerator WaitForInputAndProceed(GameObject resultObj, ChorusChoice choice, bool success)
     {
         // Wait for any input
-        while (!Input.anyKeyDown && !Input.GetMouseButtonDown(0) && !Input.GetMouseButtonDown(1))
+        while (!InputUtils.AnyKeyOrClickDown)
         {
             yield return null;
         }

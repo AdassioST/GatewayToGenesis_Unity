@@ -386,7 +386,7 @@ namespace Ink.UnityIntegration {
 			public FunctionPanelState functionPanelState = new FunctionPanelState();
 			// public FunctionPanelState.FunctionParams functionParams = new FunctionPanelState.FunctionParams();
 			public VariablesPanelState variablesPanelState = new VariablesPanelState();
-			public ObservedVariablesPanelState observedVariablesPanelState = new ObservedVariablesPanelState();
+			[System.NonSerialized] public ObservedVariablesPanelState observedVariablesPanelState = new ObservedVariablesPanelState();
 		}
 
 		
@@ -512,7 +512,7 @@ namespace Ink.UnityIntegration {
 					public bool boolValue;
 					public string inkVariablePath;
 					public object inkVariableValue;
-					public InkList inkListVariableValue;
+					[System.NonSerialized] public InkList inkListVariableValue;
 					public string inkListVariablePath;
 
 					public void RefreshInkVariableValue (Story story) {

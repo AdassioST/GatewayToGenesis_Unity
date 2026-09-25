@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class TestScript : MonoBehaviour
 {
@@ -74,16 +75,16 @@ public class TestScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (InputUtils.KeyDown(Key.Digit1))
         {
             gusiClick("R01");
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (InputUtils.KeyDown(Key.Digit2))
         {
             gusiClick("R02");
         }
 
-        else if (Input.GetKeyDown(KeyCode.Y))
+        else if (InputUtils.KeyDown(Key.Y))
         {
             int randomNum = Random.Range(1,3);
             switch (randomNum)
@@ -103,7 +104,7 @@ public class TestScript : MonoBehaviour
             }
         }
 
-        else if (Input.GetKeyDown(KeyCode.P))
+        else if (InputUtils.KeyDown(Key.P))
         {
             int randomNum = 1;
             switch (randomNum)
