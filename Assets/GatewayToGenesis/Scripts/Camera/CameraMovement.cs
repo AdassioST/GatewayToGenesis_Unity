@@ -34,8 +34,29 @@ public class CameraMovement : MonoBehaviour
     private Vector3 minBounds, maxBounds;
     private float cameraWidth, cameraHeight;
 
+    /// <summary>The capital camera in the scene (the world view hands zoom over to it and back).</summary>
+    public static CameraMovement Instance { get; private set; }
+    public bool AtWidest => currentZoom >= maxZoom - 0.001f;
+    /// <summary>The pointer is over the HUD, where the wheel does not move this camera.</summary>
+    public bool PointerBlocked => EventSystem.current != null && IsPointerOverUI();
+
+    /// <summary>Set the zoom (the wheel, and the world view handing the capital back at its widest view).</summary>
+    public void SetZoom(float zoom)
+    {
+        currentZoom = Mathf.Clamp(zoom, minZoom, maxZoom);
+        if (virtualCamera != null) virtualCamera.m_Lens.OrthographicSize = currentZoom;
+        // Faster, snappier panning when zoomed out.
+        float t = maxZoom > minZoom ? (currentZoom - minZoom) / (maxZoom - minZoom) : 1f;
+        moveSpeed = Mathf.Lerp(5f, 10f, t);
+        smoothingTime = Mathf.Lerp(0.5f, 0.2f, t);
+        UpdateCameraBounds();
+    }
+
+    public void ZoomToWidest() => SetZoom(maxZoom);
+
     private void Awake()
     {
+        Instance = this;
         if (virtualCamera != null)
         {
             transposer = virtualCamera.GetCinemachineComponent<CinemachineTransposer>();
@@ -54,8 +75,15 @@ public class CameraMovement : MonoBehaviour
         UpdateCameraBounds();
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     private void Update()
     {
+        // While the world view has the screen, the wheel and the screen edges belong to it.
+        if (WorldView.IsOpen) return;
         if (IsPointerOverUI()) return;
 
         HandleZoom();
@@ -68,17 +96,13 @@ public class CameraMovement : MonoBehaviour
 
         if (scrollInput != 0)
         {
-            float newZoom = Mathf.Clamp(currentZoom - scrollInput * zoomSpeed, minZoom, maxZoom);
-
-            currentZoom = newZoom;
-            virtualCamera.m_Lens.OrthographicSize = currentZoom;
-
-            // Update move speed and smoothing dynamically
-            moveSpeed = Mathf.Lerp(5f, 10f, (currentZoom - minZoom) / (maxZoom - minZoom));
-            smoothingTime = Mathf.Lerp(0.5f, 0.2f, (currentZoom - minZoom) / (maxZoom - minZoom));
-
-            // Update bounds for the new zoom level
-            UpdateCameraBounds();
+            // Past the widest view the zoom carries on into the world map (one continuous zoom).
+            if (scrollInput < 0f && AtWidest)
+            {
+                WorldView.ZoomOutOfCapital();
+                return;
+            }
+            SetZoom(currentZoom - scrollInput * zoomSpeed);
         }
     }
 

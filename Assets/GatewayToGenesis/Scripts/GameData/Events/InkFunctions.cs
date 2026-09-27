@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Ink.Runtime;
 
 /// <summary>
@@ -40,6 +41,14 @@ public static class InkFunctions
         }
 
         // Generic values
+        story.BindExternalFunction("GetResonanceAnchors", () => SaveSession.Anchors);
+        story.BindExternalFunction("SacrificeWorld", () => Act(() =>
+        {
+            if (GameAge.Id != "age-of-the-end") throw new InvalidOperationException("World sacrifice is reserved for the final Choice of the End.");
+            var menu = UnityEngine.Object.FindAnyObjectByType<SaveMenu>();
+            if (menu == null) throw new InvalidOperationException("The save menu is unavailable; sacrifice was not performed.");
+            menu.CompleteSacrifice();
+        }));
         story.BindExternalFunction("GetValue", (string domain, string target) => GameValues.Get(domain, target));
         story.BindExternalFunction("CheckValue", (string domain, string target, int required) => GameValues.Get(domain, target) >= required);
 
@@ -87,8 +96,8 @@ public static class InkFunctions
             var slot = Units()?.GetTechnologySlot(technologyName);
             if (slot == null) return false;
             if (preview) return true;
-            slot.enlightenedCompleted = true;
-            slot.RefreshTechnologyUI();
+            // The full Enlightenment (uncovered, part of its research paid, announced), as a met goal gives it.
+            Units().EnlightenTechnology(slot, "A story");
             log($"Enlightened technology {technologyName}");
             return true;
         });
@@ -118,6 +127,24 @@ public static class InkFunctions
         story.BindExternalFunction("ProcessEventDeaths", (int deathCount) => Act(() => PopGrowthLogic.Instance?.ProcessEventDeaths(deathCount)));
 
         // Weather
+        story.BindExternalFunction("GetTileWeather", (int q, int r) =>
+            CelestialWeatherSystemLogic.Instance?.WeatherAt(new HexCoord(q, r))?.name ?? "");
+        story.BindExternalFunction("SetRegionalWeather", (string profileName, string sectors, int duration) =>
+        {
+            if (preview) return 0;
+            var weather = CelestialWeatherSystemLogic.Instance;
+            var profile = CelestialWeatherSystemLogic.FindWeatherProfile(profileName);
+            return weather == null ? -1 : weather.AddWeatherFront(profile, WeatherExtent.Sectors, HexCoord.Zero,
+                durationSevenths: duration, sectors: (sectors ?? "").Split(',').Select(s => s.Trim()));
+        });
+        story.BindExternalFunction("SetWorldWeather", (string profileName, int duration) =>
+        {
+            if (preview) return 0;
+            var weather = CelestialWeatherSystemLogic.Instance;
+            return weather == null ? -1 : weather.AddWeatherFront(CelestialWeatherSystemLogic.FindWeatherProfile(profileName),
+                WeatherExtent.World, HexCoord.Zero, durationSevenths: duration, priority: 1000);
+        });
+        story.BindExternalFunction("ClearWeatherFront", (int id) => preview || (CelestialWeatherSystemLogic.Instance?.RemoveWeatherFront(id) ?? false));
         story.BindExternalFunction("GetCurrentWeather", () => CelestialWeatherSystemLogic.Instance?.GetCurrentWeatherName() ?? "");
         story.BindExternalFunction("IsWeather", (string profileName) => CelestialWeatherSystemLogic.Instance != null && CelestialWeatherSystemLogic.Instance.IsWeatherActive(profileName));
         story.BindExternalFunction("ChangeWeather", (string profileName) =>

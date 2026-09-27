@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Fortified Living
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 60915e90f38c68837a83bcbc94a125b6, type: 2}
+  isEventTech: 0
+  tier: 8
+  satisfactionPoints: 0
+  techRequirements:
+  - Vital Winds Mastery
+  - Celestial Astrology
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 100
+  enlightenedConditions:
+  - type: 6
+    trigger: buildings_total
+    requiredAmount: 71
+    description: Construct more than 70 Buildings.
+  techUnlockables:
+  - {fileID: 11400000, guid: 5d6a1e7e8170df04182613fb404010a9, type: 2}

@@ -1,0 +1,13 @@
+# A moonlit lake with wooded banks and a glade approach.
+tile: violet-grove/moon-hollow
+biome: violet-grove
+weight: 1
+rotations: any
+legend: V=violet-wood M=moonlit-grove G=violet-glade L=lake
+heights: L=0.34
+---
+  V M M V
+ V M L M V
+V G L L G V
+ V M L M V
+  V M M V

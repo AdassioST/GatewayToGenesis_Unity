@@ -127,7 +127,9 @@ public class TabBuilderLogic : MonoBehaviour
             var banner = section.transform.Find("Banner");
             if (banner != null && banner.TryGetComponent(out TooltipTrigger tooltipTrigger))
             {
-                tooltipTrigger.SetCustom(sectionData.title, sectionData.description, sectionData.name, layout: TooltipStyle.Banner);
+                // The section's canon keyword adds its lore (the banner line already is its summary).
+                tooltipTrigger.SetCustom(sectionData.title, sectionData.description, sectionData.name, layout: TooltipStyle.Banner,
+                    keyword: "section:" + sectionData.name.ToLowerInvariant(), loreSummary: false);
             }
         }
         return section;

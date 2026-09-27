@@ -1,0 +1,11 @@
+# A quarter of ruins being quarried.
+tile: survivor-architecture/ruin-fields
+biome: survivor-architecture
+weight: 1
+rotations: any
+legend: F=fallow-steppe R=ruin-field
+---
+  F F F
+ F R R F
+F R R R F
+ F F F F

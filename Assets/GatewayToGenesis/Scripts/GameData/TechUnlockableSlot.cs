@@ -19,7 +19,8 @@ public class TechUnlockableSlot : MonoBehaviour, ITooltipSource
 
         techUnlockableData = unlockableData;
 
-        if (unlockableData.unlockableType != TechUnlockableType.Special)
+        // Cards about no particular unit (Special hooks, a council seat, a demand modifier) show their slot image alone.
+        if (unlockableData.unlockableType != TechUnlockableType.Special && unlockableData.gameUnit != null)
         {
             techIcon.sprite = unlockableData.gameUnit.icon;
 

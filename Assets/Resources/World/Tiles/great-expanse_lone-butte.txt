@@ -1,0 +1,13 @@
+# A lone butte rising from the scrub.
+tile: great-expanse/lone-butte
+biome: great-expanse
+weight: 1
+rotations: none
+legend: C=expanse-scrub H=highlands P=peaks
+heights: H=0.74 P=0.9
+---
+  C C C
+ C H H C
+C H P H C
+ C H H C
+  C C C

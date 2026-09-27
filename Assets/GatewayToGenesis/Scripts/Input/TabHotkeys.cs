@@ -41,6 +41,29 @@ public class TabHotkeys : SingletonBehaviour<TabHotkeys>
     /// <summary>True while an event story has the screen (tabs are hidden and cannot be toggled).</summary>
     public bool IsEventActive => isEventActive;
 
+    /// <summary>
+    /// The capital view's root canvases (those holding the HUD and the tabs), which the world view fades out while
+    /// the world has the screen. The event overlay may sit inside one of them: see <see cref="EventOverlay"/>.
+    /// </summary>
+    public List<Canvas> CapitalCanvases()
+    {
+        var canvases = new List<Canvas>();
+        foreach (var go in new[] { storageTab, productionTab, governmentTab, researchTab, HUD })
+        {
+            var canvas = go != null ? go.GetComponentInParent<Canvas>(true) : null;
+            if (canvas == null) continue;
+            canvas = canvas.rootCanvas;
+            if (!canvases.Contains(canvas)) canvases.Add(canvas);
+        }
+        return canvases;
+    }
+
+    /// <summary>The event overlay, which stays visible over the world view (stories are told wherever the player is).</summary>
+    public GameObject EventOverlay => eventTab;
+
+    /// <summary>The capital's HUD (its NotificationGrid holds the notices, <see cref="NotificationFeed"/>).</summary>
+    public GameObject Hud => HUD;
+
     protected override void OnSingletonAwake()
     {
         foreach (var tab in new[] { storageTab, productionTab, governmentTab, researchTab, eventTab }) Register(tab);
@@ -92,9 +115,16 @@ public class TabHotkeys : SingletonBehaviour<TabHotkeys>
 
     public void ToggleEventTab() => Toggle(eventTab, exclusive: true);
 
+    /// <summary>Open the research tab (left open if it already is), e.g. from a notice.</summary>
+    public void OpenResearchTab() { if (researchTab != null && !IsOpen(researchTab)) ToggleResearchTab(); }
+
+    /// <summary>Open the government tab (left open if it already is), e.g. from a notice.</summary>
+    public void OpenGovernmentTab() { if (governmentTab != null && !IsOpen(governmentTab)) ToggleGovernmentTab(); }
+
     private void Toggle(GameObject tab, bool exclusive)
     {
-        if (tabsDisabled || isEventActive || tab == null || !displays.ContainsKey(tab)) return;
+        // The White-Haven Library has the screen (and its search field the keyboard).
+        if (tabsDisabled || isEventActive || LibraryWindow.IsOpen || WorldView.IsOpen || tab == null || !displays.ContainsKey(tab)) return;
         HideTooltip();
 
         if (IsOpen(tab))

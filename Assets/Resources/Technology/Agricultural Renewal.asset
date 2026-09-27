@@ -20,7 +20,7 @@ MonoBehaviour:
   resourceRequirements:
   - Research
   resourceAmount:
-  - 45
+  - 75
   eurekaConditions:
   - type: 1
     trigger: Timber Camp

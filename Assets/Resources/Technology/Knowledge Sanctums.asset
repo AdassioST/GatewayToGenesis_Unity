@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Knowledge Sanctums
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 60a1ce56aa7d614f79c7bdd47c718f8c, type: 2}
+  isEventTech: 0
+  tier: 5
+  satisfactionPoints: 0
+  techRequirements:
+  - The Rekindling
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 80
+  enlightenedConditions:
+  - type: 6
+    trigger: technologies
+    requiredAmount: 10
+    description: Unlock 10 Technologies.
+  techUnlockables:
+  - {fileID: 11400000, guid: 140060ca367a55d81c50b1615630e748, type: 2}

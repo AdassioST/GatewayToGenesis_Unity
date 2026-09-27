@@ -9,9 +9,10 @@ using System.Collections.Generic;
 /// finished activating (<see cref="CouncilSeat.seventhsUntilActive"/> reaches 0). An empty seat gives nothing.
 ///
 /// Scaling, in three phases so Legend Effectiveness (LE) is settled before it scales anything:
-///   Authority            legend bonuses × Head of State multiplier
-///   LegendEffectiveness  legend bonuses × Head of State multiplier
-///   Scaled               legend bonuses × Head of State multiplier × (1 + LE%)
+///   Authority            legend bonuses × Head of State multiplier × growth
+///   LegendEffectiveness  legend bonuses × Head of State multiplier × growth
+///   Scaled               legend bonuses × Head of State multiplier × growth × (1 + LE%)
+/// Growth is the legend's rank (<see cref="LegendGrowthRules"/>) times its Composure (<see cref="ComposureRules.CouncilFactor"/>).
 /// Seat bonuses are never scaled.
 /// </summary>
 public static class CouncilRules
@@ -51,13 +52,16 @@ public static class CouncilRules
         public IEnumerable<LegendBonus> legendBonuses;
         public int seventhsUntilActive;
         public bool isHeadOfState;
+        /// <summary>The legend's growth from its rank (<see cref="LegendGrowthRules.Multiplier"/>) and its Composure
+        /// (<see cref="LegendProgress.CouncilMultiplier"/>); 0 or less counts as 1.</summary>
+        public float legendGrowth;
     }
 
     public readonly struct CouncilEffect
     {
         public readonly string source;
         public readonly GameEffect effect;
-        /// <summary>Head of State multiplier for a legend bonus; 0 marks a seat bonus, which is never scaled.</summary>
+        /// <summary>Head of State multiplier × growth for a legend bonus; 0 marks a seat bonus, which is never scaled.</summary>
         public readonly float legendMultiplier;
 
         public CouncilEffect(string source, GameEffect effect, float legendMultiplier)
@@ -86,7 +90,7 @@ public static class CouncilRules
             }
             if (LegendBonusesApply(seat.hasLegend, seat.seventhsUntilActive) && seat.legendBonuses != null)
             {
-                float multiplier = seat.isHeadOfState ? headOfStateMultiplier : 1f;
+                float multiplier = (seat.isHeadOfState ? headOfStateMultiplier : 1f) * (seat.legendGrowth > 0f ? seat.legendGrowth : 1f);
                 foreach (var bonus in seat.legendBonuses)
                 {
                     if (bonus != null) effects.Add(new CouncilEffect(seat.legendSource, bonus.ToEffect(), multiplier));

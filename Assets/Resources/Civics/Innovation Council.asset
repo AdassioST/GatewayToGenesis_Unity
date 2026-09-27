@@ -26,6 +26,10 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 650e67bed203b1444a88a03e2b0c182a, type: 3}
     allowAnyLegendClass: 0
     allowedClasses: 020000000300000005000000
+    areas:
+    - innovation
+    - industry
+    - lore
     bonuses:
     - bonusType: 0
       targetStat: Aureus

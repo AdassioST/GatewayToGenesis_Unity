@@ -2,6 +2,8 @@
 
 === hollow_caravan ===
 # title: The Lost Caravan
+# cast: area:defense
+# theme: Defiance
 # description: A beacon of hope or an omen of ruin? The wind carries whispers of wagon wheels and laughter, but also something darker beneath the surface.
 # conditions: technology:Reconstruction; no_event_in_sevenths:2
 # consequences: score:caravan_encountered +1; weather:clear
@@ -189,7 +191,7 @@ The forge hums with a focused rhythm; elsewhere, supplies are rationed to protec
 === hollow_caravan_verse_21 ===
 Efficiency mandates slow certain trades while the village adjusts to recent shifts.
 
-* Restrict trade temporarily&C consequences: production_percent_section:Academia -7; duration:sevenths:7; click_power_percent_section:Old World Relics +15; duration:sevenths:4
+* Restrict trade temporarily&C consequences: production_percent_section:Academia -7; duration:sevenths:7; click_power_percent_section:Old World Remnants +15; duration:sevenths:4
 -> hollow_caravan_outro
 
 === hollow_caravan_outro ===
@@ -296,7 +298,7 @@ CRITICAL FAILURE! Your attempt at balance has disrupted the natural order. The f
 === weeping_princess_verse_17 ===
 RARE EVENT! The Weeping Princess's gratitude manifests as a blessing that affects all who dwell in your village, creating a period of unprecedented prosperity.
 
-* Receive the blessing&C consequences: score:prosperity_blessing +1; stat:morale +10; production_percent_section:Academia +15; duration:sevenths:7; click_power_percent_section:Old World Relics +20; duration:sevenths:5
+* Receive the blessing&C consequences: score:prosperity_blessing +1; stat:morale +10; production_percent_section:Academia +15; duration:sevenths:7; click_power_percent_section:Old World Remnants +20; duration:sevenths:5
 -> weeping_princess_outro
 
 === weeping_princess_outro ===

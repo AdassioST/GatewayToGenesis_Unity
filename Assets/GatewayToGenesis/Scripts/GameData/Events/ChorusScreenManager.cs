@@ -347,6 +347,8 @@ public class ChorusScreenManager : MonoBehaviour
         float bonus = statManager != null ? statManager.GetSavingRollChancePercentCapped() : 0f;
         int pillar = data.hasChallenge && statManager != null ? statManager.GetPillarValue(data.challengePillar) : 0;
         var result = ChorusRules.Resolve(data, Random.Range(1, 101), bonus, pillar);
+        string story = EventSystemLogic.Instance?.GetCurrentStoryNode()?.nodeName;
+        Achievements.Report(AchievementEvent.Chorus(result).From($"chorus:{story}:{data.choiceId}", story));
 
         Queue(ChorusRules.CostConsequences(data));
         Queue(result.consequences);

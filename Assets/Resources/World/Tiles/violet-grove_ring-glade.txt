@@ -1,0 +1,12 @@
+# A glade ringed by violet woods around a still pool.
+tile: violet-grove/ring-glade
+biome: violet-grove
+weight: 2
+rotations: any
+legend: V=violet-wood G=violet-glade L=lake
+---
+  V V V
+ V G G V
+V G L G V
+ V G G V
+  V V V

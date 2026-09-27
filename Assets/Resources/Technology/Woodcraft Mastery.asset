@@ -21,8 +21,13 @@ MonoBehaviour:
   resourceRequirements:
   - Research
   resourceAmount:
-  - 25
-  enlightenedConditions: []
+  - 30
+  enlightenedConditions:
+  - type: 1
+    trigger: Decaying Hut
+    requiredAmount: 3
+    description: Build 3 Decaying Hut
   techUnlockables:
   - {fileID: 11400000, guid: d17450aef6e9d2746ab07af3580450f9, type: 2}
   - {fileID: 11400000, guid: ed4a4e0598c0c1e42a80536fd47a8b2f, type: 2}
+  - {fileID: 11400000, guid: 58c2e6bff8947f84be3eff1c90b58db5, type: 2}

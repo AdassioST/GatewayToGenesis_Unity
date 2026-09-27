@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c57dfd8b6d4645fcbcb01a10a89446ab, type: 3}
+  m_Name: LegendSettings
+  m_EditorClassIdentifier:
+  composure:
+    cloudedAt: 10
+    fracturedAt: 40
+    spiralingAt: 70
+    surrenderAt: 100
+    baseline: 20
+    restRecovery: 2
+    expeditionRecovery: 0.5
+    seatedRecovery: 0.25
+    unannouncedCrisisLoad: 0.4
+    declaredCrisisLoad: 0.9
+    griefScale: 50
+    griefCapPerSeventh: 15
+    rankJoy: 12
+    woundSevenths: 7
+    abyssSurge: 2
+    abyssSevenths: 7
+    abyssAftermath: 55
+    fracturedCouncil: 0.9
+    spiralingCouncil: 0.7
+  soul:
+    baseScore: 5
+    leitmotifBonus: 5
+    ornamentBonus: 3
+    evolvedTraitBonus: 2
+    commonBudget: 0
+    uncommonBudget: 25
+    rareBudget: 75
+    epicBudget: 125
+    mythicBudget: 150
+  fragments:
+    fragmentsPerBindingPoint: 10
+    underdogThreshold: 75
+    underdogMultiplier: 2
+    actOfFate:
+    - kind: 0
+      amount: 3
+    crisisCarried:
+    - kind: 4
+      amount: 6
+    - kind: 6
+      amount: 4
+    motifAwakening:
+    - kind: 0
+      amount: 4
+    - kind: 4
+      amount: 4
+    catalyticAbyss:
+    - kind: 2
+      amount: 8
+    journey:
+    - kind: 4
+      amount: 2
+    discovery: 1
+    founding:
+    - kind: 5
+      amount: 3
+    improvement:
+    - kind: 5
+      amount: 1
+    masterwork:
+    - kind: 5
+      amount: 3
+    mishapEndured:
+    - kind: 4
+      amount: 1
+    companionLost:
+    - kind: 3
+      amount: 3
+    brokenRoad:
+    - kind: 3
+      amount: 2
+    balladScale: 1
+    coProtagonistShare: 0.6
+    themedEventFragments: 1
+    balladCoProtagonists: 2

@@ -63,6 +63,19 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
     private readonly List<TimedEffect> activeTimed = new List<TimedEffect>();
     private int timedEffectCounter;
 
+    // Ballads under way or sung (saved), and the parties waiting to play the stories they found (saved).
+    private readonly List<BalladRecord> _ballads = new List<BalladRecord>();
+    private readonly Dictionary<string, BalladCast> _summons = new Dictionary<string, BalladCast>(StringComparer.OrdinalIgnoreCase);
+    // The party that found the story being told (its members may play it though they are on the road).
+    private BalladCast _currentSummons;
+
+    /// <summary>The ballad actors of the story being told (null between stories). See <see cref="BalladActors"/>.</summary>
+    public BalladCast CurrentCast { get; private set; }
+    /// <summary>The story's actors changed (cast at its start, or changed by the player).</summary>
+    public event Action CastChanged;
+    /// <summary>A ballad's finale was sung and its actors rewarded.</summary>
+    public event Action<BalladRecord> BalladCompleted;
+
     private EventScreenManager screenManager;
     private bool subscribedToTime;
 
@@ -73,6 +86,8 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
         // Explicit == null throughout: Unity's fake-null objects defeat ?? and ?.
         screenManager = GetComponent<EventScreenManager>();
         if (screenManager == null) screenManager = gameObject.AddComponent<EventScreenManager>();
+        // Consequence wording names the legends behind a role while a story is told.
+        EventText.CastOf = who => CurrentCast != null ? BalladActors.Targets(who, CurrentCast, LegendProgress.Council, LastLeader) : null;
     }
 
     private void Start() => StartCoroutine(SubscribeWhenReady());
@@ -93,6 +108,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
 
     protected override void OnSingletonDestroy()
     {
+        EventText.CastOf = null;
         if (!subscribedToTime || TimeSystem == null) return;
         TimeSystem.OnSeventhChange -= OnSeventhChanged;
         TimeSystem.OnPhaseChange -= OnTimeMilestone;
@@ -146,6 +162,14 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
 
     // ===== NOTIFICATIONS =====
 
+    public string PendingSaveStory => currentNotification != null ? EventVolumeManager.Instance.SaveStoryKey(currentNotification.GetComponent<EventNotificationData>()?.storyNode) : null;
+    public void RestorePendingSaveStory(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return;
+        var node = EventVolumeManager.Instance.FindSaveStory(name);
+        if (node == null) throw new System.InvalidOperationException("Missing pending story: " + name);
+        CreateEventNotification(node);
+    }
     private void CreateEventNotification(StoryNode storyNode)
     {
         if (eventsContainer == null || eventNotificationPrefab == null)
@@ -211,6 +235,16 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
 
     // ===== STORY FLOW =====
 
+    /// <summary>Open an authored issue only while its live condition still holds. Pending stories keep their turn.</summary>
+    public bool TryStartIssue(StoryNode node)
+    {
+        if (isEventActive || currentNotification != null || !AreSystemsReady() || !Volumes.IsIssueAvailable(node)) return false;
+        currentEventTriggerSource = "settlement issue";
+        TriggerStory(node);
+        TabHotkeys.Instance?.SwitchToEventTab();
+        return isEventActive;
+    }
+
     /// <summary>Start telling a story: pauses time and hides the HUD tabs.</summary>
     public void TriggerStory(StoryNode storyNode)
     {
@@ -228,6 +262,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
         // A story's own consequences (its "# consequences:" tag) apply however it ends.
         ClearCumulativeConsequences();
         if (storyNode.storyConsequences != null) foreach (var consequence in storyNode.storyConsequences) AddConsequence(consequence);
+        CastStory(storyNode);
 
         Volumes.StartStory(storyNode, Volumes.GetCurrentVolume());
         GameLog.Event($"Story started: {storyNode.storyTitle}", Log);
@@ -263,8 +298,20 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
         }
 
         string title = story != null ? story.storyTitle : "Event";
-        foreach (var consequence in cumulativeConsequences) ApplyConsequence(consequence, title);
+        foreach (var consequence in cumulativeConsequences)
+            if (consequence.type != EventConsequence.ConsequenceType.LesserOpus) ApplyConsequence(consequence, title);
+        if (story != null) RewardActors(story, title);
+        if (story != null && CurrentCast != null && LegendProgress.Instance != null)
+        {
+            bool finale = !string.IsNullOrEmpty(story.ballad) && story.verse == BalladActors.FinaleVerse(AllStories(), story.ballad);
+            foreach (var consequence in cumulativeConsequences.Where(c => c.type == EventConsequence.ConsequenceType.LesserOpus))
+                if (consequence.value == 1 && LesserOpusCatalog.SplitTarget(consequence.targetName, out string who, out var opus))
+                    foreach (var actor in BalladActors.Targets(who, CurrentCast, LegendProgress.Council, LastLeader))
+                        if (CurrentCast.Has(actor)) LegendProgress.Instance.AwardLesserOpus(actor, opus, story, finale);
+        }
         ClearCumulativeConsequences();
+        CurrentCast = null;
+        _currentSummons = null;
 
         if (TimeSystem != null) TimeSystem.PauseTime(false);
         TimeSystemLogic.Instance?.DisableSlowMotion();
@@ -372,7 +419,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
                 if (GameUnits != null) GameUnits.ChangeProductionUnitFromName(consequence.targetName, consequence.value);
                 break;
             case EventConsequence.ConsequenceType.TechnologyEnlightened:
-                EnlightenTechnology(consequence.targetName);
+                EnlightenTechnology(consequence.targetName, storyTitle);
                 break;
             case EventConsequence.ConsequenceType.PopulationChange:
                 if (consequence.value < 0) pop?.ModifyPopulation(consequence.value);
@@ -389,6 +436,8 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
                 break;
             case EventConsequence.ConsequenceType.DeathRecordsRevision:
                 pop?.ReviseDeathRecords(consequence.value);
+                Achievements.Report(AchievementEvent.Of(AchievementSignal.DeathLedgerRevised, consequence.value)
+                    .From($"ledger-revision:{currentStoryNode?.nodeName ?? storyTitle}", currentStoryNode?.nodeName));
                 break;
             case EventConsequence.ConsequenceType.WeatherChange:
                 ApplyWeatherChange(consequence);
@@ -399,13 +448,182 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
                     GameLog.Warning($"unlock_event '{consequence.targetName}' in '{storyTitle}': no such story.", Log);
                 }
                 break;
+            case EventConsequence.ConsequenceType.RenownChange:
+                // The older form: Fragments of Meaning.
+                ApplyFragments(consequence.targetName, FragmentKind.Meaning, consequence.value, storyTitle);
+                break;
+            case EventConsequence.ConsequenceType.FragmentChange:
+                if (BalladActors.SplitTarget(consequence.targetName, out string who, out var kind)) ApplyFragments(who, kind, consequence.value, storyTitle);
+                else GameLog.Warning($"fragment '{consequence.targetName}' in '{storyTitle}': needs who and a kind of fragment.", Log);
+                break;
             default:
                 GameLog.Error($"Unhandled consequence type {consequence.type} in '{storyTitle}'.", Log);
                 break;
         }
     }
 
-    private void EnlightenTechnology(string technologyName)
+    // ===== BALLAD ACTORS =====
+
+    /// <summary>
+    /// A party found a story: its Director and companions will play it when it is told (<see cref="BalladActors"/>).
+    /// Called by the world map before the story is unlocked.
+    /// </summary>
+    public void Summon(string story, string director, IEnumerable<string> companions)
+    {
+        string key = EventScript.TopLevelKnot(story);
+        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(director)) return;
+        var cast = new BalladCast { protagonist = director, how = "their expedition" };
+        foreach (var name in companions ?? Enumerable.Empty<string>())
+            if (!string.IsNullOrEmpty(name) && !cast.Has(name)) cast.coProtagonists.Add(name);
+        cast.coSlots = cast.coProtagonists.Count;
+        _summons[key] = cast;
+    }
+
+    // Who plays the story: its ballad's actors, the party that found it, the seat of its area, the Head of State, or no one yet.
+    private void CastStory(StoryNode story)
+    {
+        _currentSummons = null;
+        if (story.nodeName != null && _summons.TryGetValue(story.nodeName, out var summoned))
+        {
+            _currentSummons = summoned;
+            _summons.Remove(story.nodeName);
+        }
+        var spec = BalladActors.ParseCast(story.cast);
+        var carried = !string.IsNullOrEmpty(story.ballad) ? FindBallad(story.ballad)?.cast : null;
+        CurrentCast = BalladActors.Resolve(spec, !string.IsNullOrEmpty(story.ballad), carried, _currentSummons, BuildStage());
+        GameLog.Event(CurrentCast.Empty
+            ? $"'{story.storyTitle}' has no one to play it yet: the player chooses"
+            : $"'{story.storyTitle}' is played by {string.Join(", ", CurrentCast.Members)} ({CurrentCast.how})", Log);
+        CastChanged?.Invoke();
+    }
+
+    private BalladActors.Stage BuildStage()
+    {
+        var government = GovernmentLogic.Instance;
+        return new BalladActors.Stage
+        {
+            available = IsFreeToPlay,
+            answerFor = government != null ? (area, free) => government.AnswerFor(area, free) : (Func<string, Func<string, bool>, CouncilAreaRules.Answer>)null,
+            holderOf = government != null ? title => SeatHolder(government, title) : (Func<string, string>)null,
+            headOfState = government != null ? government.HeadOfStateLegend : null,
+            areaName = area => CouncilAreaRules.NameOf(area, CouncilAreaCatalog.Current),
+            balladCoProtagonists = LegendLore.FragmentTuning.balladCoProtagonists,
+        };
+    }
+
+    private static string SeatHolder(GovernmentLogic government, string title)
+    {
+        foreach (var (seat, legend) in government.GetAllAssignedLegends())
+            if (string.Equals(seat.GetEffectiveTitle(), title, StringComparison.OrdinalIgnoreCase) || string.Equals(seat.seatTitle, title, StringComparison.OrdinalIgnoreCase))
+                return legend.legendName;
+        return null;
+    }
+
+    /// <summary>A legend who can play a story now: met, not lost, and not away on the road (unless its party found the story).</summary>
+    public bool IsFreeToPlay(string legend)
+    {
+        var legends = LegendProgress.Instance;
+        if (string.IsNullOrEmpty(legend) || legends == null || !legends.IsRecruited(legend)) return false;
+        var world = WorldSystem.Instance;
+        if (world == null || world.Map == null || world.ExpeditionOf(legend) == null) return true;
+        return _currentSummons != null && _currentSummons.Has(legend);
+    }
+
+    /// <summary>Legends the player may put in the story being told: the council first, then everyone else free to play.</summary>
+    public List<string> CastCandidates()
+    {
+        var legends = LegendProgress.Instance;
+        if (CurrentCast == null || legends == null) return new List<string>();
+        return BalladActors.Candidates(LegendProgress.Council(), legends.RecruitedNames, CurrentCast, IsFreeToPlay);
+    }
+
+    /// <summary>The player makes a legend the protagonist (a co-protagonist trades places with the old one).</summary>
+    public bool ChooseProtagonist(string legend)
+    {
+        if (CurrentCast == null || !IsFreeToPlay(legend)) return false;
+        BalladActors.SetProtagonist(CurrentCast, legend, "chosen");
+        GameLog.Event($"{legend} takes the lead in '{currentStoryNode?.storyTitle}'", Log);
+        CastChanged?.Invoke();
+        return true;
+    }
+
+    /// <summary>The player adds a co-protagonist while the story has a role open.</summary>
+    public bool AddCoProtagonist(string legend)
+    {
+        if (CurrentCast == null || !BalladActors.AddCo(CurrentCast, legend, IsFreeToPlay)) return false;
+        CastChanged?.Invoke();
+        return true;
+    }
+
+    /// <summary>The player takes a legend out of the story (the first co-protagonist steps up to lead).</summary>
+    public bool RemoveActor(string legend)
+    {
+        if (CurrentCast == null || !BalladActors.Remove(CurrentCast, legend)) return false;
+        CastChanged?.Invoke();
+        return true;
+    }
+
+    // fragment:Who Kind +N: a role of the story's actors, the council, or a legend by name.
+    private void ApplyFragments(string who, FragmentKind kind, int amount, string storyTitle)
+    {
+        var legends = LegendProgress.Instance;
+        if (legends == null) return;
+        var targets = BalladActors.Targets(who, CurrentCast, LegendProgress.Council, LastLeader);
+        if (targets.Count == 0) GameLog.Event($"fragment:{who} in '{storyTitle}': no one plays that role; nothing is paid.", Log);
+        legends.ApplyFragments(targets, kind, amount, storyTitle);
+    }
+
+    private static string LastLeader => WorldSystem.Instance != null ? WorldSystem.Instance.LastLeader : null;
+
+    // A story's end for its actors: a little of its theme to each, and the ballad's progress (its finale pays the theme).
+    private void RewardActors(StoryNode story, string title)
+    {
+        var legends = LegendProgress.Instance;
+        var tuning = LegendLore.FragmentTuning;
+        var stories = AllStories();
+        var info = !string.IsNullOrEmpty(story.ballad) ? BalladActors.BalladInfo(stories, story.ballad) : default;
+        string theme = !string.IsNullOrEmpty(story.theme) ? story.theme : info.theme;
+        if (legends != null && CurrentCast != null)
+        {
+            foreach (var actor in CurrentCast.Members.Distinct().ToList())
+                legends.RecordBalladParticipation(actor, story, BalladActors.RoleOf(CurrentCast, actor));
+            var reward = BalladActors.ThemedEventReward(theme, tuning);
+            if (reward.Count > 0)
+                foreach (var actor in CurrentCast.Members.ToList())
+                    legends.Award(actor, reward, $"{BalladActors.RoleOf(CurrentCast, actor)} in \"{title}\"");
+        }
+        if (string.IsNullOrEmpty(story.ballad)) return;
+
+        var ballad = FindBallad(story.ballad);
+        if (ballad == null) _ballads.Add(ballad = new BalladRecord { id = story.ballad });
+        ballad.title = !string.IsNullOrEmpty(info.title) ? info.title : ballad.title ?? story.ballad;
+        ballad.theme = theme ?? ballad.theme;
+        if (!ballad.versesTold.Contains(story.verse)) ballad.versesTold.Add(story.verse);
+        if (CurrentCast != null && !CurrentCast.Empty) ballad.cast = CurrentCast.Clone();
+        if (ballad.complete || story.verse < BalladActors.FinaleVerse(stories, story.ballad)) return;
+
+        ballad.complete = true;
+        var cast = ballad.cast;
+        GameLog.Event($"Ballad sung to its end: {ballad.title} (theme {ballad.theme ?? "none"}, protagonist {cast?.protagonist ?? "no one"})", Log);
+        if (legends != null)
+            foreach (var (legend, reward) in BalladActors.BalladRewards(ballad.theme, cast, tuning))
+                legends.Award(legend, reward, $"{BalladActors.RoleOf(cast, legend)} of \"{ballad.title}\"");
+        BalladCompleted?.Invoke(ballad);
+    }
+
+    private IEnumerable<StoryNode> AllStories() => Volumes != null ? Volumes.GetVolumes().Where(v => v != null).SelectMany(v => v.storyNodes) : Enumerable.Empty<StoryNode>();
+
+    private BalladRecord FindBallad(string id) => _ballads.FirstOrDefault(b => string.Equals(b.id, id, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Ballads begun or sung, in the order they began.</summary>
+    public IReadOnlyList<BalladRecord> Ballads => _ballads;
+
+    public bool IsBalladComplete(string id) => FindBallad(id)?.complete ?? false;
+
+    public int BalladVersesTold(string id) => FindBallad(id)?.versesTold.Count ?? 0;
+
+    // The same Enlightenment a met goal gives: uncovered at once, part of its research paid (GameUnitsLogic.EnlightenTechnology).
+    private void EnlightenTechnology(string technologyName, string storyTitle)
     {
         var techSlot = GameUnits != null ? GameUnits.GetTechnologySlot(technologyName) : null;
         if (techSlot == null)
@@ -413,11 +631,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
             GameLog.Warning($"TechnologyEnlightened: '{technologyName}' is not in the research tab.", Log);
             return;
         }
-        techSlot.enlightenedCompleted = true;
-        techSlot.researchProgress = Mathf.Max(techSlot.researchProgress, Mathf.Clamp01(techSlot.enlightenedBonusPercent));
-        techSlot.RefreshTechnologyUI();
-        techSlot.UpdateProgressUI();
-        if (techSlot.technologyTreeLogic != null) techSlot.technologyTreeLogic.DetermineTechnologyVisibility(techSlot);
+        GameUnits.EnlightenTechnology(techSlot, string.IsNullOrEmpty(storyTitle) ? "A story" : $"From {storyTitle}");
     }
 
     // targetName is a weather profile or "clear"; value 1 makes it permanent, 0 lets procedural weather replace it.
@@ -476,6 +690,9 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
 
     /// <summary>How many times a story (by node name or title) has completed.</summary>
     public int GetCompletionCount(string storyName) => storyName != null && completionCounts.TryGetValue(storyName, out int count) ? count : 0;
+
+    /// <summary>Stories completed so far (each story counted by its node; for "any story told" conditions).</summary>
+    public int TotalCompletions() { int total = 0; foreach (var count in completionCounts.Values) total += count; return total; }
 
     public bool IsEventOnCooldown(string eventName, int requiredCooldown)
     {

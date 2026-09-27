@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Unsustainable Growth
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 39ee90921bdc34d0bb029242ec108a8d, type: 2}
+  isEventTech: 0
+  tier: 9
+  satisfactionPoints: 0
+  techRequirements:
+  - Songs of the Moon
+  - Chants of Ash
+  - Fortified Living
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 140
+  enlightenedConditions:
+  - type: 5
+    trigger: Food
+    requiredAmount: 55
+    description: Exceed 55 Food Per Second.
+  techUnlockables:
+  - {fileID: 11400000, guid: ff120b6ed90b68fad63373bafd503019, type: 2}
+  - {fileID: 11400000, guid: 34a23acafc8e7b2ec6fbcd1932fc86f8, type: 2}
+  - {fileID: 11400000, guid: cbb18b1e020106484fb47d050e47efa2, type: 2}

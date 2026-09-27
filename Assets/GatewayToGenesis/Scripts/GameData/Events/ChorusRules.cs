@@ -29,6 +29,21 @@ public struct ChorusResolution
 }
 
 /// <summary>
+/// What the player is shown before choosing: the chance to succeed or fail and whether a failure can be
+/// critical. Rare events and critical successes stay hidden, so they come as a surprise.
+/// </summary>
+public struct ChorusPreview
+{
+    /// <summary>False for a choice that simply happens (no pillar challenge): it has one outcome, no odds.</summary>
+    public bool hasChallenge;
+    /// <summary>Chance (0-100) of a good outcome, as the challenge slot shows it (Piety included).</summary>
+    public int successPercent;
+    public int failurePercent;
+    /// <summary>Some failing rolls end in a critical failure.</summary>
+    public bool canFailCritically;
+}
+
+/// <summary>
 /// Chorus dice rules, free of Unity so they can be tested. One d100 roll decides everything; the saving-roll
 /// bonus (Piety) is added to it and capped at 100.
 ///   Rare event (when authored): the top rare_event_percent rolls, checked first.
@@ -162,6 +177,25 @@ public static class ChorusRules
             odds[outcome] = count + 1;
         }
         return odds;
+    }
+
+    /// <summary>
+    /// The odds as the player sees them. Success is the challenge chance with Piety (what <see cref="ChanceAbove"/>
+    /// gives the challenge slot); rare events and critical successes are not revealed.
+    /// </summary>
+    public static ChorusPreview Preview(ChorusChoiceData choice, float savingRollBonus, int pillarValue)
+    {
+        if (choice == null || !choice.hasChallenge) return new ChorusPreview { hasChallenge = false, successPercent = 100 };
+        int success = ChanceAbove(100 - SuccessPercent(pillarValue, choice.challengeStrength), savingRollBonus);
+        bool critical = false;
+        if (!string.IsNullOrEmpty(choice.critFailurePath))
+        {
+            for (int roll = 1; roll <= CriticalBand && !critical; roll++)
+            {
+                critical = OutcomeFor(choice, roll, savingRollBonus, pillarValue) == ChorusOutcome.CriticalFailure;
+            }
+        }
+        return new ChorusPreview { hasChallenge = true, successPercent = success, failurePercent = 100 - success, canFailCritically = critical };
     }
 
     private static bool HasRareEvent(ChorusChoiceData choice) => choice.rareEventPercent > 0 && !string.IsNullOrEmpty(choice.rareEventPath);

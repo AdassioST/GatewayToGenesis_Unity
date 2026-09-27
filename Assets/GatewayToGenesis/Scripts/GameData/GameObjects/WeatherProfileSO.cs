@@ -63,6 +63,9 @@ public class WeatherCondition
 [CreateAssetMenu(fileName = "New Weather Profile", menuName = "Environment/Weather Profile", order = 1)]
 public class WeatherProfileSO : ScriptableObject
 {
+    [Header("Regional map weather")]
+    [Tooltip("Travel fatigue on tiles covered by this weather; also affects units travelling to other cities.")]
+    [Range(0.25f, 4f)] public float mapTravelMultiplier = 1f;
     #region Nested Structures
     /// <summary>
     /// Weather effect that modifies game systems (consistent with CivicEffect/LegendBonus)
@@ -316,7 +319,7 @@ public class WeatherProfileSO : ScriptableObject
         if (p < 0) p += 100f;
         
         // Get normalized phase durations
-        float[] durations = GetNormalizedPhaseDurations();
+        var durations = GetNormalizedPhaseDurations();
         
         // Calculate phase boundaries
         float dawnEnd = durations[0];
@@ -345,7 +348,7 @@ public class WeatherProfileSO : ScriptableObject
         if (p < 0) p += 100f;
         
         // Get normalized phase durations
-        float[] durations = GetNormalizedPhaseDurations();
+        var durations = GetNormalizedPhaseDurations();
         
         // Calculate phase boundaries
         float dawnEnd = durations[0];
@@ -512,88 +515,22 @@ public class WeatherProfileSO : ScriptableObject
         return string.Join("\n", status);
     }
 
-    /// <summary>
-    /// Get normalized phase durations that sum to exactly 100%
-    /// If percentages don't sum to 100%, applies normalization rules:
-    /// - Below 100%: adds missing percentage to lowest phase (random if tied)
-    /// - Above 100%: trims excess from highest phase (random if tied)
-    /// </summary>
-    public float[] GetNormalizedPhaseDurations()
-    {
-        float[] durations = {
-            dawnDurationPercentage,
-            middayDurationPercentage,
-            duskDurationPercentage,
-            nightDurationPercentage,
-            postMidnightDurationPercentage
-        };
-        
-        // Calculate current total
-        float total = durations[0] + durations[1] + durations[2] + durations[3] + durations[4];
-        
-        // If already 100%, return as-is
-        if (Mathf.Abs(total - 100f) < 0.01f)
-        {
-            return durations;
-        }
-        
-        if (total < 100f)
-        {
-            // Below 100%: add missing percentage to lowest phase
-            float missing = 100f - total;
-            int lowestIndex = FindLowestPhaseIndex(durations);
-            durations[lowestIndex] += missing;
-        }
-        else
-        {
-            // Above 100%: trim excess from highest phase
-            float excess = total - 100f;
-            int highestIndex = FindHighestPhaseIndex(durations);
-            durations[highestIndex] = Mathf.Max(0f, durations[highestIndex] - excess);
-        }
-        
-        return durations;
-    }
+    [NonSerialized] private float[] _normalizedDurations;
     
     /// <summary>
-    /// Find index of phase with lowest duration (random if tied)
+    /// Phase durations (dawn, midday, dusk, night, post-midnight) normalized to 100% by
+    /// <see cref="WeatherRules.NormalizePhaseDurations"/>. Computed once and cached (the sky reads it every frame);
+    /// editing the profile in the inspector refreshes it.
     /// </summary>
-    private int FindLowestPhaseIndex(float[] durations)
+    public IReadOnlyList<float> GetNormalizedPhaseDurations()
     {
-        float minValue = Mathf.Min(durations);
-        List<int> lowestIndices = new List<int>();
-        
-        for (int i = 0; i < durations.Length; i++)
+        return _normalizedDurations ??= WeatherRules.NormalizePhaseDurations(new[]
         {
-            if (Mathf.Abs(durations[i] - minValue) < 0.01f)
-            {
-                lowestIndices.Add(i);
-            }
-        }
-        
-        // Return random index if multiple phases have same lowest value
-        return lowestIndices[UnityEngine.Random.Range(0, lowestIndices.Count)];
+            dawnDurationPercentage, middayDurationPercentage, duskDurationPercentage, nightDurationPercentage, postMidnightDurationPercentage
+        });
     }
     
-    /// <summary>
-    /// Find index of phase with highest duration (random if tied)
-    /// </summary>
-    private int FindHighestPhaseIndex(float[] durations)
-    {
-        float maxValue = Mathf.Max(durations);
-        List<int> highestIndices = new List<int>();
-        
-        for (int i = 0; i < durations.Length; i++)
-        {
-            if (Mathf.Abs(durations[i] - maxValue) < 0.01f)
-            {
-                highestIndices.Add(i);
-            }
-        }
-        
-        // Return random index if multiple phases have same highest value
-        return highestIndices[UnityEngine.Random.Range(0, highestIndices.Count)];
-    }
+    private void OnValidate() => _normalizedDurations = null;
     
     /// <summary>
     /// Get current total percentage (for validation)

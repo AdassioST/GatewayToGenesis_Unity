@@ -1,0 +1,1901 @@
+# Vault import report
+
+Written by the lore import (Tools > Gateway to Genesis > Import Lore From Vault). Each run replaces it.
+
+- Vault: `C:/Arcanoria Master/Arcanoria`
+- Manifest: `C:/Arcanoria Master/GatewayToGenesis_Unity\Assets\Resources\Library\Vault~\Manifest.md`
+- Glossary: 386 entries from notes and passages, 334 sections of long notes, 36 Ages
+- Library.json: written
+
+## Linked terms with no entry (703): they show as plain words until a note exists
+
+- [[Humanity]] (105: A Burrowed Name, The Hollowing, Queries of Divine Communion, Character Details, The Auric Aria's Journey & Character Arc, Auric Aria, ...)
+- [[Civilization]] (100: The Hollowing, Queries of Divine Communion, Character Details, The Auric Aria's Journey & Character Arc, Characterization & Dialogue Querying Interactions, Outer God, ...)
+- [[Legend Title]] (36: Auric Aria, Lacrimosa, Selenea, Sky Glass, 12. Magic Reveals Character, The Closed Table of Moguls — The Inner Sanctum, ...)
+- [[Resonance Anchors]] (35: Queries of Divine Communion, Character Details, Outer God, The Symphonic Veins and Lunar Sorrow, Time Bubbles as Self-Folding Solitons, The Advent of the Wolf Bomb, ...)
+- [[Magnum Opus]] (27: Auric Aria, Lacrimosa, Selenea, Vaelia, Aurelian, Daedalus, ...)
+- [[Demi-Human]] (26: The Auric Aria's Journey & Character Arc, Living Bodies as Adaptive Soliton Clusters, Daedalus, Luminaire, The Architect Beneath Two Heavens, The Wish That Never Changes, ...)
+- [[Amadea]] (24: Queries of Divine Communion, The Weight of Value as Coherence Fuel, Essence Sacrifice, Stages of an Atonalis, Atonalis, Composure, ...)
+- [[Piety]] (23: Character Details, The Auric Aria's Journey & Character Arc, Outer God, True Mythos of Creation, Anthropomorphic Shape, 13. "Ancient" Outer Magic is Fundamentally Different, ...)
+- [[Events]] (22: A Burrowed Name, Outer God, 9. Magic Reacts Differently Under Certain Conditions, 11. Dead Magic Zones Exist, The Magic Arts of the Seven Bindings, Evolution of Enclaves across Ages, ...)
+- [[New Testament]] (18: Queries of Divine Communion, The Auric Aria's Journey & Character Arc, Character Arc, Auric Order, The Architect Beneath Two Heavens, The New Testament: The Architect of the Purest of Love, ...)
+- [[Emotional Residue]] (17: 3. Magic Cannot Create Something from Nothing, 5. Magic Leaves Traces Behind, 9. Magic Reacts Differently Under Certain Conditions, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Age of Golden Roses, ...)
+- [[Grand Thread Rings]] (17: The Witness in the Dark, The Final Inscription (Added Later, at the Threshold of the Garden of Life), Key of Attunement, The Architecture of Harmonized Reality, The Mortal Interface: Where Flesh Meets Symphony, Superposed Resonance, ...)
+- [[Seven Archangels]] (17: Queries of Divine Communion, Character Details, The Auric Aria's Journey & Character Arc, Aurelian, The Facilitator of the Age of the False Messiah, Mirror and Opposition: Father Raphael, ...)
+- [[Lost Cycle]] (16: Character Details, The Auric Aria's Journey & Character Arc, Character Arc, Resonance Motif Awakening: The Judgement of One Million Eyes, True Mythos of Creation, Composure, ...)
+- [[Sonata]] (16: Character Details, Outer God, Singer of Paradise, Sixth Cycle, Moon, Composure, ...)
+- [[World Event]] (16: The Golden Light in the Sky, The Hollowing, The Final Inscription (Added Later, at the Threshold of the Garden of Life), Character Details, Motif Awakening, Age Crisis, ...)
+- [[Auric Angels]] (15: Character Details, The Auric Aria's Journey & Character Arc, 5. Magic Leaves Traces Behind, Divinity of Auric Magic and Outer Magic, Luminaire, Second Reset, ...)
+- [[Holy War]] (15: The Auric Aria's Journey & Character Arc, Divinity of Auric Magic and Outer Magic, Advanced Spellweaving and Chord Compositions, Age Crisis, Cataclysmic Aftermath, Age of Golden Roses, ...)
+- [[Lyrical Fragment]] (15: Motif Awakening, 12. Magic Reveals Character, Spellweaving, Ages, Auric Order, The Hierarchy of Roles during Events, ...)
+- [[Magical Relic]] (15: Lux Aeterna, Law of Relics, 3. Magic Cannot Create Something from Nothing, 5. Magic Leaves Traces Behind, The Magic Arts of the Seven Bindings, Auric Heptacode, ...)
+- [[Rose Seed]] (15: Aetherlight, Emberwhisper, Glimmerfern, Lunehymn, Lux Aeterna, Anomalous Properties, ...)
+- [[The One True God]] (15: The Auric Aria's Journey & Character Arc, Auric Aria, The Hollowing and the Rise of the All-Loving Moon, Resonance Motif Awakening: The Judgement of One Million Eyes, Outer God, True Mythos of Creation, ...)
+- [[Carnalix]] (14: The Weight of Value as Coherence Fuel, Anomalous Properties, Stages of an Atonalis, Eight-Born Paths, The Area of Dissonance and Forbidden Magic, Tier 3: Ages of Empires & Industrialization, ...)
+- [[World-Bending Relics]] (14: Character Arc, Moon, Law of Relics, 13. "Ancient" Outer Magic is Fundamentally Different, Utility: Creative Sets of Properties & Shapeshifting, The Birth of the Hyper Chord, ...)
+- [[Dissonance Core]] (13: Outer God, Living Bodies as Adaptive Soliton Clusters, Anomalous Properties, Stages of an Atonalis, Eight-Born Paths, Composure, ...)
+- [[Silver Blood]] (13: Character Details, Selenea, Moon, Divinity of Auric Magic and Outer Magic, Artus, Quotes On Characters and Events, ...)
+- [[Strand Pool]] (13: Crystal as Cymatics Topology, Time Bubbles as Self-Folding Solitons, The Advent of the Wolf Bomb, Time Bubble, 5. Magic Leaves Traces Behind, The Magic Arts of the Seven Bindings, ...)
+- [[Coherence-Binding Tissue]] (12: Living Bodies as Adaptive Soliton Clusters, The Birth of "Forbidden" Technology and the Drive for Safety, Syvanth, Cadmus Tacet, The Eleos Bloom Taxonomy, Tier 3: Nymphic Eleos Blooms, ...)
+- [[Dark Age]] (12: 10. Magic Can Become Addictive, The Horizontal Worldbuilding of Enclaves, Age of the False Messiah, Tier 1: Ages of Foundations & Early Magic, Tier 2: Ages of The Medieval Period, Tier 3: Ages of Empires & Industrialization, ...)
+- [[Golden Age]] (12: The Horizontal Worldbuilding of Enclaves, Tier 1: Ages of Foundations & Early Magic, Tier 2: Ages of The Medieval Period, Tier 3: Ages of Empires & Industrialization, Tier 4: Ages of Unification, Ages, ...)
+- [[Probability Amplitudes]] (12: Queries of Divine Communion, Character Details, The Architecture of Harmonized Reality, Time Bubbles as Self-Folding Solitons, Time Bubble, The Magic Arts of the Seven Bindings, ...)
+- [[Wolf Bomb]] (12: What Solitons Actually Are, The Auric Tone Length as Minimum Tone, Crystal as Cymatics Topology, The Advent of the Wolf Bomb, Living Bodies as Adaptive Soliton Clusters, Soliton, ...)
+- [[Discant]] (11: Anomalous Properties, Stages of an Atonalis, The Surrender of Elara, The Cradle of Echoes, Eight-Born Paths, The Area of Dissonance and Forbidden Magic, Tier 3: Ages of Empires & Industrialization, ...)
+- [[Illusory Magic]] (11: Composure, Consensual Anchoring, 5. Magic Leaves Traces Behind, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, The Registers of Magic, ...)
+- [[Mikael]] (11: Queries of Divine Communion, Character Details, The Auric Aria's Journey & Character Arc, Divinity of Auric Magic and Outer Magic, Aurelian, Ages I, ...)
+- [[Obsessian]] (11: Time Bubble, Stages of an Atonalis, Eight-Born Paths, The Closed Table of Moguls — The Inner Sanctum, Tier 2: Ages of The Medieval Period, Tier 4: Ages of Unification, ...)
+- [[Resources]] (11: Aetherlight, Emberwhisper, Glimmerfern, Lunehymn, Lux Aeterna, Auric Heptacode, ...)
+- [[Violux]] (11: Stages of an Atonalis, Eight-Born Paths, Variant III — The Pleasure Parasite (A Flux Erosyx-Carnalix Hybrid), The Area of Dissonance and Forbidden Magic, Tier 2: Ages of The Medieval Period, Sky Glass Burials, ...)
+- [[Dissonance League]] (10: The Auric Aria's Journey & Character Arc, The Area of Dissonance and Forbidden Magic, Tier 2: Ages of The Medieval Period, Miss Nyctilia, Ages II, Ages V, ...)
+- [[Elemental Sprite]] (10: The Final Inscription (Added Later, at the Threshold of the Garden of Life), Character Details, Living Bodies as Adaptive Soliton Clusters, The Horizontal Worldbuilding of Enclaves, The Eleos Bloom Taxonomy, Tier 1: The Ambient Listeners (Responsive Flora), ...)
+- [[Luceatfilum]] (10: Aetherlight, Emberwhisper, Glimmerfern, Lunehymn, Lux Aeterna, 4. Emotional Instability Affects Spellweaving, ...)
+- [[Medea]] (10: Character Details, Artus, Quotes On Characters and Events, The Sonata of the Golden Sovereign, The Sonata of the Pale Moon, Ages II, ...)
+- [[Signath]] (10: Anomalous Properties, Stages of an Atonalis, Eight-Born Paths, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Tier 2: Ages of The Medieval Period, ...)
+- [[Stellar Veil]] (10: The First Act of Deliberate Creation, The Desire for a Perfect Reflection, After the Seventh Cycle — The Fortification of the Firmament, the Heavens and the Break, The Tears That Became the Sky — Lacrimosa as the Strongest Resonance Anchors, The Auroral Ribbons as conduits of The First Overtone, Primordial Star, ...)
+- [[Age of Renewal]] (9: Age Crisis as catalysts for Enclaves, Phase I – The Golden Orchard of False Security, Revelation and Response – The First Agromagical Conclaves, Themes and Legacy, Age of Desolation, Age of Hymns, ...)
+- [[Alternate Hollowing]] (9: The Mass Suicide of Lacrimosa, The Hollowing, Character Details, The Auric Aria's Journey & Character Arc, Characterization & Dialogue Querying Interactions, Resonance Motif Awakening: The Judgement of One Million Eyes, ...)
+- [[Ascendant]] (9: Stages of an Atonalis, Artus, Grand Hunts of Legends, Legendary Hunting Charters, The Ballad of the Echoing Hunt, The Ballad of the Silenced Savior, ...)
+- [[Auric Codex]] (9: The Auric Aria's Journey & Character Arc, Selah, Quotes On Characters and Events, Ages II, Ages III, Ages IV, ...)
+- [[Classical Age]] (9: Tier 1: Ages of Foundations & Early Magic, Tier 2: Ages of The Medieval Period, Tier 3: Ages of Empires & Industrialization, Tier 4: Ages of Unification, Ages, Ballad Resolution, Magnum Opuss, and Legend Titles, ...)
+- [[Eight-Wings of Lacrimosa]] (9: Character Details, Resonance Motif Awakening: The Judgement of One Million Eyes, Lux Aeterna, Auric Heptacode, The Facilitator of the Age of the False Messiah, Selah, ...)
+- [[Genocides of the Auric Aria]] (9: The Auric Aria's Journey & Character Arc, Resonance Motif Awakening: The Judgement of One Million Eyes, The Sonata of the Golden Sovereign, Library of Heaven's Tower, Ages IV, Ages V, ...)
+- [[Luminant Moths]] (9: Age Crisis as catalysts for Enclaves, The Vector of Luminant Moths and their usage in Civilization, The triple interaction of Luminant Decay and the build-up of EC (Euphoria Compound), THE THREE MANIFESTATIONS: EXPRESSIONS OF ONE DISEASE, Historical Parallel, THE HISTORICAL PARALLELS, ...)
+- [[Resonance Field]] (9: Luminance, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Age of Glyphs, The Three Phases of Glyphcraft, The Final Law of Music Glyphcraft, ...)
+- [[Adel]] (8: Character Details, The Hierarchy of Roles during Events, The Sonata of the Golden Sovereign, Ages III, Ages IV, Ages V, ...)
+- [[Age Transition]] (8: 8. Some Places Suppress Magic, Leylines Nomads, Civic, Constellation, Ballad Resolution, Magnum Opuss, and Legend Titles, Conversion to Constellations, ...)
+- [[Auric Bell Staff]] (8: Daedalus, Cadmus Tacet, Historical Development, Physical Philosophy, Variants of the Auric Bells, Theological History, ...)
+- [[Bar]] (8: The Advent of the Wolf Bomb, Living Bodies as Adaptive Soliton Clusters, 9. Magic Reacts Differently Under Certain Conditions, The Micro-Cosmic Motion System, The Complete Hierarchy, Theological History, ...)
+- [[Cursed Objects]] (8: Anomalous Properties, Stages of an Atonalis, 3. Magic Cannot Create Something from Nothing, 5. Magic Leaves Traces Behind, The Magic Arts of the Seven Bindings, Auric Heptacode, ...)
+- [[Flesh-Exalting Transcendence]] (8: Outer God, Lux Aeterna, Motif Awakening, 13. "Ancient" Outer Magic is Fundamentally Different, The Area of Dissonance and Forbidden Magic, Divinity of Auric Magic and Outer Magic, ...)
+- [[Impostor Syndrome]] (8: The Auric Aria's Journey & Character Arc, Auric Aria, Parlor of the Moon, Character Details, True Mythos of Creation, Daedalus, ...)
+- [[Luminant Decay]] (8: Age Crisis as catalysts for Enclaves, The Vector of Luminant Moths and their usage in Civilization, The triple interaction of Luminant Decay and the build-up of EC (Euphoria Compound), THE THREE MANIFESTATIONS: EXPRESSIONS OF ONE DISEASE, The Sweet Smell — TRAGIC MISDIRECTION, Historical Parallel, ...)
+- [[Lunar Abyss]] (8: 9. Magic Reacts Differently Under Certain Conditions, Divinity of Auric Magic and Outer Magic, Environmental Ecology, The Auric Aria is a Type G Star, The Stars Are Alive, The Coherence Axiom of Arcanoria's Ecology, ...)
+- [[Magical Catalyst]] (8: 12. Magic Reveals Character, The Magic Arts of the Seven Bindings, Age of Glyphs, The Three Phases of Glyphcraft, The Visual Identity of the Heptastave, The Final Law of Music Glyphcraft, ...)
+- [[Miracle Magic]] (8: Miracle Magic: Breaking the Ceiling, The First Miracle: Elara and the Song of Sedrick, Stages of an Atonalis, 1. Magic Always Has a Cost, 6. Overuse of Magic Causes Physical Damage, The Magic Arts of the Seven Bindings, ...)
+- [[Morpheus Abysmal]] (8: Stages of an Atonalis, Eight-Born Paths, Tier 2: Ages of The Medieval Period, Augusitus, Miss Nyctilia, Original Eight, ...)
+- [[Pagiel]] (8: The Flesh-Exalting Transcendence, A Pact of a Thousand Eyes., Resonance Motif Awakening: The Judgement of One Million Eyes, The Weight of Value as Coherence Fuel, Lux Aeterna, Mythical Virtuoso, The Hierarchy of Roles during Events, ...)
+- [[Age of Humanity]] (7: Character Details, The Birth of "Forbidden" Technology and the Drive for Safety, The Age of Sealing Iron: Progress Through Absolute Control, Tier 2: Ages of The Medieval Period, Auric Order, Cadmus Tacet, ...)
+- [[Agromagical Enclave]] (7: Living Bodies as Adaptive Soliton Clusters, The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Cadmus Tacet, Environmental Ecology, The Physical Seed, ...)
+- [[Animach]] (7: Stages of an Atonalis, Eight-Born Paths, The Area of Dissonance and Forbidden Magic, Tier 2: Ages of The Medieval Period, The Narrative Engine of The Eternal Symphony, Original Eight, ...)
+- [[Atonalis Nest]] (7: 11. Dead Magic Zones Exist, Age of Golden Roses, Miss Nyctilia, Velvet Nectar, The Dissonance Containment Protocol (DCP), The Danger of CRL Misclassification & Emergency Breaches, ...)
+- [[Chern Number]] (7: The Auric Tone Length as Minimum Tone, Crystal as Cymatics Topology, The Advent of the Wolf Bomb, Living Bodies as Adaptive Soliton Clusters, Soliton, The Magic Arts of the Seven Bindings, ...)
+- [[Crisis Wonders]] (7: Character Details, Polychord Crisis, Tier 2: Ages of The Medieval Period, Hypermage, Second Reset, The Sonata of the Golden Sovereign, ...)
+- [[Dimensional Arts]] (7: Chord Layering, Layered Finality, The Magic Arts of the Seven Bindings, Miss Nyctilia, The Imperium Obsessus, Magic Arts, ...)
+- [[Divine Reset]] (7: The Auric Aria's Journey & Character Arc, What Solitons Actually Are, Soliton, Age of The End, Tier 1: Ages of Foundations & Early Magic, Quotes On Characters and Events, ...)
+- [[Fanatical]] (7: Character Details, 10. Magic Can Become Addictive, Auric Order, Chorus Pillar, Pillars, Ages II, ...)
+- [[Jealous]] (7: The Auric Aria's Journey & Character Arc, Auric Aria, True Mythos of Creation, Daedalus, All Personality Legend Traits, Ages II, ...)
+- [[Landmark]] (7: 8. Some Places Suppress Magic, 9. Magic Reacts Differently Under Certain Conditions, 11. Dead Magic Zones Exist, The Narrative Engine of The Eternal Symphony, The One Hunt, Crescent Mist Peaks, ...)
+- [[Lesser Opus]] (7: Lacrimosa, Vaelia, Syvanth, Cadmus Tacet, The White-Touched Archivist, Legend Opus, ...)
+- [[Paradise Lost]] (7: The Auric Aria's Journey & Character Arc, 5. Magic Leaves Traces Behind, Divinity of Auric Magic and Outer Magic, Quotes On Characters and Events, Ages V, Ages VI, ...)
+- [[Reality Bender]] (7: The Auric Aria's Journey & Character Arc, Auric Aria, Syvanth, Cadmus Tacet, Vanessa of Iridia, The Soul Sheet Music of Legends, ...)
+- [[Religion]] (7: Divinity of Auric Magic and Outer Magic, Cultural Facts, The Crisis Cult and the Entrepreneur of Meaning, The Facilitator of the Age of the False Messiah, The Sonata of the Pale Moon, Tier 1: The Ambient Listeners (Responsive Flora), ...)
+- [[Velvet Ambrosia]] (7: The Area of Dissonance and Forbidden Magic, The Closed Table of Moguls — The Inner Sanctum, The Layers of Horror as Commodity, The Social Stratification of the Velvet Elegance, Age of Velvet Elegance, Velvet Nectar, ...)
+- [[Ambitious]] (6: The Auric Aria's Journey & Character Arc, Auric Aria, True Mythos of Creation, Cadmus Tacet, Vanessa of Iridia, All Personality Legend Traits)
+- [[Attention Addict]] (6: The Mass Suicide of Lacrimosa, The Hollowing, Character Arc, Lacrimosa, All Personality Legend Traits, Purest of Love)
+- [[Celestial Vault]] (6: After the Seventh Cycle — The Fortification of the Firmament, the Heavens and the Break, The Auroral Ribbons as conduits of The First Overtone, 5. Magic Leaves Traces Behind, The Magic Arts of the Seven Bindings, Tier 4: Ages of Unification, The Stars Are Alive)
+- [[Charismatic]] (6: Aurelian, Artus, Selah, Syvanth, Miss Nyctilia, All Personality Legend Traits)
+- [[Compulsive Overthinker]] (6: The Mass Suicide of Lacrimosa, The Hollowing, The Flesh-Exalting Transcendence, A Pact of a Thousand Eyes., Character Arc, Lacrimosa, All Personality Legend Traits)
+- [[Field Magic]] (6: How to Read a Register, The Magic Arts of the Seven Bindings, Miss Nyctilia, Magic Arts, Formation of the Institutes and the Dissonance League, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Fragment of Meaning]] (6: Motif Awakening, Auric Order, Ballad Resolution, Magnum Opuss, and Legend Titles, 1. The Wish - Origin and Physical Legend Traits, The Narrative Engine of The Eternal Symphony, 1. The Wound - Origin and Physical Legend Traits)
+- [[Indulgent Enclave]] (6: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Orphael, Augusitus, Cadmus Tacet, Purest of Love)
+- [[Looping Paradox]] (6: Time Bubble, Eight-Born Paths, Tier 2: Ages of The Medieval Period, Tier 4: Ages of Unification, The Narrative Engine of The Eternal Symphony, The Jealous and Self-Loathing Erosyx)
+- [[Major Actor]] (6: Tier 1: Ages of Foundations & Early Magic, Tier 2: Ages of The Medieval Period, The Hierarchy of Roles during Events, Ballad Resolution, Magnum Opuss, and Legend Titles, The Soul Sheet Music of Legends, The Narrative Engine of The Eternal Symphony)
+- [[Music Glyph]] (6: The Magic Arts of the Seven Bindings, Age of Glyphs, Historical Development, The Final Law of Music Glyphcraft, Glyphic Heptastave, Vow Mark)
+- [[Resonance Stabilizer]] (6: The Advent of the Wolf Bomb, 8. Some Places Suppress Magic, The Magic Arts of the Seven Bindings, Miss Nyctilia, The Hybridization Engine of Arcanoria, Crescent Mist Peaks)
+- [[Selfless]] (6: The Closed Table of Moguls — The Inner Sanctum, Artus, Luminaire, Augusitus, All Personality Legend Traits, Original Eight)
+- [[Slayer Magnum Opus]] (6: Artus, Legend Opus, The Narrative Engine of The Eternal Symphony, Ascension of Legends into the Stellar Legacy Score, Unique Aspects of the Stellar Legacy Score, The Imperium Obsessus)
+- [[Soul Sheet Music]] (6: Music as Offloading and Essence Sacrifice Lubricant, Sorcerous Duels: The Musical Battlefield, 12. Magic Reveals Character, The Magic Arts of the Seven Bindings, The Soul Sheet Music of Legends, The Affection System and Relational Echoing Bonds)
+- [[Syncretism]] (6: 12. Magic Reveals Character, Constellation, Conversion to Constellations, Stardust, The Core of Arcanoria's Legacy, Ascension of Legends into the Stellar Legacy Score)
+- [[Velvet Throne]] (6: Singer of Paradise, The Closed Table of Moguls — The Inner Sanctum, The Social Stratification of the Velvet Elegance, Age of Velvet Elegance, Velvet Nectar, The Sonata of the Golden Sovereign)
+- [[Wolf Tone]] (6: The Advent of the Wolf Bomb, The Full Physics Chain, Soliton, 11. Dead Magic Zones Exist, Cataclysmic Aftermath, The Study of The Eternal Symphony)
+- [[Affection]] (5: Birth from Corruption of a Spellweaver's Soul Leitmotif, The Soul Sheet Music of Legends, The Affection System and Relational Echoing Bonds, The Romantic Interest System, Legend Relationship)
+- [[Alien Star]] (5: After the Seventh Cycle — The Fortification of the Firmament, the Heavens and the Break, The Tears That Became the Sky — Lacrimosa as the Strongest Resonance Anchors, The Auroral Ribbons as conduits of The First Overtone, Divinity of Auric Magic and Outer Magic, The Stars Are Alive)
+- [[Awakened State]] (5: Motif Awakening, The Three States of a Soul Leitmotif, 6. Overuse of Magic Causes Physical Damage, The Soul Sheet Music of Legends, The Principle of Perpetual Awakening)
+- [[Beloved Kernel]] (5: The Seven Weights, The Shape of the First Beloved, The Birth of Lyd, The First Beloved and the Countdown, Institutes and Containment Assessment, The Dissonance Containment Protocol (DCP))
+- [[Constellation Renown]] (5: Constellation, Stardust, Ascension of Legends into the Stellar Legacy Score, Unique Aspects of the Stellar Legacy Score, The Stars Are Alive)
+- [[Constellation Worship]] (5: Constellation, Stardust, Ascension of Legends into the Stellar Legacy Score, Unique Aspects of the Stellar Legacy Score, The Stars Are Alive)
+- [[Corpus Mortuum]] (5: Eight-Born Paths, The Seven Weights, The Shape of the First Beloved, The Birth of Lyd, The First Beloved and the Countdown, Lyd, The First Beloved)
+- [[Cymatics Arts]] (5: The Magic Arts of the Seven Bindings, Miss Nyctilia, Formation of the Institutes and the Dissonance League, The Dissonance Containment Protocol (DCP), The Danger of CRL Misclassification & Emergency Breaches)
+- [[Dissonance Curse]] (5: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, The Visual Identity of the Heptastave, The Final Law of Music Glyphcraft, Vow Mark)
+- [[Dream Magic]] (5: The Magic Arts of the Seven Bindings, Divinity of Auric Magic and Outer Magic, Evolution into the All-Loving Moon and The Hollowing, Purest of Love, Magic Arts)
+- [[Drowning in Flux]] (5: Outer God, Variant III — The Pleasure Parasite (A Flux Erosyx-Carnalix Hybrid), The Area of Dissonance and Forbidden Magic, Tier 3: Ages of Empires & Industrialization, Velvet Nectar)
+- [[Elizabeth]] (5: Character Details, Second Reset, Ages II, Ages V, Ages VI)
+- [[Exogenesis Threat]] (5: Miss Nyctilia, The Face It Shows as the Shrieking Terror, Eirenesis Anakriach, Shrieking Terror, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Fracted]] (5: Anomalous Properties, Stages of an Atonalis, Chaos Reverence Sacrifices, Civic, The Dissonance Containment Protocol (DCP))
+- [[Fragment of Defiance]] (5: Motif Awakening, Ballad Resolution, Magnum Opuss, and Legend Titles, 1. The Wish - Origin and Physical Legend Traits, The Narrative Engine of The Eternal Symphony, 1. The Wound - Origin and Physical Legend Traits)
+- [[Fragment of Lucidity]] (5: A Burrowed Name, Motif Awakening, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony, 1. The Wound - Origin and Physical Legend Traits)
+- [[Fungal Matriarch]] (5: The Vector of Luminant Moths and their usage in Civilization, The triple interaction of Luminant Decay and the build-up of EC (Euphoria Compound), Historical Parallel, THE HISTORICAL PARALLELS, Great Plague)
+- [[Grand Auric Cathedral]] (5: The Auric Aria's Journey & Character Arc, Ages IV, Ages VI, Old Testament, Seven Dark Fates)
+- [[Harmonic Entanglement]] (5: Flux, The Architecture of Harmonized Reality, The Magic Arts of the Seven Bindings, The First Overtone, Civic)
+- [[Hyperphantasia Arts]] (5: The Magic Arts of the Seven Bindings, Age of Hyperphantasia, Age of Starlight, The Imperium Obsessus, Magic Arts)
+- [[Jolly]] (5: Character Details, Selenea, Cordelia, Augusitus, All Personality Legend Traits)
+- [[Melancholic]] (5: Character Details, Selenea, Moon, All Personality Legend Traits, The Sonata of the Golden Sovereign)
+- [[Mind Control Arts]] (5: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Slave & Servitude Auctions, Civic, Purest of Love)
+- [[Moon Phase]] (5: The Split of Cosmic Motion and the Lunar Calendar, The Complete Hierarchy, Cycle, Seventh, Crescent Mist Peaks)
+- [[Mystical]] (5: The Cultural Weight of the Two Clocks, Aurelian, Selah, Miss Nyctilia, All Personality Legend Traits)
+- [[Myth Grade]] (5: Legend Relationship, Conversion to Constellations, Stardust, Ascension of Legends into the Stellar Legacy Score, The Stars Are Alive)
+- [[Mythic Drift]] (5: Artus, Constellation, Ascension of Legends into the Stellar Legacy Score, The Stars Are Alive, Original Eight)
+- [[Nascent]] (5: Stages of an Atonalis, Formless Masses, Composure, The First Meeting on the Ballad of the White Clots, The Dissonance Containment Protocol (DCP))
+- [[Possessive]] (5: The Hollowing, Character Arc, Lacrimosa, All Personality Legend Traits, Purest of Love)
+- [[PTM]] (5: The Coherence Axiom of Arcanoria's Ecology, The Hybridization Engine of Arcanoria, The Ecology of Eleos Blooms, Environmental Ecology and Epigenetics, Cultural, Sociological and Institutional Exploitation)
+- [[Pulse]] (5: What Solitons Actually Are, 9. Magic Reacts Differently Under Certain Conditions, The Magic Arts of the Seven Bindings, The Micro-Cosmic Motion System, The Complete Hierarchy)
+- [[Sympathetic Magic]] (5: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Slave & Servitude Auctions, Civic, Vow Mark)
+- [[The Grand Fusillade]] (5: 11. Dead Magic Zones Exist, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Advanced Spellweaving and Chord Compositions, Hyper Chord)
+- [[Theological Virtue]] (5: Auric Order, Selah, Ages II, Ages IV, Uriel)
+- [[Trade Nexus]] (5: The Advent of the Wolf Bomb, 8. Some Places Suppress Magic, The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Xian-K'in)
+- [[World Shaping Maverick]] (5: Auric Aria, Cadmus Tacet, Vanessa of Iridia, The Soul Sheet Music of Legends, All Personality Apex Traits)
+- [[World Truth]] (5: 12. Magic Reveals Character, Roles Embodiment and the Attraction of Destiny, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony, Ascension of Legends into the Stellar Legacy Score)
+- [[Age of Alchemy]] (4: Lux Aeterna, Auric Heptacode, Tier 3: Ages of Empires & Industrialization, Hollowmarch)
+- [[Apex Trait]] (4: Luminaire, Cadmus Tacet, The Soul Sheet Music of Legends, Conversion to Constellations)
+- [[Auric Enclave]] (4: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Cadmus Tacet, Original Eight)
+- [[Auric Purification]] (4: Ages III, Ages IV, Ages V, Ages VI)
+- [[Auric Tone Length]] (4: The First Act of Deliberate Creation, The Auric Tone Length as Minimum Tone, Frequency Harmonics as Encoded Information, The Full Physics Chain)
+- [[Beloved Shard]] (4: The Shape of the First Beloved, The Birth of Lyd, The First Beloved and the Countdown, Institutes and Containment Assessment, The Dissonance Containment Protocol (DCP))
+- [[Broken Optimist]] (4: Selenea, Daedalus, Artus, All Personality Legend Traits)
+- [[Coherence Repulsion]] (4: The Auric Tone Length as Minimum Tone, Crystal as Cymatics Topology, The Advent of the Wolf Bomb, The Magic Arts of the Seven Bindings)
+- [[Contract Arts]] (4: The Magic Arts of the Seven Bindings, Slave & Servitude Auctions, Civic, Vow Mark)
+- [[Court of Delicacies]] (4: Shadow Order, The origin of Velvet Nectar, Formation of the Institutes and the Dissonance League, Institute)
+- [[DCP]] (4: Miss Nyctilia, Formation of the Institutes and the Dissonance League, The Dissonance Containment Protocol (DCP), The Danger of CRL Misclassification & Emergency Breaches)
+- [[Deep Feeler]] (4: Character Details, Selenea, Augusitus, All Personality Legend Traits)
+- [[Delusional]] (4: The Magic Arts of the Seven Bindings, Age of Hyperphantasia, Syvanth, All Personality Legend Traits)
+- [[Destra]] (4: Resonance Motif Awakening: The Judgement of One Million Eyes, The Hierarchy of Roles during Events, Evolution into the All-Loving Moon and The Hollowing, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Detective Magic]] (4: Strand, Composure, 5. Magic Leaves Traces Behind, Crescent Mist Peaks)
+- [[Devoted]] (4: Cadmus Tacet, Legend Relationship, All Personality Legend Traits, Ages I)
+- [[Domestication Enclave]] (4: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Cadmus Tacet, Velvet Nectar)
+- [[Empathetic]] (4: Motif Awakening, Orphael, All Personality Legend Traits, Crescent Mist Peaks)
+- [[Feather Fall Arts]] (4: The Magic Arts of the Seven Bindings, Age of Glyphs, The Three Phases of Glyphcraft, Historical Development)
+- [[Fractal Kaleidoscope]] (4: The White-Touched Archivist, Ages IV, Seven Dark Fates, Crescent Mist Peaks)
+- [[Fragment of Acceptance]] (4: Ballad Resolution, Magnum Opuss, and Legend Titles, 1. The Wish - Origin and Physical Legend Traits, The Narrative Engine of The Eternal Symphony, 1. The Wound - Origin and Physical Legend Traits)
+- [[Fragment of Catharsis]] (4: A Burrowed Name, Motif Awakening, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony)
+- [[Fragment of Rebirth]] (4: Ballad Resolution, Magnum Opuss, and Legend Titles, 1. The Wish - Origin and Physical Legend Traits, The Narrative Engine of The Eternal Symphony, 1. The Wound - Origin and Physical Legend Traits)
+- [[Head of State]] (4: Composure, Carnival of Shifting Reflections, Legendary Hunting Charters, Civic)
+- [[Healing Magic]] (4: The Legacy of Miracle Magic, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Heptagonal Brillouin Zone]] (4: The Auric Tone Length as Minimum Tone, The Advent of the Wolf Bomb, The Full Physics Chain, The Three Phases of Glyphcraft)
+- [[Imaginative]] (4: The Magic Arts of the Seven Bindings, Cordelia, The White-Touched Archivist, All Personality Legend Traits)
+- [[Invisible Color]] (4: The Magic Arts of the Seven Bindings, The First Meeting on the Ballad of the White Clots, The White-Touched Archivist, All Personality Legend Traits)
+- [[Love Language]] (4: The Cultural Weight of the Two Clocks, The Soul Sheet Music of Legends, The Romantic Interest System, Legend Relationship)
+- [[Lustful]] (4: Motif Awakening, Orphael, All Personality Legend Traits, Crescent Mist Peaks)
+- [[Massacre of Phoebe]] (4: The Auric Aria's Journey & Character Arc, Quotes On Characters and Events, Ages IV, Ages V)
+- [[Memory Singer]] (4: Singer of Paradise, 5. Magic Leaves Traces Behind, Age of Velvet Elegance, Velvet Nectar)
+- [[Minor Actor]] (4: Tier 1: Ages of Foundations & Early Magic, The Hierarchy of Roles during Events, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony)
+- [[Principled]] (4: The Auric Aria's Journey & Character Arc, Auric Aria, Augusitus, All Personality Legend Traits)
+- [[Puppet Master]] (4: Consensual Anchoring, Syvanth, Miss Nyctilia, All Personality Legend Traits)
+- [[Romantic Interest]] (4: The Soul Sheet Music of Legends, The Affection System and Relational Echoing Bonds, The Romantic Interest System, Legend Relationship)
+- [[Sak Tahn Waax]] (4: Historical Development, The Final Law of Music Glyphcraft, Glyphic Heptastave, Xian-K'in)
+- [[Soul-Binding]] (4: Soul-Casing of Familiars, The Magic Arts of the Seven Bindings, Cadmus Tacet, Theological History)
+- [[Stellar Covenant]] (4: 12. Magic Reveals Character, Constellation, Ascension of Legends into the Stellar Legacy Score, The Stars Are Alive)
+- [[Story Affinity]] (4: Roles Embodiment and the Attraction of Destiny, The Hierarchy of Roles during Events, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony)
+- [[The Eight-Tongued King]] (4: Stages of an Atonalis, Eight-Born Paths, Tier 2: Ages of The Medieval Period, The Narrative Engine of The Eternal Symphony)
+- [[The Severing of the Union]] (4: The Auric Aria's Journey & Character Arc, Formless Father, Ages II, Ages V)
+- [[Weaver Enclave]] (4: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, Orphael, Tier 2: The Hybridizers (The Gynostemium))
+- [[Whistling Fans]] (4: The Magic Arts of the Seven Bindings, Sephira, Ritual Whistling Fans Dancers, Civic)
+- [[Zephyr Arts]] (4: How to Read a Register, The Magic Arts of the Seven Bindings, Magic Arts, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Age of Auric Radiance]] (3: Tier 3: Ages of Empires & Industrialization, Auric Order, Hollowmarch)
+- [[Age of Embers]] (3: Tier 1: Ages of Foundations & Early Magic, Ages, Crescent Mist Peaks)
+- [[Age of Enlightenment]] (3: Character Details, Tier 3: Ages of Empires & Industrialization, Auric Order)
+- [[Age of Holography]] (3: Auric Heptacode, Tier 4: Ages of Unification, Historical Development)
+- [[Agromagical Arts]] (3: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Magic Arts)
+- [[Agromagical Enclaves]] (3: Revelation and Response – The First Agromagical Conclaves, Themes and Legacy, Agromagical Conclaves)
+- [[Analytical]] (3: Character Arc, Lacrimosa, All Personality Legend Traits)
+- [[Arioch]] (3: Resonance Motif Awakening: The Judgement of One Million Eyes, The Hierarchy of Roles during Events, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Ark of Genesis]] (3: The Auric Aria's Journey & Character Arc, 5. Magic Leaves Traces Behind, Ages IV)
+- [[Auric Proselytizer]] (3: Selah, All Personality Legend Traits, Uriel)
+- [[Auspicious Zephyr]] (3: Aurelian, Artus, All Personality Legend Traits)
+- [[Beat]] (3: The Micro-Cosmic Motion System, The Complete Hierarchy, The First Meeting on the Ballad of the White Clots)
+- [[Breathing Arts]] (3: The Magic Arts of the Seven Bindings, Magic Arts, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Clarity of Infinite Light]] (3: Luminaire, Cadmus Tacet, All Personality Apex Traits)
+- [[Condemned Idealist]] (3: The Auric Aria's Journey & Character Arc, Auric Aria, All Personality Legend Traits)
+- [[Contemplation]] (3: Auric Order, The Name of Peace, Given Before the Horror, Fear as Metaphysical Conviction)
+- [[Dark Forest Paradox]] (3: Outer God, The Auric Aria is a Type G Star, Tier 4: The Emergence of Demi-Human Dryads)
+- [[Daydreaming Escapist]] (3: Character Details, Selenea, All Personality Legend Traits)
+- [[Deific Moodboard.canvas]] (3: Auric Aria, Lacrimosa, Selenea)
+- [[Electrical Magic]] (3: Luminance, The Magic Arts of the Seven Bindings, The Final Law of Music Glyphcraft)
+- [[Enigmatic]] (3: Outer God, The White-Touched Archivist, All Personality Legend Traits)
+- [[Fiery Passion]] (3: Cordelia, All Personality Legend Traits, Uriel)
+- [[Forbidden Magic]] (3: 2. Certain Spellweaving is Forbidden Magic or Taboo, The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Fragment of Vision]] (3: A Burrowed Name, Ballad Resolution, Magnum Opuss, and Legend Titles, The Narrative Engine of The Eternal Symphony)
+- [[Hesitant]] (3: Character Arc, Lacrimosa, All Personality Legend Traits)
+- [[Interregnum]] (3: The Shape of the First Beloved, Institutes and Containment Assessment, The Dissonance Containment Protocol (DCP))
+- [[Intuitive]] (3: Vaelia, Vanessa of Iridia, All Personality Legend Traits)
+- [[Liminal Magic]] (3: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Magic Arts)
+- [[Lucetta]] (3: Resonance Motif Awakening: The Judgement of One Million Eyes, The Hierarchy of Roles during Events, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Ludwine]] (3: Stages of an Atonalis, The Magic Arts of the Seven Bindings, Original Eight)
+- [[Luminant Rot]] (3: Historical Parallel, THE AROMATICS TRAP  & MAGICAL LEATHER Wax — INSTITUTIONAL CASCADE FAILURE, THE HISTORICAL PARALLELS)
+- [[Lydian Cadence]] (3: The Seven Weights, The Shape of the First Beloved, The Birth of Lyd, The First Beloved and the Countdown)
+- [[Manipulative]] (3: Miss Nyctilia, The Soul Sheet Music of Legends, All Personality Legend Traits)
+- [[Mastermind Architect]] (3: Resonance Motif Awakening: The Judgement of One Million Eyes, Lacrimosa, All Personality Apex Traits)
+- [[Megastructure Wonder]] (3: Hypermage, The White-Haven Library, The Stars Are Alive)
+- [[Mortuary Magic]] (3: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Magic Arts)
+- [[Mythic Virtuoso]] (3: The Weight of Value as Coherence Fuel, Ritual Whistling Fans Dancers, Civic)
+- [[Naive]] (3: Character Details, Selenea, All Personality Legend Traits)
+- [[Outer Magic]] (3: 13. "Ancient" Outer Magic is Fundamentally Different, The Area of Dissonance and Forbidden Magic, Divinity of Auric Magic and Outer Magic)
+- [[Phase Singularity]] (3: The Auric Tone Length as Minimum Tone, The Advent of the Wolf Bomb, The Full Physics Chain)
+- [[Philosophical]] (3: Daedalus, All Personality Legend Traits, Original Eight)
+- [[Pollux]] (3: Anxithor, 10. Magic Can Become Addictive, The origin of Velvet Nectar)
+- [[Pragmatic]] (3: Luminaire, Cadmus Tacet, All Personality Legend Traits)
+- [[Prophet]] (3: Outer God, 5. Magic Leaves Traces Behind, Crescent Mist Peaks)
+- [[Purifying Flame]] (3: Resonance Motif Awakening: The Judgement of One Million Eyes, All Personality Legend Traits, Uriel)
+- [[Resilient]] (3: Daedalus, Artus, All Personality Legend Traits)
+- [[Resonance Tides]] (3: Coherence-Binding Tissue, Environmental Ecology, The Coherence Axiom of Arcanoria's Ecology)
+- [[Reverent]] (3: Selah, All Personality Legend Traits, Old Testament)
+- [[Rite]] (3: 9. Magic Reacts Differently Under Certain Conditions, The Micro-Cosmic Motion System, The Complete Hierarchy)
+- [[Sectile]] (3: Stages of an Atonalis, Composure, The Dissonance Containment Protocol (DCP))
+- [[Self-Deceiving]] (3: Vaelia, Orphael, All Personality Legend Traits)
+- [[Seraph]] (3: Resonance Motif Awakening: The Judgement of One Million Eyes, The Hierarchy of Roles during Events, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Shapeshifting Arts]] (3: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, The Registers of Magic)
+- [[Silent Watcher]] (3: Character Arc, Lacrimosa, All Personality Legend Traits)
+- [[Slime]] (3: Living Bodies as Adaptive Soliton Clusters, The Hybridization Engine of Arcanoria, The Ecology of Eleos Blooms)
+- [[Sly Fox]] (3: Vaelia, Vanessa of Iridia, All Personality Legend Traits)
+- [[Spatial Magic]] (3: The Magic Arts of the Seven Bindings, Miss Nyctilia, The Dissonance Containment Protocol (DCP))
+- [[Sprite-Light Conclave]] (3: Living Bodies as Adaptive Soliton Clusters, The Horizontal Worldbuilding of Enclaves, The Ecology of Eleos Blooms)
+- [[Teasing]] (3: Vaelia, Vanessa of Iridia, All Personality Legend Traits)
+- [[Topological Arts]] (3: The Magic Arts of the Seven Bindings, Miss Nyctilia, The Dissonance Containment Protocol (DCP))
+- [[Topological Null]] (3: The Advent of the Wolf Bomb, The Full Physics Chain, The Magic Arts of the Seven Bindings)
+- [[Trade Routes]] (3: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves, All-Loving Moon)
+- [[Transmutation Arts]] (3: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic, Magic Arts)
+- [[Underdog]] (3: Cadmus Tacet, Mythical Virtuoso, Legend Trait)
+- [[Vals Jenner]] (3: The Birth of "Forbidden" Technology and the Drive for Safety, Cadmus Tacet, Civic)
+- [[Volatile]] (3: Outer God, Sephira, All Personality Legend Traits)
+- [[Wind Magic]] (3: How to Read a Register, The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Abjuration Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Achievement]] (2: Moon, Legend Relationship)
+- [[Age of Arcology]] (2: Cataclysmic Aftermath, Tier 4: Ages of Unification)
+- [[Age of Bells]] (2: Age of Hymns, Iridia)
+- [[Age of Clockwork]] (2: Tier 3: Ages of Empires & Industrialization, Hollowmarch)
+- [[Age of Divine Machinery]] (2: Tier 3: Ages of Empires & Industrialization, Iridia)
+- [[Age of Invention]] (2: Tier 3: Ages of Empires & Industrialization, Iridia)
+- [[Age of Sacred Prohibition]] (2: Tier 3: Ages of Empires & Industrialization, Iridia)
+- [[Age of Silence]] (2: Tier 3: Ages of Empires & Industrialization, Iridia)
+- [[Age of the Wolf Tone Winter]] (2: Tier 1: Ages of Foundations & Early Magic, Tier 4: Ages of Unification)
+- [[All-Loving Anchor]] (2: Lux Aeterna, All-Loving Moon)
+- [[Anxious]] (2: All Personality Legend Traits, Original Eight)
+- [[Aria]] (2: Magic Pipeline, The Fifth Creature, The First Beloved)
+- [[Artifice Magic]] (2: The Magic Arts of the Seven Bindings, The Registers of Magic)
+- [[Artusian Knight]] (2: Sorcerous Duels: The Musical Battlefield, Artus)
+- [[Atonalis Technology]] (2: Formation of the Institutes and the Dissonance League, Institute)
+- [[Auric Aria Bell]] (2: Selah, Variants of the Auric Bells)
+- [[Auric Burst]] (2: The First Act of Deliberate Creation, The Tears That Became the Sky — Lacrimosa as the Strongest Resonance Anchors)
+- [[Auric Magic]] (2: 13. "Ancient" Outer Magic is Fundamentally Different, Divinity of Auric Magic and Outer Magic)
+- [[Auric Resonance Column]] (2: Father Raphael, Variants of the Auric Bells)
+- [[Beam Arts]] (2: Chord Layering, The Magic Arts of the Seven Bindings)
+- [[Beloved Shards]] (2: The Shape of the First Beloved, Institutes and Containment Assessment)
+- [[Biomagical Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Butterfly Web Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Carnalix Atonalis]] (2: The Shape of the First Beloved, Institutes and Containment Assessment)
+- [[Celestial Astrolabe]] (2: The Magic Arts of the Seven Bindings, Crescent Mist Peaks)
+- [[Celestial Holography Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Ceremonial Arts]] (2: The Magic Arts of the Seven Bindings, Tier 1: The Ambient Listeners (Responsive Flora))
+- [[Chrono Magic]] (2: The Area of Dissonance and Forbidden Magic, Miss Nyctilia)
+- [[Circle of Fifths]] (2: Age of Glyphs, The Three Phases of Glyphcraft)
+- [[City Development]] (2: The Advent of the Wolf Bomb, 8. Some Places Suppress Magic)
+- [[Civilization Reset]] (2: Tier 2: Ages of The Medieval Period, First Reset)
+- [[Clarity Seeker]] (2: The White-Touched Archivist, All Personality Legend Traits)
+- [[Clingy Narcissist]] (2: Syvanth, All Personality Legend Traits)
+- [[Coherence Arts]] (2: The Magic Arts of the Seven Bindings, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Communion]] (2: Auric Order, The Name of Peace, Given Before the Horror)
+- [[Confident]] (2: Aurelian, All Personality Legend Traits)
+- [[Contrition]] (2: Auric Order, The Name of Peace, Given Before the Horror)
+- [[Corded Flesh]] (2: The Shape of the First Beloved, The Birth of Lyd, The First Beloved and the Countdown)
+- [[Coward]] (2: Sephira, All Personality Legend Traits)
+- [[CRL]] (2: The Dissonance Containment Protocol (DCP), The Danger of CRL Misclassification & Emergency Breaches)
+- [[Cryomagic Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Crystallization Magic]] (2: The Magic Arts of the Seven Bindings, Miss Nyctilia)
+- [[CU]] (2: The Dissonance Containment Protocol (DCP), The Danger of CRL Misclassification & Emergency Breaches)
+- [[Curse Dispersal Arts]] (2: The Magic Arts of the Seven Bindings, The Visual Identity of the Heptastave)
+- [[Cusp]] (2: Civic, Institute)
+- [[Cynical]] (2: Sephira, All Personality Legend Traits)
+- [[Dark Commodities]] (2: Anomalous Properties, Velvet Nectar)
+- [[Determined Achiever]] (2: Aurelian, All Personality Legend Traits)
+- [[Diligent]] (2: Luminaire, All Personality Legend Traits)
+- [[Dissonance Bloom]] (2: The Area of Dissonance and Forbidden Magic, Age Crisis as catalysts for Enclaves)
+- [[Dust Cleaning Arts]] (2: How to Read a Register, The Magic Arts of the Seven Bindings)
+- [[Eccentric Maniac]] (2: The White-Touched Archivist, All Personality Legend Traits)
+- [[Elegy Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Elygia]] (2: Advanced Spellweaving and Chord Compositions, Hyper Chord)
+- [[Emergency Breach Color Codex]] (2: Miss Nyctilia, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Entropic Scrying Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Era Score]] (2: Ages, Ballad Resolution, Magnum Opuss, and Legend Titles)
+- [[Erastus]] (2: The Hierarchy of Roles during Events, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Eros Magic]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Esoteric Enclave]] (2: Auric Heptacode, The Horizontal Worldbuilding of Enclaves)
+- [[Extravagant Egocentric]] (2: Miss Nyctilia, All Personality Legend Traits)
+- [[Fatalistic Absurdist]] (2: Chorus Pillar, All Personality Legend Traits)
+- [[Fierce]] (2: All Personality Legend Traits, Uriel)
+- [[Fire Funnel Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Fire Magic]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Flared Current]] (2: Sephira, All Personality Legend Traits)
+- [[Forgery Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Geomancy Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Great Expanse]] (2: Physical Philosophy, Hollowmarch)
+- [[Great Plague of the Luminant Decay]] (2: Pathogenic Weaknesses of Pure Light, Environmental Ecology and Epigenetics)
+- [[Haunted Empiricist]] (2: Sephira, All Personality Legend Traits)
+- [[Hidden Actor]] (2: The Hierarchy of Roles during Events, Ballad Resolution, Magnum Opuss, and Legend Titles)
+- [[Hollow-Point Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Industrious Enclave]] (2: The Horizontal Worldbuilding of Enclaves, Age Crisis as catalysts for Enclaves)
+- [[Ink Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Kaia]] (2: The Hierarchy of Roles during Events, The Doctrinal Cascade: How Mira's Wish Generates The Nine Archbishops of the Purest of Love.)
+- [[Lazarus]] (2: Tier 3: Nymphic Eleos Blooms, The origin of Velvet Nectar)
+- [[Lazy]] (2: Augusitus, All Personality Legend Traits)
+- [[Legacy Obsessed]] (2: Miss Nyctilia, All Personality Legend Traits)
+- [[Lenore]] (2: Eight-Born Paths, Xian-K'in)
+- [[Liberation of Hollowmarch]] (2: The Hollowing, Opposing the Heavens)
+- [[Magnetism Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Megastructure Wonders]] (2: Cataclysmic Aftermath, Polychord Crisis)
+- [[Memory Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Memory Reaver]] (2: The Area of Dissonance and Forbidden Magic, Velvet Nectar)
+- [[Mimicry Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Moody]] (2: The White-Touched Archivist, All Personality Legend Traits)
+- [[Nimbus Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Null-Type Wolf Bomb]] (2: The Advent of the Wolf Bomb, The Full Physics Chain)
+- [[Obsessive]] (2: Syvanth, All Personality Legend Traits)
+- [[Obsidian Feather]] (2: Queries of Divine Communion, Iridia)
+- [[Obsidian Feather Society]] (2: Miss Nyctilia, Institute)
+- [[Ornamental Gardening Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Over-giving Devout]] (2: Cordelia, All Personality Legend Traits)
+- [[People Pleaser]] (2: Orphael, All Personality Legend Traits)
+- [[Perfumery Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Prism Magic]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Psychic Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Reckless]] (2: The Closed Table of Moguls — The Inner Sanctum, All Personality Legend Traits)
+- [[Reincarnation]] (2: Constellation, Ascension of Legends into the Stellar Legacy Score)
+- [[Rekindling Fire]] (2: Augusitus, All Personality Legend Traits)
+- [[Resonance Siphon]] (2: The Advent of the Wolf Bomb, The Full Physics Chain)
+- [[Romantic Hedonist]] (2: Orphael, All Personality Legend Traits)
+- [[Ruthless Perfectionist]] (2: Luminaire, All Personality Legend Traits)
+- [[Sacrifice]] (2: Auric Order, The Name of Peace, Given Before the Horror)
+- [[Sacrificial Lamb]] (2: Luminaire, All Personality Legend Traits)
+- [[Savior Complex]] (2: Artus, All Personality Legend Traits)
+- [[Scattered]] (2: All Personality Legend Traits, Uriel)
+- [[Scrap]] (2: Gayviene, Portharmonica)
+- [[Self-Indulgent Slave]] (2: Orphael, All Personality Legend Traits)
+- [[Selfish Harmonic]] (2: The Coherence Axiom of Arcanoria's Ecology, The Hybridization Engine of Arcanoria)
+- [[Shy]] (2: Resonance Motif Awakening: The Judgement of One Million Eyes, All Personality Legend Traits)
+- [[Silence Arts]] (2: The Magic Arts of the Seven Bindings, The Danger of CRL Misclassification & Emergency Breaches)
+- [[Siphon-Type Wolf Bomb]] (2: The Advent of the Wolf Bomb, The Full Physics Chain)
+- [[Snow Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Soul Tuner]] (2: All Personality Legend Traits, All Personality Apex Traits)
+- [[Soul-Casing]] (2: The Magic Arts of the Seven Bindings, Resonance Box)
+- [[Spectacle Arts]] (2: The Magic Arts of the Seven Bindings, Purest of Love)
+- [[Storm-Mother]] (2: Sephira, All Personality Apex Traits)
+- [[Submissive]] (2: Cordelia, All Personality Legend Traits)
+- [[Suppressed Diamond]] (2: Luminaire, All Personality Legend Traits)
+- [[Technomancy Arts]] (2: The Magic Arts of the Seven Bindings, The Registers of Magic)
+- [[The One Hunt]] (2: Fear as Metaphysical Conviction, The One Hunt)
+- [[Tragic Hypocrite]] (2: Augusitus, All Personality Legend Traits)
+- [[Transient Actor]] (2: The Hierarchy of Roles during Events, Ballad Resolution, Magnum Opuss, and Legend Titles)
+- [[Triadic Pivot]] (2: Act of Fate, Ages)
+- [[Trojan Horse Arts]] (2: The Magic Arts of the Seven Bindings, The Area of Dissonance and Forbidden Magic)
+- [[Unpredictable Storm]] (2: All Personality Legend Traits, Uriel)
+- [[Unyielding Will]] (2: All Personality Legend Traits, Uriel)
+- [[Utilitarian Stoic]] (2: Cadmus Tacet, All Personality Legend Traits)
+- [[Vital Resources]] (2: Lux Aeterna, Great Plague)
+- [[Voice Projection Arts]] (2: The Magic Arts of the Seven Bindings, Miss Nyctilia)
+- [[Void-Embrace Anchor]] (2: Cadmus Tacet, All Personality Apex Traits)
+- [[Vortex Arts]] (2: How to Read a Register, The Magic Arts of the Seven Bindings)
+- [[Warp Travel Arts]] (2: The Magic Arts of the Seven Bindings, Magic Arts)
+- [[Zealous]] (2: All Personality Legend Traits, Uriel)
+- [[A Brown Auric Peach?]] (1: Age Crisis)
+- [[Accumulator Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Addiction Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Adhesion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Advanced Lensing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Aeolion]] (1: Xian-K'in)
+- [[Affinity Points]] (1: Roles Embodiment and the Attraction of Destiny)
+- [[Age of the Debt of Flesh]] (1: Tier 3: Ages of Empires & Industrialization)
+- [[Alloy Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Amadea, Sonata of the Violet Empress]] (1: Age of Glyphs)
+- [[Amphitheater Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Animation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Antidote Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Apathetic]] (1: All Personality Legend Traits)
+- [[Arrogant]] (1: All Personality Legend Traits)
+- [[Astrological Cartography Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Atmos Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Attractive]] (1: Augusitus)
+- [[Attrition Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Attunement Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Auric Resonator]] (1: The Magic Arts of the Seven Bindings)
+- [[Babmer K'ahn-Jing]] (1: Xian-K'in)
+- [[Barrier Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Bitter Grudge]] (1: All Personality Legend Traits)
+- [[Blackhole Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Bleeding Architect]] (1: Selah)
+- [[Body Scanning Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Boreal Reach]] (1: Vow Mark)
+- [[Braking Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Brewing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Bridging Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Bullet Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Burning Flagellant]] (1: All Personality Legend Traits)
+- [[Cadence Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Calligraphy Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Carnal Crests]] (1: The Magic Arts of the Seven Bindings)
+- [[Cartography Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Caustic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Cauterizing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Cautious]] (1: All Personality Legend Traits)
+- [[Chain Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Chamber Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Cipher Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Clarity Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Cleaning Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Clockwork Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Code Black]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Blue]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Crimson]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Gold]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Pink]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Verdant]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code Violet]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Code White]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Coherence Mapping Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Combat Displacement Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Combustion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Compression Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Compulsive Liar]] (1: All Personality Legend Traits)
+- [[Confluence]] (1: THE THREE MANIFESTATIONS: EXPRESSIONS OF ONE DISEASE)
+- [[Conjuration Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Consuming Gale]] (1: All Personality Legend Traits)
+- [[Cordelio]] (1: A Burrowed Name)
+- [[Corpse Bouquet]] (1: Tier 3: Nymphic Eleos Blooms)
+- [[Courtship Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Crescendo]] (1: The Cultural Weight of the Two Clocks)
+- [[Crown of Feathered Obsidian]] (1: Iridia)
+- [[Crucible Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[CRX Product]] (1: Institute)
+- [[Crystalized in Delusion]] (1: Age of Hyperphantasia)
+- [[Crystalline Memory of Motion]] (1: Physical Philosophy)
+- [[Culinary Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Curing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Cushion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Dancing Blade Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Day of Judgement]] (1: Seven Dark Fates)
+- [[Deep Mirrored Bond]] (1: The Affection System and Relational Echoing Bonds)
+- [[Delay Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Desperate Rumination]] (1: All Personality Legend Traits)
+- [[Destructive Flare]] (1: All Personality Legend Traits)
+- [[Dilution Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Dim Tuning]] (1: The Affection System and Relational Echoing Bonds)
+- [[Diplomatic Harmonist]] (1: All Personality Legend Traits)
+- [[Disciplined Orthodox]] (1: All Personality Legend Traits)
+- [[Dissolution Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Dissonance Blooms]] (1: Pathogenic Weaknesses of Pure Light)
+- [[Distortion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Distrustful]] (1: All Personality Legend Traits)
+- [[Divination Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Divine Composition]] (1: The Eternal Symphony)
+- [[Dogmatic]] (1: All Personality Legend Traits)
+- [[Domestication Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Dreamweaver]] (1: The Facilitator of the Age of the False Messiah)
+- [[DTL]] (1: The Dissonance Containment Protocol (DCP))
+- [[Duet Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Effigy Scrying Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Electric Acceleration Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Elemental Magical Resource]] (1: Auric Heptacode)
+- [[Eleos Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Encore Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Equilibrium Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Essence Distillation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Exiled]] (1: 1. The Wish - Origin and Physical Legend Traits)
+- [[Familiar]] (1: Dark Arts)
+- [[Fatalistic Embracer]] (1: All Personality Legend Traits)
+- [[Ferry Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Field Medicine Arts]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Field Sensing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Firecracker Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Flash Explosion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Flux Vortex]] (1: The Advent of the Wolf Bomb)
+- [[Forge Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Forged Rivalry]] (1: The Affection System and Relational Echoing Bonds)
+- [[Formless Mass]] (1: The Ecology of Eleos Blooms)
+- [[Fortification Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Fractal Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Fragmentation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Fragments of Renewal]] (1: Ascension of Legends into the Stellar Legacy Score)
+- [[Frayed Tension]] (1: The Affection System and Relational Echoing Bonds)
+- [[Freezing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Friction Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Gateway Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Genius]] (1: Augusitus)
+- [[Glyphic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Gravity Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Gravity Sensing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Grief-Stricken]] (1: All Personality Legend Traits)
+- [[Grounding Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Handball Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Harmonic Entanglement Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Hearth Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Heating Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Hermeneutic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Hermetic]] (1: All Personality Legend Traits)
+- [[Hollow Heart]] (1: All Personality Legend Traits)
+- [[Hollow-Point]] (1: Magic Arts)
+- [[Hope]] (1: Auric Order)
+- [[Hot-Headed]] (1: All Personality Legend Traits)
+- [[Hurting Arts]] (1: The Area of Dissonance and Forbidden Magic)
+- [[Hyper Solid Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Hyperenergy Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Hyperprotection Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Illumination Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Impatient]] (1: All Personality Legend Traits)
+- [[Impressionable]] (1: All Personality Legend Traits)
+- [[In-Depth Analysis of the Singer of Paradise]] (1: Singer of Paradise)
+- [[In-Depth Plague of Euphoria]] (1: Great Plague)
+- [[Inertia Redirection Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Inextinguishable Fire]] (1: Sephira)
+- [[Inspiration Stigma]] (1: Ascension of Legends into the Stellar Legacy Score)
+- [[Instant Combustion Syndrome]] (1: The Danger of CRL Misclassification & Emergency Breaches)
+- [[Ionic Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Irrational]] (1: All Personality Legend Traits)
+- [[Junius]] (1: Quotes On Characters and Events)
+- [[K'ahn]] (1: Xian-K'in)
+- [[Kael]] (1: Mira)
+- [[Kanjing]] (1: Xian-K'in)
+- [[Kiln Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Kindred Soulmate]] (1: The Affection System and Relational Echoing Bonds)
+- [[Kinetic Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Knell]] (1: The Magic Arts of the Seven Bindings)
+- [[Kyvy]] (1: Mira)
+- [[Labyrinth Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Lattice Folding Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Levitation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Lift Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Light Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Loss Anchor]] (1: All Personality Legend Traits)
+- [[Loss-Beauty Lunatic]] (1: All Personality Legend Traits)
+- [[Loyal Thread]] (1: All Personality Legend Traits)
+- [[Luminant Decay Plague]] (1: The Coherence Axiom of Arcanoria's Ecology)
+- [[Luminant Decaying Plague]] (1: Themes and Legacy)
+- [[Luminous Idealist]] (1: Selah)
+- [[Lunatic]] (1: 1. The Wish - Origin and Physical Legend Traits)
+- [[Lydian Mode]] (1: The Seven Weights)
+- [[Magic Dead Zones]] (1: Environmental Ecology)
+- [[Malediction Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Mathematical Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Metronome Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Midas Touch Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Militant Enclave]] (1: The Horizontal Worldbuilding of Enclaves)
+- [[Mineral Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Mist Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Mnemonic Fog Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Myth Purification]] (1: Ascension of Legends into the Stellar Legacy Score)
+- [[Nightmare Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Nihilistic]] (1: All Personality Legend Traits)
+- [[Noise Cancellation]] (1: The Magic Arts of the Seven Bindings)
+- [[Null Zone Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Numb]] (1: All Personality Legend Traits)
+- [[Nurturing Caregiver]] (1: All Personality Legend Traits)
+- [[Obfuscation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Object Purification Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Open Rest]] (1: The Affection System and Relational Echoing Bonds)
+- [[Opportunistic]] (1: All Personality Legend Traits)
+- [[Optical Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Orphaned]] (1: All Origin & Physical Legend Traits)
+- [[Outpost]] (1: Artus)
+- [[Paranoid]] (1: All Personality Legend Traits)
+- [[Patient]] (1: All Personality Legend Traits)
+- [[Pattern Seer]] (1: All Personality Legend Traits)
+- [[Payload Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Percussion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Petrification Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Phase Disruption Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Phase Locking Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Photographic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Piercing Analyst]] (1: Cadmus Tacet)
+- [[Pivot Chord]] (1: The Three Phases of Glyphcraft)
+- [[Plasma Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Pleasure Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Pleasure Parasite]] (1: Velvet Nectar)
+- [[Precision Cutting Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Precision Removal Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Presumptuous]] (1: All Personality Legend Traits)
+- [[Prismatic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Prophetic Spark]] (1: All Personality Legend Traits)
+- [[Prophetical Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Propulsion Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Prosthetic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Proto‑Universe]] (1: The Name of Peace, Given Before the Horror)
+- [[Pugilist Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Pulse Manipulation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Pulse Wave Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Pure Structure]] (1: The Ecology of Eleos Blooms)
+- [[Purifying Fire Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Real Cycle Birthday]] (1: The Cultural Weight of the Two Clocks)
+- [[Rebound Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Regal Anchoring Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Regal Enclave]] (1: The Horizontal Worldbuilding of Enclaves)
+- [[Relation Fracture]] (1: The Affection System and Relational Echoing Bonds)
+- [[Relation Growth]] (1: The Affection System and Relational Echoing Bonds)
+- [[Relational Severance]] (1: Legend Relationship)
+- [[Resonance Anchor]] (1: The Three Phases of Glyphcraft)
+- [[Resonator Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Restraining Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Revelation]] (1: Auric Order)
+- [[Revelatory Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Reverberation Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Risk Lover]] (1: All Personality Legend Traits)
+- [[Role Signature]] (1: Roles Embodiment and the Attraction of Destiny)
+- [[Rust Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Saber-Knight]] (1: Artus)
+- [[Sail-Filing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Searing Enigma Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Seismic Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Serene]] (1: All Personality Legend Traits)
+- [[Seven Bindings of Spellweaving]] (1: Core Terms)
+- [[Seventh Cycle of Creation]] (1: The Cultural Weight of the Two Clocks)
+- [[Severance Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Shadow Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Shadow Person]] (1: The Amber Wonderland on the Place of its own Family)
+- [[Shared Perception Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Shatter-Point Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Sickly]] (1: 1. The Wish - Origin and Physical Legend Traits)
+- [[Signaling Veil Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Silence]] (1: The Cultural Weight of the Two Clocks)
+- [[Silhouette Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Silver Blooms]] (1: Parlor of the Moon)
+- [[Siphon Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Skeptical]] (1: All Personality Legend Traits)
+- [[Slimes]] (1: The Horizontal Worldbuilding of Enclaves)
+- [[Smoke Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Solvent Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Sonic Boom Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Soul Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Soul Binding]] (1: The Full Physics Chain)
+- [[Soul Tuning Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Soundproofing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Spiritual Tracer]] (1: 5. Magic Leaves Traces Behind)
+- [[Stable Harmonic Channel Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Stage Performer]] (1: All Personality Legend Traits)
+- [[Starved Hound]] (1: Eight-Born Paths)
+- [[Static Dampening Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Stellar Covenants]] (1: Ascension of Legends into the Stellar Legacy Score)
+- [[Stream Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Stubborn]] (1: All Personality Legend Traits)
+- [[Subduing Hate]] (1: Outer God)
+- [[Superconductivity Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Sustain Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Sworn Duet]] (1: The Affection System and Relational Echoing Bonds)
+- [[Telekinesis Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Telemetry Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Telepathy Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Tempering Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[The Forecaster]] (1: Gayviene)
+- [[The Soul Trap]] (1: The Imperium Obsessus)
+- [[The Weeping Sky?]] (1: Resonance Motif Awakening: The Judgement of One Million Eyes)
+- [[Thermal Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Threat Cartographer]] (1: All Personality Legend Traits)
+- [[Tide Singing Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Time Bubble Arts]] (1: Miss Nyctilia)
+- [[Topological Gate]] (1: The Visual Identity of the Heptastave)
+- [[Toxin Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Trading Enclave]] (1: The Horizontal Worldbuilding of Enclaves)
+- [[Traveling Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Triad]] (1: Legend Traits and their importance)
+- [[Trusting]] (1: All Personality Legend Traits)
+- [[Twinned State Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Utopian Visionary]] (1: Cordelia)
+- [[Vampire]] (1: The Trauma of the Outer Gods: The Danger of Divine Dependence)
+- [[Veiling Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Vein Grafting Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Velocity Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Vengeful]] (1: All Personality Legend Traits)
+- [[Verdant Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Visibility Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Vitrification Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Vivisection Arts]] (1: The Magic Arts of the Seven Bindings)
+- [[Vow Orchids]] (1: Vow Mark)
+- [[Vowed Nemesis]] (1: The Affection System and Relational Echoing Bonds)
+- [[Waltz of Wandering Love]] (1: 5. Magic Leaves Traces Behind)
+- [[Wandering Libretto]] (1: Iridia)
+- [[Water Magic]] (1: The Magic Arts of the Seven Bindings)
+- [[Witness Memorialist]] (1: All Personality Legend Traits)
+- [[Wolf Tone Institute]] (1: Institutional Exploitation)
+- [[Wound Resonance]] (1: Evolution of Enclaves across Ages)
+
+## Notes not imported
+
+- Worldbuilding/Events/Achievement.md: excluded by the manifest
+- Worldbuilding/Game Systems/Combat System.md: excluded by the manifest
+- Worldbuilding/Game Systems/Environment Logic.md: excluded by the manifest
+- Worldbuilding/Game Systems/Event System Logic.md: excluded by the manifest
+- Worldbuilding/Game Systems/Game Logic.md: excluded by the manifest
+- Worldbuilding/Game Systems/Government Logic.md: excluded by the manifest
+- Worldbuilding/Game Systems/My Statement on AI.md: excluded by the manifest
+- Worldbuilding/Gateway To Genesis.md: excluded by the manifest
+- Worldbuilding/Mythology/Mythos/Humanity.md: empty
+- Worldbuilding/Mythology/Mythos/Lost Cycle.md: empty
+- Worldbuilding/Origin of Magic/Conduits of Magic/Grand Thread Rings.md: empty
+- Worldbuilding/Origin of Magic/Conduits of Magic/Harmonic Entanglement.md: empty
+- Worldbuilding/Origin of Magic/Conduits of Magic/Probability Amplitudes.md: empty
+- Worldbuilding/Origin of Magic/Conduits of Magic/Resonance Anchors.md: empty
+- Worldbuilding/Origin of Magic/Conduits of Magic/Strand Pool.md: empty
+- Worldbuilding/Origin of Magic/Magical Resources/Resources.md: empty
+- Worldbuilding/Origin of Magic/Root of Evil/Discant.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Awakened State.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Dyad Chord.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Major Note.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Minor Note.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Tetrad Chord.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Triad Chord.md: empty
+- Worldbuilding/Origin of Magic/Spellweaving/Unison.md: empty
+- Worldbuilding/Rise & Fall, Crisis/Crisis/Crisis Objects/Luminant Rot.md: empty
+- Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 0/Old World Remnants.md: empty
+- Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 1/Age of Renewal.md: empty
+- Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 2/Age of Embers.md: empty
+- Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 4/Age of Bells.md: nothing in it is lore
+- Worldbuilding/Society/Auric Order/Age of Humanity.md: empty
+- Worldbuilding/Society/Auric Order/The One True God.md: empty
+- Worldbuilding/Society/Characters/Ages 1/Junius.md: empty
+- Worldbuilding/Society/Characters/Ages 1/Leaf.md: empty
+- Worldbuilding/Society/Characters/Ages 2/Kael.md: empty
+- Worldbuilding/Society/Characters/Ages 2/Kyvy.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Adel.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Arioch.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Destra.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Erastus.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Kaia.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Lucetta.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Pagiel.md: empty
+- Worldbuilding/Society/Characters/Ages 3/Seraph.md: empty
+- Worldbuilding/Society/Characters/Ages 4/Vals Jenner.md: empty
+- Worldbuilding/Society/Characters/Ages 5/Elygia.md: empty
+- Worldbuilding/Society/Characters/Scrap.md: empty
+- Worldbuilding/Society/Civilization.md: nothing in it is lore
+- Worldbuilding/Society/Societal Resources/Faith/Piety.md: empty
+- Worldbuilding/Society/Societal Resources/Places/District.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Acceptance.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Catharsis.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Defiance.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Lucidity.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Meaning.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Rebirth.md: empty
+- Worldbuilding/Society/Stellar Legacy/Fragment of Vision.md: empty
+- Worldbuilding/Society/Stellar Legacy/Great Concertist.md: empty
+- Worldbuilding/Society/Stellar Legacy/Great Spellweaver.md: empty
+- Worldbuilding/Society/Stellar Legacy/Legend Title.md: empty
+- Worldbuilding/Society/Stellar Legacy/Lesser Opus.md: empty
+- Worldbuilding/Society/Stellar Legacy/Lyrical Fragment.md: empty
+- Worldbuilding/Society/Stellar Legacy/Magnum Opus.md: empty
+- Worldbuilding/Society/Stellar Legacy/Personality Traits/Starting/Hot-Headed.md: empty
+- Worldbuilding/Society/Stellar Legacy/Slayer Magnum Opus.md: empty
+- Worldbuilding/Society/Stellar Legacy/Story Affinity.md: empty
+- Worldbuilding/Truths, Chaos, Rituals/Old Testament/Seven Archangels.md: empty
+- Worldbuilding/World Environment/Atonalis/Sectile/The Forecaster.md: empty
+- Worldbuilding/World Environment/Civilizations/Cities/Babmer K'ahn-Jing.md: empty
+- Worldbuilding/World Environment/Enclaves/Indulgent/Indulgent Enclave.md: empty
+
+## Entries
+
+Every entry by shelf, where its text comes from, and each passage of the note left out (or kept although it looked like a design note).
+
+### Age of Desolation
+
+- **Agromagical Conclaves** (`agromagical-conclaves`, Conclave) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 2405 characters
+- **Auric Peach** (`auric-peach`, Crop) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 2161 characters
+- **Food** (`food`, Vital Resource) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 192 characters
+- **Golden Ash** (`golden-ash`, Soil Amendment) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 1253 characters
+- **Old World Relics** (`old-world-relics`, Relic) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 1493 characters
+- **Old World Remnants** (`old-world-remnants`, Section) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 0/Age of Desolation.md`: 150 characters
+- **Peach Sickness** (`peach-sickness`, Affliction) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 2271 characters
+- **Phosflare** (`phosflare`, Ore) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 921 characters
+- **Ruin-Song** (`ruin-song`, Phenomenon) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 629 characters
+- **Searstone** (`searstone`, Ore) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 937 characters
+
+### Ages
+
+- **Age of Archways** (`age-of-archways`, Age IV) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 4/Age of Archways.md`: 6 characters
+- **Age of Auroral Ribbons** (`age-of-auroral-ribbons`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Age of Auroral Ribbons.md`: 125 characters
+- **Age of Behemoths** (`age-of-behemoths`, Age II) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 2/Age of Behemoths.md`: 111 characters
+- **Age of Blood** (`age-of-blood`, Age VII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 7/Age of Blood.md`: 124 characters
+- **Age of Candles** (`age-of-candles`, Age IV) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 4/Age of Candles.md`: 10 characters
+- **Age of Chimeras** (`age-of-chimeras`, Age X) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 10/Age of Chimeras.md`: 472 characters
+- **Age of Covens** (`age-of-covens`, Age V) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 5/Age of Covens.md`: 20 characters
+- **Age of Crowns** (`age-of-crowns`, Age V) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 5/Age of Crowns.md`: 41 characters
+- **Age of Desolation** (`age-of-desolation`, Age 0) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 0/Age of Desolation.md`: 2224 characters
+  - left out (talks about the game ("the game")): The starting point of the Ages for the game, it pertains to Age 0 as it isn't itself a proper age but rather t...
+- **Age of False Moons** (`age-of-false-moons`, Age XIII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 13/Age of False Moons.md`: 95 characters
+- **Age of Glyphs** (`age-of-glyphs`, Age II) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 2/Age of Glyphs.md`: 1286 characters
+- **Age of Golden Roses** (`age-of-golden-roses`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Age of Golden Roses.md`: 518 characters
+- **Age of High Courts** (`age-of-high-courts`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Age of High Courts.md`: 33 characters
+- **Age of Horrors** (`age-of-horrors`, Age V) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 5/Age of Horrors.md`: 62 characters
+- **Age of Hymns** (`age-of-hymns`, Age I) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 1/Age of Hymns.md`: 141 characters
+- **Age of Hyperphantasia** (`age-of-hyperphantasia`, Age XI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 11/Age of Hyperphantasia.md`: 747 characters
+- **Age of Legends** (`age-of-legends`, Age III) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 3/Age of Legends.md`: 278 characters
+- **Age of Mirrors** (`age-of-mirrors`, Age VII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 7/Age of Mirrors.md`: 37 characters
+- **Age of Sealing Iron** (`age-of-sealing-iron`, Age IX) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 9/Age of Sealing Iron.md`: 115 characters, in 5 sections
+- **Age of Silk** (`age-of-silk`, Age III) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 3/Age of Silk.md`: 112 characters
+- **Age of Simulations** (`age-of-simulations`, Age XII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 12/Age of Simulations.md`: 69 characters
+- **Age of Singularity** (`age-of-singularity`, Age XIII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 13/Age of Singularity.md`: 87 characters
+- **Age of Spirit Petals** (`age-of-spirit-petals`, Age V) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 5/Age of Spirit Petals.md`: 49 characters
+- **Age of Starlight** (`age-of-starlight`, Age XI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 11/Age of Starlight.md`: 388 characters
+- **Age of The End** (`age-of-the-end`, Age XIII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 13/Age of The End.md`: 2701 characters
+  - left out (talks about the game ("Third Actor")): "The Original Ripple, The Infinite Void, and the Known Universe all began with the Third Actor, and Arcanoria...
+  - left out (talks about the game ("the player")): The Weight of Change, the Weight of Value, the Weight of Potential, and the Weight of Purpose, the Weight of I...
+  - left out (talks about the game ("the player")): Thus, the "Final Motif Awakening Wish" is the resolution of the last directive of the Known Universe. It is th...
+  - left out (talks about the game ("the player")): - The End of the Third Actor: If the Choice of the End is successfully navigated this is one of the two "Final...
+  - left out (talks about the game ("the player")): (Hesitant, with tears in her eyes looking directly at the player)
+  - left out (talks about the game ("cinematics")): After choosing the End of the Third Actor, the final sequence of the credits will slowly burn all of the memor...
+  - left out (talks about the game ("save file")): The Auric Aria will break all of her Composure as the and she cries while the credits will be reducing with a...
+  - left out (talks about the game ("the game")): The crucial part here is that the first half of "the credits" isn't actually the credits of the game, it is th...
+  - left out (talks about the game ("Third Actor")): The very end of the credits will feature Selenea, Lacrimosa, and the Auric Aria with their respective titles l...
+  - left out (talks about the game ("Gateway To Genesis")): "Congratulations, for becoming the Gateway To Genesis. And within it, transforming the loss into making real t...
+  - left out (talks about the game ("save file")): While the save file itself gets permanently deleted this will unlock the final menu screen of Gateway To Genes...
+  - left out (talks about the game ("the player")): The theme of the menu is the continuation of the very song of the end, which is the Auric Aria's raw harmony o...
+  - left out (talks about the game ("the game")): If the game is completed at 100% the game itself will grant too the rarest Achievement itself of the same name...
+  - left out (talks about the game ("save file")): There is one easter egg, however, if for whatever reason the user created a back-up of their save file then er...
+- **Age of the False Messiah** (`age-of-the-false-messiah`, Age III) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 3/Age of the False Messiah.md`: 522 characters
+- **Age of the Hypermage** (`age-of-the-hypermage`, Age XIII) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 13/Age of the Hypermage.md`: 126 characters
+- **Age of the Sacred Cross** (`age-of-the-sacred-cross`, Age V) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 5/Age of the Sacred Cross.md`: 39 characters
+- **Age of the Seven Threads** (`age-of-the-seven-threads`, Age III) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 3/Age of the Seven Threads.md`: 415 characters
+- **Age of Torn Banners** (`age-of-torn-banners`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Age of Torn Banners.md`: 58 characters
+- **Age of Velvet Elegance** (`age-of-velvet-elegance`, Age IX) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 9/Age of Velvet Elegance.md`: 1205 characters, in 3 sections
+- **Age of Vessels** (`age-of-vessels`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Age of Vessels.md`: 83 characters
+- **Age of Wayfarers** (`age-of-wayfarers`, Age IV) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 4/Age of Wayfarers.md`: 29 characters
+- **Ages** (`ages`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages.md`: 2465 characters, in 4 sections, quiet
+  - left out (talks about the game ("the player")): All Ages have branching logic depending on the Age Crisis triggered from certain checks of resources, populati...
+  - left out (talks about the game ("cinematic")): For example the Weight of Flaw being in industrialization such as the Age of Sealing Iron or Age of Velvet Ele...
+  - left out (talks about the game ("Gateway To Genesis")): The entire thesis of Arcanoria, both magical, Auric Heptacode, and philosophical Seven Weights, are explained...
+  - left out (talks about the game ("The game")): The only odd one out are Ages 0. which represent the Weight of Change. This is to mask that the 14 Ages of Arc...
+  - left out (introduces a passage left out): Ages:
+  - left out (names a real-world work ("Frieren")): - Age of Legends | Aureus Pillar (Golden Age) | Epic Fantasy (Frieren's Flamme Mythical Mages) - Age of the Se...
+  - left out (introduces a passage left out): Ages:
+  - left out (names a real-world work ("Frieren")): - Age of Bells | Aureus Pillar + Waltz Pillar (Golden Age) | Light Fantasy - Age of Archways | Not Aligned in...
+  - left out (names a real-world work ("Secrets of the Silent Witch")): The Legend of the Killer of the Great Expanse (Syvanth) begins and becomes popularized. He eventually dies, bu...
+  - left out (talks about the game ("mechanics")): Focus on Duchy to Kingdom building, rags to riches stories, religion primacy, crusades, and similar mechanics.
+  - left out (talks about the game ("Mechanics")): First Diplomatic Heavy Mechanics, Starting Espionage Organisms, Border Skirmishes, Ideology / Theology, Rivals...
+  - left out (talks about the game ("players")): First Chorus Pillar vs Aureus Pillar, then the internal divide between them will splinter factions of Aureus P...
+  - left out (names a real-world work ("Pasteur")): Development of surgery on Pure Light beings by Cadmus Tacet, he's cruel but does necessary advancements, inspi...
+  - left out (introduces a passage left out): Ages:
+  - left out (names a real-world work ("Ninja Scroll")): - Age of Polyphony (Golden Age) | Waltz Pillar | Light Fantasy - Age of Torn Banners (Classical Age) | Regalia...
+  - left out (talks about the game ("hard mode")): The Age Crisis teaches that all Civilizations have an end, and that every end is just a beginning. That's the...
+  - left out (talks about the game ("the game")): The Polychord Crisis is going to be the AC, BC of the game. After Polychord Crisis (APC), Before Polychord Cri...
+  - left out (names a real-world work ("Magical Girls")): - Age of Starlight (Golden Age) | Aureus Pillar | Magical Girls using Primordial Stars for Consonance. - Age o...
+  - left out (talks about the game ("cinematic")): The end of this group of Ages features the cinematic of breaching the hyperspace for the first time with a Voi...
+  - left out (talks about the game ("Third Actor")): Fighting Alien Stars and other horrors beyond the firmament and the Stellar Veil while making a permanent fix...
+  - left out (section "Additional Mechanics of Ages" is about the game): ## Additional Mechanics of Ages
+  - left out (section "Additional Mechanics of Ages" is about the game): The list of the minor crisis that separate the Ages by Act of Fate can be many varied Events that include but...
+  - left out (section "Additional Mechanics of Ages" is about the game): - Famine cults choke the wild plains. - Lava floods threaten settlements. - Plague glyphs ravage rivers. - Sym...
+  - left out (section "Additional Mechanics of Ages" is about the game): All canonical Constellations, meaning the historical characters of Arcanoria that aren't made through emergent...
+  - left out (section "Additional Mechanics of Ages" is about the game): This means two things:
+  - left out (section "Additional Mechanics of Ages" is about the game): - A canonical Constellation can't be liberated into Stardust until the concept of time itself ends in the Age...
+  - left out (section "Additional Mechanics of Ages" is about the game): However, beyond canonical Constellations becoming available in the Third Reset onwards after Civilization lear...
+- **Polychord Crisis** (`polychord-crisis`, Age VI) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 6/Polychord Crisis.md`: 190 characters
+  - left out (talks about the game ("the game")): A type of Age Crisis resulting in the firing of the ultimate weapon by the use of a Hyper Chord. Involves Prim...
+
+### Chaos
+
+- **All-Loving Moon** (`all-loving-moon`, Outer God Ritual) from `Worldbuilding/Truths, Chaos, Rituals/Outer God Rituals/All-Loving Moon.md`: 3263 characters
+  - left out (real-world reference ("inspired by")): The Sympathetic Vibration gravity pull is especially important during the Ballad of the Fall of Hollowmarch. T...
+- **Anxithor** (`anxithor`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Anxithor.md`: 733 characters
+- **Atonalis** (`atonalis`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Atonalis.md`: 3461 characters, in 5 sections
+- **Corruption** (`corruption`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Corruption.md`: 272 characters, quiet
+- **Dissonance** (`dissonance`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Dissonance.md`: 100 characters, quiet
+- **Eight-Born Paths** (`eight-born-paths`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Eight-Born Paths.md`: 10697 characters
+- **Eirenesis Anakriach** (`eirenesis-anakriach`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/Eirenesis Anakriach.md`: 1073 characters, in 4 sections
+- **Erosyx** (`erosyx`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Erosyx.md`: 362 characters, in 3 sections
+- **Flesh-Binding Ritual** (`flesh-binding-ritual`, Outer God Ritual) from `Worldbuilding/Truths, Chaos, Rituals/Outer God Rituals/Flesh-Binding Ritual.md`: 595 characters
+- **Formless Masses** (`formless-masses`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Formless Masses.md`: 698 characters
+- **Lyd, The First Beloved** (`lyd-the-first-beloved`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/Lyd, The First Beloved.md`: 1766 characters, in 5 sections
+- **Original Eight** (`original-eight`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/Original Eight.md`: 5422 characters
+  - left out (real-world reference ("real world")): - Anxithor | Eirenesis Anakriach | Cindergale: The first ever creation and the Auric Aria's trembling hands th...
+- **Parasite Atonalis** (`parasite-atonalis`, Atonalis) from `Worldbuilding/World Environment/Atonalis/Nascent/Parasite Atonalis.md`: 540 characters, in 5 sections
+  - left out (section "Mechanics: How Luminance Becomes a Weapon" is about the game): #### Mechanics: How Luminance Becomes a Weapon
+  - left out (section "Mechanics: How Luminance Becomes a Weapon" is about the game): Luminance, in its consonant form, is Sufficient Precision—the exact articulation of objective truth. It heals...
+  - left out (section "Mechanics: How Luminance Becomes a Weapon" is about the game): The Confessor inverts this entirely. It weaponizes truth as exposure—not to heal, but to humiliate.
+  - left out (section "Mechanics: How Luminance Becomes a Weapon" is about the game): The Mechanism:
+  - left out (section "Mechanics: How Luminance Becomes a Weapon" is about the game): 1. Resonant Probing: The Confessor first establishes a sympathetic vibration with its victim, not through Flux...
+- **Primal Discordia** (`primal-discordia`, Root of Evil) from `Worldbuilding/Origin of Magic/Root of Evil/Primal Discordia.md`: 350 characters
+- **Purest of Love** (`purest-of-love`, Outer God Ritual) from `Worldbuilding/Truths, Chaos, Rituals/Outer God Rituals/Purest of Love.md`: 3574 characters, in 4 sections
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): # Appendix B: The Mechanics of The Hollowing as "Pain Removal"
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): Lacrimosa rise comes from societal foundation and previous crisis:
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): The Equation of The Hollowing:
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): $$\text{Trauma (Plague)} + \text{Isolation (Death of Family)} = \text{Unbearable Dissonance}$$
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): $$\text{Unbearable Dissonance} + \text{Hollowing (Lacrimosa)} = \text{Silence / Peace}$$
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): - The "Purest of Love" = The removal of the "Self" variable. If $Self = 0$, then $Suffering = 0$. In exchange...
+  - left out (section "Appendix B: The Mechanics of The Hollowing as "Pain Removal"" is about the game): | Path | Mental Disorder Analogue | The Wound | The Cult's Solution | | ---------------------- | -------------...
+- **Shrieking Terror** (`shrieking-terror`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/Shrieking Terror.md`: 1021 characters
+- **The Amber Wonderland** (`the-amber-wonderland`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/The Amber Wonderland.md`: 7573 characters, in 4 sections
+- **The Cradle of Echoes** (`the-cradle-of-echoes`, Atonalis) from `Worldbuilding/World Environment/Atonalis/Fracted/The Cradle of Echoes.md`: 200 characters
+- **The Imperium Obsessus** (`the-imperium-obsessus`, Original Eight) from `Worldbuilding/World Environment/Atonalis/Original Eight/The Imperium Obsessus.md`: 1623 characters, in 6 sections
+  - left out (talks about the game ("Gateway To Genesis")): While it is possible to defeat, beating the False God is a feat akin to vanquishing a real deity, it grants th...
+  - left out (talks about the game ("Mechanics")): Managing Composure vs. Feeding Mechanics: As a Violux Atonalis, the Imperium Obsessus feeds on transgression,...
+
+### Cosmos
+
+- **A True Sine Wave** (`a-true-sine-wave`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/A True Sine Wave.md`: 84 characters
+- **Act of Fate** (`act-of-fate`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/Act of Fate.md`: 398 characters
+- **Anthropomorphic Shape** (`anthropomorphic-shape`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Anthropomorphic Shape.md`: 903 characters
+- **Auric Heptacode** (`auric-heptacode`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/Auric Heptacode.md`: 7007 characters
+- **Celestial Ensnaring Mirror** (`celestial-ensnaring-mirror`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Celestial Ensnaring Mirror.md`: 782 characters
+- **Consonance** (`consonance`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/Consonance.md`: 99 characters, quiet
+- **Cosmic Motion** (`cosmic-motion`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Cosmic Motion.md`: 209 characters
+- **Known Universe** (`known-universe`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Known Universe.md`: 287 characters, in 9 sections
+  - left out (talks about the game ("Third Actor")): The Third Actor interacts with it and sets in motion the Original Ripple, which awakens Primal White Noise in...
+  - left out (talks about the game ("Third Actor")): The Third Actor watches from beyond the veil.
+- **Moon** (`moon`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Moon.md`: 10645 characters, quiet
+- **Original Ripple** (`original-ripple`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Original Ripple.md`: 34 characters
+- **Primal White Noise** (`primal-white-noise`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Primal White Noise.md`: 10 characters
+- **Primordial Star** (`primordial-star`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Primordial Star.md`: 722 characters
+- **Proto-Universe** (`proto-universe`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/Proto-Universe.md`: 214 characters
+- **The Eternal Symphony** (`the-eternal-symphony`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/The Eternal Symphony.md`: 1945 characters
+- **The First Overtone** (`the-first-overtone`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/The First Overtone.md`: 2553 characters
+- **The Infinite Void** (`the-infinite-void`, Celestial Object) from `Worldbuilding/Origin of Magic/Celestial Objects/The Infinite Void.md`: 136 characters
+- **Trinity Harmony** (`trinity-harmony`, The One Symphony) from `Worldbuilding/Origin of Magic/The One Symphony/Trinity Harmony.md`: 2137 characters
+
+### Crises
+
+- **A Pact of a Thousand Eyes** (`a-pact-of-a-thousand-eyes`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/A Pact of a Thousand Eyes.md`: 328 characters
+- **Age Crisis** (`age-crisis`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Age Crisis.md`: 1903 characters
+  - left out (talks about the game ("snowball")): Gateway To Genesis implements Age Crisis that are triggered based on societal development and present challeng...
+  - left out (talks about the game ("incremental")): Age Crisis behave similar to a board wipe, but keeping technologies, World Truths, Divine Reset incremental po...
+  - left out (real-world reference ("real-world")): Age Crisis never announce themselves, initially they look like the Events of an Act of Fate which tend to be m...
+- **Cataclysmic Aftermath** (`cataclysmic-aftermath`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Cataclysmic Aftermath.md; Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 2718 characters
+  - left out (talks about the game ("Gateway To Genesis")): The Cataclysmic Aftermaths, also known as the Great Filters are the three distinct Age Crisis of Gateway To Ge...
+  - left out (introduces a passage left out): The three Cataclysmic Aftermaths acting as Great Filters are the following Age Crisis:
+  - KEPT although talks about the game ("the game"): - The Polychord Crisis: The first filter in Ages VI that is the culmination of the Holy War that ends with the...
+  - left out (talks about the game ("gameplay")): Each of them are a pivotal moment for Arcanoria and have each several implications on unlocking various layers...
+  - left out (introduces a passage left out): The resets are the following:
+  - left out (talks about the game ("the Game")): - First Reset: The Old Testament era when the Auric Aria came back from her silence of the Lost Cycle. Before...
+  - left out (introduces a passage left out): The Master-Key evolves in 4 phases:
+  - left out (talks about the game ("Early Game")): - Tier 1: Acquired after Civilization fails the doomed Second Reset Polychord Crisis and the Auric Aria uses t...
+  - left out (talks about the game ("gameplay")): This major Age Crisis unlocks two layers of gameplay:
+  - left out (talks about the game ("mechanic")): - It signals the end of the Second Reset through The Truth of Arcanoria that unlocks many layers, secrets, the...
+  - left out (talks about the game ("Gateway To Genesis")): This is the second Age Crisis and Great Filter that separates the previous Ages which is triggered by the acce...
+  - left out (talks about the game ("cinematic")): - The hyper accelerationist Institute of Ages XI, Wolf Bomb Anti Existence. onwards believes in soteriology by...
+  - left out (talks about the game ("Third Actor")): While the MAD Wolf Bomb Annihilation scenario does not trigger Primal White Noise the reality is essentially u...
+  - left out (talks about the game ("Gateway To Genesis")): In this stage, the application of Divine Reset is an act of mercy to go back into the past, Gateway To Genesis...
+  - left out (talks about the game ("Third Actor")): - This is the true Primal White Noise and it's the original static that The Ultimate Weapon was made to combat...
+  - left out (talks about the game ("the player")): The presence of A True Sine Wave is the resolution of the conflict, and having every layer of Tier 1 through 4...
+  - left out (talks about the game ("Gateway To Genesis")): The last Cataclysmic Aftermath is the Choice of the End which directs any of the 3 endings of Gateway To Genes...
+  - left out (talks about the game ("save file")): - The End of Arcanoria, by having A True Sine Wave reverberate through The First Overtone in a failed state ef...
+- **Great Fracture** (`great-fracture`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Great Fracture.md`: 103 characters
+- **Great Plague** (`great-plague`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Great Plague.md`: 4006 characters, in 11 sections
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): ### THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): WAVE I: THE SILENT VECTORS (Month 0-12)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outbreak zones: Capitals, major settlements, trade nodes (high-Confluence zones with heavy extractor activity)...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Trigger event:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Great Hunger relief festival causes massive synchronized spellcasting - Leylines extraction spikes from 30-4...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): What's actually happening:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Bacterial colonization proceeds slowly (low magical energy available) - EC production is gradual; immune sys...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Why moth vector remains invisible:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Disease looks like natural consumption/tuberculosis - Aromatics seem to help (by accident, through social is...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Authority response:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Identifies disease as consumption (partially correct) - Implements aromatics (completely ineffective but see...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Mortality: 25-40% in affected capitals over 12 months; spreads via refugee and trade networks
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outcome: Wave I subsides in origin capitals as saturation stabilizes; false confidence spreads; infected refug...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): WAVE II: ESCALATION & INFRASTRUCTURE CASCADE (Month 12-36)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Phase A: Initial Escalation in Refugee Zones (Month 12-18)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outbreak zones: Refugee settlements, trade hubs, secondary cities (receiving refugee populations)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Confluence saturation: 40-55% (baseline + refugee moths + continued extraction)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Disease manifestation: Consumption → transition to Dancing Plague
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): What happens:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Refugees fleeing capitals carry infection + massive moth populations - Refugee camps concentrate high-satura...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): In refugee camps:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Newly infected reach Stage 2 quickly (4-7 days) - EC production is substantial and magical resonance becomes...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Authority response:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Observe dancing; conclude "possession or madness" - Escalate aromatics (incorrect response) - Fumigate (kill...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Infrastructure stress begins:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Deaths reach 40-50% in refugee camps - Maintenance staff for extractors are dead/unavailable/quarantined - E...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Mortality: 50-60% in refugee zones over 6 months
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Phase B: Infrastructure Failure & First Cascades (Month 18-30)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outbreak zones: Secondary cities, extraction sites (where infrastructure is failing) Confluence saturation: 60...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): What happens:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Unmaintained extractors accumulate Dual Confluence Stream without operational release - Saturation spikes fr...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): First cascade events:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Infected person in Frenzy stage enters high-saturation zone - Motor seizure + Dissonance + person's conducti...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): What cascade event does:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Raw Aetherlight discharges through conductive paths (person's nervous system, extractors, ground) - Person a...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade frequency:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Month 18-24: Cascade every few days (triggered only by Manifestation 3 individuals in peak zones) - Month 24...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Infrastructure effects:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Extractors damaged by cascades - Authority attempts to activate additional extractors (to compensate for los...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Emberwhisper fallout begins (Month 24+):
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Cascades release Aetherlight - Particles accumulate in atmosphere - Visible shimmer/pale glow in sky develop...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade consequence—secondary cascade:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Emberwhisper particles fall as rain - Particles destabilize on soil contact - Rain detonates on impact: seco...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Mortality: 60-80% in secondary cities over 18 months
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Phase C: Systemic Failure (Month 30-36)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outbreak zones: All high-saturation zones simultaneously Confluence saturation: 75-85% (critical cascade zone;...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): What happens:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Saturation approaches tipping point in multiple regions - Cascades become regular occurrence (daily or multi...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade sources multiply:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Infected individuals (fewer remaining, but still occurring) - Residual EC in soil triggering secondary casca...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Authority collapse:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Confidence in response completely shattered - Authority structures destroyed (officials dead, fled, or power...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Environmental deterioration:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Ground becomes contaminated by Vibrational Fallout. - Emberwhisper pure embers poisons water supplies - Regi...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Mortality: 70-85% in high-saturation zones over 36 months
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): WAVE III: ENDEMIC PHASE & ADAPTATION (Month 36+)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): By month 36, plague has transitioned from epidemic to endemic status. All regions are simultaneously affected;...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Low-Saturation Zones (5-40% imbalance)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Disease manifestation: Manifestation 1 (Consumption) only
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade risk: None (saturation too low)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outcome:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Plague becomes endemic disease, not epidemic - 2-5% annual mortality (manageable) - Civilization continues i...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Why these zones survive:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Saturation too low for cascade threshold - No Dissonance bloom (slow-progression manifestation) - Disease ki...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Moderate-Saturation Zones (40-75% imbalance)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Disease manifestation: Manifestation 1-2 boundary
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade risk: Episodic (weekly or monthly, not constant)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outcome:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Cascades occur but are not constant - Infection rate stabilizes to endemic level - Some settlements attempt...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Why civilization survives here:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Saturation below spontaneous cascade point - Careful management can prevent tipping - Extractors can be main...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): High-Saturation Zones (75%+ imbalance)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Disease manifestation: Manifestation 2-3
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Cascade risk: Constant (multiple cascades daily; approaching spontaneous cascade point)
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outcome:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Cascades are daily occurrence - Infrastructure is destroyed - Cascades occur from multiple sources simultane...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Eventually:
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): - Saturation exceeds 90% - System cascades spontaneously without any trigger - Continuous Aetherlight discharg...
+  - left out (section "THE THREE WAVES: PROGRESSION OF CONTINENTAL CATASTROPHE" is about the game): Outcome: 70-85% mortality in high-saturation zones; wastelands form; survivors become nomadic or flee to adapt...
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Player")): Player Psychology: "Medical crisis. Treat it like a disease."
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Player")): Player Conclusion: "The sweet smell is the vector. Control the smell, control the disease."
+  - left out (talks about the game ("Players")): This is the first logical but incomplete conclusion. Players have identified a real symptom and misinterpreted...
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Player")): - Regions with masking show reduced infection - Flavor: "The aromatic masks appear effective. The council cele...
+  - left out (talks about the game ("Player")): Player Psychology: "Success! We understand the problem and we're solving it!"
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Players")): - THIS IS MANIFESTATION 2 of the same plague - Saturation 40 → 50 - Moderate saturation level causes neurologi...
+  - left out (talks about the game ("Player")): Player Psychology: "We have TWO problems now. Disease AND emotional unrest. Or... are they related?"
+  - left out (talks about the game ("players")): Design Insight: Don't hint at connection. Let players think they're managing separate crises. This makes the l...
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Player")): Player Conclusion: "AH! The moths are the vector! They carry the bacteria from person to person!"
+  - left out (talks about the game ("Player")): Player Psychology: "Finally! We understand. The moths are the answer. Eliminate moths = eliminate plague."
+  - left out (talks about the game ("player")): Critical Design: Make the moth theory seem obviously correct. This keeps player focused on wrong solution whil...
+  - left out (talks about the game ("Player")): Player chooses moth control approach:
+  - left out (introduced by a passage left out): - Fumigation (kills outdoor moths) - Pesticides (broad approach) - Farming restrictions (reduce domesticated p...
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("player")): - Saturation 60 → 70 (approaching critical threshold) - Outdoor fumigation kills susceptible moths - Survivors...
+  - left out (talks about the game ("Player")): Player Psychology: "The strategy is working. But at great cost. Should we continue?"
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Player")): Player Realization: "The moth theory was wrong. Something else is happening."
+  - left out (talks about the game ("Players")): What Players Experience:
+  - left out (talks about the game ("Player")): Player Realization: "This is NOT a disease. This is MAGICAL. The problem is magical saturation, not biological...
+  - left out (talks about the game ("Player")): Player Psychology: Horror, realization, desperation.
+  - left out (talks about the game ("Players")): What Players See:
+  - left out (talks about the game ("Mechanics")): Population Loss Mechanics
+  - left out (talks about the game ("UI")): Measurement: Percentage trust in government/authorities (visible on UI from Turn 40+)
+  - left out (talks about the game ("UI")): Measurement: Civilian happiness/satisfaction percentage (visible on UI)
+  - left out (talks about the game ("Player")): - Player deliberately reduces magic use - Costs: -20% production (magic-dependent infrastructure suffers) - Ef...
+  - left out (talks about the game ("mechanics")): (Atonalis breeding, regional variation, survivor psychology, Spellweaver trauma, EC-resonance mechanics, wax)
+  - left out (talks about the game ("mechanics")): |Binding|Response|Outcome| |---|---|---| |Luminance (Precision)|Attempted rational technical solutions; believ...
+  - left out (talks about the game ("MECHANICS")): EXPLORATION 5: EC MAGICAL RESONANCE & DISSONANCE BLOOM MECHANICS
+- **Opposing the Heavens** (`opposing-the-heavens`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Opposing the Heavens.md`: 159 characters
+- **The Birth of the Hyper Chord** (`the-birth-of-the-hyper-chord`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Birth of the Hyper Chord.md`: 346 characters
+- **The Inescapable Hunger** (`the-inescapable-hunger`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 1958 characters, in 9 sections
+  - left out (names a real-world work ("Hollywood")): It is not the Hollywood famine of empty granaries; it is malnutrition and soil death inside apparent abundance...
+  - left out (introduces a passage left out): Key realizations among the survivors:
+  - left out (talks about the game ("HUD")): - Uncultivated land, left alone, slowly shows signs of self‑healing - Fields treated with light, measured ash...
+  - left out (section "How to use this entry in your Arcanoria canon" is about the game): ## How to use this entry in your Arcanoria canon
+  - left out (section "How to use this entry in your Arcanoria canon" is about the game): As a final, through description for the encyclopedia / codex:
+  - left out (section "How to use this entry in your Arcanoria canon" is about the game): > The Auric Peach Famine > The Auric Peach Famine (also called The Ash‑Bread Winter, The First Reckoning, and...
+  - left out (section "How to use this entry in your Arcanoria canon" is about the game): If you imagine this dropped into your in‑game codex or an Age 0 historian’s gloss, does this feel aligned with...
+  - left out (talks about the game ("playthroughs")): The Inescapable Hunger always culminates the Age of Desolation and always leads into the Age of Renewal. What...
+  - left out (introduced by a passage left out): - How deep the famine bites. - How many—and what kind of—people and Enclaves survive. - How scarred or resilie...
+  - left out (names a real-world work ("Elden Ring")): Before the famine fully manifests, the Age of Desolation has a specific, mournful aesthetic. It should feel ve...
+  - left out (talks about the game ("Mechanically")): Mechanically, this acts as a visual HUD layered into the world: the player reads the land’s slow decline at a...
+  - left out (talks about the game ("in‑world")): What no one in‑world recognizes yet is that the Auric peach is not salvation. It is a single note being forced...
+  - left out (introduces a passage left out): On the systemic level, this phase:
+  - left out (talks about the game ("the player")): - Teaches the player that Auric orchards are the safest, fastest way to stabilize population. - Rewards early...
+  - left out (talks about the game ("In game")): In game terms, golden ash is a high‑tier, high‑risk soil modifier:
+  - left out (introduced by a passage left out): - Light application – stabilizes pH, improves structure, moderately boosts yield; sustainable if used sparingl...
+  - left out (talks about the game ("Mechanically")): Mechanically:
+  - left out (game data (after "Mechanically:")): - Crushed and over‑applied, they push orchards into short, grotesque abundance (huge harvests, lurid peach glo...
+  - left out (section "Systemic Role and Progression (Gameplay Layer)" is about the game): ## Systemic Role and Progression (Gameplay Layer)
+  - left out (section "Systemic Role and Progression (Gameplay Layer)" is about the game): In game terms, The Inescapable Hunger is:
+  - left out (section "Systemic Role and Progression (Gameplay Layer)" is about the game): - The fixed Age Crisis of the Age of Desolation (Age 0). - The bridge event into the Age of Renewal—it always...
+  - left out (section "Crisis Progression – Key Beats" is about the game): 1. Invisible Tipping Point - Global population (sum of hamlets, caravans, ruins‑dwellers) exceeds what the cur...
+  - left out (section "Crisis Progression – Key Beats" is about the game): The Inescapable Hunger’s severity—how high the metaphorical “Ash Ledger” climbed—directly affects:
+  - left out (section "Crisis Progression – Key Beats" is about the game): - The number and nature of surviving Enclaves. - The fertility baseline of the world. - How suspicious or reve...
+  - left out (real-world reference ("real-world")): As in real-world famines, people are not immediately starving; they are malnourished. The Peach Sickness is a...
+  - left out (section "Systemic Role and Progression (Gameplay-Level)" is about the game): ## Systemic Role and Progression (Gameplay-Level)
+  - left out (section "Systemic Role and Progression (Gameplay-Level)" is about the game): Systemically, The Inescapable Hunger is:
+  - left out (section "Systemic Role and Progression (Gameplay-Level)" is about the game): - The Age 0 crisis that marks the end-state of the Age of Desolation. - The fixed bridge into the Age of Renew...
+  - left out (section "Key Beats for the Player" is about the game): 1. Unnoticed tipping point: - Global population from scattered settlements crosses a threshold relative to eff...
+  - left out (section "Key Beats for the Player" is about the game): The severity of the famine (how high the world’s “Ash Ledger” climbed, how many regions turned sterile) shapes...
+  - left out (section "Key Beats for the Player" is about the game): - The number of survivors - The rigidity or openness of emergent Enclaves - The starting conditions and narrat...
+  - left out (pasted chat reply ("Below is")): Below is an updated, more agronomically grounded version of the Inescapable Hunger with golden ash as Arcanori...
+  - left out (section "Updated Crisis Logic with Real-World Parallels" is about the game): ## Updated Crisis Logic with Real-World Parallels
+  - left out (pasted chat reply ("Previously, the")): Previously, the Peach Sickness was described in broader “magical scurvy” terms. Now it is more tightly aligned...
+  - left out (real-world reference ("real-world")): - The Auric peach is: - Rich in simple sugars and some “surface harmonics” (energy, a bit of magical Resonance...
+  - left out (pasted chat reply ("Realism mirror")): Realism mirror:
+  - left out (introduced by a passage left out): - Historically, civilizations dependent on a single staple (e.g., polished rice) saw diseases like beriberi, p...
+  - left out (real-world reference ("real-world")): We now model soil chemistry more closely on real-world NPK and pH dynamics, then express it through Arcanorian...
+  - left out (talks about the game ("Players")): Players and NPCs initially treat all three as “philosopher’s stones”—pure miracle inputs poured on until the f...
+  - left out (real-world reference ("real-world")): Golden ash and philosopher-stones remain useful—but only in tiny measured doses set by these Conclaves, echoin...
+  - left out (section "Specific Changes and How They Increase Immersion" is about the game): Here are the concrete adjustments made and why they heighten realism and immersion:
+  - left out (section "Specific Changes and How They Increase Immersion" is about the game): 1. Golden ash explicitly reframed as potash analogue - Change: Golden ash now behaves like wood ash/potash: hi...
+  - left out (section "Specific Changes and How They Increase Immersion" is about the game): All of this keeps the tinge of magic—leyline influence, subtle Resonance, golden hues as a visual language of...
+  - left out (section "Specific Changes and How They Increase Immersion" is about the game): If desired, the next pass can focus on concrete in-game events that explicitly teach these lessons (e.g., an e...
+  - left out (not selected by the manifest): The Auric Peach Famine is the defining Age Crisis of the Age of Desolation (Age 0), the first great “bridge cr...
+  - left out (not selected by the manifest): - Age placement: Concludes the Age of Desolation (Age 0) and seeds the ethos that makes the Age of Renewal pos...
+  - left out (not selected by the manifest): In the meta‑structure of Arcanoria’s 14 Ages and Act‑of‑Fate crises, it is the first proof that an Age Crisis...
+  - left out (not selected by the manifest): The Auric Peach Famine is the arithmetic of too many mouths in a wounded world depending entirely on one mirac...
+  - left out (not selected by the manifest): - Orchard belts ring settlements; trade is rich in pits and saplings. - Cellars are full of dried peaches; shr...
+  - left out (not selected by the manifest): But underneath, three hungers are quietly growing:
+  - left out (not selected by the manifest): 1. Ecological hunger – soils stripped of micro‑life, over‑ashed, chemically and magically imbalanced. 2. Physi...
+  - left out (not selected by the manifest): Before the famine has a name, the Age of Desolation is already primed for disaster.
+  - left out (not selected by the manifest): 1. Exhausted, Fallout‑scarred ground - Fields are laden with Vibrational Fallout from prior Cataclysmic Afterm...
+  - left out (not selected by the manifest): In early Age 0, the Auric peach is framed as salvation, not risk.
+  - left out (not selected by the manifest): - Settlements encircle themselves with orchard belts that function as food banks and soft fortifications. - Tr...
+  - left out (not selected by the manifest): Ignoring the early warning signs—rarer golden fruit, compacted soil, changing ruin‑song—locks Civilization dee...
+  - left out (not selected by the manifest): After years of near‑exclusive peach diets, a diffuse illness emerges across orchard belts: Peach Sickness
+  - left out (not selected by the manifest): Symptoms:
+  - left out (not selected by the manifest): - Bleeding gums, tooth loss, “ashbone” fractures, slow healing, brittle hair and nails - The “Hollow Fullness”...
+  - left out (not selected by the manifest): Underlying cause:
+  - left out (not selected by the manifest): - Auric peaches are rich in sugars and “bright” harmonics but poor in complete proteins, micronutrients, and g...
+  - left out (not selected by the manifest): Because storerooms are still full and orchards still produce pink fruit, communities misinterpret Peach Sickne...
+  - left out (not selected by the manifest): - Plant more trees. - Use more relic‑dust and ash. - Eat more of the failing miracle.
+  - left out (not selected by the manifest): The famine tightens not through scarcity but through misdiagnosis.
+  - left out (not selected by the manifest): As Peach Sickness spreads and yields falter (more brown, fewer golden peaches), desperation leads to more extr...
+  - left out (not selected by the manifest): 1. Golden ash – Arcanoria’s potash analogue - Burning Auric‑infused goldenwood and spreading ash creates explo...
+  - left out (not selected by the manifest): Again, the pattern: short‑term windfall, long‑term collapse, with every “fix” narrowing the ecological base an...
+  - left out (not selected by the manifest): Eventually, three long arcs converge
+  - left out (not selected by the manifest): - Soil exhaustion: continuous peach cultivation plus over‑ash and ore leads to crusted, nutrient‑imbalanced to...
+  - left out (not selected by the manifest): Then the visible, undeniable failure arrives:]
+  - left out (not selected by the manifest): - Orchards blossom but do not set fruit, or produce only withered brown peaches. - Once‑glowing trees go dull,...
+  - left out (not selected by the manifest): This is the true face of the Inescapable Hunger: not just fewer peaches, but a world where the land itself has...
+  - left out (not selected by the manifest): The famine is ultimately resolved not by a single spell or divine intervention, but by a shift in thinking tha...
+  - left out (not selected by the manifest): From these observations emerge Agromagical Conclaves:
+  - left out (not selected by the manifest): - Seed‑keepers, soil‑listeners, and low‑note magicians who rediscover real‑world agriculture as a kind of magi...
+  - left out (not selected by the manifest): This change—land‑as‑chord, not land‑as‑battery—is the conceptual pivot that ends the Age of Desolation and bir...
+  - left out (not selected by the manifest): Also known in later Ages as: The Auric Peach Famine
+  - left out (not selected by the manifest): Tagline: “The world remembers excess; the survivors inherit the bill.”
+  - left out (not selected by the manifest): The Inescapable Hunger is the defining Age Crisis of the Age of Desolation (Age 0). It is not a plague from wi...
+  - left out (not selected by the manifest): After the Cataclysm, scattered survivors endure a few lean but survivable cycles. They relearn how to store fo...
+  - left out (not selected by the manifest): For a brief, fragile moment, it seems the wasteland might settle into a harsh but workable new normal.
+  - left out (not selected by the manifest): Then the numbers tip. The crisis that later Ages will call The Auric Peach Famine begins with a miracle, deepe...
+  - left out (not selected by the manifest): The Inescapable Hunger always leads into the Age of Renewal. What changes is how many, and what kind of, peopl...
+  - left out (not selected by the manifest): The primary food source of this Age is the Auric peach, a fast-growing, shallow-rooted fruit tree that can tak...
+  - left out (not selected by the manifest): - Qualities: - Grows quickly in poor, post-Cataclysm soils. - Produces high caloric yield per area, even under...
+  - left out (not selected by the manifest): In the early Age of Desolation, Auric peaches feel like the last mercy of a silent god. Villages empty their s...
+  - left out (not selected by the manifest): What none of them see yet is that the Auric peach is not salvation. It is a single note mistakenly played as a...
+  - left out (not selected by the manifest): Even before the famine is named, the world is already under quiet strain.
+  - left out (not selected by the manifest): - Exhausted ground: The ash-laden fields are still saturated with Vibrational Fallout; rains fall irregularly,...
+  - left out (not selected by the manifest): Against this backdrop, the Inescapable Hunger unfolds in four broad phases.
+  - left out (not selected by the manifest): The first phase is abundance, or what passes for it in the Age of Desolation.
+  - left out (not selected by the manifest): Once survivors realize that Auric peaches:
+  - left out (not selected by the manifest): - Grow from pit to fruit in a fraction of a normal tree’s time, - Bear reliably even in thin, ashen soils, - A...
+  - left out (not selected by the manifest): they reorganize entire lifeways around orchards:
+  - left out (not selected by the manifest): - Villages ring themselves in “orchard belts.” - Caravans trade for seedlings and pits instead of unfamiliar s...
+  - left out (not selected by the manifest): The decision to depend on Auric peaches is rational. In a broken world with little knowledge, the miracle that...
+  - left out (not selected by the manifest): Within a few cycles:
+  - left out (not selected by the manifest): - Marginal fields of grains and roots are never replanted. - Hills, valleys, and former forest edges are clear...
+  - left out (not selected by the manifest): The danger is invisible: a system that looks stable, but in which every stomach, settlement, and trade route d...
+  - left out (not selected by the manifest): After years of peach-dominant diets, a strange sickness appears.
+  - left out (not selected by the manifest): People living almost entirely on Auric peaches begin to suffer:
+  - left out (not selected by the manifest): - Bleeding gums; wounds that refuse to close. - Bruises from minor blows; “ashbone” fractures that fail to kni...
+  - left out (not selected by the manifest): Healers describe it as if the body’s threads are “plump but hollow”—the flesh is full of Resonance from the fr...
+  - left out (not selected by the manifest): In truth:
+  - left out (not selected by the manifest): - Auric peaches are rich in simple sugars and superficial, “bright” harmonics. - They are poor in the subtle m...
+  - left out (not selected by the manifest): Yet because orchards are still heavy with pink fruit, most communities do not blame the peaches. If anything,...
+  - left out (not selected by the manifest): As the Peach Sickness spreads and yields begin to falter—more pink and brown fruit, fewer golden—people turn t...
+  - left out (not selected by the manifest): Across the land, remnants of golden trees and ornamented Auric hardwoods stand like skeletal monuments. In ear...
+  - left out (not selected by the manifest): Desperate farmers:
+  - left out (not selected by the manifest): - Fell what remains of them. - Burn the wood in great pits. - Gather the golden ash and spread it across their...
+  - left out (not selected by the manifest): Golden ash acts as Arcanoria’s version of potash:
+  - left out (not selected by the manifest): - In moderate doses: - It enriches weak, acidic soils with “auric salts” (potassium-like minerals). - It impro...
+  - left out (not selected by the manifest): Because the first few applications often work spectacularly, people assume that more is always better. Fields...
+  - left out (not selected by the manifest): Every golden tree consumed this way is also a relic sacrificed: a lost anchor of the old world, burned for one...
+  - left out (not selected by the manifest): Miners and scavengers uncover strange luminous stones in the exposed guts of ruined leylines:
+  - left out (not selected by the manifest): - Searstone: Sulfur-rich ore that, in small amounts, helps reclaim over-ashed, alkaline soils. - Phosflare: Ph...
+  - left out (not selected by the manifest): Hedge-alchemists proclaim these as shards of the legendary Philosopher’s Stone. Crushed and spread thickly, th...
+  - left out (not selected by the manifest): - Temporarily supercharge orchards—massive harvests, a brief resurgence of golden fruit. - But also: - Acidify...
+  - left out (not selected by the manifest): Again, the pattern holds: short-term windfall, long-term collapse.
+  - left out (not selected by the manifest): By the time the crisis reaches its peak, three trends converge:
+  - left out (not selected by the manifest): 1. Soil exhaustion: Years of continuous peach cultivation, over-application of golden ash, Searstone, and Phos...
+  - left out (not selected by the manifest): The visible signs:
+  - left out (not selected by the manifest): - Orchards in their prime suddenly produce only brown, withered peaches, or blossoms that fall without setting...
+  - left out (not selected by the manifest): Entire valleys—known only a generation ago as “The Eternal Orchards”—become graveyards of skeletal trees and a...
+  - left out (not selected by the manifest): This is the true face of the Inescapable Hunger: not only are there not enough peaches, but the land itself is...
+  - left out (not selected by the manifest): Out of this slow catastrophe, a new kind of knowledge is forced into existence.
+  - left out (not selected by the manifest): Across scattered regions, perceptive survivors begin noticing that:
+  - left out (not selected by the manifest): - Fields left unworked due to war, plague, or abandonment start to heal: - Wild grasses and herbs appear. - Ha...
+  - left out (not selected by the manifest): These observations give rise to the first Agromage Conclaves.
+  - left out (not selected by the manifest): These Conclaves are not court sorcerers, but seed-keepers and soil-listeners. Their “magic” is careful, repeat...
+  - left out (not selected by the manifest): - Crop rotation: Instituting sequences like: - Auric peaches → “earth-beans” (nitrogen-fixing legumes) → hardy...
+  - left out (not selected by the manifest): They discover that the stones themselves were never the true Philosopher’s Stone. Power lay not in ash and ore...
+  - left out (not selected by the manifest): - Pattern - Restraint - Diversity - Time
+  - left out (not selected by the manifest): In their doctrine:
+  - left out (not selected by the manifest): > “No stone alone can save a starving field. > The land is a chord, not a note.”
+  - left out (not selected by the manifest): From this, agromancy—the magical-scientific discipline of soil, root, and cycle—enters history.
+  - left out (not selected by the manifest): The Inescapable Hunger, later canonized as the Auric Peach Famine, becomes one of the great moral and practica...
+  - left out (not selected by the manifest): - On miracles: No single gift, however wondrous, can sustain a world if it replaces understanding. - On land:...
+  - left out (not selected by the manifest): In later Ages, whenever a ruler proposes relying on one crop, one resource, or one god-touched artifact to sec...
+  - left out (not selected by the manifest): > “Have you forgotten the peaches?”
+  - left out (not selected by the manifest): In Arcanoria, golden ash—the residue from burning fallen golden trees and ornamented Auric hardwoods—is effect...
+  - left out (not selected by the manifest): - It is rich in “auric salts” (a magicalized stand-in for potassium salts), plus trace minerals. - In small, m...
+  - left out (not selected by the manifest): So golden ash is not innately “bad”; it is exactly like historical potash: an extremely useful soil amendment...
+  - left out (not selected by the manifest): The Auric peach is now strongly modeled on real monocrop histories (e.g., Irish potato dependence, maize depen...
+  - left out (not selected by the manifest): - Single staple dominance: - In the Age of Desolation, the Auric peach outcompetes everything else by survival...
+  - left out (not selected by the manifest): In other words, Auric peaches are the Arcanorian version of an over-relied-upon staple: potatoes in 19th-centu...
+  - left out (not selected by the manifest): - Golden ash (Arcanorian potash): - Provides potassium-like “auric salts” that boost flowering and fruiting (m...
+  - left out (not selected by the manifest): To mirror events like the Dust Bowl and over-plowed prairies:
+  - left out (not selected by the manifest): - As old forests and golden groves are felled for fuel and ash, root networks that once held soil vanish. - Co...
+  - left out (not selected by the manifest): The visual is Arcanoria’s version of dust storms and gullying:
+  - left out (not selected by the manifest): - Valleys where ash and topsoil have blown off, exposing sterile subsoil. - Golden “sand” dunes where fertile...
+  - left out (not selected by the manifest): This is how, by the famine’s climax, even Auric peaches fail: not by a single blight alone, but by a slowly mu...
+  - left out (not selected by the manifest): To ground the solution in realistic agronomy while keeping a tinge of magic:
+  - left out (not selected by the manifest): - Crop Rotation: Agromage Conclaves rediscover patterns like: - Auric peaches → nitrogen-fixing “earth-beans”...
+  - left out (not selected by the manifest): These are exactly the scientific mechanisms behind:
+  - left out (not selected by the manifest): - Historical yield improvements from legume rotation - Recovery of exhausted land after rest - Stabilization o...
+  - left out (not selected by the manifest): But in Arcanoria, the Conclaves describe it as listening to the lower harmonics of the Leylines and “teaching...
+- **The Undeniable Moon** (`the-undeniable-moon`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/The Undeniable Moon.md`: 93 characters
+- **Voice of the Heavens** (`voice-of-the-heavens`, Age Crisis) from `Worldbuilding/Rise & Fall, Crisis/Crisis/Voice of the Heavens.md`: 39 characters
+
+### Events
+
+- **A Burrowed Name** (`a-burrowed-name`, Event) from `Worldbuilding/Events/Age Related/Ages 0/A Burrowed Name.md`: 8261 characters
+- **The Call of the Dreamweaver** (`the-call-of-the-dreamweaver`, Event) from `Worldbuilding/Events/Age Related/Ages 2/The Call of the Dreamweaver.md`: 24 characters
+- **The Golden Light in the Sky** (`the-golden-light-in-the-sky`, World Event) from `Worldbuilding/Events/World Events/The Golden Light in the Sky.md`: 220 characters
+- **The Hollowing** (`the-hollowing`, World Event) from `Worldbuilding/Events/World Events/The Hollowing.md`: 3515 characters
+  - left out (section "Mechanics of how hollowing works" is about the game): ### Mechanics of how hollowing works
+  - left out (section "Mechanics of how hollowing works" is about the game): - It is the proto version of a Flesh-Casing Ritual. Instead of being bound to the gem, the hollowed are bound...
+- **The Mass Suicide of Lacrimosa** (`the-mass-suicide-of-lacrimosa`, Event) from `Worldbuilding/Events/Age Related/Ages 3/The Mass Suicide of Lacrimosa.md`: 3833 characters
+  - left out (talks about the game ("mechanics")): However, even if the Auric Order loses less than 70% but Father Raphael still submits to Lacrimosa, she will b...
+- **The Ultimate Weapon** (`the-ultimate-weapon`, Event) from `Worldbuilding/Events/The Ultimate Weapon.md`: 1062 characters, in 6 sections
+  - left out (talks about the game ("the player")): It requires the presence of Primal White Noise to manifest in reality and "activate" in something akin to a DE...
+  - left out (talks about the game ("in‑world")): Thus, the wish is a masterful piece of in‑world systems engineering: it uses the Hypermage’s nature (recursive...
+
+### Legends
+
+- **Artus** (`artus`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Artus.md`: 3042 characters
+- **Augusitus** (`augusitus`, Legend · Age IV) from `Worldbuilding/Society/Characters/Ages 4/Augusitus.md`: 2560 characters
+- **Aurelian** (`aurelian`, Legend · Age I) from `Worldbuilding/Society/Characters/Ages 1/Aurelian.md`: 4888 characters
+- **Ballad** (`ballad`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Ballad.md`: 1107 characters, quiet
+- **Cadmus Tacet** (`cadmus-tacet`, Legend · Age V) from `Worldbuilding/Society/Characters/Ages 5/Cadmus Tacet.md`: 24919 characters
+- **Constellation** (`constellation`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Constellation.md`: 3529 characters, quiet
+  - left out (talks about the game ("mechanic")): Reincarnation is a mechanic destined to give the Civilization a chance to grow a stronger Constellation throug...
+- **Cordelia** (`cordelia`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Cordelia.md`: 1083 characters
+- **Daedalus** (`daedalus`, Legend · Age I) from `Worldbuilding/Society/Characters/Ages 1/Daedalus.md`: 4390 characters
+- **Elara** (`elara`, Legend · Age I) from `Worldbuilding/Society/Characters/Ages 1/Elara.md`: 305 characters
+- **Eyras** (`eyras`, Legend · Age I) from `Worldbuilding/Society/Characters/Ages 1/Eyras.md`: 452 characters
+- **Fate Stage** (`fate-stage`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Fate Stage.md`: 870 characters, in 3 sections
+  - left out (talks about the game ("players")): "The play does not reveal its final act until the players have lived through the first."
+  - left out (talks about the game ("the player")): There is also some degree of director’s influence, this means that the player, as the ruler of a Civilization,...
+  - left out (talks about the game ("the player")): The Fate Stage ensures that there is replayability for World Events while adding narrative texture as the livi...
+- **Father Raphael** (`father-raphael`, Legend · Age III) from `Worldbuilding/Society/Characters/Ages 3/Father Raphael.md`: 25734 characters
+  - left out (talks about the game ("mechanically")): He performs the rituals mechanically. He speaks the prayers. He maintains the wards. But his mind is elsewhere...
+- **Gayviene** (`gayviene`, Legend) from `Worldbuilding/Society/Characters/Gayviene.md`: 17386 characters
+- **Great Architect** (`great-architect`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 86 characters
+- **Great Chronicler** (`great-chronicler`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 81 characters
+- **Great Concertist** (`great-concertist`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 85 characters
+- **Great Justiciar** (`great-justiciar`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 75 characters
+- **Great Seer** (`great-seer`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 79 characters
+- **Great Sovereign** (`great-sovereign`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 82 characters
+- **Great Spellweaver** (`great-spellweaver`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 1260 characters
+- **Great Vanguard** (`great-vanguard`, Great Spellweaver) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 79 characters
+- **Legend** (`legend`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Legend.md`: 202 characters, quiet
+- **Legend Opus** (`legend-opus`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Legend Opus.md`: 56 characters
+- **Legend Relationship** (`legend-relationship`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Legend Relationship.md`: 3327 characters, in 3 sections
+  - left out (talks about the game ("mechanically")): Likewise, both ends of the axis are mechanically active and narratively legitimate but they serve distinct fun...
+  - left out (talks about the game ("mechanics")): The mechanics branch from the Thread. The Stage is the depth. The Thread is the substance:
+  - left out (introduced by a passage left out): - Resonance Thread: Born from the Key of Attunement this bond is formed on the shared identity formation, vuln...
+- **Legend Trait** (`legend-trait`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Legend Trait.md`: 3829 characters, in 8 sections
+  - left out (talks about the game ("mechanic")): Dissonance origins, physical disadvantages, and negative Legend Traits however do have a hidden mechanic calle...
+  - left out (introduced by a passage left out): - Underdog Benefit: You already gain ×2 Lyrical Fragments when you "punch above your station." And this bonus...
+  - left out (talks about the game ("the player")): Finally, this combination of elements creates the final piece of the Soul Leitmotif. The "Wish" that every Leg...
+  - left out (introduces a passage left out): A Legend has exactly three personality Legend Traits. These form the core thematic motifs of their character,...
+  - left out (real-world reference ("real-world")): - Baseline of a Legend's Relational Patterns: Personality Legend Traits operate as the core of who that charac...
+- **Luminaire** (`luminaire`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Luminaire.md`: 21080 characters
+- **Mira** (`mira`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Mira.md`: 77968 characters
+  - left out (talks about the game ("mechanically")): Mira remained muted, mechanically moving her hands but on a blank stare.
+- **Miss Nyctilia** (`miss-nyctilia`, Legend · Age V) from `Worldbuilding/Society/Characters/Ages 5/Miss Nyctilia.md`: 9918 characters
+- **Mythical Virtuoso** (`mythical-virtuoso`, Legend) from `Worldbuilding/Society/Characters/Mythical Virtuoso.md`: 5459 characters
+- **Orphael** (`orphael`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Orphael.md`: 991 characters
+- **Sedrick** (`sedrick`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Sedrick.md`: 430 characters
+- **Selah** (`selah`, Legend · Age III) from `Worldbuilding/Society/Characters/Ages 3/Selah.md`: 2012 characters, in 6 sections
+  - left out (section "The Old Testament: The Architect of the Auric Codex" is about the game): #### The Old Testament: The Architect of the Auric Codex
+  - left out (section "The Old Testament: The Architect of the Auric Codex" is about the game): In the Old Testament, Selah rises from the devastation of the Demi-Human wars as one of the Auric Aria earlies...
+  - left out (section "The Old Testament: The Architect of the Auric Codex" is about the game): Yet even in the Old Testament, the seeds of her future fracture are present. The Auric Codex she helps build i...
+  - left out (section "The Old Testament: The Architect of the Auric Codex" is about the game): Her devotion is real, but it has always been inseparable from her need to make the suffering mean something. S...
+- **Sephira** (`sephira`, Legend · Age II) from `Worldbuilding/Society/Characters/Ages 2/Sephira.md`: 12987 characters
+- **Skarr Karmelita** (`skarr-karmelita`, Legend) from `Worldbuilding/Society/Characters/Skarr Karmelita.md`: 1124 characters
+- **Stardust** (`stardust`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Stardust.md`: 898 characters, quiet
+- **Stellar Legacy Score** (`stellar-legacy-score`, Stellar Legacy) from `Worldbuilding/Society/Stellar Legacy/Stellar Legacy Score.md`: 1363 characters, in 9 sections
+  - left out (talks about the game ("gameplay")): In this system, a Legend is an exceptional individual whose life story generates Resonance. The Stellar Legacy...
+  - left out (talks about the game ("gameplay")): This creates a lineage of myth that directly impacts gameplay mechanics (economy, warfare, magic) based on who...
+  - left out (talks about the game ("XP")): Every significant action a Legend takes generates Lyrical Fragments, each a symbol of a facet of courage in Co...
+  - left out (talks about the game ("mechanically")): The "Underdog" Modifier: Some Legends have disadvantageous traits usually paired with low origins (Orphan, Exi...
+  - left out (talks about the game ("mechanically")): This ensures that the "Rags-to-Riches" arc is mechanically superior, albeit much harder in execution for gener...
+  - left out (talks about the game ("player")): - Example: The first player to kill "The Discord Weaver" across their playthrough earns "First to Silence the...
+  - left out (talks about the game ("mechanics")): Constellation have their own mechanics distinct from Legends that make their Legend Opus and Legend Titles use...
+  - left out (introduced by a passage left out): - Stellar Covenants: Future Legends can channel these Constellations through Stellar Covenants to gain tempora...
+  - left out (formula (a tooltip cannot show it)): $$\text{Constellation Resonance} = (\text{Legend Opus} + \text{Accumulated Worship}) \times \text{Renown}$$
+  - left out (talks about the game ("mechanics")): Moreover, old Constellations offer massive power but come with restrictions and possibly outdated mechanics un...
+  - left out (talks about the game ("The player")): - Scenario: You have the Constellation "Syvea, Mother of the Lost." A legendary healer that devoted their life...
+  - left out (talks about the game ("the game")): Your pantheon evolves based on how you play. If you abuse a Healing Constellation for military gain, the game...
+  - left out (talks about the game ("Playthrough")): Example "Rags to Myth" Playthrough
+  - left out (talks about the game ("The player")): The player is an author, not just the ruler of a Civilization. In Arcanoria, you don't pick a leader, you writ...
+  - left out (talks about the game ("Players")): You create Einstein. You are Charlemagne. The Constellations that Legends of Ages X look up to, are the charac...
+  - left out (talks about the game ("players")): Constellations are not static. If a Constellation is used in a way that contradicts its original story (e.g.,...
+  - left out (talks about the game ("mechanic")): Dissonance origins, physical disadvantages, and negative Legend Traits however do have a hidden mechanic calle...
+  - left out (introduced by a passage left out): - Underdog Benefit: You already gain ×2 Lyrical Fragments when you "punch above your station." And this bonus...
+  - left out (talks about the game ("the player")): Finally, this combination of elements creates the final piece of the Soul Leitmotif. The "Wish" that every Leg...
+  - left out (introduces a passage left out): A Legend has exactly three personality Legend Traits. These form the core thematic motifs of their character,...
+  - left out (real-world reference ("real-world")): - Baseline of a Legend's Relational Patterns: Personality Legend Traits operate as the core of who that charac...
+- **Syvanth** (`syvanth`, Legend · Age IV) from `Worldbuilding/Society/Characters/Ages 4/Syvanth.md`: 2640 characters, in 3 sections
+  - left out (real-world reference ("inspired by")): - His logs are all filled with a theatrical gruesome interpretation of the actions. Cadmus Tacet had to be ver...
+- **The White-Touched Archivist** (`the-white-touched-archivist`, Legend) from `Worldbuilding/Society/Characters/The White-Touched Archivist.md`: 2665 characters, in 4 sections
+  - left out (real-world reference ("inspired by")): His story is inspired by Galileo Galilei. He was pursuing knowledge of Cosmic Motion and what happened during...
+  - left out (talks about the game ("the game")): On the second half of the Ballad of the white clots, the Legend tasked to find the entrance of The White-Haven...
+- **Vaelia** (`vaelia`, Legend · Age 0) from `Worldbuilding/Society/Characters/Ages 0/Vaelia.md`: 1926 characters
+  - left out (manifest skip): ### Romance Ballad
+  - left out (manifest skip): The romance unfolds in beats:
+  - left out (manifest skip): - First Meeting: She teases the Legend musically without introduction. She is curious, not impressed. - First...
+- **Vanessa of Iridia** (`vanessa-of-iridia`, Legend · Age VI) from `Worldbuilding/Society/Characters/Ages 6/Vanessa of Iridia.md`: 639 characters
+
+### Magic
+
+- **Absolute Certainty** (`absolute-certainty`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Absolute Certainty.md`: 4609 characters
+- **Aetherlight** (`aetherlight`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Aetherlight.md; Worldbuilding/Origin of Magic/Magical Resources/Lux Aeterna.md`: 549 characters
+- **Attunement for Magic** (`attunement-for-magic`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Attunement for Magic.md`: 1276 characters
+- **Auroral Ribbons** (`auroral-ribbons`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Auroral Ribbons.md`: 205 characters
+- **Catalytic Abyss of Emotion** (`catalytic-abyss-of-emotion`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Catalytic Abyss of Emotion.md`: 338 characters
+- **Chaotic Resonant Cascade** (`chaotic-resonant-cascade`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Chaotic Resonant Cascade.md`: 405 characters
+- **Chord Layering** (`chord-layering`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Chord Layering.md`: 3158 characters
+- **Cindergale** (`cindergale`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Cindergale.md`: 108 characters
+- **Click Power** (`click-power`, Spellweaving Ritual) from `Worldbuilding/World Environment/Atonalis/Spellweaving Rituals/Click Power.md`: 409 characters
+  - left out (talks about the game ("mechanic")): Click Power is a core mechanic of Gateway To Genesis, as the game begins as an incremental strategy clicker, t...
+  - left out (talks about the game ("the game")): Traditionally, Click Power behaves at the beginning of the game like a production button to generate Resources...
+  - left out (talks about the game ("mechanic")): This mechanic actively prevents auto clickers from being fully functional in Gateway To Genesis, while adding...
+- **Coherence** (`coherence`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Coherence.md`: 590 characters, quiet
+- **Composure** (`composure`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Composure.md`: 9770 characters, quiet
+- **Consciousness** (`consciousness`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Consciousness.md`: 672 characters, quiet
+- **Consensual Anchoring** (`consensual-anchoring`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Consensual Anchoring.md`: 840 characters
+- **Crystal** (`crystal`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Crystal.md`: 878 characters, quiet
+- **Dance** (`dance`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Dance.md`: 427 characters, quiet
+- **Discordant Interference** (`discordant-interference`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Discordant Interference.md`: 424 characters
+- **Dual Confluence Stream** (`dual-confluence-stream`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Dual Confluence Stream.md; Worldbuilding/Gateway To Genesis.md`: 651 characters
+- **Dyad Chord** (`dyad-chord`, Chord of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 214 characters
+- **Echoing Bonds** (`echoing-bonds`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Echoing Bonds.md`: 370 characters
+  - left out (talks about the game ("players")): - You harmonize it with other players (7). The Principles of Magic. - "A leitmotif by itself is simple, but wh...
+- **Emberwhisper** (`emberwhisper`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Emberwhisper.md; Worldbuilding/Origin of Magic/Magical Resources/Lux Aeterna.md`: 355 characters
+- **Emotional Authenticity** (`emotional-authenticity`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Emotional Authenticity.md`: 1982 characters, in 3 sections
+- **Essence Sacrifice** (`essence-sacrifice`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Essence Sacrifice.md`: 1714 characters, in 8 sections
+  - left out (talks about the game ("cinematic")): This is only achieved when Essence Sacrifice can combine offloading with personal sacrifice at sufficient dept...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): ### Conservation of Energy and Fuel Mechanics
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): As the fourth auric thread, Essence Sacrifice frames Spellweaving as a physical exchange of energy, not mystic...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): Fuel is also proportional to the meaning and sacrifice exchanged, where a high symbolic fuel can make the simp...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): The Void element exemplifies this mechanism in physical terms: Shadow represents the measurable energy deficit...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): Thus the final offloading equation is the relationship between music, sacrifice, and spell potency which can b...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): $$\text{Spell Potency} = \frac{\text{Fuel Quality} \times \text{Thematic Resonance} \times \text{Performance Q...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): When music handles the denominator through offloading, the numerator's factors determine the ceiling. When fue...
+  - left out (section "Conservation of Energy and Fuel Mechanics" is about the game): This is the mathematics of miracles.
+- **Fated Flower** (`fated-flower`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Fated Flower.md`: 19 characters
+- **Flesh-Casing Ritual** (`flesh-casing-ritual`, Spellweaving Ritual) from `Worldbuilding/World Environment/Atonalis/Spellweaving Rituals/Flesh-Casing Ritual.md`: 337 characters
+- **Flux** (`flux`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Flux.md`: 540 characters, quiet
+- **Forsaken Flower** (`forsaken-flower`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Forsaken Flower.md`: 31 characters
+- **Frequency Harmonics** (`frequency-harmonics`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Frequency Harmonics.md`: 45 characters
+- **Fundamental Frequency** (`fundamental-frequency`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Fundamental Frequency.md`: 3517 characters
+- **Glimmerfern** (`glimmerfern`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Glimmerfern.md; Worldbuilding/Origin of Magic/Magical Resources/Lux Aeterna.md`: 313 characters
+- **Golden Ichor** (`golden-ichor`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Golden Ichor.md`: 273 characters
+- **Great Harmonic Loom** (`great-harmonic-loom`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Great Harmonic Loom.md`: 613 characters, in 4 sections
+  - left out (introduces a passage left out): The whole process of casting magic behaves like a full audio signal chain and requires the following steps:
+  - left out (talks about the game ("mechanically")): 1. Resonance as the vibration of a Fundamental Frequency to create a signal. This raw carrier wave is a pure t...
+- **Harmonic Equilibrium** (`harmonic-equilibrium`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Harmonic Equilibrium.md`: 165 characters
+- **Hyper Chord** (`hyper-chord`, Chord of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 1253 characters
+- **Key of Attunement** (`key-of-attunement`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Key of Attunement.md`: 5269 characters
+  - left out (talks about the game ("player")): Attunement, then, is the art and discipline of aligning one's Consciousness with this innate frequency. It is...
+  - left out (section "The First Overtone and Wave Mechanics" is about the game): ### The First Overtone and Wave Mechanics
+  - left out (section "The First Overtone and Wave Mechanics" is about the game): As the first auric thread, the Key of Attunement uniquely channels The First Overtone. This binding is directl...
+  - left out (section "The First Overtone and Wave Mechanics" is about the game): Unlike the other bindings which manipulate specific aspects of reality, the Key of Attunement establishes the...
+  - left out (section "The First Overtone and Wave Mechanics" is about the game): The Resonance element embodies this principle perfectly. Sound is the physical manifestation of vibration, the...
+- **Law of Relics** (`law-of-relics`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Law of Relics.md`: 455 characters, in 27 sections
+  - left out (talks about the game ("mechanics")): The report details Lacrimosa’s "Flesh-Binding Ritual," developed by her cult, "The Purest of Love".1 This ritu...
+  - left out (formula (a tooltip cannot show it)): $$\text{Relic} = (\text{Will}{\text{Aria}} + \text{Witnessing}{\text{Lacrimosa}}) \times \text{Consent}{\text{...
+  - left out (talks about the game ("mechanics")): In many standard fantasy systems (e.g., Vancian magic, RPG mechanics), magic is a resource (Mana/Ether) that e...
+  - left out (section "Appendix A: Chronological Progression of Object-Magic Relations" is about the game): ## Appendix A: Chronological Progression of Object-Magic Relations
+  - left out (section "Appendix A: Chronological Progression of Object-Magic Relations" is about the game): Table 2: The Evolution of the Magical Object through the Cycles
+  - left out (section "Appendix A: Chronological Progression of Object-Magic Relations" is about the game): |Era|Primary Object/Entity|Mechanism of Magic|Source of Power|Nature of Existence| |---|---|---|---|---| |Pre-...
+  - left out (section "Appendix A: Chronological Progression of Object-Magic Relations" is about the game): This table summarizes the trajectory of the magical object from unstable chaos to the stable, ethical resonanc...
+  - left out (talks about the game ("mechanic")): To critique the "Law of Relics"—the mechanism by which objects become magical—one must first perform a forensi...
+  - left out (talks about the game ("player")): Emberwhisper exists only because the Auric Aria betrayed Selenea in the Seventh Cycle. It is the physical resi...
+  - left out (talks about the game ("mechanic")): This recontextualizes the entire magic system as Parasitic. The "Leylines" are "Symphonic Veins" carrying the...
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): ## Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): To understand why the "Law of Relics" (Collaboration) is necessary, we must analyze why the old system (Utilit...
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): Luminaire is the "Perfect Child," bred to be the "crystalline instrument" of the state.1 Her narrative is a cr...
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): - The Critique: "You are not Luminaire the person. You are Luminaire the future queen... You do not use magic—...
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): Father Aldric represents the Cost of Belief. For 42 years, he maintains the wards through sheer will.1
+  - left out (section "Part IV: The Sociology of Emptiness – Case Studies in Systemic Failure" is about the game): - The Collapse: When the other priests leave, the wards fail. This proves that the "Magic" was never in the st...
+  - left out (section "5.1 The Surface Layer: Accessible Mechanics" is about the game): ### 5.1 The Surface Layer: Accessible Mechanics
+  - left out (section "5.1 The Surface Layer: Accessible Mechanics" is about the game): The system uses an Elemental Harmonic Circle that is easy to grasp for gameplay:
+  - left out (section "5.1 The Surface Layer: Accessible Mechanics" is about the game): - Flux (Water + Wind) beats Cindergale. - Cindergale (Fire + Wind) beats Crystal. - Luminance (Light + Lightni...
+  - left out (section "5.1 The Surface Layer: Accessible Mechanics" is about the game): A novice can operate entirely on this level. "I combine Fire and Wind to make Cindergale. I aim. I shoot." It...
+  - left out (talks about the game ("player")): If a player asks, "Why did my Fireball fizzle?", the answer isn't "You rolled a 1." The answer is "Because you...
+  - left out (talks about the game ("player")): If a player asks, "Why is this Health Potion so strong?", the answer is "Because it was brewed by your mother,...
+  - left out (talks about the game ("mechanics")): This system forces the narrative into the mechanics. The "Hard Magic" rules enforce "Soft Magic" themes.
+  - left out (formula (a tooltip cannot show it)): $$\text{Relic} = (\text{Will}{\text{Aria}} + \text{Witness}{\text{Lacrimosa}}) \times \text{Consent}{\text{Hum...
+  - left out (talks about the game ("mechanics")): The system’s greatest strength is its Holographic Integrity. Every part contains the whole. The "Acoustic Cosm...
+  - left out (talks about the game ("player")): The system is relentlessly, oppressively heavy. It demands that every magical act be rooted in trauma, grief,...
+  - left out (talks about the game ("games")): - Sanderson’s Cosmere: Arcanoria shares the "Hard Magic" rigor (Rules, Heptacode). However, Sanderson’s system...
+  - left out (talks about the game ("Mechanics")): - World-Building (10/10): The acoustic cosmology is flawless and permeates every layer of reality. - Mechanics...
+  - left out (talks about the game ("The player")): This demonstrates the "Infinite Depth" vs. "Easy to Start" dynamic. The player says "I drink a potion." The lo...
+  - left out (real-world reference ("real-world")): The realm of speculative fiction and ludonarrative design is frequently categorized by the rigidity of its mag...
+  - left out (talks about the game ("mechanics")): This analysis posits that the Arcanoria system operates on a recursive, fractal scale. The trauma of the creat...
+  - left out (talks about the game ("mechanics")): This document serves as a comprehensive guide to "digesting" this complex system. It explores the subject from...
+  - left out (real-world reference ("real-world")): - Chaos as White Noise: In standard fantasy, chaos is often entropic void or elemental fire. In Arcanoria, cha...
+  - left out (talks about the game ("mechanics")): |Material|Origin Event|Metaphysical Essence|Function| |---|---|---|---| |Emberwhisper|The Binding of Selenea (...
+  - left out (talks about the game ("mechanically")): Synthesis: To master the system, one must realize that casting a fire spell is mechanically identical to creat...
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): The "Principles of Magic" document codifies the "physics engine" of this reality.1 Magic is divided into seven...
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): |Binding|Element|Auric Thread|Psychological Constraint|Scientific/Philosophical Parallel| |---|---|---|---|---...
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): The genius of this system lies in how it gamifies mental health.
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): - The "Cindergale" Problem: To cast Fire, one needs "Perfect Focus." In a combat scenario, maintaining a Zen-l...
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): The system employs a rigorous interaction cycle 1:
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): 1. Flux (Emotion) disrupts Perfect Focus (Cindergale). Unrestrained feeling sweeps away concentration. (Water...
+  - left out (section "Part IV: The Mechanics of Spellweaving — The Seven Bindings" is about the game): This is not just a combat circle; it is a Therapeutic Cycle. Healing in Arcanoria requires moving through thes...
+  - left out (real-world reference ("real-world")): - Cymatic Geometry: The gem's internal structure (Veinwork) is determined by the "patterns" of the user's soul...
+  - left out (talks about the game ("mechanics")): To answer the user's request on "how to achieve mastery," we must synthesize the physics, psychology, and mech...
+  - left out (talks about the game ("Mechanic")): 1. The Novice (The Mechanic): - Focus: Memorizing the Elemental Circle (Water beats Fire). - Practice: Casting...
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): ## Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): For the advanced user, understanding the Tetrad Chord is the pinnacle of the system.
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): The Physics of the Tetrad:
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): A Tetrad Chord combines a Major Root with three Minor Notes (Third, Fifth, Seventh).
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): - The Seventh Interval: In music theory, the seventh creates tension that demands resolution. In Arcanoria, th...
+  - left out (section "Part X: Advanced Mechanics — The Tetrad Chord and Reality Bending" is about the game): This confirms that high-level magic in Arcanoria is not about having "more mana"; it is about having the psych...
+- **Layered Finality** (`layered-finality`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Layered Finality.md`: 500 characters
+- **Leylines** (`leylines`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Leylines.md`: 73 characters, quiet
+- **Luminance** (`luminance`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Luminance.md`: 1108 characters, quiet
+- **Lunehymn** (`lunehymn`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Lunehymn.md; Worldbuilding/Origin of Magic/Magical Resources/Lux Aeterna.md`: 1018 characters
+- **Lux Aeterna** (`lux-aeterna`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Lux Aeterna.md`: 3783 characters
+- **Magic Arts** (`magic-arts`, Spellweaving Ritual) from `Worldbuilding/World Environment/Atonalis/Spellweaving Rituals/Magic Arts.md`: 2605 characters
+- **Major Note** (`major-note`, Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 215 characters
+- **Mastery Over Chaos** (`mastery-over-chaos`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Mastery Over Chaos.md`: 502 characters
+- **Minor Note** (`minor-note`, Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md; Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md`: 826 characters
+- **Motif Awakening** (`motif-awakening`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Motif Awakening.md`: 10561 characters
+- **Music as Catalyst** (`music-as-catalyst`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Music as Catalyst.md`: 107 characters
+- **Object Permanence** (`object-permanence`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Object Permanence.md`: 201 characters
+- **Ornament** (`ornament`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Ornament.md`: 119 characters, quiet
+- **Own Voice** (`own-voice`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Own Voice.md`: 70 characters
+- **Perfect Focus** (`perfect-focus`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Perfect Focus.md`: 2083 characters, in 3 sections
+- **Personal Pathways and Interconnected Awakenings** (`personal-pathways-and-interconnected-awakenings`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Personal Pathways and Interconnected Awakenings.md`: 558 characters, in 7 sections
+- **Potential of Creation** (`potential-of-creation`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Potential of Creation.md`: 681 characters
+- **Primary Instrument** (`primary-instrument`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Primary Instrument.md`: 213 characters
+- **Resonance** (`resonance`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Resonance.md`: 756 characters, quiet
+- **Rhythmic Entrainment** (`rhythmic-entrainment`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Rhythmic Entrainment.md`: 57 characters
+- **Signal Loss** (`signal-loss`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Signal Loss.md`: 2105 characters
+  - left out (talks about the game ("mechanics")): Another clever way to avoid Signal Loss depends entirely on understanding how the mechanics of the Known Unive...
+- **Sky Glass** (`sky-glass`, Magical Resource) from `Worldbuilding/Origin of Magic/Magical Resources/Sky Glass.md`: 2379 characters
+- **Soliton** (`soliton`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Soliton.md`: 2612 characters, in 9 sections
+  - left out (status checklist): Status: - [ ] Tracking Implemented - [ ] Game Effects Implemented
+  - left out (formula (a tooltip cannot show it)): $$\frac{\partial u}{\partial t} - 6u\frac{\partial u}{\partial x} + \frac{\partial^3 u}{\partial x^3} = 0$$
+  - left out (formula (a tooltip cannot show it)): $$i\hbar_A \frac{\partial \psi}{\partial t} = -\frac{\hbar_A^2}{2m_S}\nabla^2\psi - g_1|\psi|^2\psi + g_2|\psi...
+  - left out (formula (a tooltip cannot show it)): $$\frac{\hbar_A^2}{2m_S}k^2 = g_1|\psi{\text{Stable}}|^2 - g_2|\psi{\text{Stable}}|^4 \quad \text{and} \quad \...
+  - left out (formula (a tooltip cannot show it)): $$|\psi{\text{Stable}}|^2 = \frac{g_1}{2g_2}\left(1 + \sqrt{1 - \frac{4g_2(\gamma_A - \gamma_L)^2}{g_1^2}}\rig...
+  - left out (formula (a tooltip cannot show it)): $$i\hbar_A \frac{\partial \psi}{\partial t} = -\frac{\hbar_A^2}{2m_S}\nabla^2\psi - g_1|\psi|^2\psi + g_2|\psi...
+  - left out (formula (a tooltip cannot show it)): $$\frac{\hbar_A^2}{2m_S}k^2 = g_1|\psi{\text{Stable}}|^2 - g_2|\psi{\text{Stable}}|^4$$
+  - left out (formula (a tooltip cannot show it)): $$\Delta E{\text{Detonation}} = \int \left(g_2|\psi|^4 - g_2|\psi{\text{Stable}}|^4\right) dV \gg 0$$
+  - left out (formula (a tooltip cannot show it)): $$k \leq k{\text{Max}} = \frac{1}{\ell_A} \quad \Rightarrow \quad \ell_A = \sqrt{\frac{\hbar_A^2}{2m_S g |\psi...
+  - left out (formula (a tooltip cannot show it)): $$\lambda_A = 2\pi\ell_A$$
+  - left out (formula (a tooltip cannot show it)): $$\mathbf{b}j = \frac{2\pi}{\ell_A} \hat{e}j, \quad j = 1, \ldots, 7$$
+  - left out (talks about the game ("the player")): The seven bands of the HBZ correspond directly to the seven tonal classes of the Auric Heptacode. Each band su...
+  - left out (real-world reference ("real-world")): When multiple Solitons achieve stable mutual resonance, they stop being isolated wave packets and begin to for...
+  - left out (real-world reference ("real world")): In Arcanoria, Crystal formations are the eigenmodes of the Great Harmonic Loom's local topology — the geometri...
+  - left out (formula (a tooltip cannot show it)): $$\mathcal{C} = \frac{1}{2\pi} \oint{\partial \mathcal{H}} \mathbf{A} \cdot d\mathbf{k}$$
+  - left out (formula (a tooltip cannot show it)): $$\mathcal{C}1 = \mathcal{C}2 \quad \text{and} \quad \Delta\phi = 0 \quad \Rightarrow \quad \text{Forced Sympa...
+  - left out (formula (a tooltip cannot show it)): $$\langle x_f | e^{-iHt/\hbar} | x_i \rangle = \int \mathcal{D}[x(t)] \, e^{iS[x]/\hbar}$$
+  - left out (formula (a tooltip cannot show it)): $$|\psi{\text{Fold } n}|^2 = 2^n \cdot |\psi_0|^2$$
+  - left out (formula (a tooltip cannot show it)): $$\kappa = \frac{g|\psi|^2}{\dfrac{\hbar_A^2}{2m_S}k^2}$$
+  - left out (formula (a tooltip cannot show it)): $$i\frac{\partial \psi}{\partial t} = -\frac{1}{2}\nabla^2\psi - |\psi|^{2\sigma}\psi$$
+  - left out (formula (a tooltip cannot show it)): $$|\psi(t)| \sim \frac{|\psi_0|}{\sqrt{1 - t/T{\text{Blow}}}}$$
+  - left out (formula (a tooltip cannot show it)): $$\mathcal{C} = \frac{1}{2\pi} \oint{\partial \mathcal{H}} \mathbf{A} \cdot d\mathbf{k} \notin \mathbb{Z}$$
+  - left out (formula (a tooltip cannot show it)): $$i\hbar_A \frac{\partial \psi}{\partial t} = -\frac{\hbar_A^2}{2m_S}\nabla^2\psi - g_1|\psi|^2\psi$$
+  - left out (formula (a tooltip cannot show it)): $$\nu{\text{Beat}} = \frac{1}{2\pi}\sqrt{(\kappa - 1)} \cdot \omega_0$$
+  - left out (formula (a tooltip cannot show it)): $$\mathcal{C} \notin \mathbb{Z} \quad \Rightarrow \quad \text{All } \psi_j \text{ lose coherent phase} \quad \...
+  - left out (formula (a tooltip cannot show it)): $$\nu{\text{Wolf}} = |\nu_1 - \nu_2|$$
+  - left out (formula (a tooltip cannot show it)): $$E{\text{Boundary}} = \alpha \int |\nabla\psi_1 \cdot \nabla\psi_2| \, dV > 0$$
+  - left out (formula (a tooltip cannot show it)): $$\Delta\phi{12} = \phi_1 - \phi_2 = 0 \pmod{2\pi}$$
+  - left out (formula (a tooltip cannot show it)): $$|\psi{\text{Merged}}|^2 = |\psi_1|^2 + |\psi_2|^2 + 2|\psi_1||\psi_2|\cos(\Delta\phi)$$
+  - left out (formula (a tooltip cannot show it)): $$\int |\psi{\text{Merged}}|^2 \, dV = \int (|\psi_1|^2 + |\psi_2|^2) \, dV + \underbrace{2\int |\psi_1||\psi_...
+  - left out (formula (a tooltip cannot show it)): $$T{\text{Blow}}^{\text{Fusion}} \sim \frac{1}{\sqrt{\kappa{\text{Merged}} - 1}} \ll T{\text{Blow}}^{\text{Fis...
+  - left out (talks about the game ("In-world")): | Feature | Null-Type Wolf Bomb (Fission) | Siphon-Type Wolf Bomb (Fusion) | | ------------------------- | ---...
+  - left out (talks about the game ("mechanics")): In any other destruction event in Arcanoria, the aftermath is held by the survivors. The wound belongs to thos...
+  - left out (formula (a tooltip cannot show it)): $$\text{Living Being} = \underbrace{\alpha_S \cdot \psi{\text{Structure}}}{\text{Auric Structure}} + \underbra...
+  - left out (formula (a tooltip cannot show it)): $$|\psi{\text{Body}}(t)| \xrightarrow{\text{Soul-Key Attractor}} |\psi{\text{Stable}}|^2 = \frac{g_1}{2g_2}$$
+  - left out (formula (a tooltip cannot show it)): $$\nu{\text{Offspring}} = f(\nu{\text{Parent}1}, \nu{\text{Parent}2}) \quad \text{where} \quad \Delta\phi{\tex...
+  - left out (formula (a tooltip cannot show it)): $$\alpha_S^{\text{Sprite}} \xrightarrow{\text{ Environment Entrainment}} \alpha_S^{\text{Slime}} \quad (10\% \...
+- **Soul Leitmotif** (`soul-leitmotif`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Soul Leitmotif.md`: 620 characters, in 5 sections
+  - left out (talks about the game ("Mechanics")): Transformation Mechanics: The transition from dormant to wearable is intentional and conscious, triggered when...
+- **Soul Oscillator** (`soul-oscillator`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Soul Oscillator.md`: 1728 characters
+- **Soul-Key** (`soul-key`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Soul-Key.md`: 4576 characters
+  - left out (real-world reference ("real-world")): A Soul-Key is the harmonic stability and Coherence of any Spellweaving. It changes with real-world scales, and...
+  - left out (real-world reference ("real-life")): A Soul-Key is metaphysically the intent of the Spellweaver while in real-life is the sound that can mirror the...
+- **Spellweaver** (`spellweaver`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Spellweaver.md`: 89 characters
+- **Spellweaving** (`spellweaving`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Spellweaving.md`: 764 characters, in 13 sections
+  - left out (real-world reference ("real-world")): Furthermore, the Strand Pools of Emotional Authenticity is why Humanity in Arcanoria can't remember facts as m...
+- **Stable Harmonic Channels** (`stable-harmonic-channels`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Stable Harmonic Channels.md`: 270 characters
+- **Staccato** (`staccato`, Rhythm of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md; Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ages of Magic/Ages 0/Age of Desolation.md`: 431 characters
+- **Static Criticality** (`static-criticality`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Static Criticality.md`: 906 characters
+  - left out (section "The Mechanics of Coherence Detonation" is about the game): ### The Mechanics of Coherence Detonation
+  - left out (section "The Mechanics of Coherence Detonation" is about the game): When the saturation of the Dual Confluence Stream exceeds 50-70% imbalance, the local environment effectively...
+  - left out (section "The Mechanics of Coherence Detonation" is about the game): The catastrophic results of Static Criticality imbalances can be understood as a rupture in the magical atmosp...
+  - left out (section "The Mechanics of Coherence Detonation" is about the game): This mechanism explains why the explosions are described as "cascades." One explosion releases raw Aetherlight...
+  - left out (section "The Mechanics of Coherence Detonation" is about the game): Ruptured threads with enough potency are able to create Vibrational Fallout and feed Primal White Noise.
+- **Strand** (`strand`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Strand.md`: 543 characters, quiet
+- **Sufficient Precision** (`sufficient-precision`, Binding) from `Worldbuilding/Origin of Magic/Bindings & Elements/Sufficient Precision.md`: 4837 characters
+  - left out (section "Harmonic Series and Information Mechanics" is about the game): ### Harmonic Series and Information Mechanics
+  - left out (section "Harmonic Series and Information Mechanics" is about the game): As the second auric thread, Sufficient Precision channels informational Frequency Harmonics derived from Stabl...
+  - left out (section "Harmonic Series and Information Mechanics" is about the game): This thread shapes, encodes and establishes the content of the carrier wave — the exact spacing and definition...
+  - left out (section "Harmonic Series and Information Mechanics" is about the game): The Luminance element embodies this principle: light grants clarity of definition; lightning imparts the sharp...
+- **Superposed Resonance** (`superposed-resonance`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Superposed Resonance.md`: 293 characters
+- **Sympathetic Vibration** (`sympathetic-vibration`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Sympathetic Vibration.md`: 74 characters
+- **Symphonic Veins** (`symphonic-veins`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Symphonic Veins.md`: 60 characters
+- **Tetrad Chord** (`tetrad-chord`, Chord of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 331 characters
+- **The Principles of Magic** (`the-principles-of-magic`, Magic) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 906 characters, in 7 sections
+  - left out (introduces a passage left out): In Arcanoria, they greatly amplify the magical Resonance of Frequency Harmonics due to the existence of the Gr...
+  - left out (talks about the game ("players")): - You find your note and key (1). Key of Attunement. - You play a precise interval (2). Sufficient Precision....
+  - left out (real-world reference ("real-life")): However, it is important to note that Spellweaving is unable to create tissue growth as there isn't any bio-ma...
+  - left out (introduced by a passage left out): - Strand is the primary element for healing, as it draws on the concept of Object Permanence to maintain the s...
+- **The Registers of Magic** (`the-registers-of-magic`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/The Registers of Magic.md`: 1474 characters, in 4 sections
+  - left out (talks about the game ("mechanics")): - Chrono Magic (Strand) — Register of time manipulation, with heavy caveats, since causing a paradox opens Tim...
+- **Time Bubble** (`time-bubble`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Time Bubble.md`: 2895 characters
+- **Triad Chord** (`triad-chord`, Chord of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 285 characters
+- **Triadic Virtues of Spellcraft** (`triadic-virtues-of-spellcraft`, Spellweaving) from `Worldbuilding/Origin of Magic/Spellweaving/Triadic Virtues of Spellcraft.md`: 599 characters
+- **Unison** (`unison`, Chord of Spellweaving) from `Worldbuilding/Origin of Magic/The Principles of Magic.md`: 192 characters, quiet
+- **Vibrational Decay** (`vibrational-decay`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Vibrational Decay.md`: 138 characters
+- **Vibrational Density** (`vibrational-density`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Vibrational Density.md`: 125 characters
+- **Vibrational Fallout** (`vibrational-fallout`, Conduit of Magic) from `Worldbuilding/Origin of Magic/Conduits of Magic/Vibrational Fallout.md`: 331 characters
+- **Void** (`void`, Element) from `Worldbuilding/Origin of Magic/Bindings & Elements/Void.md`: 37 characters, quiet
+
+### Mythology
+
+- **Auric Aria** (`auric-aria`, Deity) from `Worldbuilding/Mythology/Deities/Auric Aria.md`: 1721 characters, in 3 sections
+  - left out (talks about the game ("the player")): - Following the cataclysmic Polychord Crisis that ends Civilization, the Auric Aria manifests before the playe...
+  - left out (talks about the game ("the game")): - Start of the game in the Second Reset - The Auric Aria remains distant so to not cause a disaster like the F...
+- **Eighth Cycle** (`eighth-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Eighth Cycle.md`: 1771 characters
+- **Fifth Cycle** (`fifth-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Fifth Cycle.md`: 1222 characters
+- **First Cycle** (`first-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/First Cycle.md`: 179 characters
+- **First Living Being** (`first-living-being`, Mythos) from `Worldbuilding/Mythology/Mythos/First Living Being.md`: 159 characters
+- **Formless Father** (`formless-father`, Deity) from `Worldbuilding/Mythology/Deities/Formless Father.md`: 2376 characters
+- **Fourth Cycle** (`fourth-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Fourth Cycle.md`: 244 characters
+- **Lacrimosa** (`lacrimosa`, Deity) from `Worldbuilding/Mythology/Deities/Lacrimosa.md`: 1420 characters, in 8 sections
+  - left out (talks about the game ("mechanics")): But she did not drift away. She stalked. She became a phantom of creation, studying every motion the Auric Ari...
+  - left out (talks about the game ("the game")): - The deaths of Humanity in the Lost Cycle keep the structure of Auroral Ribbons and the link from Lacrimosa a...
+  - left out (talks about the game ("the player")): - Cult of Lacrimosa eventually develops a Flesh-Binding Ritual to give her a real Anthropomorphic Shape and th...
+  - left out (talks about the game ("Cinematic")): - Collapse of most ancient systems due to her undeniable influence. - The lack of the Auric Aria's appearance...
+  - left out (real-world reference ("inspired by")): This is the compound and climatic resolution that will dictate how Lacrimosa maladaptive Legend Traits of Comp...
+  - left out (talks about the game ("the game")): By the time the game begins in the Second Reset, the New Testament era, the Auric Aria is deeply scarred by th...
+- **Library of Heaven's Tower** (`library-of-heaven-s-tower`, Old Testament) from `Worldbuilding/Truths, Chaos, Rituals/Old Testament/Library of Heaven's Tower.md`: 876 characters
+  - left out (real-world reference ("Inspired by")): Inspired by the biblical mixture of the tower of babel (lack of language through induced noise by dosing Prima...
+- **Old Testament** (`old-testament`, Old Testament) from `Worldbuilding/Truths, Chaos, Rituals/Old Testament/Old Testament.md`: 6320 characters, in 8 sections
+  - left out (talks about the game ("Third Actor")): The Old Testament is the proof of the God Paradox, both action and inaction lead to the same result until the...
+  - left out (section "4. Formation of the Auric Codex" is about the game): #### 4. Formation of the Auric Codex
+  - left out (section "4. Formation of the Auric Codex" is about the game): - The tethers with the Auric Aria are fairly fragile but every so often these rituals of her incarnation are t...
+- **Outer God** (`outer-god`, Deity) from `Worldbuilding/Mythology/Deities/Outer God.md`: 7377 characters
+- **Parlor of the Moon** (`parlor-of-the-moon`, Deity) from `Worldbuilding/Mythology/Deities/Parlor of the Moon.md`: 10287 characters, in 4 sections
+  - left out (talks about the game ("Third Actor")): This one is not in the Aria's hand alone. It is written in two scripts—one golden, one silver—intertwined. The...
+  - left out (talks about the game ("Third Actor")): > "The lesson was never the geometry. > > The lesson was that imperfect trying is better than perfect silence....
+- **Second Cycle** (`second-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Second Cycle.md`: 379 characters
+- **Selenea** (`selenea`, Deity) from `Worldbuilding/Mythology/Deities/Selenea.md`: 1458 characters, in 3 sections
+- **Seven Dark Fates** (`seven-dark-fates`, Old Testament) from `Worldbuilding/Truths, Chaos, Rituals/Old Testament/Seven Dark Fates.md`: 9949 characters
+- **Seven-Cycle Creation** (`seven-cycle-creation`, Mythos) from `Worldbuilding/Mythology/Mythos/Seven-Cycle Creation.md`: 534 characters
+- **Seventh Cycle** (`seventh-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Seventh Cycle.md`: 1533 characters
+- **Singer of Paradise** (`singer-of-paradise`, Deity) from `Worldbuilding/Mythology/Deities/Singer of Paradise.md`: 1541 characters
+- **Sixth Cycle** (`sixth-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Sixth Cycle.md`: 1737 characters
+- **Third Cycle** (`third-cycle`, Mythos) from `Worldbuilding/Mythology/Mythos/Third Cycle.md`: 195 characters
+- **True Mythos of Creation** (`true-mythos-of-creation`, Mythos) from `Worldbuilding/Mythology/True Mythos of Creation.md`: 30094 characters
+- **Uriel** (`uriel`, Old Testament) from `Worldbuilding/Truths, Chaos, Rituals/Old Testament/Uriel.md`: 1214 characters
+
+### Relics
+
+- **Armament** (`armament`, Armament) from `Worldbuilding/Society/Weapons, Instruments & Relics/Armament.md`: 272 characters, quiet
+- **Auric Bells** (`auric-bells`, Primary Instrument) from `Worldbuilding/Society/Weapons, Instruments & Relics/Primary Instruments/Auric Bells.md`: 1273 characters, in 4 sections
+  - left out (talks about the game ("the player")): The constructive interference of these four returning wavefronts at the center produces the cavity's character...
+  - left out (talks about the game ("player")): The practical consequence is that the cavity remembers the last struck note across several beats. When the per...
+  - left out (talks about the game ("The player")): This is why the percussion rail requires no cog mechanism to sustain its tempo. The player sets the first beat...
+  - left out (talks about the game ("the player")): Along the outer edge of each bell arc runs a lateral rail carrying seven pistons, one per natural note (C thro...
+  - left out (talks about the game ("the player")): Individual pistons can be pinned out of the firing sequence before play, allowing the player to compose which...
+  - left out (talks about the game ("the player")): - Dormant or Sleeping Bud: All bell arcs fold flat and lock behind the shell plates. Micro-shutters are sealed...
+  - left out (talks about the game ("player")): - Length: 120–150cm - Bell count: 9–13 bells per arc, dual arcs — a soprano arc and a bass arc — giving it the...
+  - left out (talks about the game ("the player")): - Length: 190–220cm - Bell count: 6–10 bells, single deep arc; each bell is significantly larger in diameter t...
+- **Eight-Winged Viola** (`eight-winged-viola`, World-Bending Relic) from `Worldbuilding/Society/Weapons, Instruments & Relics/World Bending Objects/Eight-Winged Viola.md`: 643 characters, in 11 sections
+- **Goldweaver Auric Harp** (`goldweaver-auric-harp`, World-Bending Relic) from `Worldbuilding/Society/Weapons, Instruments & Relics/World Bending Objects/Goldweaver Auric Harp.md`: 73 characters
+- **Pale Moonlit Violin** (`pale-moonlit-violin`, World-Bending Relic) from `Worldbuilding/Society/Weapons, Instruments & Relics/World Bending Objects/Pale Moonlit Violin.md`: 52 characters
+- **Portharmonica** (`portharmonica`, Primary Instrument) from `Worldbuilding/Society/Weapons, Instruments & Relics/Primary Instruments/Portharmonica.md`: 1991 characters
+- **The Relic of Arcanoria** (`the-relic-of-arcanoria`, World-Bending Relic) from `Worldbuilding/Society/Weapons, Instruments & Relics/World Bending Objects/The Relic of Arcanoria.md`: 88 characters
+  - left out (talks about the game ("the player")): This final piece of the World-Bending Relics is the memory that only the player can see of a future that will...
+  - left out (talks about the game ("the player")): The theme of the menu is the Auric Aria's raw harmony of her Soul Leitmotif without any ornamentation, and It...
+  - left out (talks about the game ("the game")): It is a World-Bending Relics of immense significance because it is the only that ever breached the meta narrat...
+
+### Society
+
+- **Administrative Authority** (`administrative-authority`, Power) from `Worldbuilding/Society/Societal Resources/Power/Administrative Authority.md`: 42 characters
+- **Atonalis Bombs** (`atonalis-bombs`, Militant Civic · Ages V Onwards · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Atonalis Bombs)`: 767 characters
+- **Atrocity** (`atrocity`, Power) from `Worldbuilding/Society/Societal Resources/Power/Atrocity.md`: 178 characters, quiet
+- **Aureus Pillar** (`aureus-pillar`, Pillar of Civilization) from `Worldbuilding/Society/Societal Resources/Foundation/Aureus Pillar.md`: 741 characters
+- **Auric Geometry** (`auric-geometry`, Foundation) from `Worldbuilding/Society/Societal Resources/Foundation/Auric Geometry.md`: 2140 characters
+- **Auric Mythos of Creation** (`auric-mythos-of-creation`, Auric Order) from `Worldbuilding/Society/Auric Order/Auric Mythos of Creation.md`: 9777 characters
+- **Auric Order** (`auric-order`, Auric Order) from `Worldbuilding/Society/Auric Order/Auric Order.md`: 8459 characters
+- **Ballad & Fantasy Plays** (`ballad-fantasy-plays`, Weaver Civic · Ages II–IV · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Ballad & Fantasy Plays)`: 803 characters
+- **Bloodline Tithe** (`bloodline-tithe`, Ages VII–IX · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Bloodline Tithe)`: 872 characters
+- **Bridal Conquest** (`bridal-conquest`, Militant Civic · Ages 0–III · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Bridal Conquest)`: 759 characters
+- **Capital** (`capital`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Capital.md`: 38 characters, quiet
+- **Carnival of Shifting Reflections** (`carnival-of-shifting-reflections`, Indulgent Civic · Ages IV-VI · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Carnival of Shifting Reflections)`: 815 characters
+- **Chaos Reverence Sacrifices** (`chaos-reverence-sacrifices`, Esoteric Civic · Ages 0-II · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Chaos Reverence Sacrifices)`: 831 characters
+- **Chorus Pillar** (`chorus-pillar`, Pillar of Civilization) from `Worldbuilding/Society/Societal Resources/Foundation/Chorus Pillar.md`: 1702 characters
+- **Civic** (`civic`, Foundation) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md`: 40023 characters, quiet
+  - left out (introduces a passage left out): Ballads:
+  - left out (talks about the game ("the game")): - A disgraced knight enters the deadly Horned Flag Stampede to win a feast for starving orphans. A conspirator...
+  - left out (names a real-world work ("Magical Girl")): Enhanced Magical Girl Polyphony | Ages XI | Consonance
+- **Courting Grounds** (`courting-grounds`, Weaver Civic · Ages IV · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Courting Grounds)`: 778 characters
+- **Culinary Alchemists** (`culinary-alchemists`, Agromagical Civic · Ages I-III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Culinary Alchemists)`: 677 characters
+- **Developing Town** (`developing-town`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Developing Town.md`: 108 characters
+- **Duels of Severance** (`duels-of-severance`, Militant Civic · Ages 0-III · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Duels of Severance)`: 886 characters
+- **Feast of Abundance** (`feast-of-abundance`, Indulgent Civic · Ages I-III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Feast of Abundance)`: 725 characters
+- **Glyphic Heptastave** (`glyphic-heptastave`, Invention) from `Worldbuilding/Society/Tools & Inventions/Glyphic Heptastave.md`: 2679 characters, in 14 sections
+  - left out (status checklist): Status:
+  - left out (implementation status ("Implemented")): - Tracking Implemented - Game Effects Implemented
+  - left out (formula (a tooltip cannot show it)): $$P{\text{Imprint}} \leq \min \left( P{\text{Score}}, P{\text{Performance}}, P{\text{Inscription}}, P{\text{Ca...
+  - left out (real-world reference ("inspired by")): The term is inspired by real acoustics, but it is broader than the strict physical definition of a harmonic.
+  - left out (real-world reference ("real-world")): The closest real-world analogy is cymatics.
+  - left out (formula (a tooltip cannot show it)): $$P{\text{Maintained}}(t) \leq P{\text{Imprint}}$$
+  - left out (formula (a tooltip cannot show it)): $$\left|\frac{dP}{dt}\right|{\text{Maintained}} < \left|\frac{dP}{dt}\right|{\text{Unmaintained}}$$
+  - left out (talks about the game ("mechanically")): Consent is mechanically necessary. The participants must willingly enter the shared score and allow their Reso...
+  - left out (formula (a tooltip cannot show it)): $$\text{Glyphic Ink} = \text{Emberwhisper} + \text{Physical Binder}$$
+  - left out (introduces a passage left out): Advanced systems can display:
+  - left out (real-world reference ("in real time")): - full Channel maps - Resonance Point density - Anchor locations - modulation in real time - three-dimensional...
+  - left out (formula (a tooltip cannot show it)): $$\text{Frozen Music} = \text{Soul-Leitmotif Performance} \times \text{Stave Recording} \times \text{Heptagram...
+  - left out (formula (a tooltip cannot show it)): $$\text{Glyphic Spellweaving} = \text{Re-Excited Score} \times \text{Synchronization} \times \text{Soul Leitmo...
+- **Grand Hunts of Legends** (`grand-hunts-of-legends`, Militant Civic · Ages II–IV · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Grand Hunts of Legends)`: 660 characters
+- **Harmonic Quorum** (`harmonic-quorum`, Regal Civic · Ages I-III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Harmonic Quorum)`: 606 characters
+- **Horned Flag Stampedes** (`horned-flag-stampedes`, Domestication Civic · Ages II-VI · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Horned Flag Stampedes)`: 374 characters
+- **Legendary Hunting Charters** (`legendary-hunting-charters`, Regal Civic · Ages IV-VII · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Legendary Hunting Charters)`: 735 characters
+- **Leylines Nomads** (`leylines-nomads`, Esoteric Civic · Ages 0-III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Leylines Nomads)`: 277 characters
+- **Major Settlement** (`major-settlement`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Major Settlement.md`: 99 characters
+- **Memory Markets** (`memory-markets`, Trading Civic · Ages IV–VII · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Memory Markets)`: 435 characters
+- **Mirrorbox Trap** (`mirrorbox-trap`, Invention) from `Worldbuilding/Society/Tools & Inventions/Mirrorbox Trap.md`: 586 characters
+- **Moonlit Vigil** (`moonlit-vigil`, Weaver Civic · Ages 0-III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Moonlit Vigil)`: 621 characters
+- **Perfect Manifestation of Life** (`perfect-manifestation-of-life`, Auric Order) from `Worldbuilding/Society/Auric Order/Perfect Manifestation of Life.md`: 111 characters
+- **Perfect Reflection** (`perfect-reflection`, Auric Order) from `Worldbuilding/Society/Auric Order/Perfect Reflection.md`: 792 characters
+- **Pillars** (`pillars`, Foundation) from `Worldbuilding/Society/Societal Resources/Foundation/Pillars.md`: 3347 characters, quiet
+  - KEPT although real-world reference ("real life"): The Pillars of Civilization are the spectrum of philosophical integration and nature of power and magic in Arc...
+  - left out (talks about the game ("early game")): The climax of this struggle occurs in the early game during Ages V where several storylines converge in the cr...
+  - left out (manifest skip): The axis functions to determine directly government types, alignment, religion, societal hierarchies, and prio...
+  - left out (manifest skip): Fanatical is only available after realizing The Truth of Arcanoria.
+  - left out (manifest skip): | FANATIC WALTZ | WALTZ | WALTZ LEANING | CENTRIST | REGALIA LEANING | REGALIA | FANATIC REGALIA | | | | -----...
+  - left out (manifest skip): This interplay allows for many combinations from Emperor of Mankind god emperors being a Fanatical Radical com...
+- **Polyphonic Choral Singers** (`polyphonic-choral-singers`, Weaver Civic · Ages IV-VI · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Polyphonic Choral Singers)`: 634 characters
+- **Regalia Pillar** (`regalia-pillar`, Pillar of Civilization) from `Worldbuilding/Society/Societal Resources/Foundation/Regalia Pillar.md`: 1521 characters
+- **Religious Haven** (`religious-haven`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Religious Haven.md`: 77 characters
+- **Resonance Box** (`resonance-box`, Invention) from `Worldbuilding/Society/Tools & Inventions/Resonance Box.md`: 1249 characters
+- **Ritual Whistling Fans Dancers** (`ritual-whistling-fans-dancers`, Weaver Civic · Ages II–VI · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Ritual Whistling Fans Dancers)`: 591 characters
+- **Secluded Refuge** (`secluded-refuge`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Secluded Refuge.md`: 82 characters
+- **Shadow Order** (`shadow-order`, Power) from `Worldbuilding/Society/Societal Resources/Power/Shadow Order.md`: 136 characters
+- **Sky Glass Burials** (`sky-glass-burials`, Esoteric Civic · Ages 0–III · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Sky Glass Burials)`: 726 characters
+- **Slave & Servitude Auctions** (`slave-servitude-auctions`, Trading Civic · Ages IV-VII · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Slave & Servitude Auctions)`: 394 characters
+- **Slayer's Amphitheater** (`slayer-s-amphitheater`, Militant Civic · Ages IV–VI · Cusp) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Slayer's Amphitheater)`: 565 characters
+- **Species Caste System** (`species-caste-system`, Regal Civic · Ages IV-VII Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Species Caste System)`: 158 characters
+- **Spiraling Conscription** (`spiraling-conscription`, Militant Civic · Ages IV Onwards · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Spiraling Conscription)`: 843 characters
+- **Symphony Card** (`symphony-card`, Invention) from `Worldbuilding/Society/Tools & Inventions/Symphony Card.md`: 104 characters
+- **The Ball Fluff Runs** (`the-ball-fluff-runs`, Domestication Civic · Ages I-VI · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ball Fluff Runs)`: 239 characters
+- **The Ballad of a Bleeding Unison Love** (`the-ballad-of-a-bleeding-unison-love`, Courting Grounds (Weaver Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of a Bleeding Unison Love)`: 684 characters
+- **The Ballad of a Shattered Sky** (`the-ballad-of-a-shattered-sky`, Leylines Nomads & Sky Glass Burials (Esoteric Civics)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of a Shattered Sky)`: 736 characters
+- **The Ballad of Fracture Quorum** (`the-ballad-of-fracture-quorum`, Harmonic Quorum (Regal Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of Fracture Quorum)`: 702 characters
+- **The Ballad of Gentle Severance** (`the-ballad-of-gentle-severance`, Duels of Severance (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of Gentle Severance)`: 670 characters
+- **The Ballad of Hollow Banquet** (`the-ballad-of-hollow-banquet`, Feast of Abundance (Indulgent Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of Hollow Banquet)`: 709 characters
+- **The Ballad of Painted Composure** (`the-ballad-of-painted-composure`, Truth Soul Leitmotif Testimonies (Regal Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of Painted Composure)`: 839 characters
+- **The Ballad of Severed Winds** (`the-ballad-of-severed-winds`, Ritual Whistling Fans Dancers (Weaver Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of Severed Winds)`: 606 characters
+- **The Ballad of the Broken Vanguard** (`the-ballad-of-the-broken-vanguard`, Spiraling Conscription (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Broken Vanguard)`: 795 characters
+- **The Ballad of the Conquerors Vow** (`the-ballad-of-the-conquerors-vow`, Bridal Conquest (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Conquerors Vow)`: 721 characters
+- **The Ballad of the Crystal Stampede** (`the-ballad-of-the-crystal-stampede`, The Ball Fluff Runs & Horned Flag Stampedes (Domestication Civics)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Crystal Stampede)`: 711 characters
+- **The Ballad of the Echoing Hunt** (`the-ballad-of-the-echoing-hunt`, Grand Hunts of Legends (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Echoing Hunt)`: 640 characters
+- **The Ballad of the Empty Hemovault** (`the-ballad-of-the-empty-hemovault`, Bloodline Tithe (Regal/Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Empty Hemovault)`: 764 characters
+- **The Ballad of the Exile's Sprint** (`the-ballad-of-the-exile-s-sprint`, Atonalis Bombs (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Exile's Sprint)`: 748 characters
+- **The Ballad of the Fleshy Mountain Pass** (`the-ballad-of-the-fleshy-mountain-pass`, Legendary Hunting Charters (Regal Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Fleshy Mountain Pass)`: 645 characters
+- **The Ballad of the Locked Love** (`the-ballad-of-the-locked-love`, Moonlit Vigil (Weaver Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Locked Love)`: 681 characters
+- **The Ballad of the Painted King** (`the-ballad-of-the-painted-king`, Carnival of Shifting Reflections (Indulgent Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Painted King)`: 643 characters
+- **The Ballad of the Poisoned Dough** (`the-ballad-of-the-poisoned-dough`, Cooking Guilds (Agromagical Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Poisoned Dough)`: 523 characters
+- **The Ballad of the Roaring Wards** (`the-ballad-of-the-roaring-wards`, Slayer's Amphitheater (Militant Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Roaring Wards)`: 636 characters
+- **The Ballad of the Silenced Savior** (`the-ballad-of-the-silenced-savior`, Chaos Reverence Sacrifices (Esoteric Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Silenced Savior)`: 676 characters
+- **The Ballad of the Starving Symphony** (`the-ballad-of-the-starving-symphony`, Culinary Alchemists (Agromagical Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Starving Symphony)`: 735 characters
+- **The Ballad of the Subversive Soprano** (`the-ballad-of-the-subversive-soprano`, Polyphonic Choral Singers (Weaver Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Subversive Soprano)`: 644 characters
+- **The Ballad of the Traitor's Ink** (`the-ballad-of-the-traitor-s-ink`, Ballad & Fantasy Plays (Weaver Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Traitor's Ink)`: 707 characters
+- **The Ballad of the Velvet Ghost** (`the-ballad-of-the-velvet-ghost`, Memory Markets (Trading Civic)) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (The Ballad of the Velvet Ghost)`: 666 characters
+- **Trade Nodes** (`trade-nodes`, Settlement) from `Worldbuilding/Society/Societal Resources/Places/Trade Nodes.md`: 83 characters
+- **Trafficking Rings Conquests** (`trafficking-rings-conquests`, Militant Civic · Ages IV-VII · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Trafficking Rings Conquests)`: 73 characters
+- **Truth Soul Leitmotif Testimonies** (`truth-soul-leitmotif-testimonies`, Regal Civic · Ages I Onwards · Consonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Truth Soul Leitmotif Testimonies)`: 756 characters
+- **Underground Pleasure Colosseums** (`underground-pleasure-colosseums`, Indulgent Civic · Ages IV · Dissonance) from `Worldbuilding/Society/Societal Resources/Foundation/Civic.md (Underground Pleasure Colosseums)`: 226 characters
+- **Vow Mark** (`vow-mark`, Invention) from `Worldbuilding/Society/Tools & Inventions/Vow Mark.md`: 9990 characters
+  - left out (talks about the game ("Mechanics")): The Ritual and Mechanics of the Mark A Vow Mark is a dark application of Sympathetic Magic, combining Contract...
+- **Waltz Pillar** (`waltz-pillar`, Pillar of Civilization) from `Worldbuilding/Society/Societal Resources/Foundation/Waltz Pillar.md`: 1700 characters
+
+### Time
+
+- **Cycle** (`cycle`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 2448 characters, in 5 sections, quiet
+  - left out (status checklist): Status: - [x] Tracking Implemented - [ ] Game Effects Implemented
+  - left out (names a real-world work ("Aztec")): In their place is a time system woven from the numerical fingerprint of the Auric Heptacode and the structural...
+  - left out (real-world reference ("In real-time")): The Seventh is the minimum scholarly unit of time. It is the real "Day" for the scholars of Arcanoria, the hea...
+  - left out (formula (a tooltip cannot show it)): $$\text{Phase Length} = 3 \times 7 = 21 \text{ Sevenths}$$
+  - left out (real-world reference ("In real-time")): Four Echoes complete one Real Cycle, the true cosmic revolution. A Real Cycle therefore spans 4 Lunar Cycles,...
+  - left out (formula (a tooltip cannot show it)): $$21 \times 84 \times 21 = 37{,}044 = 3^3 \times 4 \times 7^3$$
+  - left out (formula (a tooltip cannot show it)): $$1 \text{ Day} = 7 \text{ Rites} = 21 \text{ Bars}$$
+  - left out (formula (a tooltip cannot show it)): $$3 \times 7 = 21 \implies \frac{1 \text{ Day}}{21} = 1 \text{ Bar} \approx 1\text{h } 39\text{m}$$
+  - left out (formula (a tooltip cannot show it)): $$3 \times 4 \times 7 = 84 \implies \frac{1 \text{ Bar}}{84} = 1 \text{ Pulse} \approx 71 \text{ Seconds}$$
+  - left out (formula (a tooltip cannot show it)): $$3 \times 7 = 21 \implies \frac{1 \text{ Pulse}}{21} = 1 \text{ Beat} \approx 3.38 \text{ Seconds}$$
+  - left out (introduces a passage left out): The full architecture of time in Arcanoria, from the grandest cosmic arc to the smallest heartbeat:
+  - left out (real-world reference ("Earth years")): | Unit | Composition | Earth Duration | Auric Geometry | | ------------------------------ | ------------------...
+  - left out (formula (a tooltip cannot show it)): $$21 = 3 \times 7 \quad \text{(Phase · Bar · Beat length — \textit{Trinity Harmony} multiplied by \textit{Auri...
+  - left out (formula (a tooltip cannot show it)): $$63 = 3^2 \times 7 \quad \text{(Echo length in Sevenths — three layers of Trinity before the seven emerges)}$...
+  - left out (formula (a tooltip cannot show it)): $$84 = 3 \times 4 \times 7 \quad \text{(Pulses per Bar. The only number where all sacred values converge at on...
+  - left out (formula (a tooltip cannot show it)): $$252 = 3 \times 4 \times 3 \times 7 \quad \text{(Real Cycle in Sevenths = Lunar Cycle in Days — the Palindrom...
+  - left out (formula (a tooltip cannot show it)): $$37{,}044 = 3^3 \times 4 \times 7^3 \quad \text{(Beats per Day — Trinity and Heptacode cubed, Cosmic Structur...
+- **Echo** (`echo`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Echo.md`: 519 characters, quiet
+  - left out (status checklist): Status: - [x] Tracking Implemented - [ ] Game Effects Implemented
+  - left out (talks about the game ("the game")): A single Echo accounts for 63 Seventh with 3 Ritual Seventh. 6 and 3 of the 63 reflect the Trinity Harmony. Al...
+  - left out (introduced by a passage left out): - Echo of Resonance - Echo of Crescendo - Echo of Dissonance - Echo of Silence
+- **Echo of Crescendo** (`echo-of-crescendo`, Echo) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 125 characters
+- **Echo of Dissonance** (`echo-of-dissonance`, Echo) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 122 characters
+- **Echo of Resonance** (`echo-of-resonance`, Echo) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 138 characters
+- **Echo of Silence** (`echo-of-silence`, Echo) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 118 characters
+- **Lunar Calendar** (`lunar-calendar`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Lunar Calendar.md`: 119 characters
+- **Lunar Cycle** (`lunar-cycle`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Lunar Cycle.md`: 221 characters
+- **Phase** (`phase`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Phase.md`: 569 characters, quiet
+  - left out (status checklist): Status: - [x] Tracking Implemented - [ ] Game Effects Implemented
+  - KEPT although talks about the game ("the game"): A Phase consists of 12 per Cycle with 3 per each Echo due to the Trinity Harmony. In total they are 12 each wi...
+  - KEPT although introduced by a passage left out: - Phase of Prelude - Phase of Harmonics - Phase of Reflection - Phase of Flourish - Phase of Zenith - Phase of...
+- **Phase of Ashfall** (`phase-of-ashfall`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 57 characters
+- **Phase of Discord** (`phase-of-discord`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 57 characters
+- **Phase of Flourish** (`phase-of-flourish`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 58 characters
+- **Phase of Fracture** (`phase-of-fracture`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 57 characters
+- **Phase of Harmonics** (`phase-of-harmonics`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 69 characters
+- **Phase of Prelude** (`phase-of-prelude`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 69 characters
+- **Phase of Reflection** (`phase-of-reflection`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 69 characters
+- **Phase of Repose** (`phase-of-repose`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 52 characters
+- **Phase of Stillness** (`phase-of-stillness`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 52 characters
+- **Phase of Transition** (`phase-of-transition`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 58 characters
+- **Phase of Twilight** (`phase-of-twilight`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 52 characters
+- **Phase of Zenith** (`phase-of-zenith`, Phase) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 58 characters
+- **Ritual Seventh** (`ritual-seventh`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Ritual Seventh.md; Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 668 characters
+  - left out (status checklist): Status: - [x] Time Tracking Implemented - [ ] Game Effects Implemented
+  - left out (introduces game data): Effects:
+  - left out (game data (after "Effects:")): - Increase the potency of Magic Arts and Click Power. - Allow for unique Events to trigger.
+- **Seventh** (`seventh`, Passage of Time) from `Worldbuilding/Rise & Fall, Crisis/Passage of Time/Seventh.md; Worldbuilding/Rise & Fall, Crisis/Passage of Time/Cycle.md`: 1147 characters
+  - KEPT although real-world reference ("In real-time"): The Seventh is the minimum scholarly unit of time. It is the real "Day" for the scholars of Arcanoria, the hea...
+  - left out (status checklist): Status: - [x] Time Tracking Implemented - [x] Game Effects Implemented
+  - left out (talks about the game ("the game")): This is the minimum unit of time tracking in the game. It accounts for 3 real life minutes. It is called a Sev...
+
+### Truths
+
+- **Betrayal of the Moon** (`betrayal-of-the-moon`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Betrayal of the Moon.md`: 415 characters
+- **EC** (`ec`, Forbidden Object) from `Worldbuilding/Truths, Chaos, Rituals/Forbidden Objects/EC.md`: 247 characters, in 22 sections, quiet
+  - left out (status checklist): Status: - [ ] Tracking Implemented - [ ] Game Effects Implemented
+  - left out (section "Designer Dampeners" is about the game): #### Designer Dampeners
+  - left out (section "Designer Dampeners" is about the game): Designer dampeners are used to suppress or redirect CBT response.
+  - left out (section "Designer Dampeners" is about the game): They can:
+  - left out (section "Designer Dampeners" is about the game): - Disable spellcasting. - Prevent magical overload. - Reduce coherence disease. - Create temporary magic suppr...
+- **First Reset** (`first-reset`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/First Reset.md`: 520 characters
+  - left out (talks about the game ("the game")): It is the state of the world before the start of the game where the Auric Aria was collaborating a lot with Hu...
+- **First Weaving of Life** (`first-weaving-of-life`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/First Weaving of Life.md`: 599 characters
+- **Hypermage** (`hypermage`, Forbidden Object) from `Worldbuilding/Truths, Chaos, Rituals/Forbidden Objects/Hypermage.md`: 6660 characters
+  - left out (real-world reference ("real-life")): As Hypermages are impossibly alien constructs, they operate on a Luminance interface similar to that of The Wh...
+- **Imperfection of Life** (`imperfection-of-life`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Imperfection of Life.md`: 863 characters
+- **Inevitability of Death** (`inevitability-of-death`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Inevitability of Death.md`: 219 characters
+- **Scorching Truth** (`scorching-truth`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Scorching Truth.md`: 1108 characters
+  - left out (talks about the game ("save state")): - The Ultimate Weapon was allegedly made in the Lost Cycle - The Ultimate Weapon forces reality to an imperfec...
+- **Second Reset** (`second-reset`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Second Reset.md`: 920 characters
+  - left out (talks about the game ("the game")): The second canon Divine Reset and start of the game.
+  - left out (talks about the game ("the game")): The start of the game is hidden within the timeline as it is after the First Reset and the Cataclysmic Afterma...
+  - left out (talks about the game ("the player")): Moreover, the climax of the second reset always leads to a Cataclysmic Aftermath as the bad ending that ends i...
+- **Seven Weights** (`seven-weights`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Seven Weights.md`: 1480 characters
+- **The Auric Aria is a Type G Star** (`the-auric-aria-is-a-type-g-star`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/The Auric Aria is a Type G Star.md`: 3933 characters
+- **The Auric Aria's Suicide** (`the-auric-aria-s-suicide`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/The Auric Aria's Suicide.md`: 534 characters
+- **The Stars Are Alive** (`the-stars-are-alive`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/The Stars Are Alive.md`: 9313 characters
+  - left out (real-world reference ("real life")): Finally, this Alien Star can create sometimes its own aliens in the nearby sterile planets that are remnants o...
+- **The Truth of Arcanoria** (`the-truth-of-arcanoria`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/The Truth of Arcanoria.md`: 295 characters, in 5 sections
+  - left out (talks about the game ("the game")): Having access to The Truth of Arcanoria unlocks a lot of content through the game, akin to entering Hard mode...
+  - left out (talks about the game ("story patch")): - The real ending of the Polychord Crisis, unlocking Ages VII onwards. - Special Ages like the Age of Hymns. -...
+  - left out (talks about the game ("the player")): After learning The Auric Aria's Suicide, developing the Aureus Pillar will allow to commune directly with her...
+  - left out (talks about the game ("Third Actor")): This movement becomes not a simple recounting of history but an archaeological excavation of repressed memory...
+  - left out (talks about the game ("the game")): Moreover, this forces the Auric Aria to confront something worse than guilt: the recognition that her love was...
+  - left out (talks about the game ("The player")): The player expects Selenea's rage to be directed at the Auric Aria for the betrayal. The complication reveals...
+  - left out (talks about the game ("the player")): Finalizing this gives way to the Age of The End where the Auric Aria recognizes that there is a way out of the...
+  - left out (talks about the game ("Gateway To Genesis")): The narrative of Arcanoria and Gateway To Genesis consist of a massive Ages spanning commitment that is meant...
+  - left out (talks about the game ("The game")): - The game begins at the start of the Second Reset, although the Civilization is deliberately withheld this in...
+  - left out (talks about the game ("The player")): The emotional baseline: Despair with a thin veneer of institutional hope. The player learns that they are Civi...
+  - left out (talks about the game ("playthrough")): Bar 2: The Institutionalization and Evolution of Magic (Age of Renewal until The Hollowing of the first playth...
+  - left out (talks about the game ("players")): - When Civilization enters the Age of Renewal the Dual Confluence Stream begins to fully run anew again, and t...
+  - left out (talks about the game ("the player")): - The All-Loving Moon is created and depending on the player standing on Chorus Pillar or Aureus Pillar, they...
+  - left out (talks about the game ("The player")): The emotional beat: Confusion, then horror, then an uncomfortable recognition that the "enemy" might have a po...
+  - left out (talks about the game ("the player")): The exact context of the Auric Aria’s admission occurs during the climax of the Sonata of the Golden Sovereign...
+- **The White-Haven Library** (`the-white-haven-library`, Forbidden Object) from `Worldbuilding/Truths, Chaos, Rituals/Forbidden Objects/The White-Haven Library.md`: 803 characters, in 10 sections
+  - left out (talks about the game ("players")): When players approach The White-Touched Archivist in Arcanoria, they encounter something that defies spatial l...
+  - left out (introduced by a passage left out): - The room's dimensions are non-Euclidean—walls recede at angles that shouldn't exist, doorways lead to spaces...
+  - left out (talks about the game ("Players")): Players cannot fully enter The Dominion. They can only approach its threshold and interact through narrative i...
+  - left out (talks about the game ("player")): This is not metaphorical. When a player queries the wiki for information about a devastating loss, the Dominio...
+  - left out (talks about the game ("players")): For players, encountering these Strands means that when they read one historical entry, that entry automatical...
+  - left out (talks about the game ("Players")): Players do not access the wiki through a traditional interface. Instead, they encounter The Archivist themselv...
+  - left out (talks about the game ("player")): A player asking "What caused the Fall of House Meridian?" receives:
+  - left out (introduced by a passage left out): 1. Surface level (immediate): A clear, linear historical account of events 2. Emotional level (beneath): The g...
+  - left out (talks about the game ("player")): A mortal player experiences this as a single, coherent answer that somehow answers their question perfectly, e...
+  - left out (talks about the game ("players")): These gaps are honest. They reflect the Archivist's core principle: archives preserve truth, and sometimes tru...
+  - left out (talks about the game ("in-game")): The in-game wiki is not a database interface. It is The White-Touched Archivist's Dominion made manifest in wo...
+  - left out (talks about the game ("players")): When players access the wiki, they are not retrieving information from a server. They are stepping to the thre...
+- **Velvet Nectar** (`velvet-nectar`, Forbidden Object) from `Worldbuilding/Truths, Chaos, Rituals/Forbidden Objects/Velvet Nectar.md`: 12157 characters
+- **We Are Atonalis** (`we-are-atonalis`, Inescapable Truth) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/We Are Atonalis.md`: 356 characters
+- **Weight of Change** (`weight-of-change`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Change.md`: 263 characters
+- **Weight of Flaw** (`weight-of-flaw`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Flaw.md`: 220 characters
+- **Weight of Indulgence** (`weight-of-indulgence`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Indulgence.md`: 241 characters
+- **Weight of Nature** (`weight-of-nature`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Nature.md`: 211 characters
+- **Weight of Potential** (`weight-of-potential`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Potential.md`: 217 characters
+- **Weight of Purpose** (`weight-of-purpose`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Purpose.md`: 252 characters
+- **Weight of Value** (`weight-of-value`, Weight) from `Worldbuilding/Truths, Chaos, Rituals/Inescapable Truths/Weight of Value.md`: 245 characters
+
+### World
+
+- **Arcanoria** (`arcanoria`, World) from `Worldbuilding/Rise & Fall, Crisis/Arcanoria.md; Worldbuilding/Gateway To Genesis.md`: 881 characters, in 3 sections, quiet
+  - left out (talks about the game ("Gateway To Genesis")): Loss is transformation. Gateway To Genesis is not about preventing loss. It's about what you do with loss afte...
+  - left out (talks about the game ("the game")): The magical Earth where the game takes place, its origin lies in the Seven-Cycle Creation by the Auric Aria.
+  - left out (talks about the game ("the game")): Starting the game is the Original Ripple. The player is the "kinetic energy" required to pluck The Eternal Sym...
+  - left out (introduces a passage left out): A type of autonomous self-governing authority specialized in a particular activity that vary based on the Ages...
+  - left out (talks about the game ("Mechanics")): - Primary Function: It's the essence of the Enclave, and their vision statement. It's deeply related to their...
+  - left out (talks about the game ("player")): Finally, if there are enough Ages of a stable Enclave without Suzerainty or integration into a Civilization. T...
+  - left out (talks about the game ("the game")): At the start of the game, there's almost no Enclaves, just separate tribal societies in the Age of Desolation...
+  - left out (talks about the game ("player")): Finally, not all Enclaves will survive, which creates a tragedy on the application of limited resources maximi...
+  - left out (manifest skip): ### Map Features
+  - left out (manifest skip): The map features and types are:
+  - left out (manifest skip): - Settlements: They are the Civilization at its core, and depending on their development and growth they have...
+- **Auric Structure** (`auric-structure`, Bestiary) from `Worldbuilding/World Environment/Bestiary/Auric Structure.md`: 542 characters
+- **Crescent Mist Peaks** (`crescent-mist-peaks`, Landmark) from `Worldbuilding/World Environment/Landmarks/Crescent Mist Peaks.md`: 18226 characters
+- **Eclipsed Waterfalls** (`eclipsed-waterfalls`, Landmark) from `Worldbuilding/World Environment/Landmarks/Eclipsed Waterfalls.md`: 693 characters
+- **Eleos Bloom** (`eleos-bloom`, Bestiary) from `Worldbuilding/World Environment/Bestiary/Eleos Bloom.md`: 1633 characters, in 8 sections
+  - left out (talks about the game ("in-world")): A useful in-world phrase developed by Agromagical Enclaves is:
+  - left out (introduced by a passage left out): - “Light keeps the bloom alive. Feeling tells it what life is for.”
+- **Enclave** (`enclave`, Enclave) from `Worldbuilding/World Environment/Enclaves/Enclave.md`: 0 characters, in 3 sections, quiet
+  - left out (introduces a passage left out): A type of autonomous self-governing authority specialized in a particular activity that vary based on the Ages...
+  - left out (talks about the game ("Mechanics")): - Primary Function: It's the essence of the Enclave, and their vision statement. It's deeply related to their...
+  - left out (talks about the game ("player")): Finally, if there are enough Ages of a stable Enclave without Suzerainty or integration into a Civilization. T...
+  - left out (talks about the game ("the game")): At the start of the game, there's almost no Enclaves, just separate tribal societies in the Age of Desolation...
+  - left out (talks about the game ("player")): Finally, not all Enclaves will survive, which creates a tragedy on the application of limited resources maximi...
+- **Hollowmarch** (`hollowmarch`, Civilization) from `Worldbuilding/World Environment/Civilizations/Hollowmarch.md`: 1779 characters
+  - left out (talks about the game ("player")): During Ages V, they become a major player alongside Iridia during the Holy War crusades as Hollowmarch becomes...
+- **Institute** (`institute`, Enclave) from `Worldbuilding/World Environment/Enclaves/Institute.md`: 4869 characters, in 3 sections, quiet
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): #### The Containment Response: The Emergency Breach Color Codex
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): The Emergency Breach Color Codex is the immediate response language used by Institutes developed thowhen the n...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): The color code system exists because not all emergencies are the same kind of danger, and conflating them into...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): The code list and priority of the Emergency Breach Color Codex is the following in descending order, from lowe...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): | Code | Color | Threat Type | Response Priority | | ---------------- | ---------------------- | -------------...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): Each color response is not only a hazard marker, but also a behavioral command. All personnel are trained to r...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): The codex can stack when multiple failures occur simultaneously, but the highest-priority code always governs...
+  - left out (section "The Containment Response: The Emergency Breach Color Codex" is about the game): This code system was created by Miss Nyctilia and it uses her voice as the broadcasting system through her adv...
+- **Iridia** (`iridia`, Civilization) from `Worldbuilding/World Environment/Civilizations/Iridia.md`: 2162 characters
+  - left out (talks about the game ("player")): Iridia is the last of the classical Civilizations to be founded during Ages II, and becomes the beacon of hope...
+- **Lune Shallow** (`lune-shallow`, Civilization) from `Worldbuilding/World Environment/Civilizations/Minors/Lune Shallow.md`: 167 characters
+- **Memory Field** (`memory-field`, Landmark) from `Worldbuilding/World Environment/Landmarks/Memory Field.md`: 2028 characters
+- **Pure Light** (`pure-light`, Bestiary) from `Worldbuilding/World Environment/Bestiary/Pure Light.md`: 57 characters, in 11 sections
+  - left out (formula (a tooltip cannot show it)): $$i\frac{\partial \psi}{\partial t} + \frac{1}{2}\nabla^2\psi + |\psi|^2\psi = 0$$
+  - left out (talks about the game ("mechanically")): The Transducer These piezo-proteins catch the Pure Light wave and mechanically convert it into biochemical ene...
+  - left out (formula (a tooltip cannot show it)): $$V{\text{hybrid}} = \chi{\text{CBT}} \int \left( \Psi_A^ \Psi_B e^{i \Delta\phi} \right) d^3x - \sum{k} \Gamm...
+  - left out (formula (a tooltip cannot show it)): $$r{\text{harm}} = \frac{\int \psi_A^(\mathbf{r}) \psi_B(\mathbf{r}) \, d^3r}{\sqrt{\int \vert{}\psi_A(\mathbf...
+  - left out (formula (a tooltip cannot show it)): $$\frac{\partial x_i(\mathbf{r},t)}{\partial t} = D \nabla^2 x_i + x_i (W_i(\mathbf{r}) - \bar{W}(\mathbf{r}))...
+  - left out (talks about the game ("mechanically")): Because biology is biophysics, magic is mechanically exploitable. Institutions such as Cadmus Tacet and the Wo...
+  - left out (section "Designer Dampeners" is about the game): #### Designer Dampeners
+  - left out (section "Designer Dampeners" is about the game): Designer dampeners are used to suppress or redirect CBT response. They can:
+  - left out (section "Designer Dampeners" is about the game): - Disable spellcasting. - Prevent magical overload. - Reduce coherence disease. - Create temporary magic suppr...
+- **Sacred Site** (`sacred-site`, Landmark) from `Worldbuilding/World Environment/Landmarks/Sacred Site.md`: 56 characters
+- **The Silent Expanse** (`the-silent-expanse`, Landmark) from `Worldbuilding/World Environment/Landmarks/The Silent Expanse.md`: 60 characters
+- **Xian-K'in** (`xian-k-in`, Civilization) from `Worldbuilding/World Environment/Civilizations/Xian-K'in.md`: 4213 characters
+

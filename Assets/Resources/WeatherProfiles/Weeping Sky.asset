@@ -32,7 +32,7 @@ MonoBehaviour:
   - effectType: 3
     modifierValue: 25
     modifierType: 0
-    targetStat: Old World Relics
+    targetStat: Old World Remnants
     conditionStat: 
     scope: 1
   - effectType: 9
@@ -637,3 +637,5 @@ MonoBehaviour:
   dayLightColor: {r: 1, g: 1, b: 1, a: 1}
   duskLightColor: {r: 1, g: 0.6, b: 0.4, a: 1}
   nightLightColor: {r: 0.6, g: 0.7, b: 1, a: 1}
+
+  mapTravelMultiplier: 1.25

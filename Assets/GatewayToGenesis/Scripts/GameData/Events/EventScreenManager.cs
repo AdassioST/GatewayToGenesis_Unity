@@ -187,8 +187,12 @@ public class EventScreenManager : MonoBehaviour
         // The button previews what continuing will do.
         if (button != null)
         {
-            string preview = EventText.DescribeConsequences(ButtonConsequences());
-            if (!string.IsNullOrEmpty(preview)) SetCustomTooltip(button.gameObject, "Has Happened...", null, preview);
+            string preview = TooltipText.Consequences(ButtonConsequences());
+            if (!string.IsNullOrEmpty(preview))
+            {
+                string label = FirstChoiceLabel();
+                TooltipTrigger.Ensure(button.gameObject).SetCustom(!string.IsNullOrEmpty(label) ? label : "Continue", null, "What Follows", preview);
+            }
             else RemoveTooltip(button.gameObject);
         }
 

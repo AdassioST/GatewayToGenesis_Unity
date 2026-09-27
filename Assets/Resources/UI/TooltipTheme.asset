@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc64628f2ce44c2d949146dfa14d35a5, type: 3}
+  m_Name: TooltipTheme
+  m_EditorClassIdentifier: 
+  font: {fileID: 11400000, guid: f76605759a0216649b5c6ce4d6bb6f87, type: 2}
+  background: {fileID: 21300000, guid: 7e6cff35286e4219bfeb59f88115bdef, type: 3}
+  backgroundAlpha: 0.9
+  backgroundScale: 4
+  frame: {fileID: 21300000, guid: 8594cdd2160e4931a07e9cea0c898500, type: 3}
+  shadow: {fileID: 21300000, guid: ec626eee2a6646cd9b5dabc2db752d8b, type: 3}
+  divider: {fileID: 21300000, guid: 66f47f5c03bb41798e1d897ce3c5e9e9, type: 3}
+  ring: {fileID: 21300000, guid: 62ed0cc42d264d18aff97c58b222806a, type: 3}
+  ringSocket: {fileID: 21300000, guid: 796888fc22c7484abf1a92f230c9f4c9, type: 3}
+  pixelScale: 2
+  titleColor: {r: 1, g: 0.9019608, b: 0.7803922, a: 1}
+  subtitleColor: {r: 0.7254902, g: 0.6470588, b: 0.8784314, a: 1}
+  bodyColor: {r: 0.9254902, g: 0.8901961, b: 0.8313725, a: 1}
+  flavorColor: {r: 0.9254902, g: 0.6509804, b: 0.7333333, a: 1}
+  frameFluid: {r: 0.6901961, g: 0.6431373, b: 0.5960784, a: 1}
+  frameSolid: {r: 1, g: 1, b: 1, a: 1}
+  ringTrack: {r: 0.2313725, g: 0.1843137, b: 0.1607843, a: 1}
+  ringFill: {r: 0.9019608, g: 0.7372549, b: 0.5764706, a: 1}
+  ringSolid: {r: 0.9960784, g: 0.8313725, b: 0.6666667, a: 1}
+  linkHover: {r: 1, g: 0.9647059, b: 0.8235294, a: 1}
+  titleSize: 23
+  subtitleSize: 14
+  bodySize: 17
+  flavorSize: 16
+  minWidth: 260
+  maxWidth: 480
+  bannerWidth: 650
+  padding:
+    left: 28
+    right: 28
+    top: 24
+    bottom: 34
+  spacing: 14
+  pointerOffset: {x: 20, y: -8}
+  lockDelay: 0.6
+  stillTolerance: 4
+  linkHoverDelay: 0.12
+  closeGrace: 0.35
+  collapseAfter: 5
+  fadeIn: 0.12
+  fadeOut: 0.08

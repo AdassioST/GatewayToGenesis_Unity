@@ -1,0 +1,1973 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a81cbee5a31a5b679cb7638cfee1c69, type: 3}
+  m_Name: World
+  m_EditorClassIdentifier:
+  generation:
+    stencil: World/Composition
+    tilesFolder: World/Tiles
+    cellsPerStencilCell: 8
+    apron: 1.5
+    warp: 0.45
+    fixedSeed: 0
+    seaLevel: 0.3
+    coastBand: 0.7
+    oceanRingWidth: 3
+    oceanTerrain: deep-ocean
+    shallowsTerrain: shallows
+    lakeTerrain: lake
+    connective:
+    - terrain: peaks
+      weight: 3
+      minElevation: 0.8
+      maxElevation: 1
+      minMoisture: 0
+      maxMoisture: 1
+    - terrain: highlands
+      weight: 2
+      minElevation: 0.66
+      maxElevation: 0.84
+      minMoisture: 0
+      maxMoisture: 1
+    - terrain: foothills
+      weight: 2
+      minElevation: 0.55
+      maxElevation: 0.72
+      minMoisture: 0
+      maxMoisture: 1
+    - terrain: plains
+      weight: 2
+      minElevation: 0
+      maxElevation: 0.6
+      minMoisture: 0.25
+      maxMoisture: 0.75
+    - terrain: woodland
+      weight: 1.5
+      minElevation: 0
+      maxElevation: 0.66
+      minMoisture: 0.55
+      maxMoisture: 1
+    - terrain: marsh
+      weight: 1
+      minElevation: 0
+      maxElevation: 0.4
+      minMoisture: 0.75
+      maxMoisture: 1
+    - terrain: scrub
+      weight: 1
+      minElevation: 0
+      maxElevation: 0.66
+      minMoisture: 0
+      maxMoisture: 0.35
+    seamReach: 10
+    riverThreshold: 45
+    majorRiverThreshold: 180
+    lakeDepth: 0.05
+    minLakeCells: 4
+    maxLakeCells: 80
+    seedStrength: 0.35
+    seedRadius: 14
+    dissonanceSeeds: 6
+    dissonanceStrength: 0.4
+    dissonanceRadius: 10
+    sacredSites: 4
+    naturalBasins: 12
+    capitalAuthorityRadius: 0
+    leylineDriftRadius: 5
+    leylineDriftStrength: 0.22
+    leylineLength: 60
+    silverThreshold: 0.3
+    silverRetention: 0.88
+    silverResidue: 0.4
+    magicAccess:
+    - 0.35
+    - 0.6
+    - 0.8
+    - 1
+    startExploreRadius: 0
+    startRevealRadius: 1
+    capitalFeature: capital
+    terrains:
+    - id: deep-ocean
+      name: Open Sea
+      description:
+      color: {r: 0.03, g: 0.07, b: 0.15, a: 1}
+      passable: 0
+      water: 1
+      fertility: 0
+      moveCost: 1
+      governance: 0
+      beauty: 0
+      yields: []
+    - id: shallows
+      name: Shallows
+      description:
+      color: {r: 0.07, g: 0.24, b: 0.3, a: 1}
+      passable: 0
+      water: 1
+      fertility: 0
+      moveCost: 1
+      governance: 0
+      beauty: 0
+      yields: []
+    - id: lake
+      name: Lake
+      description:
+      color: {r: 0.06, g: 0.2, b: 0.3, a: 1}
+      passable: 0
+      water: 1
+      fertility: 0
+      moveCost: 1
+      governance: 0
+      beauty: 0.1
+      yields: []
+    - id: peaks
+      name: Peaks
+      description:
+      color: {r: 0.86, g: 0.87, b: 0.92, a: 1}
+      passable: 0
+      water: 0
+      fertility: 0.02
+      moveCost: 1
+      governance: 0
+      beauty: 0.3
+      yields: []
+    - id: highlands
+      name: Highlands
+      description:
+      color: {r: 0.36, g: 0.33, b: 0.33, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.2
+      moveCost: 2
+      governance: 2.2
+      beauty: 0.1
+      yields:
+      - resource: Duskstone
+        amount: 0.008
+      forage:
+      - resource: Behemoth Meat
+        amount: 1
+    - id: foothills
+      name: Foothills
+      description:
+      color: {r: 0.42, g: 0.4, b: 0.27, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.35
+      moveCost: 1.5
+      governance: 1.5
+      beauty: 0.15
+      yields:
+      - resource: Elderwood
+        amount: 0.005
+      forage:
+      - resource: Bitter Roots
+        amount: 4
+      - resource: Behemoth Meat
+        amount: 1
+    - id: plains
+      name: Open Plains
+      description:
+      color: {r: 0.47, g: 0.52, b: 0.22, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.5
+      moveCost: 1
+      governance: 1
+      beauty: 0.05
+      yields:
+      - resource: Deep-Rooted Grain
+        amount: 0.02
+      forage:
+      - resource: Deep-Rooted Grain
+        amount: 6
+      - resource: Earth-Beans
+        amount: 6
+    - id: scrub
+      name: Scrubland
+      description:
+      color: {r: 0.56, g: 0.44, b: 0.24, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.3
+      moveCost: 1.1
+      governance: 1.15
+      beauty: -0.1
+      yields: []
+      forage:
+      - resource: Bitter Roots
+        amount: 8
+    - id: marsh
+      name: Marsh
+      description:
+      color: {r: 0.16, g: 0.29, b: 0.24, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.45
+      moveCost: 2
+      governance: 1.8
+      beauty: -0.2
+      yields:
+      - resource: Glimmerfern
+        amount: 0.004
+      forage:
+      - resource: Bitter Roots
+        amount: 6
+      - resource: Earth-Beans
+        amount: 4
+    - id: woodland
+      name: Woodland
+      description:
+      color: {r: 0.1, g: 0.27, b: 0.14, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.45
+      moveCost: 1.3
+      governance: 1.3
+      beauty: 0.2
+      yields:
+      - resource: Elderwood
+        amount: 0.01
+      forage:
+      - resource: Bitter Roots
+        amount: 5
+      - resource: Behemoth Meat
+        amount: 1
+    - id: ash-plains
+      name: Golden Ash
+      description: A fine, shimmering dust settled over everything - roads, hovel-roofs, dead trees, river stones.
+      color: {r: 0.55, g: 0.51, b: 0.45, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.15
+      moveCost: 1
+      governance: 1.2
+      beauty: -0.45
+      yields:
+      - resource: Duskstone
+        amount: 0.004
+    - id: skeletal-orchard
+      name: Skeletal Orchards
+      description: Dead trees from a time even before the Auric peach, branches like exposed nerves against a pale sky.
+      color: {r: 0.64, g: 0.44, b: 0.18, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.3
+      moveCost: 1.1
+      governance: 1.2
+      beauty: -0.3
+      yields:
+      - resource: Elderwood
+        amount: 0.015
+      forage:
+      - resource: Dried Auric Peaches
+        amount: 6
+    - id: ruin-field
+      name: Crumbling Ruins
+      description: Survivors quarry the past, prying metals from statues, chiseling runes from inlaid floors.
+      color: {r: 0.33, g: 0.29, b: 0.35, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.1
+      moveCost: 1.4
+      governance: 1.4
+      beauty: -0.35
+      yields:
+      - resource: Duskstone
+        amount: 0.012
+    - id: leyline-ravine
+      name: Broken Leyline
+      description: Jagged ravines glowing with sickly light, where the boundary between matter and Flux feels thin and wrong.
+      color: {r: 0.34, g: 0.12, b: 0.52, a: 1}
+      passable: 0
+      water: 0
+      fertility: 0.05
+      moveCost: 1
+      governance: 0
+      beauty: 0.2
+      yields: []
+    - id: fallow-steppe
+      name: Fallow Ground
+      description: Wild grasses, hardy weeds, and volunteer legumes appear.
+      color: {r: 0.6, g: 0.58, b: 0.28, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.6
+      moveCost: 1
+      governance: 1
+      beauty: 0
+      yields:
+      - resource: Earth-Beans
+        amount: 0.06
+      forage:
+      - resource: Earth-Beans
+        amount: 12
+    - id: moonlit-grove
+      name: Moonlit Grove
+      description: A bioluminescent plant that thrives in moonlit groves.
+      color: {r: 0.15, g: 0.23, b: 0.42, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.45
+      moveCost: 1.3
+      governance: 1.3
+      beauty: 0.45
+      yields:
+      - resource: Glimmerfern
+        amount: 0.008
+      forage:
+      - resource: Bitter Roots
+        amount: 4
+    - id: violet-wood
+      name: Violet Woods
+      description:
+      color: {r: 0.25, g: 0.1, b: 0.34, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.5
+      moveCost: 1.4
+      governance: 1.4
+      beauty: 0.4
+      yields:
+      - resource: Elderwood
+        amount: 0.01
+      forage:
+      - resource: Bitter Roots
+        amount: 4
+      - resource: Behemoth Meat
+        amount: 1
+    - id: violet-glade
+      name: Violet Glade
+      description:
+      color: {r: 0.46, g: 0.27, b: 0.58, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.55
+      moveCost: 1.1
+      governance: 1.1
+      beauty: 0.5
+      yields:
+      - resource: Glimmerfern
+        amount: 0.006
+      forage:
+      - resource: Earth-Beans
+        amount: 6
+    - id: expanse-steppe
+      name: Expanse Steppe
+      description:
+      color: {r: 0.7, g: 0.56, b: 0.26, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.45
+      moveCost: 1
+      governance: 1
+      beauty: 0.05
+      yields:
+      - resource: Deep-Rooted Grain
+        amount: 0.012
+      forage:
+      - resource: Deep-Rooted Grain
+        amount: 6
+      - resource: Behemoth Meat
+        amount: 1
+    - id: expanse-scrub
+      name: Expanse Scrub
+      description:
+      color: {r: 0.48, g: 0.37, b: 0.22, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.25
+      moveCost: 1.1
+      governance: 1.15
+      beauty: -0.1
+      yields:
+      - resource: Duskstone
+        amount: 0.004
+      forage:
+      - resource: Bitter Roots
+        amount: 6
+    - id: taiga-forest
+      name: Taiga Forest
+      description:
+      color: {r: 0.06, g: 0.2, b: 0.18, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.35
+      moveCost: 1.5
+      governance: 1.6
+      beauty: 0.15
+      yields:
+      - resource: Elderwood
+        amount: 0.012
+      forage:
+      - resource: Behemoth Meat
+        amount: 2
+    - id: taiga-bog
+      name: Taiga Bog
+      description:
+      color: {r: 0.15, g: 0.22, b: 0.19, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.3
+      moveCost: 2
+      governance: 1.9
+      beauty: -0.25
+      yields:
+      - resource: Glimmerfern
+        amount: 0.004
+      forage:
+      - resource: Bitter Roots
+        amount: 6
+    - id: rift-scar
+      name: Rift Scar
+      description:
+      color: {r: 0.52, g: 0.08, b: 0.14, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.15
+      moveCost: 1.8
+      governance: 2
+      beauty: -0.55
+      yields:
+      - resource: Glimmerfern
+        amount: 0.01
+    - id: wind-plain
+      name: Windswept Plain
+      description:
+      color: {r: 0.55, g: 0.62, b: 0.46, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.45
+      moveCost: 0.9
+      governance: 1
+      beauty: 0.1
+      yields:
+      - resource: Deep-Rooted Grain
+        amount: 0.012
+      forage:
+      - resource: Deep-Rooted Grain
+        amount: 6
+    - id: wind-mesa
+      name: Wind Mesa
+      description:
+      color: {r: 0.6, g: 0.38, b: 0.28, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.2
+      moveCost: 1.6
+      governance: 1.8
+      beauty: 0.2
+      yields:
+      - resource: Duskstone
+        amount: 0.006
+    - id: auric-meadow
+      name: Auric Meadow
+      description:
+      color: {r: 0.86, g: 0.68, b: 0.2, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.7
+      moveCost: 1
+      governance: 1
+      beauty: 0.45
+      yields:
+      - resource: Dried Auric Peaches
+        amount: 0.03
+      forage:
+      - resource: Dried Auric Peaches
+        amount: 10
+    - id: auric-copse
+      name: Auric Copse
+      description:
+      color: {r: 0.16, g: 0.22, b: 0.21, a: 1}
+      passable: 1
+      water: 0
+      fertility: 0.55
+      moveCost: 1.2
+      governance: 1.2
+      beauty: 0.35
+      yields:
+      - resource: Elderwood
+        amount: 0.006
+      forage:
+      - resource: Dried Auric Peaches
+        amount: 6
+      - resource: Bitter Roots
+        amount: 3
+    biomes:
+    - id: violet-grove
+      name: Violet Grove
+      description:
+      color: {r: 0.55, g: 0.36, b: 0.7, a: 1}
+      terrains:
+      - terrain: violet-wood
+        weight: 3
+        minElevation: 0
+        maxElevation: 0.76
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: violet-glade
+        weight: 1.5
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0.4
+        maxMoisture: 1
+      - terrain: moonlit-grove
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.66
+        minMoisture: 0.5
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1.5
+        minElevation: 0.7
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.84
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.45
+      relief: 0.1
+      tilt: 0.12
+      moisture: 0.65
+      orientations: []
+      requires: []
+      prefers:
+      - core
+      tileCoverage: 0.35
+      coherence: 0.6
+    - id: great-expanse
+      name: Great Expanse
+      description:
+      color: {r: 0.78, g: 0.66, b: 0.42, a: 1}
+      terrains:
+      - terrain: expanse-steppe
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: expanse-scrub
+        weight: 2
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 0.45
+      - terrain: plains
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.6
+        minMoisture: 0.35
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1.5
+        minElevation: 0.7
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.86
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.42
+      relief: 0.07
+      tilt: 0.08
+      moisture: 0.35
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.45
+    - id: taiga
+      name: Taiga
+      description:
+      color: {r: 0.22, g: 0.38, b: 0.34, a: 1}
+      terrains:
+      - terrain: taiga-forest
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: taiga-bog
+        weight: 1.5
+        minElevation: 0
+        maxElevation: 0.55
+        minMoisture: 0.55
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1.5
+        minElevation: 0.68
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.8
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.55
+      relief: 0.14
+      tilt: 0.14
+      moisture: 0.6
+      orientations:
+      - 1
+      - 2
+      requires: []
+      prefers:
+      - north
+      tileCoverage: 0.3
+      coherence: 0.45
+    - id: magical-rift
+      name: Magical Rift
+      description:
+      color: {r: 0.5, g: 0.24, b: 0.6, a: 1}
+      terrains:
+      - terrain: rift-scar
+        weight: 3
+        minElevation: 0
+        maxElevation: 0.78
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: leyline-ravine
+        weight: 1.2
+        minElevation: 0
+        maxElevation: 0.78
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.68
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.82
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.5
+      relief: 0.2
+      tilt: 0.1
+      moisture: 0.45
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.55
+    - id: wind-plains
+      name: Wind Plains
+      description:
+      color: {r: 0.64, g: 0.72, b: 0.58, a: 1}
+      terrains:
+      - terrain: wind-plain
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.78
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: wind-mesa
+        weight: 1.5
+        minElevation: 0.55
+        maxElevation: 0.82
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: plains
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.6
+        minMoisture: 0.3
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.74
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.86
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.58
+      relief: 0.08
+      tilt: 0.1
+      moisture: 0.35
+      orientations: []
+      requires: []
+      prefers:
+      - coast
+      tileCoverage: 0.3
+      coherence: 0.5
+    - id: auric-grasslands
+      name: Auric Grasslands
+      description: Golden grass crowns weathered stone shelves above mist-filled basins. Dark conifers gather on the ridges and broken sanctuaries watch the silver reaches.
+      color: {r: 0.9, g: 0.74, b: 0.3, a: 1}
+      terrains:
+      - terrain: auric-meadow
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.72
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: auric-copse
+        weight: 1.5
+        minElevation: 0
+        maxElevation: 0.72
+        minMoisture: 0.45
+        maxMoisture: 1
+      - terrain: marsh
+        weight: 0.6
+        minElevation: 0
+        maxElevation: 0.45
+        minMoisture: 0.72
+        maxMoisture: 1
+      - terrain: foothills
+        weight: 1.5
+        minElevation: 0.68
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.86
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.49
+      relief: 0.18
+      terraces: 0.9
+      tilt: 0.16
+      moisture: 0.55
+      orientations: []
+      requires: []
+      prefers:
+      - south
+      tileCoverage: 0.3
+      coherence: 0.6
+    - id: survivor-architecture
+      name: Survivor Architecture
+      description: New settlements cling to the bases of ruins like moss on a corpse.
+      color: {r: 0.64, g: 0.78, b: 0.24, a: 1}
+      terrains:
+      - terrain: fallow-steppe
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: skeletal-orchard
+        weight: 1.5
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: ruin-field
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: woodland
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.66
+        minMoisture: 0.55
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.7
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.4
+      relief: 0.06
+      tilt: 0.06
+      moisture: 0.62
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.55
+    - id: crumbling-infrastructure
+      name: Crumbling Infrastructure
+      description: Former capital spires stab the horizon like grave markers.
+      color: {r: 0.61, g: 0.55, b: 0.8, a: 1}
+      terrains:
+      - terrain: ruin-field
+        weight: 4
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: ash-plains
+        weight: 2
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: leyline-ravine
+        weight: 0.6
+        minElevation: 0
+        maxElevation: 0.74
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: foothills
+        weight: 1
+        minElevation: 0.6
+        maxElevation: 0.8
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.84
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.48
+      relief: 0.1
+      tilt: 0.08
+      moisture: 0.45
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.4
+    - id: the-golden-ash
+      name: The Golden Ash
+      description: Mineral-rich but lifeless, beautiful and sterile at once.
+      color: {r: 0.91, g: 0.78, b: 0.75, a: 1}
+      terrains:
+      - terrain: ash-plains
+        weight: 5
+        minElevation: 0
+        maxElevation: 0.76
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: skeletal-orchard
+        weight: 2
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: ruin-field
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.72
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.85
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.46
+      relief: 0.09
+      tilt: 0.08
+      moisture: 0.3
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.35
+    - id: broken-leylines
+      name: Broken Leyline Channels
+      description: Where leylines were once clean, buried arteries of ordered Resonance, many are now torn open.
+      color: {r: 0.7, g: 0.78, b: 0.92, a: 1}
+      terrains:
+      - terrain: moonlit-grove
+        weight: 3
+        minElevation: 0
+        maxElevation: 0.72
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: leyline-ravine
+        weight: 1.2
+        minElevation: 0
+        maxElevation: 0.72
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: fallow-steppe
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.66
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: marsh
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.45
+        minMoisture: 0.6
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.72
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.44
+      relief: 0.12
+      tilt: 0.08
+      moisture: 0.6
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0.3
+      coherence: 0.55
+    - id: sector-7-placeholder
+      name: Sector 7 (placeholder)
+      description:
+      color: {r: 0.45, g: 0.11, b: 0.3, a: 1}
+      terrains:
+      - terrain: woodland
+        weight: 2
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0.4
+        maxMoisture: 1
+      - terrain: scrub
+        weight: 2
+        minElevation: 0
+        maxElevation: 0.7
+        minMoisture: 0
+        maxMoisture: 0.55
+      - terrain: plains
+        weight: 1
+        minElevation: 0
+        maxElevation: 0.62
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: highlands
+        weight: 1
+        minElevation: 0.66
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      - terrain: peaks
+        weight: 2
+        minElevation: 0.82
+        maxElevation: 1
+        minMoisture: 0
+        maxMoisture: 1
+      elevation: 0.5
+      relief: 0.12
+      tilt: 0.12
+      moisture: 0.5
+      orientations: []
+      requires: []
+      prefers: []
+      tileCoverage: 0
+      coherence: 0.45
+    sectors:
+    - id: S1
+      name: Starting sector
+      description:
+      biomes:
+      - auric-grasslands
+      allowRepeats: 0
+      backbone: 0
+      coherenceSeeds: 1
+      island: 0
+    - id: S2
+      name: Sector 2
+      description:
+      biomes:
+      - violet-grove
+      - great-expanse
+      allowRepeats: 0
+      backbone: 0
+      coherenceSeeds: 1
+      island: 0
+    - id: S3
+      name: Sector 3 (placeholder catalog)
+      description:
+      biomes:
+      - crumbling-infrastructure
+      allowRepeats: 1
+      backbone: 0
+      coherenceSeeds: 1
+      island: 0
+    - id: S4
+      name: Sector 4 (placeholder catalog)
+      description:
+      biomes:
+      - the-golden-ash
+      allowRepeats: 1
+      backbone: 0.1
+      coherenceSeeds: 1
+      island: 0
+    - id: S5
+      name: Sector 5
+      description:
+      biomes:
+      - taiga
+      - magical-rift
+      - wind-plains
+      - survivor-architecture
+      allowRepeats: 0
+      backbone: 0.35
+      coherenceSeeds: 1
+      island: 0
+    - id: S6
+      name: Sector 6 (placeholder catalog)
+      description:
+      biomes:
+      - broken-leylines
+      allowRepeats: 1
+      backbone: 0
+      coherenceSeeds: 1
+      island: 0
+    - id: S7
+      name: Sector 7 (placeholder catalog)
+      description:
+      biomes:
+      - sector-7-placeholder
+      allowRepeats: 1
+      backbone: 0.15
+      coherenceSeeds: 1
+      island: 0
+    features:
+    - id: capital
+      name: Your Capital
+      tag: capital
+      beauty: 0.2
+      description: New settlements cling to the bases of ruins like moss on a corpse.
+      color: {r: 1, g: 0.96, b: 0.82, a: 1}
+      minAge: 0
+      count: 0
+      minDistance: 0
+      maxDistance: 0
+      terrains: []
+      biomes: []
+      prefers: 0
+      spacing: 3
+      visibleFromAfar: 1
+      mayAppearOnExplored: 0
+      rewards: []
+      yields: []
+      recruitsLegend: 0
+      renown: 0
+      story:
+    - id: auric-sanctuary
+      name: The Hollow Choir
+      tag: landmark
+      beauty: 0.5
+      description: Roofless pointed arches stand above the golden terraces. Wind passing through their empty windows carries a choir with no living singers.
+      color: {r: 0.74, g: 0.71, b: 0.62, a: 1}
+      minAge: 0
+      count: 3
+      minDistance: 3
+      maxDistance: 30
+      terrains: []
+      biomes:
+      - auric-grasslands
+      prefers: 4
+      spacing: 6
+      visibleFromAfar: 1
+      mayAppearOnExplored: 1
+      rewards: []
+      yields: []
+      renown: 2
+    - id: auric-orchard
+      name: Auric Orchard
+      tag: orchard
+      beauty: 0.3
+      description: A fast-growing, shallow-rooted fruit tree that can take hold even in ash-choked, Fallout-touched soils brushed by weakened leylines.
+      color: {r: 0.95, g: 0.78, b: 0.3, a: 1}
+      minAge: 0
+      count: 4
+      minDistance: 3
+      maxDistance: 12
+      terrains: []
+      biomes: []
+      prefers: 1
+      spacing: 3
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Dried Auric Peaches
+        amount: 25
+      yields:
+      - resource: Food
+        amount: 0.45
+      recruitsLegend: 0
+      renown: 1
+      story:
+      expeditionStories:
+      - expedition_orchard
+    - id: resting-field
+      name: Resting Field
+      tag: fertile
+      beauty: 0.15
+      description: Abandoned fields, left uncultivated because everyone fled or died, begin to show small signs of recovery.
+      color: {r: 0.55, g: 0.85, b: 0.45, a: 1}
+      minAge: 0
+      count: 4
+      minDistance: 4
+      maxDistance: 20
+      terrains: []
+      biomes: []
+      prefers: 1
+      spacing: 4
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Earth-Beans
+        amount: 20
+      yields:
+      - resource: Earth-Beans
+        amount: 0.3
+      recruitsLegend: 0
+      renown: 2
+      story:
+    - id: fallen-resonator
+      name: Fallen Auric Resonator
+      tag: relic
+      beauty: -0.15
+      description: Crystalline towers that once tuned weather and stabilized local space lie toppled in fields and valleys. Their faceted surfaces still faintly echo forgotten frequencies, glowing weakly at dusk.
+      color: {r: 0.55, g: 0.9, b: 0.95, a: 1}
+      minAge: 0
+      count: 4
+      minDistance: 5
+      maxDistance: 32
+      terrains: []
+      biomes: []
+      prefers: 3
+      spacing: 6
+      visibleFromAfar: 1
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Aetherlight
+        amount: 60
+      - resource: Duskstone
+        amount: 25
+      yields: []
+      recruitsLegend: 0
+      renown: 3
+      story:
+      expeditionStories:
+      - expedition_resonator_1
+      - expedition_resonator_2
+      - expedition_resonator_3
+    - id: silent-spire
+      name: Silent Spire
+      tag: spire
+      beauty: 0.1
+      description: Former capital spires stab the horizon like grave markers. Upper levels are open to the sky, choked with wind and dust.
+      color: {r: 0.75, g: 0.6, b: 0.95, a: 1}
+      minAge: 0
+      count: 2
+      minDistance: 7
+      maxDistance: 40
+      terrains: []
+      biomes: []
+      prefers: 0
+      spacing: 10
+      visibleFromAfar: 1
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Research
+        amount: 25
+      yields: []
+      recruitsLegend: 0
+      renown: 5
+      story: ballad_ruin_song_1
+    - id: survivor-hamlet
+      name: Survivor Hamlet
+      tag: legend
+      beauty: 0.05
+      description: 'Walls: reclaimed blocks from fallen colonnades. Roofs: ribs of collapsed halls, patched with scrap cloth and thatch.'
+      color: {r: 1, g: 0.62, b: 0.35, a: 1}
+      minAge: 0
+      count: 3
+      minDistance: 3
+      maxDistance: 14
+      terrains: []
+      biomes: []
+      prefers: 4
+      spacing: 4
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Bitter Roots
+        amount: 20
+      yields: []
+      recruitsLegend: 1
+      renown: 2
+      story:
+    - id: agromagical-conclave
+      name: Agromagical Conclave
+      tag: fertile
+      beauty: 0.3
+      description: The land is a chord, not a note. No stone alone can save a starving field.
+      color: {r: 0.4, g: 1, b: 0.55, a: 1}
+      minAge: 1
+      count: 2
+      minDistance: 1
+      maxDistance: 8
+      terrains: []
+      biomes: []
+      prefers: 1
+      spacing: 3
+      visibleFromAfar: 1
+      mayAppearOnExplored: 1
+      rewards: []
+      yields:
+      - resource: Food
+        amount: 0.6
+      recruitsLegend: 0
+      renown: 2
+      story:
+    - id: memory-field
+      name: Memory Field
+      tag: landmark
+      beauty: 0.2
+      description: An advanced type of a Strand Pool mirroring as an archeomagical Strand field that contain the weight of history for a strong event.
+      color: {r: 0.7, g: 0.85, b: 1, a: 1}
+      minAge: 1
+      count: 1
+      minDistance: 6
+      maxDistance: 40
+      terrains: []
+      biomes: []
+      prefers: 2
+      spacing: 3
+      visibleFromAfar: 1
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Research
+        amount: 60
+      yields: []
+      recruitsLegend: 1
+      renown: 8
+      story:
+    - id: secluded-refuge
+      name: Secluded Refuge
+      tag: refuge
+      beauty: 0.2
+      description: A type of landmark of hidden settlements alongside the map.
+      color: {r: 0.4, g: 0.8, b: 0.8, a: 1}
+      minAge: 1
+      count: 3
+      minDistance: 6
+      maxDistance: 40
+      terrains: []
+      biomes: []
+      prefers: 0
+      spacing: 6
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards:
+      - resource: Deep-Rooted Grain
+        amount: 15
+      yields:
+      - resource: Food
+        amount: 0.1
+      recruitsLegend: 0
+      renown: 3
+      story:
+    - id: reedwater-crossing
+      name: Reedwater Crossing
+      tag: landmark
+      beauty: 0.2
+      description: A shallow ford joins reed beds and old caravan tracks.
+      color: {r: 0.75, g: 0.7, b: 0.4, a: 1}
+      minAge: 0
+      count: 8
+      minDistance: 8
+      maxDistance: 999
+      terrains: []
+      biomes: []
+      prefers: 4
+      spacing: 9
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards: []
+      yields: []
+      recruitsLegend: 0
+      renown: 1
+      story:
+      requiresFreshwater: 1
+    - id: harmonic-observatory
+      name: Harmonic Observatory
+      tag: discovery
+      beauty: 0.3
+      description: An abandoned instrument measures the changing paths of the Grand Thread Rings.
+      color: {r: 0.75, g: 0.7, b: 0.4, a: 1}
+      minAge: 0
+      count: 5
+      minDistance: 8
+      maxDistance: 999
+      terrains: []
+      biomes: []
+      prefers: 3
+      spacing: 9
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards: []
+      yields: []
+      recruitsLegend: 0
+      renown: 1
+      story:
+      minimumCoherence: 0.65
+    - id: lakeside-refuge
+      name: Freshwater Refuge
+      tag: landmark
+      beauty: 0.3
+      description: Fresh water and sheltered banks offer a place to rest and survey the shore.
+      color: {r: 0.75, g: 0.7, b: 0.4, a: 1}
+      minAge: 0
+      count: 7
+      minDistance: 8
+      maxDistance: 999
+      terrains: []
+      biomes: []
+      prefers: 1
+      spacing: 9
+      visibleFromAfar: 0
+      mayAppearOnExplored: 0
+      rewards: []
+      yields: []
+      recruitsLegend: 0
+      renown: 1
+      story:
+      requiresFreshwater: 1
+    grandfields:
+    - id: elderwood-grandfield
+      name: Elderwood Grandfield
+      description: A dense old-growth stand invites a dedicated extraction outpost.
+      resource: Elderwood
+      category: Building Material
+      color: {r: 0.45, g: 0.7, b: 0.35, a: 1}
+      minAge: 0
+      count: 5
+      size: 9
+      terrains: []
+      biomes: [violet-grove, taiga]
+      minimumCoherence: 0
+      minimumMagicalFertility: 0
+      requiresFreshwater: 0
+      minDistance: 8
+      baseYield: 0.3
+    - id: duskstone-exposure
+      name: Duskstone Exposure
+      description: A mineral-rich outcrop is exposed beneath the broken highlands.
+      resource: Duskstone
+      category: Building Material
+      color: {r: 0.62, g: 0.55, b: 0.72, a: 1}
+      minAge: 0
+      count: 5
+      size: 8
+      terrains: [highlands, foothills]
+      biomes: []
+      minimumCoherence: 0
+      minimumMagicalFertility: 0
+      requiresFreshwater: 0
+      minDistance: 8
+      baseYield: 0.25
+    - id: glimmerfern-grove
+      name: Glimmerfern Grove
+      description: A bioluminescent plant that thrives in moonlit groves.
+      resource: Glimmerfern
+      category: Vital Resource
+      color: {r: 0.55, g: 0.95, b: 0.85, a: 1}
+      minAge: 0
+      count: 3
+      size: 7
+      terrains: [moonlit-grove, violet-glade, violet-wood]
+      biomes: []
+      minimumCoherence: 0.5
+      minimumMagicalFertility: 0
+      requiresFreshwater: 0
+      minDistance: 8
+      baseYield: 0.15
+    - id: emberwhisper-vein
+      name: Emberwhisper Vein
+      description: Gleaming, velvet red crystal with quiet whispers. Resonates with Aetherlight.
+      resource: Emberwhisper
+      category: Building Material
+      color: {r: 0.85, g: 0.25, b: 0.3, a: 1}
+      minAge: 1
+      count: 3
+      size: 6
+      terrains: [highlands, wind-mesa, rift-scar, foothills]
+      biomes: []
+      minimumCoherence: 0.55
+      minimumMagicalFertility: 0
+      requiresFreshwater: 0
+      minDistance: 10
+      baseYield: 0.1
+    enclaves:
+    - id: independent-watch
+      name: Independent Watch Community
+      family: 1
+      description: A small survival community guards its own territory and river approach.
+      originWound:
+      color: {r: 0.85, g: 0.55, b: 0.3, a: 1}
+      minAge: 0
+      count: 2
+      site: 2
+      bindings: []
+      authorityRadius: 3
+      woundMin: 70
+      woundMax: 92
+      minDistance: 8
+      spacing: 14
+      suzeraintyYields:
+      - resource: Elderwood
+        amount: 0.1
+    - id: traders-rest
+      name: Traders Rest Enclave
+      family: 5
+      description: An independent gathering of caravans controls a promising exchange.
+      originWound:
+      color: {r: 0.95, g: 0.75, b: 0.35, a: 1}
+      minAge: 0
+      count: 2
+      site: 4
+      bindings: []
+      authorityRadius: 3
+      woundMin: 60
+      woundMax: 85
+      minDistance: 8
+      spacing: 14
+      suzeraintyYields:
+      - resource: Food
+        amount: 0.2
+      - resource: Research
+        amount: 0.05
+    - id: moonlit-gardens
+      name: The Moonlit Gardens
+      family: 0
+      description: An Agromagical Enclave with Lunehymn-infused plants of grief turned into healing beauty.
+      originWound:
+      color: {r: 0.6, g: 0.85, b: 1, a: 1}
+      minAge: 1
+      count: 1
+      site: 9
+      bindings: []
+      authorityRadius: 3
+      woundMin: 45
+      woundMax: 70
+      minDistance: 6
+      spacing: 14
+      suzeraintyYields:
+      - resource: Food
+        amount: 0.4
+      - resource: Lunehymn
+        amount: 0.05
+    threats:
+    - id: fallout-scar
+      name: Vibrational Fallout Scar
+      description: Where the Great Harmonic Loom's Coherence collapsed into Vibrational Fallout. Wild magic gathers along its edge.
+      color: {r: 0.85, g: 0.3, b: 0.35, a: 1}
+      minAge: 0
+      onDissonanceSeeds: 1
+      count: 0
+      strength: 0.55
+      radius: 7
+      minDistance: 12
+    - id: atonalis-nest
+      name: Atonalis Nest
+      description: Atonalis gather where Coherence fails. They avoid Sacred Sites entirely.
+      color: {r: 0.95, g: 0.15, b: 0.25, a: 1}
+      minAge: 2
+      onDissonanceSeeds: 0
+      count: 4
+      strength: 0.75
+      radius: 6
+      minDistance: 16
+    nexus:
+      count: 14
+      spacing: 14
+      minDistance: 5
+      harbors: 1
+      estuaries: 1
+      passes: 1
+      confluences: 1
+  settlements:
+    spacing: 4
+    workRadius: 2
+    townCost:
+    - resource: Food
+      amount: 60
+    - resource: Elderwood
+      amount: 15
+    outpostCost:
+    - resource: Food
+      amount: 30
+    havenCost:
+    - resource: Food
+      amount: 50
+    incorporateCost:
+    - resource: Food
+      amount: 30
+    havenSacredReach: 2
+    havenCoherence: 0.75
+    townAuthorityRadius: 1
+    majorAuthorityRadius: 2
+    growthPerSeventh: 0.12
+    majorThreshold: 55
+    governmentCapacity: 1
+    capacityBuilding:
+    promoteCost:
+    - resource: Food
+      amount: 150
+    - resource: Elderwood
+      amount: 40
+    - resource: Duskstone
+      amount: 20
+    ceilingBase: 35
+    landWeight: 30
+    freshwaterWeight: 12
+    coherenceWeight: 20
+    magicWeight: 10
+    leylineWeight: 6
+    convergenceWeight: 4
+    basinWeight: 8
+    roadWeight: 6
+    networkWeight: 4
+    nexusWeight: 12
+    grandfieldWeight: 5
+    sacredWeight: 10
+    dangerWeight: 20
+    dissonanceWeight: 10
+    beautyWeight: 6
+    townYields:
+    - resource: Food
+      amount: 0.12
+    - resource: Research
+      amount: 0.02
+    majorYields:
+    - resource: Food
+      amount: 0.2
+    - resource: Research
+      amount: 0.05
+    havenYields:
+    - resource: Faith
+      amount: 0.1
+    bindings:
+    - id: Cindergale
+      focus: Fire + Wind
+      yields:
+      - resource: Emberwhisper
+        amount: 0.05
+    - id: Crystal
+      focus: Crystalized reality, bound to Absolute Certainty
+      yields:
+      - resource: Duskstone
+        amount: 0.1
+    - id: Flux
+      focus: Water + Currents
+      yields:
+      - resource: Food
+        amount: 0.25
+    - id: Luminance
+      focus: Light + Lightning
+      yields:
+      - resource: Aetherlight
+        amount: 0.06
+    - id: Resonance
+      focus: Wind + (Sound) Waves, the carrier wave of Spellweaving
+      yields:
+      - resource: Research
+        amount: 0.08
+    - id: Strand
+      focus: Memory + Time
+      yields:
+      - resource: Research
+        amount: 0.06
+    - id: Void
+      focus: Shadow + Space
+      yields:
+      - resource: Lunehymn
+        amount: 0.04
+    grandfieldBonusPercent: 150
+    grandfieldCapPercent: 900
+    roadCostPerCell:
+    - resource: Food
+      amount: 3
+    nodeSpacing: 8
+    anchorCost:
+    - resource: Aetherlight
+      amount: 40
+    - resource: Duskstone
+      amount: 25
+    anchorCoherence: 0.2
+    anchorRadius: 4
+    anchorPull: 10
+    envoyCost:
+    - resource: Food
+      amount: 25
+    envoyInfluence: 25
+    claimCost:
+    - resource: Food
+      amount: 15
+    - resource: Elderwood
+      amount: 10
+    claimCostGrowth: 0.1
+    leylineRevealBonus: 4
+    territory:
+      seats:
+      - kind: 0
+        strength: 1
+        reach: 9
+        maxCells: 30
+        adoptPerSeventh: 1
+        capacity: 0
+        scalesWithDevelopment: 0
+      - kind: 1
+        strength: 0.8
+        reach: 8
+        maxCells: 36
+        adoptPerSeventh: 0.6
+        capacity: 10
+        scalesWithDevelopment: 1
+      - kind: 2
+        strength: 0.6
+        reach: 5
+        maxCells: 10
+        adoptPerSeventh: 0.3
+        capacity: 3
+        scalesWithDevelopment: 0
+      - kind: 3
+        strength: 0.4
+        reach: 3
+        maxCells: 4
+        adoptPerSeventh: 0.15
+        capacity: 1
+        scalesWithDevelopment: 0
+      - kind: 4
+        strength: 0.55
+        reach: 5
+        maxCells: 16
+        adoptPerSeventh: 0.35
+        capacity: 4
+        scalesWithDevelopment: 1
+      - kind: 5
+        strength: 0.4
+        reach: 3
+        maxCells: 6
+        adoptPerSeventh: 0.15
+        capacity: 1
+        scalesWithDevelopment: 0
+      - kind: 6
+        strength: 0.45
+        reach: 4
+        maxCells: 8
+        adoptPerSeventh: 0.25
+        capacity: 0
+        scalesWithDevelopment: 0
+      - kind: 7
+        strength: 0.4
+        reach: 3
+        maxCells: 4
+        adoptPerSeventh: 0.1
+        capacity: 0.5
+        scalesWithDevelopment: 0
+      - kind: 8
+        strength: 0.5
+        reach: 4
+        maxCells: 0
+        adoptPerSeventh: 0
+        capacity: 0
+        scalesWithDevelopment: 0
+      adoptThreshold: 0.2
+      overlapShare: 0.25
+      anchorPullBonus: 0.25
+      localKnowledge: 1
+      roadFactor: 0.5
+      riverFactor: 0.85
+      escarpmentCost: 10
+      dissonanceCost: 1
+      dangerCost: 1
+      fertilityPriority: 1.2
+      freshwaterPriority: 0.5
+      coherencePriority: 0.5
+      beautyPriority: 0.8
+      grandfieldPriority: 0.6
+      featurePriority: 0.3
+      exploredPriority: 0.15
+      dangerPriority: 0.8
+      dissonancePriority: 0.6
+      difficultyPriority: 0.5
+      baseCapacity: 12
+      perGovernmentCapacity: 3
+      networkCapacity: 1
+      coherenceCapacity: 10
+      technologies: []
+      buildings: []
+      councilArea: governance
+      councilCapacity: 4
+      seatCellLoad: 0.25
+      distanceLoad: 0.08
+      coherenceRelief: 0.5
+      beautyRelief: 0.15
+      comfortStrain: 0.8
+      overStrain: 1.1
+      collapseStrain: 1.4
+      efficiencyDrop: 0.9
+      efficiencyFloor: 0.4
+      driftPerSeventh: 0.5
+      beautyWork: 0.2
+  units:
+  - id: expedition
+    name: Expedition
+    role: 3
+    description: Legends on the road, directed by one of them. Its numbers are each legend's; escorting settlers, the party can found a settlement.
+    color: {r: 1, g: 0.72, b: 0.28, a: 1}
+    stamina: 6
+    sight: 5
+    supplyCapacity: 12
+    supplyUsePerSeventh: 1
+    fatiguePerTravelCost: 1.2
+    workFatiguePerSeventh: 4
+    campRecoveryPerSeventh: 25
+    starvationAttritionPerSeventh: 8
+    recoveryPerSeventh: 3
+    forageRationsPerSeventh: 1.2
+    mesoSurveySevenths: 2.5
+    cost: []
+    populationCost: 0
+    unlockTechnology: Pathfinder Training
+    abilities: 51
+    knowRadius: 1
+    surveySevenths: 1
+    surveyRadius: 1
+    forageSevenths: 1
+    rewardMultiplier: 1
+    wearMultiplier: 1
+    limit: 0
+    limitBuilding:
+    charges: 0
+    workSevenths: 2
+  provisions:
+    resupplyPerSeventh: 12
+    foodValuePerRation: 1
+    campRationShare: 0.7
+    idleRecoveryShare: 0.35
+    exhaustion: 100
+    rested: 30
+    exhaustionAttrition: 6
+    exposureAttrition: 12
+    dangerAttrition: 10
+    dissonanceAttrition: 5
+    lostAtFullAttrition: 1
+  expeditions:
+    unit: expedition
+    baseSlots: 1
+    slotsPerCapacity: 2
+    slotBuilding: Hollow Watchpost
+    slotsPerBuilding: 1
+    maxParty: 4
+    outfitCost: []
+    firstFree: 1
+    settlers: 5
+    settlerCost:
+    - resource: Elderwood
+      amount: 15
+    settlerFoodValue: 0
+    settlerWeight: 0.3
+    settlerPace: 0.5
+    improveTechnology: Woodcraft Mastery
+    improveCost:
+    - resource: Elderwood
+      amount: 10
+    improveHands: 0.8
+    attritionFrom: 20
+    attritionStrain: 3
+    hungerStrain: 2
+    exhaustionStrain: 1
+    dissonanceStrain: 2
+    exposureStrain: 1
+    directorShare: 1.25
+    lossStrain: 8
+    breakStrain: 20
+    attritionRisk: 0.25
+    hungerRisk: 0.15
+    exhaustionRisk: 0.05
+    dangerRisk: 0.2
+    dissonanceRisk: 0.15
+    exposureRisk: 0.1
+    fracturedRisk: 0.05
+    spiralingRisk: 0.1
+    maxRisk: 0.6
+    mishaps:
+    - kind: 0
+      name: Injury
+      weight: 3
+      strain: 8
+      partyStrain: 0
+      attrition: 4
+      fatigue: 0
+      rationsLost: 0
+    - kind: 1
+      name: Fever
+      weight: 2
+      strain: 6
+      partyStrain: 0
+      attrition: 8
+      fatigue: 0
+      rationsLost: 0
+    - kind: 2
+      name: Spoiled rations
+      weight: 2
+      strain: 3
+      partyStrain: 0
+      attrition: 0
+      fatigue: 0
+      rationsLost: 0.3
+    - kind: 3
+      name: Lost bearings
+      weight: 2
+      strain: 4
+      partyStrain: 0
+      attrition: 0
+      fatigue: 20
+      rationsLost: 0
+    - kind: 4
+      name: Quarrel
+      weight: 1.5
+      strain: 5
+      partyStrain: 0
+      attrition: 0
+      fatigue: 0
+      rationsLost: 0
+    - kind: 5
+      name: Whispers of Dissonance
+      weight: 2
+      strain: 12
+      partyStrain: 0
+      attrition: 0
+      fatigue: 0
+      rationsLost: 0
+    - kind: 6
+      name: Ambush
+      weight: 2
+      strain: 6
+      partyStrain: 3
+      attrition: 12
+      fatigue: 0
+      rationsLost: 0
+    - kind: 7
+      name: Desertion
+      weight: 3
+      strain: 0
+      partyStrain: 4
+      attrition: 0
+      fatigue: 0
+      rationsLost: 0
+    luminanceSight: 2
+    cindergalePace: 1.15
+    crystalWear: 0.8
+    voidRations: 0.8
+    strandRewards: 1.25
+    fluxRest: 1.3
+    resonanceHardship: 0.75
+    companionRewards: 0.1
+    shapes:
+    - name: Solo
+      size: 1
+      pace: 1.25
+      wear: 0.8
+      sight: 0
+      workTime: 1.25
+      hardship: 1.35
+      roadStrain: 0.75
+      mishapRisk: 0.8
+      baseRisk: 0
+      dangerRisk: 0.6
+      quarrelWeight: 0
+      quarrelFrom: 2
+      resolve: 0
+      evade: 0.5
+      retreatPace: 1.5
+      canVanish: 1
+    - name: Duo
+      size: 2
+      pace: 1.1
+      wear: 0.9
+      sight: 0
+      workTime: 1.05
+      hardship: 0.9
+      roadStrain: 0
+      mishapRisk: 0.95
+      baseRisk: 0
+      dangerRisk: 0.8
+      quarrelWeight: 0.75
+      quarrelFrom: 2
+      resolve: 0.3
+      evade: 0.2
+      retreatPace: 1.25
+      canVanish: 0
+    - name: Trio
+      size: 3
+      pace: 1
+      wear: 1
+      sight: 0
+      workTime: 0.95
+      hardship: 1
+      roadStrain: 0
+      mishapRisk: 1.1
+      baseRisk: 0.02
+      dangerRisk: 1
+      quarrelWeight: 1
+      quarrelFrom: 2
+      resolve: 0.45
+      evade: 0
+      retreatPace: 0
+      canVanish: 0
+    - name: Company
+      size: 4
+      pace: 0.85
+      wear: 1.1
+      sight: 1
+      workTime: 0.85
+      hardship: 1.1
+      roadStrain: 0.25
+      mishapRisk: 1.25
+      baseRisk: 0.04
+      dangerRisk: 1.25
+      quarrelWeight: 1.5
+      quarrelFrom: 1
+      resolve: 0.55
+      evade: 0
+      retreatPace: 0
+      canVanish: 0
+    easedShare: 0.35
+    safeDanger: 0.1
+    safeDissonance: 0.2
+    vanishFrom: 2
+    missingSevenths: 2
+    missingSlowness: 1.5
+    reappearAttrition: 40
+    reappearFatigue: 60
+  mapTechnology: Pathfinder Training
+  unlockTechnology: Reconstruction
+  startingUnits: []

@@ -50,12 +50,12 @@ public class EventSystemTests
     {
         var problems = new List<string>();
         var list = EventScript.ParseConsequences(
-            "click_power_percent_section:Old World Relics +15; population:population -50; population:-10; " +
+            "click_power_percent_section:Old World Remnants +15; population:population -50; population:-10; " +
             "technology:Rites of Harvest enlightened; weather:Weeping Sky, permanent; weather:clear; unlock_event:weeping_princess.0.c-1", problems);
 
         CollectionAssert.IsEmpty(problems);
         Assert.AreEqual(EventConsequence.ConsequenceType.ClickPowerPercentChangeSection, list[0].type);
-        Assert.AreEqual(("Old World Relics", 15), (list[0].targetName, list[0].value));
+        Assert.AreEqual(("Old World Remnants", 15), (list[0].targetName, list[0].value));
         Assert.AreEqual(("population", -50), (list[1].targetName, list[1].value));
         Assert.AreEqual(("population", -10), (list[2].targetName, list[2].value), "population's target is implied");
         Assert.AreEqual((EventConsequence.ConsequenceType.TechnologyEnlightened, "Rites of Harvest"), (list[3].type, list[3].targetName));
@@ -98,6 +98,17 @@ public class EventSystemTests
     }
 
     [Test]
+    public void Conditions_WithoutATargetReadTheWholeValue()
+    {
+        // "age: <= 1" is parsed with the domain as its target; resolvers must see no target (the Age number), not an Age named "age".
+        var condition = EventScript.ParseCondition("age: <= 1");
+        Assert.AreEqual(("age", "age", 1), (condition.Domain, condition.targetName, condition.requiredValue));
+        Assert.AreEqual(string.Empty, GameValues.TargetOf(condition.Domain, condition.targetName));
+        Assert.AreEqual("Age-Of-Renewal", GameValues.TargetOf("age", "Age-Of-Renewal"));
+        Assert.IsNull(EventContentCheck.UnknownKind(condition), "no Age id to look up");
+    }
+
+    [Test]
     public void Conditions_UnknownDomainIsReported()
     {
         var problems = new List<string>();
@@ -137,7 +148,7 @@ public class EventSystemTests
     [Test]
     public void ChorusChoice_ConsequenceGroupsKeepTheirDurations()
     {
-        var choice = EventScript.ParseChorusChoice("Realism. Hold.&C consequences: production_percent_section:Academia -7; duration:sevenths:7; click_power_percent_section:Old World Relics +15; duration:sevenths:4 -> next");
+        var choice = EventScript.ParseChorusChoice("Realism. Hold.&C consequences: production_percent_section:Academia -7; duration:sevenths:7; click_power_percent_section:Old World Remnants +15; duration:sevenths:4 -> next");
         Assert.AreEqual(2, choice.consequences.Count);
         Assert.AreEqual((7, 4), (choice.consequences[0].durationSevenths, choice.consequences[1].durationSevenths));
         Assert.IsFalse(choice.hasChallenge);
@@ -341,5 +352,96 @@ public class EventSystemTests
         Assert.AreEqual("0.001", TooltipContent.Amount(0.0004f));
         Assert.AreEqual("0", TooltipContent.Amount(-3f));
         Assert.AreEqual("40", TooltipContent.Amount(40f));
+    }
+
+    // ===== CHORUS PREVIEW =====
+
+    [Test]
+    public void Preview_ShowsTheChallengeChanceAndHidesRareEvents()
+    {
+        foreach (int pillar in new[] { 0, 5, 10, 20 })
+        foreach (float bonus in new[] { 0f, 7.4f, 25f })
+        {
+            var preview = ChorusRules.Preview(Challenge(rarePercent: 3), bonus, pillar);
+            int shown = ChorusRules.ChanceAbove(100 - ChorusRules.SuccessPercent(pillar, 20), bonus);
+            Assert.AreEqual(shown, preview.successPercent, $"pillar {pillar}, bonus {bonus}: same chance as the challenge slot");
+            Assert.AreEqual(100, preview.successPercent + preview.failurePercent);
+        }
+        Assert.IsFalse(ChorusRules.Preview(new ChorusChoiceData { successPath = "on" }, 0f, 0).hasChallenge, "a choice without a pillar simply happens");
+    }
+
+    [Test]
+    public void Preview_FlagsCriticalFailureOnlyWhenARollCanReachIt()
+    {
+        Assert.IsTrue(ChorusRules.Preview(Challenge(), 0f, 10).canFailCritically);
+        Assert.IsFalse(ChorusRules.Preview(Challenge(crits: false), 0f, 10).canFailCritically, "no critical failure knot, no flag");
+        Assert.IsFalse(ChorusRules.Preview(Challenge(), 10f, 10).canFailCritically, "Piety lifts every roll above the critical band");
+        Assert.IsFalse(ChorusRules.Preview(Challenge(), 0f, 20).canFailCritically, "a certain success cannot fail at all");
+    }
+
+    [Test]
+    public void Outcomes_FollowTheStoryAndRevealOnlySuccessAndFailure()
+    {
+        var choice = Challenge(rarePercent: 3);
+        choice.rareEventConsequences.Add(Food(999));
+        choice.critSuccessConsequences.Add(Food(777));
+        var along = new Dictionary<string, List<EventConsequence>>
+        {
+            { "win", new List<EventConsequence> { Food(10) } },
+            { "lose", new List<EventConsequence> { Food(-5) } },
+            { "rare", new List<EventConsequence> { Food(999) } },
+        };
+        List<EventConsequence> Along(string knot, out bool decision)
+        {
+            decision = knot == "lose";
+            return along.TryGetValue(knot, out var list) ? list : new List<EventConsequence>();
+        }
+
+        string text = ChorusChoice.DescribeOutcomes(choice, ChorusRules.Preview(choice, 0f, 10), Along);
+        StringAssert.Contains("On Success", text);
+        StringAssert.Contains("On Failure", text);
+        StringAssert.Contains("50%", text);
+        StringAssert.Contains("Gained 10 x Food", text, "the outcome verse's button effects are shown");
+        StringAssert.Contains("Lost 5 x Food", text);
+        StringAssert.Contains("another decision", text, "a path that reaches a chorus says so");
+        StringAssert.Contains("Critical Failure", text, "a possible critical failure is flagged");
+        StringAssert.DoesNotContain("999", text, "rare events stay secret");
+        StringAssert.DoesNotContain("777", text, "critical successes stay secret");
+        StringAssert.DoesNotContain("Rare", text);
+    }
+
+    [Test]
+    public void Outcomes_WithoutAChallengeHaveOneOutcomeAndNoOdds()
+    {
+        var choice = new ChorusChoiceData { choiceId = "pragmatism", successPath = "on" };
+        List<EventConsequence> Along(string knot, out bool decision)
+        {
+            decision = false;
+            return new List<EventConsequence> { Food(3) };
+        }
+        string text = ChorusChoice.DescribeOutcomes(choice, ChorusRules.Preview(choice, 0f, 0), Along);
+        StringAssert.Contains("Outcome", text);
+        StringAssert.DoesNotContain("%", text);
+        StringAssert.DoesNotContain("Failure", text);
+    }
+
+    [Test]
+    public void Tone_ColoursGainsLossesAndStoryFlags()
+    {
+        Assert.AreEqual(ConsequenceTone.Good, EventText.ToneOf(Food(5)));
+        Assert.AreEqual(ConsequenceTone.Bad, EventText.ToneOf(Food(-5)));
+        Assert.AreEqual(ConsequenceTone.Bad, EventText.ToneOf(new EventConsequence { type = EventConsequence.ConsequenceType.PopulationChange, value = -3 }));
+        Assert.AreEqual(ConsequenceTone.Neutral, EventText.ToneOf(new EventConsequence { type = EventConsequence.ConsequenceType.ScoreChange, value = 1 }));
+        Assert.AreEqual(ConsequenceTone.Good, EventText.ToneOf(new EventConsequence { type = EventConsequence.ConsequenceType.TechnologyEnlightened }));
+    }
+
+    [Test]
+    public void Keywords_LinkTheCatalogsTermsButNotMarkupItselfOrExistingLinks()
+    {
+        string text = Keywords.Linkify("<color=#fff>Waltz</color> and Piety, <link=\"x\">Waltz</link>", "stat:piety");
+        StringAssert.Contains("<link=\"pillar:waltz\">", text);
+        StringAssert.DoesNotContain("stat:piety", text, "a term's own tooltip does not link to itself");
+        StringAssert.Contains("<color=#fff>", text, "tags are left alone");
+        Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(text, "pillar:waltz").Count, "an existing link is not linked again");
     }
 }

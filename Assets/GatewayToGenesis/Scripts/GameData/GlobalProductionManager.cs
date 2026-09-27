@@ -170,13 +170,13 @@ public class GlobalProductionManager : SingletonBehaviour<GlobalProductionManage
             for (int i = 0; i < data.producedResources.Count && i < data.productionRates.Count; i++)
             {
                 if (!string.Equals(data.producedResources[i], resourceName, System.StringComparison.OrdinalIgnoreCase)) continue;
-                float rate = data.productionRates[i] * slot.amount * (1f + efficiency / 100f);
+                float rate = ProductionRules.UnitOutput(data.productionRates[i], slot.amount, efficiency);
                 if (rate != 0f) lines.Add(new BreakdownLine(slot.gameUnit.name, rate, false));
             }
             for (int i = 0; i < data.consumedResources.Count && i < data.consumeRates.Count; i++)
             {
                 if (!string.Equals(data.consumedResources[i], resourceName, System.StringComparison.OrdinalIgnoreCase)) continue;
-                float rate = data.consumeRates[i] * slot.amount;
+                float rate = ProductionRules.UnitConsumption(data.consumeRates[i], slot.amount);
                 if (rate != 0f) lines.Add(new BreakdownLine($"{slot.gameUnit.name} (Consumption)", -rate, false));
             }
         }
@@ -220,11 +220,11 @@ public class GlobalProductionManager : SingletonBehaviour<GlobalProductionManage
             float activeUnits = slot.amount;
             for (int i = 0; i < data.producedResources.Count && i < data.productionRates.Count; i++)
             {
-                Accumulate(_outputRates, data.producedResources[i], data.productionRates[i] * activeUnits * (1f + efficiency / 100f));
+                Accumulate(_outputRates, data.producedResources[i], ProductionRules.UnitOutput(data.productionRates[i], activeUnits, efficiency));
             }
             for (int i = 0; i < data.consumedResources.Count && i < data.consumeRates.Count; i++)
             {
-                Accumulate(_consumptionRates, data.consumedResources[i], data.consumeRates[i] * activeUnits);
+                Accumulate(_consumptionRates, data.consumedResources[i], ProductionRules.UnitConsumption(data.consumeRates[i], activeUnits));
             }
         }
 
@@ -234,23 +234,24 @@ public class GlobalProductionManager : SingletonBehaviour<GlobalProductionManage
             if (slot == null || slot.gameUnit == null) continue;
             string resource = slot.gameUnit.name;
 
-            float output = Read(_outputRates, resource) + CalculateScalingBonus(resource);
-            float consumption = Read(_consumptionRates, resource);
-            float percent = moraleDelta;
+            var rate = new ProductionRules.Rate
+            {
+                output = Read(_outputRates, resource) + CalculateScalingBonus(resource),
+                consumption = Read(_consumptionRates, resource),
+                percent = moraleDelta
+            };
 
             FillScopeKeys(resource, slot.gameUnit.section, slot.gameUnit.type);
             foreach (var key in _scratchKeys)
             {
                 foreach (var source in ResourceModifiers.Sources(key))
                 {
-                    if (source.Value.Flat >= 0f) output += source.Value.Flat;
-                    else consumption -= source.Value.Flat;
-                    percent += source.Value.Percent;
+                    rate.AddFlat(source.Value.Flat);
+                    rate.percent += source.Value.Percent;
                 }
             }
 
-            if (output != 0f) output *= Mathf.Max(0f, 1f + percent / 100f);
-            float net = output - consumption;
+            float net = rate.Net;
             _netRates[resource] = net;
             slot.productionRate = net;
         }

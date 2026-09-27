@@ -13,7 +13,5 @@ MonoBehaviour:
   m_Name: Age of Desolation
   m_EditorClassIdentifier: 
   name: Age of Desolation
-  title: After the catastrophic Shattering of Old Arcanoria, the once-great civilization
-    is now reduced to a faraway memory, dwindled to dust, and scattered survivors
-    clinging to life
+  title: "The once-great civilization is now reduced to a faraway memory, dwindled to dust, and scattered survivors struggling to find food, shelter, and safety. The land is littered with crumbling structures, decaying in remnants of a gentler past and steeped in a pervasive sense of despair. Only slim, isolated communities form as people strive to piece together their shattered lives, clinging to fragments of ancient knowledge and relics for hope."
   description: '"Golden ashes forsaken by the Gods."'

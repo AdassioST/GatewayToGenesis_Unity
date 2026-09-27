@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b54d7df3deb8a792488405026df06289, type: 3}
+  m_Name: NotificationTheme
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 3232716697838337053, guid: b3cc754e45a234f469e9e65a4dd76607, type: 3}
+  issue: {fileID: 21300000, guid: 22309cb82a9a2ca4ea20bc4282a05315, type: 3}
+  world: {fileID: 21300000, guid: c854f3743aea0f14db7065d7cca935e6, type: 3}
+  news: {fileID: 21300000, guid: da4dc7bbd7b14b742ac750d7190e505b, type: 3}
+  icons:
+  - topic: 0
+    icon: {fileID: 21300000, guid: c3d418ca090fe174e86dcc71d9ff4e93, type: 3}
+  - topic: 1
+    icon: {fileID: 21300000, guid: 8ac804033b7b7c64fa26ed640c392c9a, type: 3}
+  - topic: 2
+    icon: {fileID: 21300000, guid: 8ac804033b7b7c64fa26ed640c392c9a, type: 3}
+  - topic: 3
+    icon: {fileID: 21300000, guid: c2834ac431256d2488e7133949f68959, type: 3}
+  - topic: 4
+    icon: {fileID: 21300000, guid: a8c42df750061bc4181e6ca1d1d2e20a, type: 3}
+  - topic: 5
+    icon: {fileID: 21300000, guid: 94f4e317b35ad644da1a61737a21080c, type: 3}
+  - topic: 6
+    icon: {fileID: 21300000, guid: 94f4e317b35ad644da1a61737a21080c, type: 3}
+  - topic: 7
+    icon: {fileID: 21300000, guid: 1c3bbd4bf4a5f6f4d8d78163f754215e, type: 3}
+  - topic: 8
+    icon: {fileID: 21300000, guid: d5a484926d62aad4ca6ea252dad054fb, type: 3}
+  maxShown: 9
+  maxNews: 6
+  popSeconds: 0.25

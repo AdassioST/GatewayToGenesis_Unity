@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Button behaviour for HUD slots: gather a resource, build a production unit or start research.</summary>
+/// <summary>Button behaviour for HUD slots: gather a resource, build a production unit, or research a technology (planning the way to it when it is locked).</summary>
 public class ClickLogic : MonoBehaviour
 {
     public GameUnitsLogic gameUnitsLogic;
@@ -44,9 +44,10 @@ public class ClickLogic : MonoBehaviour
 
     public void OnButtonClick()
     {
+        if (gameUnitsLogic == null) gameUnitsLogic = GameUnitsLogic.Instance;
         if (gameUnitsLogic == null)
         {
-            Debug.LogError("GameUnitsLogic is not assigned", this);
+            GameLog.Error($"Click on '{name}' ignored: there is no GameUnitsLogic in the scene.", LogChannel.Units);
             return;
         }
 
@@ -62,7 +63,8 @@ public class ClickLogic : MonoBehaviour
                 break;
 
             case ClickMode.UnlockTechnology:
-                if (technologySlot != null && !technologySlot.isUnlocked && !technologySlot.alreadyClicked) gameUnitsLogic.StartTechnologyProgress(technologySlot);
+                // Research it now, or plan the way to it through its prerequisites; Shift adds it to the plan instead.
+                if (technologySlot != null && technologySlot.isVisible && !technologySlot.isUnlocked) gameUnitsLogic.PlanResearch(technologySlot, InputUtils.ShiftHeld);
                 break;
         }
     }

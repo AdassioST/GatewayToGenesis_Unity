@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -54,18 +55,25 @@ public class ChallengeSlot : MonoBehaviour
         successChance = natural;
         enhancedSuccessChance = enhanced;
 
+        string pillar = EventText.Humanize(pillarType);
         if (chanceImage != null)
         {
             var sprite = ChanceSprite(enhanced);
             if (sprite != null) chanceImage.sprite = sprite;
-            string chance = $"{natural}% Chance";
-            if (enhanced > natural) chance += $"\n+{enhanced - natural}% Increased by Piety ({enhanced}% Total)";
-            TooltipTrigger.Ensure(chanceImage.gameObject).SetCustom($"It's {LuckName(enhanced)} Luck!", chance);
+            var lines = new List<string> { TooltipText.Row($"From {pillar}", TooltipText.Value($"{natural}%")) };
+            if (enhanced > natural) lines.Add(TooltipText.Row("Piety saving roll", TooltipText.Good($"+{enhanced - natural}%")));
+            lines.Add(TooltipText.Row("Chance of success", TooltipText.Judge($"{enhanced}%", enhanced >= 50)));
+            TooltipTrigger.Ensure(chanceImage.gameObject).SetCustom($"{LuckName(enhanced)} Luck", null, "Decision Odds", TooltipText.Lines(lines));
         }
         if (pillarIcon != null)
         {
-            string pillar = EventText.Humanize(pillarType);
-            TooltipTrigger.Ensure(pillarIcon.gameObject).SetCustom($"{pillar} Challenge", $"Needs {requiredStrength} {pillar} for 100%\nYou have {current} {pillar}");
+            string odds = TooltipText.Lines(new[]
+            {
+                TooltipText.Row("Strength needed", TooltipText.Value(requiredStrength.ToString())),
+                TooltipText.Row($"Your {pillar}", TooltipText.Judge(current.ToString(), current >= requiredStrength)),
+                TooltipText.Muted($"Meeting the strength makes success certain; each point short lowers the chance."),
+            });
+            TooltipTrigger.Ensure(pillarIcon.gameObject).SetCustom($"{pillar} Challenge", null, "Pillar Test", odds);
         }
     }
 

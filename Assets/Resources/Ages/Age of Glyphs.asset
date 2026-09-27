@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112c4a033953de1f3445081359f61cad, type: 3}
+  m_Name: Age of Glyphs
+  m_EditorClassIdentifier: 
+  id: age-of-glyphs
+  number: 2
+  title: Age of Glyphs
+  epigraph: 
+  actSevenths: 3f0000003f0000003f0000003f000000
+  actOfFateStories: []
+  openingStory: 
+  crisisTitle: 
+  crisisStages: []
+  preparationTechnologies: []
+  preparationScore: 
+  preparationLabel: Preparation
+  reliefScore: 
+  reliefLabel: Desperate relief
+  aggravationScore: 
+  aggravationLabel: Aggravation
+  easingFeatureTag: 
+  easingLabel: Explored land
+  tuning:
+    baseSeverity: 0.5
+    perPreparedTechnology: 0.08
+    perPreparationPoint: 0.05
+    preparationCap: 0.25
+    perReliefPoint: 0.04
+    reliefCap: 0.2
+    reservePerCitizen: 4
+    reserveWeight: 0.15
+    perEasingTile: 0.03
+    easingTileCap: 0.15
+    perAggravationPoint: 0.06
+    crowdingWeight: 0.15
+    crowdingPopulation: 150
+    minimumLoss: 0.1
+    maximumLoss: 0.6
+    survivorFloor: 5
+    foodOutputPenalty: 40
+  nextAges: []

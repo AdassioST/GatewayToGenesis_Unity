@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Echoes of Hunger
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 83510b9d8cd2cf9506b50299bc618289, type: 2}
+  isEventTech: 1
+  tier: 10
+  satisfactionPoints: 0
+  techRequirements:
+  - Unsustainable Growth
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 150
+  enlightenedConditions:
+  - type: 6
+    trigger: population
+    requiredAmount: 1001
+    description: Population Surpasses 1000.
+  techUnlockables:
+  - {fileID: 11400000, guid: 521d0305d0d36541c50f103f387b3a5b, type: 2}

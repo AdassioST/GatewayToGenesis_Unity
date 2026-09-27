@@ -21,7 +21,7 @@ MonoBehaviour:
   - Research
   - Elderwood
   resourceAmount:
-  - 15
+  - 45
   - 35
   eurekaConditions:
   - type: 3

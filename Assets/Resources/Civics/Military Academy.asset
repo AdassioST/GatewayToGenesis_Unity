@@ -19,6 +19,17 @@ MonoBehaviour:
   rarity: 0
   tier: 1
   grantsCouncilPosition: 1
+  councilPosition:
+    title: Field Marshall
+    description: 
+    icon: {fileID: 0}
+    allowAnyLegendClass: 0
+    allowedClasses: 0000000001000000
+    areas:
+    - defense
+    - security
+    - logistics
+    bonuses: []
   councilPositionName: Field Marshall
   allowAnyLegendClass: 0
   allowedLegendClasses: 0000000001000000

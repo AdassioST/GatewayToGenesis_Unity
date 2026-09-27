@@ -98,6 +98,69 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         return slot != null && slot.isUnlocked;
     }
 
+    /// <summary>Technologies researched so far (every tree).</summary>
+    public int CountUnlockedTechnologies()
+    {
+        if (researchTab == null) return 0;
+        int count = 0;
+        foreach (var slotObject in researchTab.slots)
+            if (slotObject != null && slotObject.TryGetComponent(out GameTechnologySlot slot) && slot.isUnlocked) count++;
+        return count;
+    }
+
+    /// <summary>Technologies that could be researched now: not yet researched, prerequisites met.</summary>
+    public List<GameTechnologySlot> ResearchableTechnologies()
+    {
+        var result = new List<GameTechnologySlot>();
+        if (researchTab == null) return result;
+        foreach (var slotObject in researchTab.slots)
+            if (slotObject != null && slotObject.TryGetComponent(out GameTechnologySlot slot) && !slot.isUnlocked && slot.technologyData != null && ArePrerequisitesUnlocked(slot.technologyData))
+                result.Add(slot);
+        return result;
+    }
+
+    /// <summary>The resource the active research is waiting on (none stored and some still owed), or null.</summary>
+    public string ResearchStalledOn()
+    {
+        var slot = activeTechnologySlot;
+        if (slot == null || slot.isUnlocked || slot.technologyData == null || !technologyProgress.TryGetValue(slot, out var progress)) return null;
+        var required = GetAdjustedTechCosts(slot);
+        var data = slot.technologyData;
+        for (int i = 0; i < data.resourceRequirements.Count; i++)
+        {
+            string resource = data.resourceRequirements[i];
+            float need = (i < required.Count ? required[i] : data.resourceAmount[i]) - (progress.TryGetValue(resource, out float paid) ? paid : 0f);
+            if (need > 0.01f && GetResourceAmountExact(resource) < 0.01f) return resource;
+        }
+        return null;
+    }
+
+    /// <summary>Every production unit built, of every kind.</summary>
+    public float CountAllBuildings()
+    {
+        if (productionTab == null) return 0f;
+        float total = 0f;
+        foreach (var slotObject in productionTab.slots)
+            if (slotObject != null && slotObject.TryGetComponent(out GameProductionSlot slot)) total += slot.maxAmount;
+        return total;
+    }
+
+    /// <summary>Everything in storage, summed across resources.</summary>
+    public float TotalStoredResources()
+    {
+        float total = 0f;
+        foreach (var slot in GetAvailableResources()) total += slot.amount;
+        return total;
+    }
+
+    /// <summary>Some resource sits at its capacity.</summary>
+    public bool AnyResourceFull()
+    {
+        foreach (var slot in GetAvailableResources())
+            if (slot.maxAmount > 0f && slot.amount >= slot.maxAmount - 0.001f) return true;
+        return false;
+    }
+
     public float GetClickedTotal(string resourceName) => resourceName != null && _clickedTotals.TryGetValue(resourceName, out float total) ? total : 0f;
 
     public List<GameResourceSlot> GetAvailableResources()
@@ -191,8 +254,7 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         if (slot == null || slot.gameUnit == null) return 0f;
         var modifiers = ModifierTargets.Resolve(ClickPower, slot.gameUnit);
         float statBonus = StatManager.Instance != null ? StatManager.Instance.GetDerivedValue("clickPowerBonus") : 0f;
-        float value = (slot.baseClickPower + GetPermanentClickPower(slot.gameUnit.name) + modifiers.Flat) * (1f + (modifiers.Percent + statBonus) / 100f);
-        return Mathf.Max(Mathf.Max(0.001f, slot.baseClickPower), value);
+        return ProductionRules.ClickPower(slot.baseClickPower, GetPermanentClickPower(slot.gameUnit.name), modifiers, statBonus);
     }
 
     public float GetPermanentClickPower(string resourceName) => resourceName != null && _permanentClickPower.TryGetValue(resourceName, out float bonus) ? bonus : 0f;
@@ -216,15 +278,10 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         if (data == null || requirementIndex < 0 || requirementIndex >= data.buildRequirementsAmount.Count) return 0f;
         float baseCost = data.buildRequirementsAmount[requirementIndex];
         float costPercent = GetConstructionCostPercent(slot.gameUnit);
-        float cost = Mathf.Max(baseCost * (1f + costPercent / 100f), baseCost * minimumConstructionCostShare);
-        if (slot.gameUnit.type != "Unit")
-        {
-            var production = GlobalProductionManager.Instance;
-            float balance = production != null ? production.costBalance : 0.05f;
-            float tier = production != null && production.techTier > 0f ? production.techTier : 1f;
-            cost *= Mathf.Exp(balance / tier * slot.maxAmount);
-        }
-        return cost;
+        var production = GlobalProductionManager.Instance;
+        bool isBuilding = slot.gameUnit.type != "Unit"; // units cost the same however many you own
+        return ProductionRules.BuildCost(baseCost, costPercent, minimumConstructionCostShare, isBuilding,
+            production != null ? production.costBalance : 0.05f, production != null ? production.techTier : 1f, slot.maxAmount);
     }
 
     public float GetProductionEfficiencyPercent(GameUnit unit) => ModifierTargets.Resolve(ProductionEfficiency, unit).Percent;
@@ -330,29 +387,176 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         return true;
     }
 
-    /// <summary>Start (or switch to) researching a technology. Progress on other technologies is kept.</summary>
+    // ----- The research plan -----
+
+    /// <summary>
+    /// The research plan: technologies to research in order, every prerequisite before what needs it
+    /// (<see cref="TechTreeRules"/>). The active research is always the plan's first technology that can be researched
+    /// now, so finishing one moves straight on to the next. Saved with the save document
+    /// (<see cref="SaveDocument.researchPlan"/>) rather than the system snapshot, so older saves still load.
+    /// </summary>
+    [System.NonSerialized] private List<string> _researchPlan = new List<string>();
+
+    /// <summary>The research plan or the active research changed.</summary>
+    public event Action ResearchPlanChanged;
+
+    public IReadOnlyList<string> ResearchPlan => _researchPlan;
+
+    private static IEnumerable<string> Prerequisites(string technology) => TechnologyTreeLogic.Prerequisites(technology);
+
+    private bool IsAvailable(string technology) => TechTreeRules.IsAvailable(technology, Prerequisites, IsTechnologyUnlocked);
+
+    /// <summary>
+    /// A click on a technology: research it now, or plan the way to it (every prerequisite still missing, in order) and
+    /// start on the first step. <paramref name="append"/> (Shift) adds the way after the plan already made instead of
+    /// replacing it. Research under way that is on the new way carries on; progress on every technology is always kept.
+    /// Clicking the research under way changes nothing.
+    /// </summary>
+    public void PlanResearch(GameTechnologySlot technologySlot, bool append)
+    {
+        if (technologySlot == null || technologySlot.isUnlocked || technologySlot.gameUnit == null) return;
+        if (technologySlot == activeTechnologySlot && !append) return;
+        var path = TechTreeRules.PlanTo(technologySlot.gameUnit.name, Prerequisites, IsTechnologyUnlocked);
+        if (path.Count == 0) return;
+        string active = activeTechnologySlot != null && activeTechnologySlot.gameUnit != null ? activeTechnologySlot.gameUnit.name : null;
+        _researchPlan = TechTreeRules.Merge(_researchPlan, path, append, active, IsAvailable);
+        SyncResearch();
+    }
+
+    /// <summary>Take a technology, and everything planned that needs it, out of the plan (a right click). Its progress is kept.</summary>
+    public void RemoveFromPlan(GameTechnologySlot technologySlot)
+    {
+        if (technologySlot == null || technologySlot.gameUnit == null) return;
+        if (TechTreeRules.PlanPosition(_researchPlan, technologySlot.gameUnit.name) == 0) return;
+        _researchPlan = TechTreeRules.Without(_researchPlan, technologySlot.gameUnit.name, Prerequisites);
+        SyncResearch();
+    }
+
+    /// <summary>Start (or switch to) researching a technology now, first in the plan. Progress on other technologies is kept.</summary>
     public void StartTechnologyProgress(GameTechnologySlot technologySlot)
+    {
+        if (technologySlot == null || technologySlot.isUnlocked || technologySlot.technologyData == null || technologySlot.gameUnit == null) return;
+        if (!ArePrerequisitesUnlocked(technologySlot.technologyData)) return;
+        string name = technologySlot.gameUnit.name;
+        _researchPlan.RemoveAll(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+        _researchPlan.Insert(0, name);
+        SyncResearch();
+    }
+
+    /// <summary>Carry on with the plan after a save is loaded (restoring never starts anything by itself).</summary>
+    public void ResumeResearch()
+    {
+        if (activeTechnologySlot != null && activeTechnologySlot.gameUnit != null && TechTreeRules.PlanPosition(_researchPlan, activeTechnologySlot.gameUnit.name) == 0)
+            _researchPlan.Insert(0, activeTechnologySlot.gameUnit.name);
+        SyncResearch();
+    }
+
+    /// <summary>The plan read from a save. Nothing starts here: loading never replays anything (<see cref="ResumeResearch"/> does).</summary>
+    public void RestoreResearchPlan(IEnumerable<string> plan)
+    {
+        _researchPlan = plan != null ? plan.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n.Trim()).ToList() : new List<string>();
+        ResearchPlanChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// A technology was researched, whether by its research, a story or a test: its research is done with, it leaves the
+    /// plan and the plan moves on. Called by <see cref="GameTechnologySlot.UnlockTechnology"/>.
+    /// </summary>
+    public void OnTechnologyResearched(GameTechnologySlot technologySlot)
+    {
+        if (technologySlot == null) return;
+        technologyProgress.Remove(technologySlot);
+        _adjustedTechCosts.Remove(technologySlot);
+        technologySlot.alreadyClicked = false;
+        if (activeTechnologySlot == technologySlot) StopResearch();
+        // A technology already paid in full (an Enlightenment on top of earlier progress) is researched once its way is.
+        foreach (var paid in technologyProgress.Keys.ToList())
+        {
+            if (paid != null && !paid.isUnlocked && paid.technologyData != null && ArePrerequisitesUnlocked(paid.technologyData) && IsPaid(paid))
+            {
+                paid.UnlockTechnology();
+                return; // its own call moves the plan on
+            }
+        }
+        SyncResearch();
+    }
+
+    // The active research follows the plan: its first technology that can be researched now (none when it is empty).
+    private void SyncResearch()
+    {
+        _researchPlan.RemoveAll(n => string.IsNullOrWhiteSpace(n) || IsTechnologyUnlocked(n) || GetTechnologySlot(n) == null);
+        string next = TechTreeRules.NextInPlan(_researchPlan, Prerequisites, IsTechnologyUnlocked);
+        var slot = next != null ? GetTechnologySlot(next) : null;
+        if (slot == null) StopResearch();
+        else if (slot != activeTechnologySlot || _researchCoroutine == null) BeginResearch(slot);
+        ResearchPlanChanged?.Invoke();
+        TooltipSystemLogic.Instance?.RefreshAllTooltips();
+    }
+
+    private void StopResearch()
+    {
+        if (_researchCoroutine != null) StopCoroutine(_researchCoroutine);
+        _researchCoroutine = null;
+        if (activeTechnologySlot != null) activeTechnologySlot.alreadyClicked = false;
+        activeTechnologySlot = null;
+    }
+
+    private void BeginResearch(GameTechnologySlot technologySlot)
     {
         if (technologySlot == null || technologySlot.isUnlocked || technologySlot.technologyData == null) return;
         if (!ArePrerequisitesUnlocked(technologySlot.technologyData)) return;
 
-        if (activeTechnologySlot != null && activeTechnologySlot != technologySlot) activeTechnologySlot.alreadyClicked = false;
-        if (_researchCoroutine != null) StopCoroutine(_researchCoroutine);
-
+        StopResearch();
         activeTechnologySlot = technologySlot;
-        if (!technologyProgress.ContainsKey(technologySlot))
-        {
-            technologyProgress[technologySlot] = technologySlot.technologyData.resourceRequirements.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(r => r, _ => 0f, StringComparer.OrdinalIgnoreCase);
-        }
-        GetAdjustedTechCosts(technologySlot);
+        ProgressOf(technologySlot);
+        GetAdjustedTechCosts(technologySlot); // frozen from here on
+        // Enlightened in an older save, before its gift was paid on the spot.
+        if (technologySlot.enlightenedCompleted) ApplyEnlightenedBonus(technologySlot);
         technologySlot.alreadyClicked = true;
         _researchCoroutine = StartCoroutine(ProcessTechnologyProgress(technologySlot));
+    }
+
+    // Research paid so far per requirement, made on first use (research starting, or an Enlightenment's gift).
+    private Dictionary<string, float> ProgressOf(GameTechnologySlot technologySlot)
+    {
+        if (!technologyProgress.TryGetValue(technologySlot, out var progress))
+        {
+            progress = technologySlot.technologyData.resourceRequirements.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(r => r, _ => 0f, StringComparer.OrdinalIgnoreCase);
+            technologyProgress[technologySlot] = progress;
+        }
+        return progress;
+    }
+
+    private static float RequiredAt(TechnologyData data, List<float> required, int index) =>
+        index < required.Count ? required[index] : index < data.resourceAmount.Count ? data.resourceAmount[index] : 0f;
+
+    private static float Paid(Dictionary<string, float> progress, string resource) => progress != null && progress.TryGetValue(resource, out float paid) ? paid : 0f;
+
+    /// <summary>Every requirement of a technology's research is paid.</summary>
+    private bool IsPaid(GameTechnologySlot technologySlot)
+    {
+        var data = technologySlot.technologyData;
+        technologyProgress.TryGetValue(technologySlot, out var progress);
+        var required = GetAdjustedTechCosts(technologySlot);
+        for (int i = 0; i < data.resourceRequirements.Count; i++)
+        {
+            if (Paid(progress, data.resourceRequirements[i]) < RequiredAt(data, required, i) - 0.0001f) return false;
+        }
+        return true;
+    }
+
+    private void UpdateResearchProgress(GameTechnologySlot technologySlot)
+    {
+        float total = Mathf.Max(0.0001f, GetAdjustedTechCosts(technologySlot).Sum());
+        technologyProgress.TryGetValue(technologySlot, out var progress);
+        technologySlot.researchProgress = Mathf.Clamp01((progress != null ? progress.Values.Sum() : 0f) / total);
+        technologySlot.UpdateProgressUI();
     }
 
     private IEnumerator ProcessTechnologyProgress(GameTechnologySlot technologySlot)
     {
         var data = technologySlot.technologyData;
-        var progress = technologyProgress[technologySlot];
+        var progress = ProgressOf(technologySlot);
         var required = GetAdjustedTechCosts(technologySlot);
         var wait = new WaitForSeconds(researchTickSeconds);
 
@@ -364,60 +568,87 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 continue;
             }
 
-            bool complete = true;
             for (int i = 0; i < data.resourceRequirements.Count; i++)
             {
                 string resourceName = data.resourceRequirements[i];
-                float requiredAmount = i < required.Count ? required[i] : data.resourceAmount[i];
-                float remaining = requiredAmount - progress[resourceName];
-                if (remaining > 0f)
-                {
-                    var resourceSlot = GetResourceSlotFromName(resourceName);
-                    if (resourceSlot != null)
-                    {
-                        float paid = Mathf.Min(resourceSlot.amount, remaining, requiredAmount * researchShareProcessedPerTick);
-                        if (paid > 0f)
-                        {
-                            resourceSlot.ChangeAmount(-paid);
-                            progress[resourceName] += paid;
-                        }
-                    }
-                }
-                if (progress[resourceName] < requiredAmount) complete = false;
+                float requiredAmount = RequiredAt(data, required, i);
+                float remaining = requiredAmount - Paid(progress, resourceName);
+                if (remaining <= 0f) continue;
+                var resourceSlot = GetResourceSlotFromName(resourceName);
+                if (resourceSlot == null) continue;
+                float paid = Mathf.Min(resourceSlot.amount, remaining, requiredAmount * researchShareProcessedPerTick);
+                if (paid <= 0f) continue;
+                resourceSlot.ChangeAmount(-paid);
+                progress[resourceName] = Paid(progress, resourceName) + paid;
             }
 
-            float total = Mathf.Max(0.0001f, required.Sum());
-            if (technologySlot.enlightenedCompleted && !technologySlot.enlightenedBonusApplied && technologySlot.enlightenedBonusPercent > 0f)
-            {
-                // Enlightened technologies receive a one-off share of their total cost, spread by requirement weight.
-                float bonus = total * Mathf.Clamp01(technologySlot.enlightenedBonusPercent);
-                for (int i = 0; i < data.resourceRequirements.Count; i++)
-                {
-                    float requiredAmount = i < required.Count ? required[i] : data.resourceAmount[i];
-                    if (requiredAmount <= 0f) continue;
-                    string resourceName = data.resourceRequirements[i];
-                    progress[resourceName] = Mathf.Min(requiredAmount, progress[resourceName] + bonus * (requiredAmount / total));
-                }
-                technologySlot.enlightenedBonusApplied = true;
-                complete = data.resourceRequirements.Select((r, i) => progress[r] >= (i < required.Count ? required[i] : data.resourceAmount[i])).All(done => done);
-            }
+            UpdateResearchProgress(technologySlot);
 
-            technologySlot.researchProgress = Mathf.Clamp01(progress.Values.Sum() / total);
-            technologySlot.UpdateProgressUI();
-
-            if (complete)
+            if (IsPaid(technologySlot))
             {
-                technologySlot.UnlockTechnology();
-                technologyProgress.Remove(technologySlot);
-                _adjustedTechCosts.Remove(technologySlot);
-                if (activeTechnologySlot == technologySlot) activeTechnologySlot = null;
+                // This coroutine ends here; researching it moves the plan on and starts the next one's own.
                 _researchCoroutine = null;
+                technologySlot.UnlockTechnology();
                 TooltipSystemLogic.Instance?.RefreshAllTooltips();
                 yield break;
             }
             yield return wait;
         }
-        _researchCoroutine = null;
+        if (activeTechnologySlot == technologySlot) _researchCoroutine = null;
+    }
+
+    // ----- Enlightenment -----
+
+    /// <summary>
+    /// Enlighten a technology (its Enlightenment goals were met, or a story enlightened it): it is uncovered in its tree at
+    /// once, even before its prerequisites, and <see cref="GameTechnologySlot.enlightenedBonusPercent"/> of every research
+    /// requirement is paid on the spot. A technology that can be researched now and is fully paid by the gift is
+    /// researched at once. False when it was researched or enlightened already.
+    /// </summary>
+    public bool EnlightenTechnology(GameTechnologySlot technologySlot, string reason)
+    {
+        if (technologySlot == null || technologySlot.gameUnit == null || technologySlot.isUnlocked || technologySlot.enlightenedCompleted) return false;
+        if (technologySlot.technologyData == null) return false;
+
+        technologySlot.enlightenedCompleted = true;
+        ApplyEnlightenedBonus(technologySlot);
+        technologySlot.RefreshTechnologyUI();
+        GameLog.Event($"{technologySlot.gameUnit.name} enlightened{(string.IsNullOrEmpty(reason) ? string.Empty : ": " + reason)}", Log);
+        technologySlot.NotifyEnlightened(reason);
+
+        if (IsPaid(technologySlot) && ArePrerequisitesUnlocked(technologySlot.technologyData)) technologySlot.UnlockTechnology();
+        TooltipSystemLogic.Instance?.RefreshAllTooltips();
+        return true;
+    }
+
+    public bool EnlightenTechnology(string technologyName, string reason) => EnlightenTechnology(GetTechnologySlot(technologyName), reason);
+
+    /// <summary>Technologies enlightened so far, researched since or not (every tree).</summary>
+    public int CountEnlightenedTechnologies()
+    {
+        if (researchTab == null) return 0;
+        int count = 0;
+        foreach (var slotObject in researchTab.slots)
+            if (slotObject != null && slotObject.TryGetComponent(out GameTechnologySlot slot) && slot.enlightenedCompleted) count++;
+        return count;
+    }
+
+    // An Enlightenment's gift: a share of every research requirement, paid at once and only once per technology.
+    private void ApplyEnlightenedBonus(GameTechnologySlot technologySlot)
+    {
+        if (technologySlot.enlightenedBonusApplied || technologySlot.technologyData == null) return;
+        var data = technologySlot.technologyData;
+        var progress = ProgressOf(technologySlot);
+        var required = GetAdjustedTechCosts(technologySlot);
+        float share = Mathf.Clamp01(technologySlot.enlightenedBonusPercent);
+        for (int i = 0; i < data.resourceRequirements.Count; i++)
+        {
+            string resource = data.resourceRequirements[i];
+            float need = RequiredAt(data, required, i);
+            progress[resource] = Mathf.Min(need, Paid(progress, resource) + need * share);
+        }
+        technologySlot.enlightenedBonusApplied = true;
+        UpdateResearchProgress(technologySlot);
     }
 
     /// <summary>
@@ -433,7 +664,7 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         var adjusted = new List<float>(techSlot.technologyData.resourceAmount.Count);
         foreach (float baseCost in techSlot.technologyData.resourceAmount)
         {
-            adjusted.Add(Mathf.Max(0f, baseCost - Mathf.RoundToInt(baseCost * efficiency)));
+            adjusted.Add(ProductionRules.ResearchCost(baseCost, efficiency));
         }
         if (technologyProgress.ContainsKey(techSlot)) _adjustedTechCosts[techSlot] = adjusted;
         return adjusted;
@@ -467,6 +698,11 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 PopGrowthLogic.Instance?.ReduceFoodDemand(unlockable.resourceModifier / 100f);
                 break;
 
+            case TechUnlockableType.CouncilSeat:
+                var government = GovernmentLogic.Instance;
+                for (int i = 0; i < Mathf.Max(1, Mathf.RoundToInt(unlockable.resourceModifier)) && government != null; i++) government.UnlockNextCouncilSeat();
+                break;
+
             case TechUnlockableType.Arts:
                 GameLog.Event($"Arts unit {unitName} unlocked.", Log);
                 break;
@@ -493,6 +729,23 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 TimeSystemLogic.Instance.canTrackTime = true;
                 if (HUD != null && HUD.activeSelf) TimeSystemLogic.Instance.PauseTime(false);
                 if (expandibleHUD != null) expandibleHUD.SetActive(true);
+                break;
+            // Map units: the world reads the technology itself (WorldSettings.mapTechnology, units, expeditions); the card only announces them.
+            case "Expeditions":
+            case "Builders":
+            case "Settlers":
+            // The Great Hunger: the Age of Desolation's crisis gate (AgeDefinition.gateTechnologies) does the work.
+            case "The Great Hunger":
+                GameLog.Event($"{unlockable.name}: {unlockable.effects}", Log);
+                break;
+            // Placeholder effects from the Act I tree sheet (Sept 27, 2026): their systems do not exist yet.
+            case "Resource Shed":
+            case "Resource Shed Capacity":
+            case "Innovation Sanctums":
+            case "Keynote Relics":
+            case "Vital Winds":
+            case "Resource Capacity":
+                GameLog.Event($"{unlockable.name} (placeholder, no effect yet): {unlockable.effects}", Log);
                 break;
             case "Building Material Button":
                 if (buildingMaterialButton != null) buildingMaterialButton.SetActive(true);

@@ -21,7 +21,15 @@ public class LegendData : ScriptableObject
     [Header("Council Assignment")]
     public bool canBeHeadOfState = false; // Whether this legend can serve as Head of State
     public List<LegendClass> compatibleSeatClasses = new List<LegendClass>(); // Which seat classes this legend can fill
-    
+
+    [Header("Soul (leave empty to draw from the vault's Legend Trait tables)")]
+    [Tooltip("The Soul Leitmotif's primary binding: Resonance, Luminance, Flux, Void, Cindergale, Crystal or Strand. Empty: the class's affinity.")]
+    public string soulLeitmotif;
+    [Tooltip("Origin traits (The Wish), by their names in the vault's tables. Empty: one is drawn for the legend's rarity.")]
+    public List<string> originTraits = new List<string>();
+    [Tooltip("Personality traits (The Expression), up to three, by their names in the vault's tables. Missing ones are drawn.")]
+    public List<string> personalityTraits = new List<string>();
+
     [Header("Flavor Text")]
     [TextArea(2, 4)]
     public string councilAssignmentDescription; // Description when assigned to council

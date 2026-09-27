@@ -15,9 +15,16 @@ using System.Collections.Generic;
 ///   Sections/                  SectionData, keyed by SectionData.name
 ///   Civics/                    CivicData, keyed by civicName
 ///   Legends/                   LegendData, keyed by legendName
+///   Council/                   CouncilSeatData (the default council seats), keyed by title
 ///   WeatherProfiles/           WeatherProfileSO, keyed by asset name
 ///   EventArt/                  Sprite, keyed by asset name: splash art named after its story knot (or a story's
 ///                              splash_art tag), and EventColor_{event type} banners
+///   UI/                        TooltipTheme (the look of every tooltip), keyed by asset name
+///   Ages/                      AgeDefinition (Acts of Fate, Age Crisis, passage), keyed by id (the vault slug)
+///   World/                     WorldSettings (terrains, environments, features of the world map), keyed by asset name
+///   Keywords/Keywords.md       the keyword cards tooltips show, staged by Age and civic (see the README there)
+///   Library/Library.json       the White-Haven Library's Glossary, written by the vault import, and
+///   Library/GameWiki.md        the Game Wiki's hand-written articles (see the README there); read with LoadText
 /// </summary>
 public static class GameCatalog
 {
@@ -45,11 +52,37 @@ public static class GameCatalog
     public static readonly AssetCatalog<LegendData> Legends =
         new AssetCatalog<LegendData>("Legends", l => l.legendName, "legend");
 
+    public static readonly AssetCatalog<CouncilSeatData> CouncilSeats =
+        new AssetCatalog<CouncilSeatData>("Council", s => s.title, "council seat");
+
     public static readonly AssetCatalog<WeatherProfileSO> Weather =
         new AssetCatalog<WeatherProfileSO>("WeatherProfiles", w => w.name, "weather profile");
 
     public static readonly AssetCatalog<UnityEngine.Sprite> EventArt =
         new AssetCatalog<UnityEngine.Sprite>("EventArt", s => s.name, "event art");
+
+    public static readonly AssetCatalog<TooltipTheme> UiThemes =
+        new AssetCatalog<TooltipTheme>("UI", t => t.name, "UI theme");
+
+    public static readonly AssetCatalog<AgeDefinition> Ages =
+        new AssetCatalog<AgeDefinition>("Ages", a => a.id, "age");
+
+    public static readonly AssetCatalog<WorldSettings> World =
+        new AssetCatalog<WorldSettings>("World", w => w.name, "world settings");
+
+    /// <summary>
+    /// The text of the TextAsset at <paramref name="path"/> under Resources ("Library/Library" for Library.json), or
+    /// null when there is none. Text files are read once by their owners (<see cref="Library"/>, <see cref="Keywords"/>),
+    /// which keep what they parse, so this does not cache.
+    /// </summary>
+    public static string LoadText(string path)
+    {
+        var asset = UnityEngine.Resources.Load<UnityEngine.TextAsset>(path);
+        if (asset == null) return null;
+        string text = asset.text;
+        UnityEngine.Resources.UnloadAsset(asset);
+        return text;
+    }
 
     private static HashSet<string> _sectionNames;
     private static HashSet<string> _unitTypes;
@@ -129,8 +162,14 @@ public static class GameCatalog
         Sections.Invalidate();
         Civics.Invalidate();
         Legends.Invalidate();
+        CouncilSeats.Invalidate();
         Weather.Invalidate();
         EventArt.Invalidate();
+        UiThemes.Invalidate();
+        Ages.Invalidate();
+        World.Invalidate();
+        Library.Invalidate();
+        Keywords.Invalidate();
         _sectionNames = null;
         _unitTypes = null;
         _resourceByRole = null;

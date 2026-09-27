@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Resource Storage
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: eff3f26f344f3404078f6b4fce145d19, type: 2}
+  isEventTech: 0
+  tier: 3
+  satisfactionPoints: 0
+  techRequirements:
+  - Agricultural Renewal
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 60
+  enlightenedConditions:
+  - type: 6
+    trigger: resource_full
+    requiredAmount: 1
+    description: Reach maximum capacity of any resource.
+  techUnlockables:
+  - {fileID: 11400000, guid: b2894a7336010e6f557142a2181dfb3c, type: 2}

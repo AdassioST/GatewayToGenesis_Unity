@@ -1,0 +1,13 @@
+# Mesas stepping up out of the windswept plain.
+tile: wind-plains/mesa-steps
+biome: wind-plains
+weight: 2
+rotations: any
+legend: W=wind-plain M=wind-mesa
+heights: M=0.7
+---
+  W W W W
+ W M M W W
+W M M M W W
+ W W M W W
+  W W W W

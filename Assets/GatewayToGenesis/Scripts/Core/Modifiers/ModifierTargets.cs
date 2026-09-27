@@ -21,7 +21,7 @@ public static class ModifierTargets
 
     public static bool IsType(string key) => key != null && key.StartsWith(TypePrefix, System.StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Human-readable form of a key for tooltips ("section:Hearthlands" becomes "Hearthlands section").</summary>
+    /// <summary>Human-readable form of a key for tooltips ("section:Heartlands" becomes "Heartlands section").</summary>
     public static string Describe(string key)
     {
         if (key == All) return "everything";

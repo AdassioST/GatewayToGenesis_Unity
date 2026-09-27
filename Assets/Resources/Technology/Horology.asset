@@ -20,11 +20,11 @@ MonoBehaviour:
   resourceRequirements:
   - Research
   resourceAmount:
-  - 55
+  - 80
   eurekaConditions:
-  - type: 0
-    trigger: Duskstone
-    requiredAmount: 10
-    description: Gather 10 Duskstone
+  - type: 1
+    trigger: Ancient Windmill
+    requiredAmount: 1
+    description: Construct an Ancient Windmill.
   techUnlockables:
   - {fileID: 11400000, guid: 2bc949d230da6944192882a761c18e72, type: 2}

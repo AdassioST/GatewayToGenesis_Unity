@@ -15,6 +15,5 @@ MonoBehaviour:
   name: Aetherlight
   type: Vital Resource
   section: Vital Resource
-  description: '"An ethereal beam of light trapped in a mirror box, radiating eternal
-    melancholy."'
+  description: '"The Force of Creation and Order."'
   icon: {fileID: 21300000, guid: 94f4e317b35ad644da1a61737a21080c, type: 3}

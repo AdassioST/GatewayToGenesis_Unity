@@ -4,21 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Configuration template for default council seats
-/// </summary>
-[System.Serializable]
-public class DefaultSeatTemplate
-{
-    public string title;
-    [TextArea(2, 4)]
-    public string description;
-    public Sprite icon;
-    public LegendClass[] allowedClasses;
-    public DefaultSeatBonus[] bonuses;
-}
-
-/// <summary>
-/// Configuration for default seat bonuses
+/// A bonus of a default council seat (<see cref="CouncilSeatData.bonuses"/>).
 /// </summary>
 [System.Serializable]
 public class DefaultSeatBonus
@@ -35,8 +21,11 @@ public class DefaultSeatBonus
 ///
 /// Compass: see <see cref="GovernmentCompass"/>. Recomputed at the end of any frame in which stats changed.
 ///
-/// Council: a Head of State plus six regular positions (default or civic-granted seats), of which
-/// <see cref="unlockedSeatCount"/> are open. A seat's bonuses apply as soon as a legend sits in it; the legend's
+/// Council: a Head of State plus six regular positions, of which <see cref="unlockedSeatCount"/> are open: at first only
+/// the Head of State (<see cref="openSeatsAtStart"/>), then technologies open more (TechUnlockableType.CouncilSeat:
+/// The Rekindling and Edicts of Stone and Bone, so the council holds three by the end of Act I). Each
+/// holds one of the default seats (positions such as High Arbiter, each open to legends of several classes:
+/// Resources/Council, <see cref="CouncilSeatData"/>) or a seat granted by an active civic. A seat's bonuses apply as soon as a legend sits in it; the legend's
 /// own bonuses apply after <see cref="SeatActivationSevenths"/>. The council's contribution is re-applied from
 /// scratch through <see cref="EffectRouter"/> whenever anything about it changes, so it can never stack or leave
 /// residue. Timing, phases and scaling are <see cref="CouncilRules"/>.
@@ -56,26 +45,15 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
     [Header("Head of State Configuration")]
     [SerializeField] private float headOfStateMultiplier = 2.0f; // Multiplier for legend bonuses when assigned to Head of State
 
-    [Header("Head of State UI References")]
-    [SerializeField] private Transform headOfStateContainer; // Fallback lookup for "Active" and "Cooldown" children
-    [SerializeField] private UnityEngine.UI.Image headOfStateActiveIndicator;
-    [SerializeField] private UnityEngine.UI.Image headOfStateCooldownIndicator;
-
-    [Header("Head of State UI Colors")]
-    [SerializeField] private Color activeColor = Color.green;
-    [SerializeField] private Color inactiveColor = Color.red;
-    [SerializeField] private Color readyColor = Color.cyan;
-    [SerializeField] private Color cooldownColor = new Color(0f, 0f, 0.5f, 1f);
-
     [Header("Council Change Cooldowns")]
     [SerializeField] private int councilSeatCooldownSevenths = 1;
     [SerializeField] private int headOfStateCooldownSevenths = 3;
 
-    [Tooltip("Regular council positions open at the start (max 6).")]
-    [SerializeField] private int unlockedSeatCount = 3;
+    [Tooltip("Regular council positions open at the start besides the Head of State (max 6); technologies open the rest. The default seats themselves are assets in Resources/Council.")]
+    [SerializeField] private int openSeatsAtStart;
 
-    [Header("Default Seat Configuration")]
-    [SerializeField] private DefaultSeatTemplate[] defaultSeatConfigs = new DefaultSeatTemplate[6];
+    // Regular positions open now (saved; starts at openSeatsAtStart).
+    private int unlockedSeatCount;
 
     // ===== STATE =====
 
@@ -130,7 +108,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
 
     private void Start()
     {
-        ContentValidator.ValidateAll(defaultSeatConfigs);
+        ContentValidator.ValidateAll();
         InitializeCouncilSystem();
 
         if (StatManager.Instance != null)
@@ -144,7 +122,6 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         CalculateGovernmentCoordinates();
         DetermineGovernmentType();
         ApplyCouncil();
-        UpdateHeadOfStateStatusIndicators();
     }
 
     protected override void OnSingletonDestroy()
@@ -222,24 +199,6 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
     {
         _cooldowns.Clear();
         OnLeaderPoolChanged?.Invoke();
-        UpdateHeadOfStateStatusIndicators();
-    }
-
-    // ===== HEAD OF STATE INDICATORS =====
-
-    public void UpdateHeadOfStateStatusIndicators()
-    {
-        if (_headOfState == null) return;
-        var active = headOfStateActiveIndicator != null ? headOfStateActiveIndicator : FindIndicator("Active");
-        var cooldown = headOfStateCooldownIndicator != null ? headOfStateCooldownIndicator : FindIndicator("Cooldown");
-        if (active != null) active.color = _headOfState.IsActive() ? activeColor : inactiveColor;
-        if (cooldown != null) cooldown.color = CanChangeSeat(HeadOfStateIndex) ? readyColor : cooldownColor;
-    }
-
-    private UnityEngine.UI.Image FindIndicator(string childName)
-    {
-        var child = headOfStateContainer != null ? headOfStateContainer.Find(childName) : null;
-        return child != null ? child.GetComponent<UnityEngine.UI.Image>() : null;
     }
 
     // ===== POLITICAL COMPASS =====
@@ -308,12 +267,12 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         _headOfState.allowedLegendClasses.AddRange(AllLegendClasses);
 
         defaultSeatTemplates.Clear();
-        foreach (var config in defaultSeatConfigs ?? Array.Empty<DefaultSeatTemplate>())
+        foreach (var data in GameCatalog.CouncilSeats.All.Where(s => s != null && !string.IsNullOrEmpty(s.title)).OrderBy(s => s.order).ThenBy(s => s.title))
         {
-            if (config != null && !string.IsNullOrEmpty(config.title)) defaultSeatTemplates.Add(CreateSeatFromConfig(config));
+            defaultSeatTemplates.Add(CreateSeatFromData(data));
         }
 
-        unlockedSeatCount = Mathf.Clamp(unlockedSeatCount, 0, RegularSeatCount);
+        unlockedSeatCount = Mathf.Clamp(openSeatsAtStart, 0, RegularSeatCount);
         for (int i = 0; i < RegularSeatCount; i++)
         {
             activeRegularSeats[i] = i < unlockedSeatCount && i < defaultSeatTemplates.Count ? CreateSeatFromTemplate(defaultSeatTemplates[i], i) : null;
@@ -325,11 +284,12 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         GameLog.Event($"Council ready: Head of State + {unlockedSeatCount} open positions, {defaultSeatTemplates.Count} default seat templates", Log);
     }
 
-    private static CouncilSeat CreateSeatFromConfig(DefaultSeatTemplate config)
+    private static CouncilSeat CreateSeatFromData(CouncilSeatData data)
     {
-        var seat = new CouncilSeat(config.title, -999) { roleplayDescription = config.description, seatIcon = config.icon };
-        if (config.allowedClasses != null) seat.allowedLegendClasses.AddRange(config.allowedClasses);
-        foreach (var bonus in config.bonuses ?? Array.Empty<DefaultSeatBonus>())
+        var seat = new CouncilSeat(data.title, -999) { roleplayDescription = data.description, seatIcon = data.icon };
+        if (data.allowedClasses != null) seat.allowedLegendClasses.AddRange(data.allowedClasses);
+        if (data.areas != null) seat.areas.AddRange(data.areas);
+        foreach (var bonus in data.bonuses ?? Array.Empty<DefaultSeatBonus>())
         {
             if (bonus == null) continue;
             seat.seatBonuses.Add(new SeatBonus
@@ -355,6 +315,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
             civicSeatTitle = template.civicSeatTitle
         };
         seat.allowedLegendClasses.AddRange(template.allowedLegendClasses);
+        seat.areas.AddRange(template.areas);
         foreach (var bonus in template.seatBonuses)
         {
             seat.seatBonuses.Add(new SeatBonus
@@ -473,7 +434,8 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
                 legendSource = legend != null ? LegendSource(legend) : null,
                 legendBonuses = legend != null ? legend.bonuses : null,
                 seventhsUntilActive = seat.seventhsUntilActive,
-                isHeadOfState = seat.isHeadOfState
+                isHeadOfState = seat.isHeadOfState,
+                legendGrowth = legend != null && LegendProgress.Instance != null ? LegendProgress.Instance.CouncilMultiplier(legend.legendName) : 1f
             };
         }
     }
@@ -623,8 +585,10 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         foreach (var seat in changedSeats) OnCouncilSeatChanged?.Invoke(seat);
         OnCouncilCompositionChanged?.Invoke();
         OnLeaderPoolChanged?.Invoke();
-        UpdateHeadOfStateStatusIndicators();
         MarkCouncilDirty();
+        int seated = activeRegularSeats.Count(seat => seat != null && seat.assignedLegend != null);
+        Achievements.Report(AchievementEvent.Of(AchievementSignal.CouncilChanged, seated, _headOfState != null && _headOfState.assignedLegend != null)
+            .From($"council:{seated}", _headOfState?.assignedLegend != null ? _headOfState.assignedLegend.legendName : null));
     }
 
     private static string DescribeSeat(CouncilSeat seat) => seat.seatIndex == HeadOfStateIndex ? "Head of State" : $"{seat.GetEffectiveTitle()} (position {seat.seatIndex})";
@@ -650,6 +614,25 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
 
     public List<LegendData> GetAllAvailableLegends() => LegendLeaderLogic.Instance != null ? LegendLeaderLogic.Instance.GetAvailableLegends() : new List<LegendData>();
 
+    /// <summary>The Head of State's legend, or null.</summary>
+    public string HeadOfStateLegend => _headOfState != null && _headOfState.assignedLegend != null ? _headOfState.assignedLegend.legendName : null;
+
+    /// <summary>
+    /// The seated legend who answers for an area of affairs (<see cref="CouncilAreaRules.Find"/>): a seat that covers
+    /// it, else the closest related one. Not found when no seat can; the caller decides on the Head of State.
+    /// </summary>
+    public CouncilAreaRules.Answer AnswerFor(string area, Func<string, bool> free = null)
+    {
+        var seats = SeatedCouncil().Where(s => s != null && !s.isHeadOfState).Select(s => new CouncilAreaRules.SeatView
+        {
+            title = s.GetEffectiveTitle(),
+            areas = s.areas,
+            holder = s.assignedLegend != null ? s.assignedLegend.legendName : null,
+            order = s.seatIndex,
+        });
+        return CouncilAreaRules.Find(area, seats, CouncilAreaCatalog.Current, CouncilAreaCatalog.CurrentMaxDistance, free);
+    }
+
     public List<(CouncilSeat seat, LegendData legend)> GetAllAssignedLegends()
     {
         return SeatedCouncil().Where(seat => seat.assignedLegend != null).Select(seat => (seat, seat.assignedLegend)).ToList();
@@ -672,8 +655,6 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
             OnCouncilSeatChanged?.Invoke(seat);
             MarkCouncilDirty();
         }
-
-        UpdateHeadOfStateStatusIndicators();
         OnLeaderPoolChanged?.Invoke();
     }
 
@@ -699,6 +680,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
 
         bool anyClass = position == null || position.allowAnyLegendClass || position.allowedClasses == null || position.allowedClasses.Length == 0;
         seat.allowedLegendClasses.AddRange(anyClass ? AllLegendClasses : position.allowedClasses);
+        if (position?.areas != null) seat.areas.AddRange(position.areas);
 
         foreach (var bonus in position?.bonuses ?? Array.Empty<CivicSeatBonus>())
         {
@@ -921,7 +903,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         if (allowedClasses == null || allowedClasses.Count == 0) return "No leader classes allowed";
         var distinct = allowedClasses.Distinct().ToList();
         if (distinct.Count >= AllLegendClasses.Length) return "Council Position for Any/All Classes";
-        return $"Council Position for {string.Join(", ", distinct.Select(c => c + "s"))}";
+        return $"Council Position for {string.Join(", ", distinct.Select(c => LegendClasses.Title(c) + "s"))}";
     }
 
     // ===== DEBUG =====

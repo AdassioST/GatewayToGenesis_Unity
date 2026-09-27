@@ -64,7 +64,7 @@ Innovation Council (civic)  ProductionModifier   +25%  targetStat Food          
                             SubstatBonus         +25%  targetStat authority
 Military Academy (civic)    ProductionScalingBonus +35 targetStat Food, condition housing → +35 Food/s per point of housing
                             ConstructionCostModifier +35% targetStat Decaying Hut    → Decaying Huts cost 35% MORE
-Dragon McPusey (legend)     ResourceModifier     +20%  Section "Old World Relics"    → +20% output of that section
+Dragon McPusey (legend)     ResourceModifier     +20%  Section "Old World Remnants"    → +20% output of that section
 Boiling Rain (weather)      ResourceModifier     +120% Section "Vital Resource"
 ```
 

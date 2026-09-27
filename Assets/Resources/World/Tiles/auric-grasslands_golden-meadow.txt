@@ -1,0 +1,13 @@
+# A broad pond and wet meadow, with an open southern shore.
+tile: auric-grasslands/golden-meadow
+biome: auric-grasslands
+weight: 2
+rotations: any
+legend: A=auric-meadow C=auric-copse L=lake M=marsh
+heights: L=0.34
+---
+  A C A A
+ A M L M A
+C M L L M C
+ A M L M A
+  A A A A

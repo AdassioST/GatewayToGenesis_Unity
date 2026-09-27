@@ -19,6 +19,17 @@ MonoBehaviour:
   rarity: 2
   tier: 1
   grantsCouncilPosition: 1
+  councilPosition:
+    title: Grand Archmage
+    description: 
+    icon: {fileID: 0}
+    allowAnyLegendClass: 1
+    allowedClasses: 
+    areas:
+    - mysticism
+    - lore
+    - innovation
+    bonuses: []
   councilPositionName: Grand Archmage
   allowAnyLegendClass: 1
   allowedLegendClasses: 

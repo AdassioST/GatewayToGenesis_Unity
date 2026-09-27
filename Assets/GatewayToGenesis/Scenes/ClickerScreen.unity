@@ -5359,9 +5359,9 @@ MonoBehaviour:
   nameText: {fileID: 2146882971}
   spriteImage: {fileID: 925614240}
   seatButton: {fileID: 415438306}
-  activeIndicator: {fileID: 0}
-  cooldownIndicator: {fileID: 0}
-  defaultIcon: {fileID: 0}
+  activeIndicator: {fileID: 936689755}
+  cooldownIndicator: {fileID: 1162456038}
+  defaultIcon: {fileID: 21300000, guid: da4dc7bbd7b14b742ac750d7190e505b, type: 3}
   activeColor: {r: 0, g: 1, b: 0, a: 1}
   inactiveColor: {r: 1, g: 0, b: 0, a: 1}
   readyColor: {r: 0, g: 1, b: 1, a: 1}
@@ -8497,7 +8497,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca4bde78d1db20740b770262fee37219, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tooltipSlotPrefab: {fileID: 4380297239658714753, guid: 42481a3d12fdcea4ca3c2ea89bab7f2c, type: 3}
   refreshInterval: 0.25
 --- !u!114 &622732911
 MonoBehaviour:
@@ -21718,7 +21717,7 @@ MonoBehaviour:
   leaderPoolContent: {fileID: 883730348}
   civicPoolContent: {fileID: 352757826}
   councilSeatsContainer: {fileID: 1924707919}
-  headOfStateContainer: {fileID: 415438303}
+  headOfStateSeat: {fileID: 415438307}
   aeonicCivicsContainer: {fileID: 1384147234}
   majorCivicsContainer: {fileID: 1382939480}
   minorCivicsContainer: {fileID: 469680045}
@@ -21726,8 +21725,6 @@ MonoBehaviour:
   leaderSlotPrefab: {fileID: 4410475476157721874, guid: 0c6c46daf7c87164db560ffe67e84166, type: 3}
   civicDisplayPrefab: {fileID: 6367910649326080638, guid: b05960f5baa4f0d4a91b68a5d43acaff, type: 3}
   civicDetailedPrefab: {fileID: 4540518092771812766, guid: a9531af2f58528a40964bfa2be162dc6, type: 3}
-  defaultIcon: {fileID: 21300000, guid: da4dc7bbd7b14b742ac750d7190e505b, type: 3}
-  isDisplayVisible: 0
 --- !u!1 &1736198185
 GameObject:
   m_ObjectHideFlags: 0
@@ -23406,79 +23403,9 @@ MonoBehaviour:
   pillarThreshold: 75
   fanaticThreshold: 75
   headOfStateMultiplier: 2
-  headOfStateContainer: {fileID: 415438303}
-  headOfStateActiveIndicator: {fileID: 936689755}
-  headOfStateCooldownIndicator: {fileID: 1162456038}
-  activeColor: {r: 0, g: 1, b: 0, a: 1}
-  inactiveColor: {r: 1, g: 0, b: 0, a: 1}
-  readyColor: {r: 0, g: 1, b: 1, a: 1}
-  cooldownColor: {r: 0, g: 0, b: 0.5, a: 1}
   councilSeatCooldownSevenths: 1
   headOfStateCooldownSevenths: 3
   unlockedSeatCount: 3
-  defaultSeatConfigs:
-  - title: High Arbiter
-    description: The chief judge and arbiter of disputes...
-    icon: {fileID: 21300000, guid: d4589dc48b02df44589868b747f0dfb3, type: 3}
-    allowedClasses: 000000000100000005000000
-    bonuses:
-    - bonusType: 0
-      targetStat: Regalia
-      modifierValue: 2
-      modifierType: 0
-  - title: Oracle
-    description: The mystical advisor who interprets omens...
-    icon: {fileID: 21300000, guid: 75faacdf0f1a6b544824e7b4fec50945, type: 3}
-    allowedClasses: 0400000003000000
-    bonuses:
-    - bonusType: 0
-      targetStat: Chorus
-      modifierValue: 2
-      modifierType: 0
-  - title: Master of Craft
-    description: The master artisan who oversees...
-    icon: {fileID: 21300000, guid: 21e40cc7750d7df42917ba144ede0773, type: 3}
-    allowedClasses: 030000000400000002000000
-    bonuses:
-    - bonusType: 0
-      targetStat: waltz
-      modifierValue: 2
-      modifierType: 0
-  - title: Treasurer
-    description: The financial overseer who manages...
-    icon: {fileID: 21300000, guid: 993133f17500b0a459b2f7ccc00282ee, type: 3}
-    allowedClasses: 020000000000000004000000
-    bonuses:
-    - bonusType: 0
-      targetStat: Aureus
-      modifierValue: 2
-      modifierType: 0
-  - title: Supreme Commander
-    description: The military commander who oversees...
-    icon: {fileID: 21300000, guid: 861c6cf1f72a2ec4e89ca005f28f871d, type: 3}
-    allowedClasses: 010000000500000000000000
-    bonuses:
-    - bonusType: 0
-      targetStat: Aureus
-      modifierValue: 1
-      modifierType: 0
-    - bonusType: 0
-      targetStat: Chorus
-      modifierValue: 1
-      modifierType: 0
-  - title: Civil Regent
-    description: The civil administrator who manages...
-    icon: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
-    allowedClasses: 00000000010000000200000003000000
-    bonuses:
-    - bonusType: 0
-      targetStat: Regalia
-      modifierValue: 1
-      modifierType: 0
-    - bonusType: 0
-      targetStat: Waltz
-      modifierValue: 1
-      modifierType: 0
 --- !u!1 &1886179174
 GameObject:
   m_ObjectHideFlags: 0

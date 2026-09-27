@@ -1,0 +1,10 @@
+# A fallen quarter split by a broken leyline.
+tile: crumbling-infrastructure/fallen-quarter
+biome: crumbling-infrastructure
+weight: 1
+rotations: any
+legend: A=ash-plains R=ruin-field X=leyline-ravine
+---
+ A R R A
+R R X R R
+ A R R A

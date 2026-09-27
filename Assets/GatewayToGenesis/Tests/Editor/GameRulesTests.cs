@@ -115,6 +115,20 @@ public class GameRulesTests
         for (int i = 0; i < weights.Length; i++) Assert.AreEqual(WeatherRules.Chance(weights, i), wins[i] * 100f / steps, 0.05, $"index {i}");
     }
 
+    [Test]
+    public void Weather_PhaseDurationsNormalizeToOneHundredDeterministically()
+    {
+        CollectionAssert.AreEqual(new[] { 20f, 30f, 20f, 20f, 10f }, WeatherRules.NormalizePhaseDurations(new[] { 20f, 30f, 20f, 20f, 10f }));
+        // Excess comes off the longest phase (Boiling Rain: 134.7% → dawn 71.2 − 34.7 = 36.5).
+        var trimmed = WeatherRules.NormalizePhaseDurations(new[] { 71.2f, 2.9f, 13.1f, 30.4f, 17.1f });
+        Assert.AreEqual(36.5f, trimmed[0], 1e-3);
+        Assert.AreEqual(100f, trimmed.Sum(), 1e-3);
+        // A shortfall goes to the shortest; ties always pick the earliest phase (no flicker).
+        var padded = WeatherRules.NormalizePhaseDurations(new[] { 20f, 10f, 20f, 10f, 20f });
+        CollectionAssert.AreEqual(new[] { 20f, 30f, 20f, 10f, 20f }, padded);
+        CollectionAssert.AreEqual(padded, WeatherRules.NormalizePhaseDurations(new[] { 20f, 10f, 20f, 10f, 20f }));
+    }
+
     // ===== COUNCIL =====
 
     private static SeatBonus Seat(float waltz) => new SeatBonus { bonusType = SeatBonusType.PillarBonus, targetStat = "waltz", modifierValue = waltz };
@@ -226,11 +240,6 @@ public class GameRulesTests
         foreach (RequirementType type in Enum.GetValues(typeof(RequirementType)))
         {
             var condition = new CivicRequirement { requirementType = type, requirementTarget = "x", requiredValue = 1 }.ToCondition();
-            if (type == RequirementType.EraUnlock)
-            {
-                Assert.IsNull(condition, "eras are not implemented; EraUnlock has no condition");
-                continue;
-            }
             Assert.IsNotNull(condition, $"{type} has no condition: map it in CivicRequirement.ToCondition");
             Assert.IsTrue(GameValues.IsKnownDomain(condition.Domain), $"{type} reads unregistered domain '{condition.Domain}'");
         }

@@ -21,7 +21,7 @@ MonoBehaviour:
   - bonusType: 3
     modifierValue: 20
     modifierType: 1
-    targetStat: Old World Relics
+    targetStat: Old World Remnants
     conditionStat: 
     scope: 1
   canBeHeadOfState: 1

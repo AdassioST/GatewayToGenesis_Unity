@@ -51,6 +51,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
     
     // Performance optimization: cache phase boundaries
     private float[] cachedPhaseBoundaries;
+    private readonly float[] _blendBoundaries = new float[4];
     private WeatherProfileSO lastBoundaryWeather;
     private bool needsParameterUpdate = true;
     
@@ -244,8 +245,8 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         if (isAtmosBlending)
         {
             float t = atmosBlendT;
-            float[] fromDur = blendFromProfile.GetNormalizedPhaseDurations();
-            float[] toDur = activeWeatherProfile.GetNormalizedPhaseDurations();
+            var fromDur = blendFromProfile.GetNormalizedPhaseDurations();
+            var toDur = activeWeatherProfile.GetNormalizedPhaseDurations();
             
             float fromDawnEnd = fromDur[0];
             float fromMiddayEnd = fromDawnEnd + fromDur[1];
@@ -262,7 +263,9 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
             float duskEnd = Mathf.Lerp(fromDuskEnd, toDuskEnd, t);
             float nightEnd = Mathf.Lerp(fromNightEnd, toNightEnd, t);
             
-            return new float[] { dawnEnd, middayEnd, duskEnd, nightEnd };
+            // Reused every frame of the blend instead of allocating a new array.
+            _blendBoundaries[0] = dawnEnd; _blendBoundaries[1] = middayEnd; _blendBoundaries[2] = duskEnd; _blendBoundaries[3] = nightEnd;
+            return _blendBoundaries;
         }
         
         // Return cached boundaries if weather profile hasn't changed
@@ -275,7 +278,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         
         if (activeWeatherProfile != null)
         {
-            float[] normalizedDurations = activeWeatherProfile.GetNormalizedPhaseDurations();
+            var normalizedDurations = activeWeatherProfile.GetNormalizedPhaseDurations();
             
             float dawnEnd = normalizedDurations[0];
             float middayEnd = dawnEnd + normalizedDurations[1];
@@ -719,7 +722,7 @@ public class CelestialWeatherVisualLogic : MonoBehaviour
         string phaseInfo = "";
         if (activeWeatherProfile != null)
         {
-            float[] normalizedDurations = activeWeatherProfile.GetNormalizedPhaseDurations();
+            var normalizedDurations = activeWeatherProfile.GetNormalizedPhaseDurations();
             float originalTotal = activeWeatherProfile.GetTotalPhasePercentage();
             string normalizationStatus = Mathf.Abs(originalTotal - 100f) > 0.01f ? " (NORMALIZED)" : "";
             phaseInfo = $"\nPhase Durations{normalizationStatus}: Dawn:{normalizedDurations[0]:F1}%, Midday:{normalizedDurations[1]:F1}%, " +

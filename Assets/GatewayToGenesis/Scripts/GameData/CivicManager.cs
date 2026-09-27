@@ -63,6 +63,8 @@ public class CivicManager : SingletonBehaviour<CivicManager>
 
     public static string SourceName(CivicData civic) => $"Civic: {civic.civicName}";
 
+    public void RefreshAfterLoad() { OnActiveCivicsChanged?.Invoke(); OnCivicPoolChanged?.Invoke(); OnCivicSlotsChanged?.Invoke(); }
+
     private void Start()
     {
         // Requirements are validated with the rest of the content by ContentValidator.

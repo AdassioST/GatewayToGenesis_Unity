@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Checks that the names an Ink story uses exist in the game's catalogs: resources, buildings, sections,
 /// technologies, weather profiles, civics and government types. A typo ("Old World Materials" for the
-/// "Old World Relics" section) would otherwise parse fine and silently do nothing in play. Used by
+/// "Old World Remnants" section) would otherwise parse fine and silently do nothing in play. Used by
 /// <see cref="EventStoryIndex.Validate"/> at start-up and by the EditMode content tests. A catalog with no
 /// content (a test scene without Resources) is not checked.
 /// </summary>
@@ -54,6 +55,13 @@ public static class EventContentCheck
             case EventConsequence.ConsequenceType.WeatherChange:
                 if (string.Equals(c.targetName, "clear", StringComparison.OrdinalIgnoreCase)) return null;
                 return Known(GameCatalog.Weather.Count, GameCatalog.FindWeather(c.targetName) != null, "weather profile");
+            case EventConsequence.ConsequenceType.RenownChange:
+                return KnownLegendOrRole(c.targetName);
+            case EventConsequence.ConsequenceType.FragmentChange:
+                return BalladActors.SplitTarget(c.targetName, out string who, out _) ? KnownLegendOrRole(who) : "fragment target";
+            case EventConsequence.ConsequenceType.LesserOpus:
+                if (c.value != 1 || c.durationSevenths != 0) return "Lesser Opus amount/duration (requires +1, permanent)";
+                return LesserOpusCatalog.SplitTarget(c.targetName, out string actor, out _) ? KnownLegendOrRole(actor) : "Lesser Opus";
             default:
                 return null;
         }
@@ -80,10 +88,33 @@ public static class EventContentCheck
                 return Enum.TryParse(c.targetName, true, out GovernmentType _) ? null : "government type";
             case "stat":
                 return StatDefinitions.IsKnown(c.targetName) ? null : "stat";
+            case "fragments":
+                return BalladActors.SplitTarget(c.targetName, out string who, out _) && !GameCatalog.Legends.Contains(c.targetName)
+                    ? Known(GameCatalog.Legends.Count, GameCatalog.Legends.Contains(who), "legend")
+                    : Known(GameCatalog.Legends.Count, GameCatalog.Legends.Contains(c.targetName), "legend");
+            case "ballad":
+            case "ballad_verses":
+                return null;
+            case "legend":
+            case "legend_rank":
+            case "renown":
+                return Known(GameCatalog.Legends.Count, GameCatalog.Legends.Contains(c.targetName), "legend");
+            case "age":
+                return GameValues.TargetOf(c.Domain, c.targetName).Length == 0 ? null : Known(GameCatalog.Ages.Count, GameCatalog.Ages.Contains(c.targetName), "Age");
+            case "map_feature":
+                return Known(GameCatalog.World.Count, GameCatalog.World.All.Any(w => w != null && w.generation != null && w.generation.Feature(c.targetName) != null), "world feature");
+            case "age_reached":
+                return Known(GameCatalog.Ages.Count, GameCatalog.Ages.Contains(c.targetName), "Age");
+            case "capability":
+                return AgeCapabilities.IsKnown(c.targetName) ? null : "Age capability";
             default:
                 return null;
         }
     }
+
+    // A legend by name, or a ballad actor role (protagonist, co, cast, leader, council).
+    private static string KnownLegendOrRole(string who) =>
+        BalladActors.IsRole(who) ? null : Known(GameCatalog.Legends.Count, GameCatalog.Legends.Contains(who), "legend");
 
     private static string Known(int catalogSize, bool found, string kind) => catalogSize == 0 || found ? null : kind;
 }

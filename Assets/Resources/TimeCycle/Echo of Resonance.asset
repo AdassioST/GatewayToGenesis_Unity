@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Echo of Resonance
   m_EditorClassIdentifier: 
   unitName: Echo of Resonance
-  description: The Opening Act
+  description: "Spring: Birth, Attunement, Harmonic Opening"
   icon: {fileID: 0}

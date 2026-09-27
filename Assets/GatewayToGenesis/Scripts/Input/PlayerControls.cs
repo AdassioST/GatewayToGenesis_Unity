@@ -151,6 +151,36 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Library"",
+                    ""type"": ""Button"",
+                    ""id"": ""5b0f3c52-7e1a-4c8e-9d41-2f6a8b3c9e01"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Map"",
+                    ""type"": ""Button"",
+                    ""id"": ""7a1c9e53-4b2d-4f60-8e17-3c5d7f9a0b11"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Cancel"",
+                    ""type"": ""Button"",
+                    ""id"": ""8c2d4e61-3a9b-4f7c-b152-6e0a9d7f4c02"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -230,6 +260,39 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""Click"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d3e5f7a9-1b2c-4d6e-8f01-a2b3c4d5e603"",
+                    ""path"": ""<Keyboard>/l"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Library"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9b3d5f71-6c8e-4a02-b4d6-e8f0a2c4e612"",
+                    ""path"": ""<Keyboard>/m"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Map"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e4f6a8b0-2c3d-4e7f-9012-b3c4d5e6f704"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Cancel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -244,6 +307,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_DefaultControls_Production = m_DefaultControls.FindAction("Production", throwIfNotFound: true);
         m_DefaultControls_Government = m_DefaultControls.FindAction("Government", throwIfNotFound: true);
         m_DefaultControls_Research = m_DefaultControls.FindAction("Research", throwIfNotFound: true);
+        m_DefaultControls_Library = m_DefaultControls.FindAction("Library", throwIfNotFound: true);
+        m_DefaultControls_Map = m_DefaultControls.FindAction("Map", throwIfNotFound: true);
+        m_DefaultControls_Cancel = m_DefaultControls.FindAction("Cancel", throwIfNotFound: true);
     }
 
     ~@PlayerControls()
@@ -330,6 +396,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_DefaultControls_Production;
     private readonly InputAction m_DefaultControls_Government;
     private readonly InputAction m_DefaultControls_Research;
+    private readonly InputAction m_DefaultControls_Library;
+    private readonly InputAction m_DefaultControls_Map;
+    private readonly InputAction m_DefaultControls_Cancel;
     /// <summary>
     /// Provides access to input actions defined in input action map "DefaultControls".
     /// </summary>
@@ -365,6 +434,18 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "DefaultControls/Research".
         /// </summary>
         public InputAction @Research => m_Wrapper.m_DefaultControls_Research;
+        /// <summary>
+        /// Provides access to the underlying input action "DefaultControls/Library".
+        /// </summary>
+        public InputAction @Library => m_Wrapper.m_DefaultControls_Library;
+        /// <summary>
+        /// Provides access to the underlying input action "DefaultControls/Map".
+        /// </summary>
+        public InputAction @Map => m_Wrapper.m_DefaultControls_Map;
+        /// <summary>
+        /// Provides access to the underlying input action "DefaultControls/Cancel".
+        /// </summary>
+        public InputAction @Cancel => m_Wrapper.m_DefaultControls_Cancel;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -409,6 +490,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Research.started += instance.OnResearch;
             @Research.performed += instance.OnResearch;
             @Research.canceled += instance.OnResearch;
+            @Library.started += instance.OnLibrary;
+            @Library.performed += instance.OnLibrary;
+            @Library.canceled += instance.OnLibrary;
+            @Map.started += instance.OnMap;
+            @Map.performed += instance.OnMap;
+            @Map.canceled += instance.OnMap;
+            @Cancel.started += instance.OnCancel;
+            @Cancel.performed += instance.OnCancel;
+            @Cancel.canceled += instance.OnCancel;
         }
 
         /// <summary>
@@ -438,6 +528,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Research.started -= instance.OnResearch;
             @Research.performed -= instance.OnResearch;
             @Research.canceled -= instance.OnResearch;
+            @Library.started -= instance.OnLibrary;
+            @Library.performed -= instance.OnLibrary;
+            @Library.canceled -= instance.OnLibrary;
+            @Map.started -= instance.OnMap;
+            @Map.performed -= instance.OnMap;
+            @Map.canceled -= instance.OnMap;
+            @Cancel.started -= instance.OnCancel;
+            @Cancel.performed -= instance.OnCancel;
+            @Cancel.canceled -= instance.OnCancel;
         }
 
         /// <summary>
@@ -520,5 +619,26 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnResearch(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Library" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLibrary(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Map" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMap(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Cancel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCancel(InputAction.CallbackContext context);
     }
 }

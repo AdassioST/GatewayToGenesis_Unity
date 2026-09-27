@@ -15,4 +15,4 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: deb537b9e018b8e4f816de4d485e1fda, type: 2}
   slotImage: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
   resourceModifier: 0
-  unlockableType: 5
+  unlockableType: 1

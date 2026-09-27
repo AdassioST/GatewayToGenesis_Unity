@@ -9,7 +9,7 @@ using UnityEngine;
 /// Gameplay effects go through <see cref="EffectRouter"/> under <see cref="WeatherProfileSO.GetModifierSourceName"/>,
 /// so changing weather is one RemoveSource plus one ApplySet.
 /// </summary>
-public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSystemLogic>
+public partial class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSystemLogic>
 {
     private const LogChannel Log = LogChannel.Weather;
 
@@ -92,7 +92,7 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
     
     
     #region Properties
-    public WeatherProfileSO ActiveWeatherProfile => activeWeatherProfile;
+    public WeatherProfileSO ActiveWeatherProfile => resolvedCapitalWeather ?? activeWeatherProfile;
     public bool IsHardSetWeather => isHardSetWeather;
     public bool IsProceduralWeatherEnabled => enableProceduralWeather;
     #endregion
@@ -176,7 +176,7 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
         if (visualLogic != null && activeWeatherProfile != null)
         {
             visualLogic.InitializeWithWeather(activeWeatherProfile);
-            ApplyWeatherEffects(activeWeatherProfile);
+            SyncCapitalWeather();
             // Apply initial minimum-duration lock so starting weather also respects minimum duration
             weatherSelectionLockRemainingSevenths = Mathf.Max(0, minSeventhsBeforeDecay);
             GameLog.Event($"Initial minimum-duration lock applied: {weatherSelectionLockRemainingSevenths} sevenths", Log);
@@ -203,6 +203,7 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
     #region Time System Event Handlers
     private void OnSeventhChanged(int newSeventh)
     {
+        TickRegionalWeather();
         IncrementSeventhsSinceOccurrence();
         if (weatherSelectionLockRemainingSevenths > 0) weatherSelectionLockRemainingSevenths--;
         
@@ -503,11 +504,6 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
             }
         }
         
-        // Remove effects from current active profile BEFORE changing
-        if (activeWeatherProfile != null)
-        {
-            RemoveWeatherEffects(activeWeatherProfile);
-        }
         
         // Store previous for tracking
         previousWeatherProfile = activeWeatherProfile;
@@ -519,12 +515,11 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
             GameLog.Warning($"Weather profile '{newProfile.name}' has non-seamless curves:\n{newProfile.GetCurveSeamlessStatus()}", Log);
         }
         
-        // Apply effects from new profile
-        ApplyWeatherEffects(newProfile);
-        
         // Update hard-set tracking
         isHardSetWeather = isHardSet;
         isDecayingWeather = isDecaying;
+        RefreshWeatherTiles();
+        SyncCapitalWeather();
         
         // Reset minimum-duration lock for any new weather set
         weatherSelectionLockRemainingSevenths = Mathf.Max(0, minSeventhsBeforeDecay);
@@ -538,14 +533,6 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
         // Guaranteed variation: the newly active weather has just occurred.
         seventhsSinceLastOccurrence[activeWeatherProfile] = 0;
         
-        // Notify visual logic of weather change
-        if (visualLogic != null)
-        {
-            visualLogic.OnWeatherChanged(newProfile);
-        }
-        
-        // Trigger event
-        OnWeatherChanged?.Invoke(newProfile);
         
         string setType = isHardSet ? (isDecaying ? "hard-set (decaying)" : "hard-set (permanent)") : "procedural";
         GameLog.Event($"Weather changed to: {newProfile.weatherDisplayName} ({setType})", Log);
@@ -561,6 +548,8 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
     {
         isHardSetWeather = false;
         isDecayingWeather = false;
+        RefreshWeatherTiles();
+        SyncCapitalWeather();
         GameLog.Event("Hard-set weather cleared - procedural weather can now take over", Log);
     }
     
@@ -580,6 +569,8 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
     /// </summary>
     public void ClearWeather()
     {
+        regionalWeather.Clear();
+        RefreshWeatherTiles();
         // We swap back to default weather (or fallback) and apply minimum-duration lock
         GameLog.Event("Weather cleared - swapping to default and applying minimum-duration lock", Log);
         
@@ -664,23 +655,23 @@ public class CelestialWeatherSystemLogic : SingletonBehaviour<CelestialWeatherSy
     
     public string GetActiveWeatherEffectSummary()
     {
-        if (activeWeatherProfile == null)
+        if (ActiveWeatherProfile == null)
             return "No active weather";
         
-        return $"{activeWeatherProfile.weatherDisplayName}\n{activeWeatherProfile.GetEffectSummary()}";
+        return $"{ActiveWeatherProfile.weatherDisplayName}\n{ActiveWeatherProfile.GetEffectSummary()}";
     }
     
     public string GetCurrentWeatherName()
     {
-        return activeWeatherProfile != null ? activeWeatherProfile.name : "";
+        return ActiveWeatherProfile != null ? ActiveWeatherProfile.name : "";
     }
     
     /// <summary>True when the active weather has this asset name or display name (the same names lookups accept).</summary>
     public bool IsWeatherActive(string weatherProfileName)
     {
-        if (activeWeatherProfile == null || string.IsNullOrEmpty(weatherProfileName)) return false;
-        return string.Equals(activeWeatherProfile.name, weatherProfileName, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(activeWeatherProfile.weatherDisplayName, weatherProfileName, StringComparison.OrdinalIgnoreCase);
+        if (ActiveWeatherProfile == null || string.IsNullOrEmpty(weatherProfileName)) return false;
+        return string.Equals(ActiveWeatherProfile.name, weatherProfileName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(ActiveWeatherProfile.weatherDisplayName, weatherProfileName, StringComparison.OrdinalIgnoreCase);
     }
     
     public bool IsTimedWeatherActive()

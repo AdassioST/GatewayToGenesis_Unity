@@ -35,6 +35,12 @@ public enum LogChannel
     GovernmentUI = 1 << 12,
     /// <summary>Tabs, hotkeys and tooltips.</summary>
     UI = 1 << 13,
+    /// <summary>Ages, Acts of Fate, Age Crises and the passage between Ages.</summary>
+    Ages = 1 << 14,
+    /// <summary>The world map: generation, expeditions, discoveries.</summary>
+    World = 1 << 15,
+    /// <summary>Legend recruitment, renown, ranks and ballads.</summary>
+    Legends = 1 << 16,
 }
 
 /// <summary>

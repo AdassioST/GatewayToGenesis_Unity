@@ -1,0 +1,10 @@
+# Skeletal orchards around a ruin, fallow ground between.
+tile: survivor-architecture/old-orchards
+biome: survivor-architecture
+weight: 2
+rotations: any
+legend: F=fallow-steppe O=skeletal-orchard R=ruin-field
+---
+ F O O F
+F O R O F
+ F O O F

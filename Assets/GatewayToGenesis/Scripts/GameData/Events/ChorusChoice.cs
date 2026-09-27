@@ -1,15 +1,16 @@
 using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UnityEngine;
 
 /// <summary>
 /// One chorus choice card, a view over a <see cref="ChorusChoiceData"/> from the story index: title and
 /// description, a <see cref="RequirementSlot"/> per requirement and cost, the pillar <see cref="ChallengeSlot"/>,
-/// a locked overlay, and a tooltip listing each outcome with its current odds and consequences. Selecting it
-/// hands the choice to <see cref="ChorusScreenManager"/>, which checks, rolls and applies it.
+/// a locked overlay, and a tooltip with the requirements, costs, and what success and failure each lead to
+/// (with their current odds, following the story to its end or next decision). Rare events and critical
+/// successes are never revealed; a possible critical failure is flagged. Selecting the card hands the choice
+/// to <see cref="ChorusScreenManager"/>, which checks, rolls and applies it.
 /// </summary>
-public class ChorusChoice : MonoBehaviour
+public class ChorusChoice : MonoBehaviour, ITooltipSource
 {
     [Header("Optional UI References")]
     [SerializeField] private TMP_Text titleText;
@@ -50,7 +51,7 @@ public class ChorusChoice : MonoBehaviour
         if (descriptionText != null) descriptionText.text = data != null ? data.description : string.Empty;
         BuildRequirementSlots();
         BuildChallenge(pillarIcon);
-        RefreshTooltip();
+        EnsureTooltip();
     }
 
     /// <summary>Refresh requirement colours, challenge odds and the outcome tooltip (game state changed).</summary>
@@ -62,7 +63,7 @@ public class ChorusChoice : MonoBehaviour
             if (slot != null) slot.RefreshRequirementStatus();
         }
         if (challengeSlot != null) challengeSlot.RefreshChallengeDisplay();
-        RefreshTooltip();
+        EnsureTooltip();
     }
 
     /// <summary>Make this choice. True when the chorus accepted it (available and no choice made yet).</summary>
@@ -141,59 +142,99 @@ public class ChorusChoice : MonoBehaviour
 
     // ===== OUTCOME TOOLTIP =====
 
-    private void RefreshTooltip()
+    // The card's tooltip is built live (TooltipSystemLogic refreshes it), so odds and totals stay current.
+    private void EnsureTooltip()
     {
-        string outcomes = Data != null ? DescribeOutcomes(Data) : string.Empty;
-        var trigger = GetComponent<TooltipTrigger>();
-        if (string.IsNullOrEmpty(outcomes))
-        {
-            if (trigger != null) trigger.enabled = false;
-            return;
-        }
-        if (trigger == null) trigger = gameObject.AddComponent<TooltipTrigger>();
+        var trigger = TooltipTrigger.Ensure(gameObject);
+        trigger.useCustomTooltip = false;
         trigger.enabled = true;
-        trigger.SetCustom("Consequences", outcomes);
+    }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData d)
+    {
+        if (Data == null) return false;
+        var stats = StatManager.Instance;
+        float bonus = stats != null ? stats.GetSavingRollChancePercentCapped() : 0f;
+        int pillar = Data.hasChallenge && stats != null ? stats.GetPillarValue(Data.challengePillar) : 0;
+
+        d.title = Data.title;
+        string stance = EventText.Humanize(Data.choiceId);
+        d.type = Data.hasChallenge ? $"{stance}{TooltipText.Separator}{EventText.Humanize(Data.challengePillar)} Challenge" : stance;
+        d.requirements = DescribeRequirements(Data);
+        d.effects = DescribeOutcomes(Data, ChorusRules.Preview(Data, bonus, pillar), EventStoryIndex.ConsequencesAlong);
+        if (!ChorusRules.IsAvailable(Data)) d.notes = TooltipText.Bad("Not available: a requirement is not met.");
+        return true;
+    }
+
+    /// <summary>Requirements (met or not) and the costs paid when the choice is made.</summary>
+    public static string DescribeRequirements(ChorusChoiceData choice)
+    {
+        var lines = new List<string>();
+        if (choice.requirements.Count > 0)
+        {
+            lines.Add(TooltipText.Heading("Requires"));
+            foreach (var r in choice.requirements) if (r != null) lines.Add(RequirementLine(r, false));
+        }
+        if (choice.requirementsCost.Count > 0)
+        {
+            lines.Add(TooltipText.Heading("Costs", TooltipText.Muted("paid when chosen")));
+            foreach (var c in choice.requirementsCost) if (c != null) lines.Add(RequirementLine(c, true));
+        }
+        return TooltipText.Lines(lines);
+    }
+
+    private static string RequirementLine(EventCondition condition, bool isCost)
+    {
+        bool met = condition.Evaluate();
+        return TooltipText.Bullet(TooltipText.Judge(EventText.DescribeRequirement(condition, isCost), met), met ? TooltipText.GoodHex : TooltipText.BadHex);
     }
 
     /// <summary>
-    /// What choosing <paramref name="choice"/> does: costs and unconditional consequences first, then each
-    /// outcome that can happen with its current odds (the same numbers the roll uses).
+    /// What the choice leads to, as the player may know it: success and failure with their odds and everything
+    /// each one sets in motion until the story ends or asks for another decision. Rare events and critical
+    /// successes stay secret; a possible critical failure is only flagged.
     /// </summary>
-    public static string DescribeOutcomes(ChorusChoiceData choice)
+    /// <param name="along">Consequences from a knot onward (<see cref="EventStoryIndex.ConsequencesAlong"/>).</param>
+    public static string DescribeOutcomes(ChorusChoiceData choice, ChorusPreview preview, AlongPath along)
     {
-        var upfront = ChorusRules.CostConsequences(choice);
-        upfront.AddRange(choice.consequences);
-        bool rolls = choice.hasChallenge || (choice.rareEventPercent > 0 && !string.IsNullOrEmpty(choice.rareEventPath));
-        if (!rolls)
+        var costs = ChorusRules.CostConsequences(choice);
+        var sections = new List<string>();
+        if (!preview.hasChallenge)
         {
-            var all = new List<EventConsequence>(upfront);
-            all.AddRange(choice.successConsequences);
-            return EventText.DescribeConsequences(all);
+            sections.Add(Outcome(TooltipText.Heading("Outcome"), choice.successConsequences, choice, First(choice.successPath, choice.destinationPath), costs, along));
         }
-
-        var stats = StatManager.Instance;
-        float bonus = stats != null ? stats.GetSavingRollChancePercentCapped() : 0f;
-        int pillar = choice.hasChallenge && stats != null ? stats.GetPillarValue(choice.challengePillar) : 0;
-        var odds = ChorusRules.OutcomeOdds(choice, bonus, pillar);
-
-        var sb = new StringBuilder();
-        if (upfront.Count > 0) sb.AppendLine("<b>When Chosen:</b>").AppendLine(EventText.DescribeConsequences(upfront));
-        AppendOutcome(sb, "Rare Event", ChorusOutcome.RareEvent, choice.rareEventConsequences, odds, upfront);
-        AppendOutcome(sb, "Critical Success", ChorusOutcome.CriticalSuccess, choice.critSuccessConsequences, odds, upfront);
-        AppendOutcome(sb, "On Success", ChorusOutcome.Success, choice.successConsequences, odds, upfront);
-        AppendOutcome(sb, "Otherwise", ChorusOutcome.TimePasses, choice.successConsequences, odds, upfront);
-        AppendOutcome(sb, "On Failure", ChorusOutcome.Failure, choice.failureConsequences, odds, upfront);
-        AppendOutcome(sb, "Critical Failure", ChorusOutcome.CriticalFailure, choice.critFailureConsequences, odds, upfront);
-        return sb.ToString().TrimEnd();
+        else
+        {
+            sections.Add(Outcome(TooltipText.Heading("On Success", TooltipText.Good($"{preview.successPercent}%")),
+                choice.successConsequences, choice, First(choice.successPath, choice.destinationPath), costs, along));
+            if (preview.failurePercent > 0)
+            {
+                string failure = Outcome(TooltipText.Heading("On Failure", TooltipText.Bad($"{preview.failurePercent}%")),
+                    choice.failureConsequences, choice, First(choice.failurePath, choice.destinationPath), costs, along);
+                if (preview.canFailCritically) failure += "\n" + TooltipText.Bullet(TooltipText.Bad("May end in Critical Failure"), TooltipText.BadHex);
+                sections.Add(failure);
+            }
+        }
+        return string.Join("\n\n", sections);
     }
 
-    private static void AppendOutcome(StringBuilder sb, string label, ChorusOutcome outcome, List<EventConsequence> consequences,
-        Dictionary<ChorusOutcome, int> odds, List<EventConsequence> upfront)
+    public delegate List<EventConsequence> AlongPath(string startKnot, out bool leadsToDecision);
+
+    private static string Outcome(string heading, List<EventConsequence> outcomeConsequences, ChorusChoiceData choice, string knot,
+        List<EventConsequence> costs, AlongPath along)
     {
-        if (!odds.TryGetValue(outcome, out int percent) || percent <= 0) return;
-        string lines = EventText.DescribeConsequences(consequences, true, upfront);
-        if (sb.Length > 0) sb.AppendLine();
-        sb.AppendLine($"<b>{label} ({percent}%):</b>");
-        sb.AppendLine(string.IsNullOrEmpty(lines) ? "- No Immediate Effect" : lines);
+        var all = new List<EventConsequence>();
+        if (outcomeConsequences != null) all.AddRange(outcomeConsequences);
+        if (choice.consequences != null) all.AddRange(choice.consequences);
+        bool decision = false;
+        if (along != null && !string.IsNullOrEmpty(knot)) all.AddRange(along(knot, out decision));
+
+        var lines = new List<string> { heading };
+        string effects = TooltipText.Consequences(all, costs);
+        lines.Add(string.IsNullOrEmpty(effects) ? TooltipText.Bullet(TooltipText.Muted("Nothing changes yet")) : effects);
+        if (decision) lines.Add(TooltipText.Bullet(TooltipText.Muted("<i>...then another decision</i>")));
+        return TooltipText.Lines(lines);
     }
+
+    private static string First(string a, string b) => !string.IsNullOrEmpty(a) ? a : b;
 }

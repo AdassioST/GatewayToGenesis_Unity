@@ -71,6 +71,42 @@ public class EventVolumeManager : SingletonBehaviour<EventVolumeManager>
         GameLog.Event($"Registered volume '{volume.volumeName}' with {volume.storyNodes.Count} stories", Log);
     }
 
+    public string SaveStoryKey(StoryNode node)
+    { foreach (var pair in storyNodeLookup) if (pair.Value == node) return pair.Key; return null; }
+    public StoryNode FindSaveStory(string name)
+    {
+        if (storyNodeLookup.TryGetValue(name, out var node)) return node;
+        return null;
+    }
+    public void CaptureSave(SaveDocument save)
+    {
+        foreach (var pair in volumeStories) save.ink.Add(new SavedText { key = pair.Key, value = pair.Value.state.ToJson() });
+        foreach (var pair in storyNodeLookup) save.storyLocks.Add(new SavedText { key = pair.Key, value = pair.Value.isUnlocked ? "1" : "0" });
+        foreach (var volume in eventVolumes) save.storyLocks.Add(new SavedText { key = "volume:" + volume.volumeName, value = volume.isUnlocked ? "1" : "0" });
+    }
+
+    public void RestoreSave(SaveDocument save)
+    {
+        foreach (var pair in save.ink)
+        {
+            if (!volumeStories.TryGetValue(pair.key, out var story)) throw new System.InvalidOperationException("Missing Ink volume: " + pair.key);
+            story.state.LoadJson(pair.value);
+        }
+        foreach (var pair in save.storyLocks)
+        {
+            if (pair.key.StartsWith("volume:"))
+            {
+                var volume = eventVolumes.Find(v => v.volumeName == pair.key.Substring(7));
+                if (volume == null) throw new System.InvalidOperationException("Missing event volume.");
+                volume.isUnlocked = pair.value == "1";
+            }
+            else
+            {
+                if (!storyNodeLookup.TryGetValue(pair.key, out var node)) throw new System.InvalidOperationException("Missing story: " + pair.key);
+                node.isUnlocked = pair.value == "1";
+            }
+        }
+    }
     // ===== CHOOSING A STORY =====
 
     /// <summary>
@@ -86,7 +122,7 @@ public class EventVolumeManager : SingletonBehaviour<EventVolumeManager>
             if (!IsVolumeAvailable(volume)) continue;
             foreach (var node in volume.storyNodes)
             {
-                if (node == null || !node.isUnlocked || !AreStoryConditionsMet(node)) continue;
+                if (node == null || node.isIssue || !node.isUnlocked || !AreStoryConditionsMet(node)) continue;
                 if (node.priority > best)
                 {
                     best = node.priority;
@@ -101,6 +137,18 @@ public class EventVolumeManager : SingletonBehaviour<EventVolumeManager>
         GameLog.Event($"Available: {candidates.Count} stor{(candidates.Count == 1 ? "y" : "ies")} at priority {best}; chose '{chosen.nodeName}'", Log);
         return chosen;
     }
+
+    /// <summary>Issues use the same live gates and cooldowns as scheduled stories, without occupying their queue.</summary>
+    public IEnumerable<StoryNode> AvailableIssues()
+    {
+        foreach (var volume in eventVolumes)
+            if (IsVolumeAvailable(volume))
+                foreach (var node in volume.storyNodes)
+                    if (node != null && node.isIssue && node.isUnlocked && AreStoryConditionsMet(node)) yield return node;
+    }
+
+    public bool IsIssueAvailable(StoryNode node) => node != null && node.isIssue && node.isUnlocked &&
+        volumeOfNode.TryGetValue(node, out var volume) && IsVolumeAvailable(volume) && AreStoryConditionsMet(node);
 
     private static bool IsVolumeAvailable(EventVolume volume)
     {

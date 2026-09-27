@@ -1,0 +1,12 @@
+# Open terraces and a roofless sanctuary, with a pass through the dark ridge.
+tile: auric-grasslands/broken-sanctuary
+biome: auric-grasslands
+weight: 2
+rotations: any
+legend: A=auric-meadow C=auric-copse R=ruin-field H=foothills
+---
+   C H H C
+  C A R A C
+ A A R R A A
+  A A A C A
+   A A A A

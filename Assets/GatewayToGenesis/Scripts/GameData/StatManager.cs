@@ -189,7 +189,7 @@ public class StatManager : SingletonBehaviour<StatManager>
 
             foreach (var pillar in StatDefinitions.Pillars)
             {
-                int value = Mathf.Max(1, Mathf.RoundToInt(Modifiers.Total(pillar).ApplyTo(_basePillars[pillar])));
+                int value = StatRules.Pillar(_basePillars[pillar], Modifiers.Total(pillar));
                 anyChange |= Store(_pillars, pillar, value, forceEvents, OnPillarChanged);
                 SetPillarField(pillar, _basePillars[pillar]);
             }
@@ -197,10 +197,9 @@ public class StatManager : SingletonBehaviour<StatManager>
             foreach (var substat in StatDefinitions.Substats)
             {
                 string parent = StatDefinitions.ParentPillar(substat);
-                int fromPillar = Mathf.Max(1, Mathf.RoundToInt(_pillars[parent] * _pillarMultipliers[parent]));
-                int baseValue = Mathf.Max(1, fromPillar + _substatAdjustments[substat]);
+                int baseValue = StatRules.SubstatBase(_pillars[parent], _pillarMultipliers[parent], _substatAdjustments[substat]);
                 _substatBase[substat] = baseValue;
-                int value = Mathf.Max(1, Mathf.RoundToInt(Modifiers.Total(substat).ApplyTo(baseValue)));
+                int value = StatRules.Substat(baseValue, Modifiers.Total(substat));
                 anyChange |= Store(_substats, substat, value, forceEvents, OnSubstatChanged);
                 SetSubstatField(substat, value);
             }
@@ -213,14 +212,13 @@ public class StatManager : SingletonBehaviour<StatManager>
                 anyChange |= StoreDerived(pair.Key, value, forceEvents);
                 SetDerivedField(pair.Key, value);
             }
-            communionStage = Mathf.FloorToInt(_substats["secrecy"] / 5f);
+            communionStage = StatRules.CommunionStage(_substats["secrecy"]);
             _derivedBase[StatDefinitions.CommunionStage] = communionStage;
             anyChange |= StoreDerived(StatDefinitions.CommunionStage, communionStage, forceEvents);
 
             foreach (var pair in _baseGlobals)
             {
-                int value = Mathf.RoundToInt(Modifiers.Total(pair.Key).ApplyTo(pair.Value));
-                if (pair.Key == StatDefinitions.SatisfactionUpgradeThreshold) value = Mathf.Max(1, value);
+                int value = StatRules.Threshold(pair.Value, Modifiers.Total(pair.Key), atLeastOne: pair.Key == StatDefinitions.SatisfactionUpgradeThreshold);
                 if (!_globals.TryGetValue(pair.Key, out int previous) || previous != value) anyChange = true;
                 _globals[pair.Key] = value;
             }
@@ -434,10 +432,7 @@ public class StatManager : SingletonBehaviour<StatManager>
 
     private int EnhanceMoraleDelta(int amount)
     {
-        if (amount == 0) return 0;
-        float mitigation = Mathf.Clamp(GetDerivedValue("moraleLossMod"), 0f, 100f) / 100f;
-        if (amount < 0) return Mathf.Min(Mathf.RoundToInt(amount * (1f - mitigation)), 0);
-        return Mathf.RoundToInt(amount * (1f + mitigation * moraleGainBalanceFactor));
+        return StatRules.MoraleShift(amount, GetDerivedValue("moraleLossMod"), moraleGainBalanceFactor);
     }
 
     private void SetMorale(int value)
@@ -456,16 +451,7 @@ public class StatManager : SingletonBehaviour<StatManager>
 
         // Morale drifts to its natural resting point: slowly from above, faster (Euphony-enhanced) from below.
         // Balance modifiers move the reference used for bonuses, not this resting point, which is what makes them permanent.
-        if (morale > target)
-        {
-            int down = Mathf.CeilToInt(waltzValue * Mathf.Max(0f, aboveBalanceRecoveryFactor));
-            SetMorale(Mathf.Max(target, morale - down));
-        }
-        else if (morale < target)
-        {
-            int up = Mathf.RoundToInt(Mathf.Max(0, waltzValue) * GetDerivedValue("moraleRecoveryMod"));
-            SetMorale(Mathf.Min(target, morale + Mathf.Max(1, up)));
-        }
+        SetMorale(StatRules.MoraleDrift(morale, target, waltzValue, aboveBalanceRecoveryFactor, GetDerivedValue("moraleRecoveryMod")));
 
         foreach (var source in _moraleTimedRemainingBySource.Keys.ToList())
         {
@@ -489,17 +475,8 @@ public class StatManager : SingletonBehaviour<StatManager>
     {
         var events = EventSystemLogic.Instance;
         if (events == null) return;
-        int deficit = GetMoraleBalance() - GetMorale();
-        if (deficit > 0)
-        {
-            int increase = Mathf.CeilToInt(deficit * Mathf.Max(0f, darkMoraleIncreaseFactor));
-            if (increase > 0) events.ModifyEventScore("dark_morale", increase);
-        }
-        else if (deficit < 0)
-        {
-            int decrease = Mathf.Min(Mathf.CeilToInt(-deficit * Mathf.Max(0f, darkMoraleDecreaseFactor)), events.GetEventScore("dark_morale"));
-            if (decrease > 0) events.ModifyEventScore("dark_morale", -decrease);
-        }
+        int change = StatRules.DarkMoraleChange(GetMoraleBalance(), GetMorale(), darkMoraleIncreaseFactor, darkMoraleDecreaseFactor, events.GetEventScore("dark_morale"));
+        if (change != 0) events.ModifyEventScore("dark_morale", change);
     }
 
     // ===== SATISFACTION =====
@@ -546,7 +523,7 @@ public class StatManager : SingletonBehaviour<StatManager>
     public void ChangeSatisfactionPoints(int change, string source = null)
     {
         if (change == 0) return;
-        int finalChange = change > 0 ? Mathf.RoundToInt(change * GetSatisfactionEffectivenessMultiplier()) : change;
+        int finalChange = StatRules.SatisfactionGain(change, GetSatisfactionEffectivenessMultiplier());
         ApplySatisfactionPoints(finalChange, source);
     }
 

@@ -49,7 +49,8 @@ public class RequirementSlot : MonoBehaviour
         if (condition == null) return;
         isRequirementMet = condition.Evaluate();
         if (panel != null) panel.color = isRequirementMet ? Color.green : Color.red;
-        TooltipTrigger.Ensure(gameObject).SetCustom(EventText.DescribeRequirement(condition, isCost), EventText.DescribeRequirementStatus(condition, isCost));
+        TooltipTrigger.Ensure(gameObject).SetCustom(EventText.DescribeRequirement(condition, isCost), null,
+            isCost ? "Cost" + TooltipText.Separator + "paid when chosen" : "Requirement", EventText.DescribeRequirementStatus(condition, isCost));
     }
 
     public bool IsRequirementMet() => isRequirementMet;

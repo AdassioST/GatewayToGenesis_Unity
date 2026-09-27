@@ -66,6 +66,7 @@ public class InkDrivenEventSetup : MonoBehaviour
                 EventContentCheck.Consequences(node.nodeName, node.storyConsequences, problems);
             }
         }
+        eventKnots.UnionWith(EventStoryIndex.EventKnots);
         problems.AddRange(EventStoryIndex.Validate(eventKnots));
         return problems;
     }

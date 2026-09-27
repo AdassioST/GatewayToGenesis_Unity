@@ -1,0 +1,10 @@
+# A bare ridge through the forest; it keeps its east-west run (turned only end over end).
+tile: taiga/frozen-ridge
+biome: taiga
+weight: 1
+rotations: 0 3
+legend: T=taiga-forest H=highlands P=peaks
+heights: H=0.74 P=0.88
+---
+T T H P H T T
+ T T H H T T

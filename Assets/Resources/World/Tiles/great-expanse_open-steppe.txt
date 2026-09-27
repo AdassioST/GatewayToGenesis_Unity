@@ -1,0 +1,13 @@
+# A steppe watering place with open approaches.
+tile: great-expanse/open-steppe
+biome: great-expanse
+weight: 2
+rotations: any
+legend: G=plains S=scrub L=lake
+heights: L=0.33
+---
+  G G S G
+ G G L G G
+G S L L G G
+ G G G S G
+  G S G G

@@ -132,8 +132,9 @@ public class CivicRequirement
     public ComparisonType comparison; // How to compare the values
     
     /// <summary>
-    /// The equivalent event condition. Null for <see cref="RequirementType.EraUnlock"/>: eras do not exist yet, so
-    /// that requirement always passes (ContentValidator reports it).
+    /// The equivalent event condition. <see cref="RequirementType.EraUnlock"/> names an Age id as its target (met once
+    /// the world has reached that Age), or leaves it empty to compare the current Age number with the value. Null only
+    /// for a type this does not know, and <see cref="IsMet"/> fails closed on it.
     /// </summary>
     public EventCondition ToCondition()
     {
@@ -154,6 +155,10 @@ public class CivicRequirement
                 return Value("satisfaction", null, value, op);
             case RequirementType.MoraleLevel:
                 return Value("morale", null, value, op);
+            case RequirementType.EraUnlock:
+                return string.IsNullOrWhiteSpace(requirementTarget)
+                    ? Value("age", null, value, op)
+                    : Value("age_reached", requirementTarget.Trim().ToLowerInvariant(), 1, ComparisonOperator.GreaterThanOrEqual);
             default:
                 return null;
         }
@@ -166,7 +171,7 @@ public class CivicRequirement
     public bool IsMet()
     {
         var condition = ToCondition();
-        return condition == null || condition.Evaluate();
+        return condition != null && condition.Evaluate();
     }
     
     /// <summary>Player-facing wording, e.g. "Needs At Least 10 Regalia" (<see cref="EventText.DescribeRequirement"/>).</summary>
@@ -179,7 +184,7 @@ public class CivicRequirement
 
 /// <summary>
 /// Configuration for council positions granted by civics
-/// Follows the same structure as DefaultSeatTemplate for consistency
+/// Follows the same structure as CouncilSeatData (the default seats) for consistency
 /// </summary>
 [System.Serializable]
 public class CivicCouncilPosition
@@ -195,6 +200,9 @@ public class CivicCouncilPosition
     public bool allowAnyLegendClass = false;
     [Tooltip("Specific legend classes that can fill this council position (ignored if allowAnyLegendClass is true)")]
     public LegendClass[] allowedClasses;
+
+    [Tooltip("Areas the position answers for, its main charge first (see Resources/Council/Council Areas).")]
+    public string[] areas;
     
     [Header("Position Bonuses")]
     public CivicSeatBonus[] bonuses;

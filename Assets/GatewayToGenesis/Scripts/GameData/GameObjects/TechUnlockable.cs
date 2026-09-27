@@ -23,5 +23,6 @@ public enum TechUnlockableType
     Modifier,       // + resourceModifier % output of gameUnit
     Unit,           // Adds a unit to Production
     Special,        // Named hook handled by GameUnitsLogic (e.g. "Horology", "Vagrants")
-    DemandModifier  // - resourceModifier % population food demand
+    DemandModifier, // - resourceModifier % population food demand
+    CouncilSeat     // Opens the next council position (resourceModifier: how many, at least 1)
 }

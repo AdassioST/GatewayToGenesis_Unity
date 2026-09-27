@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Ink.Runtime;
 
@@ -69,6 +70,8 @@ public static class EventStoryIndex
 
     private static readonly Dictionary<string, Knot> Knots = new Dictionary<string, Knot>(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> IndexedSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    // The events each story declared, so a second request for an indexed story returns them instead of nothing.
+    private static readonly Dictionary<string, List<StoryNode>> NodesBySource = new Dictionary<string, List<StoryNode>>(StringComparer.OrdinalIgnoreCase);
     private static readonly List<string> ProblemList = new List<string>();
 
     public static int Count => Knots.Count;
@@ -82,10 +85,14 @@ public static class EventStoryIndex
     {
         Knots.Clear();
         IndexedSources.Clear();
+        NodesBySource.Clear();
         ProblemList.Clear();
     }
 
     public static bool IsIndexed(string source) => source != null && IndexedSources.Contains(source);
+
+    /// <summary>Every knot any indexed story declares as an event (the targets unlock_event may name).</summary>
+    public static HashSet<string> EventKnots => new HashSet<string>(NodesBySource.Values.SelectMany(n => n).Select(n => n.nodeName), StringComparer.OrdinalIgnoreCase);
 
     public static bool TryGet(string knotName, out Knot knot)
     {
@@ -99,13 +106,40 @@ public static class EventStoryIndex
     public static List<ChorusChoiceData> GetChorusChoices(string knotName) => TryGet(knotName, out var knot) ? knot.chorusChoices : new List<ChorusChoiceData>();
 
     /// <summary>
+    /// Everything that happens from <paramref name="startKnot"/> onward without another decision: each screen's
+    /// button consequences, following the story to its outro or to the next chorus. A chorus outcome leads to a
+    /// verse whose button carries the real effects, so this is what the outcome actually does.
+    /// </summary>
+    /// <param name="leadsToDecision">True when the path stops at another chorus.</param>
+    public static List<EventConsequence> ConsequencesAlong(string startKnot, out bool leadsToDecision)
+    {
+        var list = new List<EventConsequence>();
+        leadsToDecision = false;
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (string name = startKnot; !string.IsNullOrEmpty(name) && visited.Add(name);)
+        {
+            if (!TryGet(name, out var knot)) break;
+            if (knot.screenType == ScreenType.Chorus)
+            {
+                leadsToDecision = true;
+                break;
+            }
+            var button = knot.FirstChoice;
+            if (button != null && button.consequences != null) list.AddRange(button.consequences);
+            name = knot.ContinueTarget;
+        }
+        return list;
+    }
+
+    /// <summary>
     /// Index every knot of a compiled story and return the story nodes (event entry knots) it declares.
     /// Indexing the same source twice replaces nothing and returns an empty list.
     /// </summary>
     public static List<StoryNode> IndexStory(string compiledJson, string source)
     {
         var nodes = new List<StoryNode>();
-        if (string.IsNullOrEmpty(compiledJson) || !IndexedSources.Add(source ?? string.Empty)) return nodes;
+        if (string.IsNullOrEmpty(compiledJson)) return nodes;
+        if (!IndexedSources.Add(source ?? string.Empty)) return NodesBySource.TryGetValue(source ?? string.Empty, out var known) ? new List<StoryNode>(known) : nodes;
 
         Story reader, simulator;
         try
@@ -141,6 +175,7 @@ public static class EventStoryIndex
             }
             foreach (var problem in problems) Report($"{source}: {problem}");
         }
+        NodesBySource[source ?? string.Empty] = new List<StoryNode>(nodes);
         GameLog.Event($"Indexed '{source}': {nodes.Count} events, {Knots.Count} knots total", Log);
         return nodes;
     }
@@ -212,8 +247,21 @@ public static class EventStoryIndex
         {
             string top = EventScript.TopLevelKnot(simulator.state.currentPathString);
             if (!string.IsNullOrEmpty(top) && top != knotName) return top;
-            if (!simulator.canContinue) break;
+            if (!simulator.canContinue) return KnotOfferingChoices(simulator, knotName);
             simulator.Continue();
+        }
+        return null;
+    }
+
+    // A knot of one line followed by choices (a typical chorus question) is entered and read in a single
+    // Continue. Ink then waits at those choices with an empty current path, so the knot is the one that
+    // owns them. No choices means the story really ended.
+    private static string KnotOfferingChoices(Story simulator, string knotName)
+    {
+        foreach (var choice in simulator.currentChoices)
+        {
+            string top = EventScript.TopLevelKnot(choice.sourcePath ?? (choice.targetPath != null ? choice.targetPath.ToString() : null));
+            if (!string.IsNullOrEmpty(top) && top != knotName) return top;
         }
         return null;
     }
@@ -233,6 +281,12 @@ public static class EventStoryIndex
                 if (!string.IsNullOrEmpty(choice.target) && !Knots.ContainsKey(choice.target)) problems.Add($"{knot.name}: '{choice.label}' leads to unknown knot '{choice.target}'.");
                 CheckUnlocks(knot.name, choice.consequences, eventKnots, problems);
                 EventContentCheck.Consequences($"{knot.name}: '{choice.label}'", choice.consequences, problems);
+            }
+
+            // Continuing from a verse or bridge that leads nowhere completes the story and skips everything after it.
+            if ((knot.screenType == ScreenType.Verse || knot.screenType == ScreenType.Bridge) && string.IsNullOrEmpty(knot.ContinueTarget))
+            {
+                problems.Add($"{knot.name}: continuing ends the story, but only an outro should (add a divert to the next knot).");
             }
 
             if (knot.screenType != ScreenType.Chorus) continue;

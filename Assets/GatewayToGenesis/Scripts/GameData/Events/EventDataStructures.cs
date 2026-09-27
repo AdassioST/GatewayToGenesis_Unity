@@ -31,6 +31,9 @@ public class StoryNode
     public string storyDescription;
     public bool isUnlocked = true;
     public int priority = 0; // Story priority within the volume
+
+    [Tooltip("An actionable Ink issue (# issue: true), offered in the notification feed instead of the random event queue.")]
+    public bool isIssue;
     
     [Header("Story Conditions")]
     public List<EventCondition> storyConditions = new List<EventCondition>(); // Conditions to trigger this story
@@ -44,6 +47,18 @@ public class StoryNode
     [Header("Screen Flow")]
     public List<ScreenFlowStep> screenFlow = new List<ScreenFlowStep>(); // How screens progress through this story
     
+    [Header("Ballad actors and ballads")]
+    [Tooltip("The ballad this story is a verse of (# ballad: id); empty for a lone event.")]
+    public string ballad;
+    [Tooltip("Its verse number within the ballad (# verse: N); the highest verse is the ballad's finale.")]
+    public int verse;
+    [Tooltip("The ballad's title (# ballad_title:), shown on the event screen.")]
+    public string balladTitle;
+    [Tooltip("What the story is about (# theme:): a Role Archetype (Leader, Resistor, Scholar, Emotional Core, Sacrificial Lamb) or a kind of Lyrical Fragment.")]
+    public string theme;
+    [Tooltip("Its ballad actors (# cast: area:defense, co:1, ...; see BalladActors.ParseCast).")]
+    public string cast;
+
     // UI metadata for controlling UI elements from Ink (runtime-only, populated from Ink parsing)
     [System.NonSerialized] public Dictionary<string, string> uiMetadata = new Dictionary<string, string>();
 }
@@ -168,7 +183,7 @@ public class EventCondition
 
     /// <summary>Whether the condition is a yes/no check rather than a number comparison.</summary>
     public bool IsYesNo => type == ConditionType.TechnologyCheck || type == ConditionType.RitualSeventhCheck
-        || (type == ConditionType.ValueCheck && (domain == "civic" || domain == "government" || domain == "weather"));
+        || (type == ConditionType.ValueCheck && (domain == "civic" || domain == "government" || domain == "weather" || domain == "age_reached" || domain == "capability"));
 
     public static string DomainOf(ConditionType type) => Domains.TryGetValue(type, out var domain) ? domain : null;
 }
@@ -198,7 +213,10 @@ public class EventConsequence
         ClickPowerPercentChange, // Percent click power change for a single resource
         ClickPowerChangeSection, // Static click power change for all resources in a section
         ClickPowerPercentChangeSection, // Percent click power change for all resources in a section
-        WeatherChange // Change weather profile (targetName = weather profile name or "clear", value = 0 for procedural, 1 for permanent)
+        WeatherChange, // Change weather profile (targetName = weather profile name or "clear", value = 0 for procedural, 1 for permanent)
+        RenownChange, // The older form of FragmentChange: Fragments of Meaning for targetName (a legend, a ballad actor role or "council")
+        FragmentChange, // Lyrical Fragments: targetName = "Who Kind"
+        LesserOpus // targetName = "Who catalog-id"; +1; only a completed Ballad finale can award it
     }
     
     public ConsequenceType type;

@@ -1,196 +1,67 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
-using TMPro; // Added for TMP_Text
 
 /// <summary>
-/// Displays a single leader slot in the leader pool
+/// One legend in the Government tab's legend pool, offered for the selected seat. Re-bound in place when the pool
+/// changes. The status line says whether picking it seats a free legend, moves or swaps a seated one, or does nothing.
 /// </summary>
 public class LeaderSlotDisplay : MonoBehaviour, ITooltipSource
 {
     [Header("UI References")]
     [SerializeField] private Image leaderSprite;
     [SerializeField] private Button leaderButton;
-    [SerializeField] private GameObject equippedIndicator; // Shows if legend is equipped elsewhere
-    [SerializeField] private TMP_Text equippedText; // Shows current seat if equipped
-    
-    private LegendData legendData;
-    private int targetSeatIndex;
-    
-    // Events
+    [Tooltip("Shown while the legend sits in any seat")]
+    [SerializeField] private GameObject equippedIndicator;
+    [SerializeField] private TMP_Text equippedText;
+
+    private static readonly Color AvailableColor = Color.green;
+    private static readonly Color AssignedColor = new Color(0.4f, 0.7f, 1f);
+    private static readonly Color SwapColor = new Color(1f, 0.5f, 0f);
+
+    private LegendData _legend;
+    private int _targetSeatIndex;
+
+    /// <summary>The player picked this legend for the selected seat.</summary>
     public event Action<LegendData> OnLeaderSelected;
-    
+
     private void Awake()
     {
-        if (leaderButton != null)
-        {
-            leaderButton.onClick.AddListener(OnLeaderButtonClicked);
-        }
-    }
-    
-    private void OnDestroy()
-    {
-        if (leaderButton != null)
-        {
-            leaderButton.onClick.RemoveListener(OnLeaderButtonClicked);
-        }
-    }
-    
-    /// <summary>
-    /// Initialize the leader slot with data
-    /// </summary>
-    public void Initialize(LegendData legend, int seatIndex)
-    {
-        legendData = legend;
-        targetSeatIndex = seatIndex;
-        
-        UpdateDisplay();
-    }
-    
-    /// <summary>
-    /// Update the visual display
-    /// </summary>
-    private void UpdateDisplay()
-    {
-        if (legendData == null) return;
-        
-        // Update sprite
-        if (leaderSprite != null)
-        {
-            leaderSprite.sprite = legendData.portrait;
-        }
-        
-        // Check if legend is equipped elsewhere
-        bool isEquippedElsewhere = false;
-        string currentSeatName = "";
-        bool isEquippedToCurrentSeat = false;
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            var currentSeat = GovernmentLogic.Instance.GetSeatWithLegend(legendData.legendName);
-            if (currentSeat != null)
-            {
-                isEquippedElsewhere = true;
-                currentSeatName = currentSeat.GetEffectiveTitle();
-                
-                // Check if this legend is already assigned to the seat we're looking at
-                if (targetSeatIndex == -1)
-                {
-                    // Head of State
-                    isEquippedToCurrentSeat = (currentSeat.seatIndex == -1);
-                }
-                else
-                {
-                    // Regular seat
-                    isEquippedToCurrentSeat = (currentSeat.seatIndex == targetSeatIndex);
-                }
-            }
-        }
-        
-        // Update equipped indicator
-        if (equippedIndicator != null)
-        {
-            equippedIndicator.SetActive(isEquippedElsewhere);
-        }
-        
-        // Update equipped text
-        if (equippedText != null)
-        {
-            equippedText.text = GetStatusText(isEquippedElsewhere, isEquippedToCurrentSeat, currentSeatName);
-            equippedText.color = GetStatusColor(isEquippedElsewhere, isEquippedToCurrentSeat);
-        }
-        
-        // Button is always interactable since we filter at source level
-        if (leaderButton != null)
-        {
-            leaderButton.interactable = true;
-        }
-    }
-    
-    /// <summary>
-    /// Get descriptive status text for the legend
-    /// </summary>
-    private string GetStatusText(bool isEquippedElsewhere, bool isEquippedToCurrentSeat, string currentSeatName)
-    {
-        if (!isEquippedElsewhere)
-        {
-            return "Available";
-        }
-        
-        if (isEquippedToCurrentSeat)
-        {
-            return "Currently Assigned";
-        }
-        
-        // Legend is equipped to a different seat - explain the swap
-        if (targetSeatIndex == -1)
-        {
-            return $"Swap from {currentSeatName}";
-        }
-        else
-        {
-            return $"Swap from {currentSeatName}";
-        }
-    }
-    
-    /// <summary>
-    /// Get color for the status text based on legend state
-    /// </summary>
-    private Color GetStatusColor(bool isEquippedElsewhere, bool isEquippedToCurrentSeat)
-    {
-        if (!isEquippedElsewhere)
-        {
-            return Color.green; // Available - green
-        }
-        
-        if (isEquippedToCurrentSeat)
-        {
-            return Color.blue; // Currently assigned - blue
-        }
-        
-        return new Color(1f, 0.5f, 0f); // Swap operation - orange
-    }
-    
-    /// <summary>
-    /// Handle leader button click
-    /// </summary>
-    private void OnLeaderButtonClicked()
-    {
-        // Check cooldown before allowing assignment
-        if (GovernmentLogic.Instance != null && !GovernmentLogic.Instance.CanChangeSeat(targetSeatIndex))
-        {
-            int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(targetSeatIndex);
-            string seatName = (targetSeatIndex == -1) ? "Head of State" : $"Seat {targetSeatIndex}";
-            GameLog.Event($"Cannot assign legend - {seatName} is on cooldown for {remainingCooldown} more sevenths", LogChannel.GovernmentUI);
-            return;
-        }
-        
-        OnLeaderSelected?.Invoke(legendData);
-    }
-    
-    /// <summary>
-    /// Get the legend data
-    /// </summary>
-    public LegendData GetLegendData()
-    {
-        return legendData;
+        if (leaderButton != null) leaderButton.onClick.AddListener(OnLeaderButtonClicked);
     }
 
-    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Legend(legendData, data);
-    
-    /// <summary>
-    /// Get the target seat index
-    /// </summary>
-    public int GetTargetSeatIndex()
+    private void OnDestroy()
     {
-        return targetSeatIndex;
+        if (leaderButton != null) leaderButton.onClick.RemoveListener(OnLeaderButtonClicked);
     }
-    
-    /// <summary>
-    /// Refresh the display (called when data changes)
-    /// </summary>
-    public void Refresh()
+
+    /// <summary>Show <paramref name="legend"/> as a candidate for the seat at <paramref name="seatIndex"/> (Head of State = -1).</summary>
+    public void Bind(LegendData legend, int seatIndex)
     {
-        UpdateDisplay();
+        _legend = legend;
+        _targetSeatIndex = seatIndex;
+        if (_legend == null) return;
+
+        if (leaderSprite != null) leaderSprite.sprite = _legend.portrait;
+        var current = GovernmentLogic.Instance != null ? GovernmentLogic.Instance.GetSeatWithLegend(_legend.legendName) : null;
+        bool seated = current != null;
+        bool here = seated && current.seatIndex == _targetSeatIndex;
+
+        if (equippedIndicator != null) equippedIndicator.SetActive(seated);
+        if (equippedText != null)
+        {
+            equippedText.text = !seated ? "Available" : here ? "Currently Assigned" : $"Swap from {current.GetEffectiveTitle()}";
+            equippedText.color = !seated ? AvailableColor : here ? AssignedColor : SwapColor;
+        }
+        if (leaderButton != null) leaderButton.interactable = true;
     }
-} 
+
+    // GovernmentLogic.AssignLegendToSeat decides (and logs) whether the seat can change now.
+    private void OnLeaderButtonClicked()
+    {
+        if (_legend != null) OnLeaderSelected?.Invoke(_legend);
+    }
+
+    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data) => TooltipContent.Legend(_legend, data);
+}

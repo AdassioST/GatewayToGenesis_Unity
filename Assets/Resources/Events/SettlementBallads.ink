@@ -1,0 +1,566 @@
+// Four local placeholder Ballads: original scenes grounded in the vault, not new canonical history.
+// Sources and integration contract: Docs/Planning/SETTLEMENT_STORIES.md.
+// Each verse is once per world; later verses unlock at committed completion. No hidden truths or campaign awards.
+-> DONE
+
+=== sb_orchard_1 ===
+# title: The Measure of an Orchard, Verse I: The Sweetest Rows
+# description: What should the expedition bring home?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_orchard_1 < 1; map_feature:auric-orchard >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Scholar
+# cast: area:economy, co:1
+# ballad: sb_orchard
+# ballad_title: The Measure of an Orchard
+# verse: 1
+The Auric Orchard shines through the dust. Fruit hangs low enough for a child to reach. At the edge of the first row, a gleaner has tied three empty seed-pouches to a branch.
+
+Her family once grew bitter roots here. The peaches fed them better, she says, until there was nothing else to sow. She does not ask the council to leave the harvest. She asks who will remember the roots when sweetness has become the only measure of a field.
+
+* Hear the question
+-> sb_orchard_1_chorus
+
+=== sb_orchard_1_chorus ===
+What should the expedition bring home?
+
+* Idealism. Bring the forgotten seed-pouches&D Pay for the gleaner's seed stock and preserve a second way to eat.&C requirements:cost:resource:Elderwood 5 -> sb_orchard_1_verse_a
+* Realism. Bring the ripe fruit&D Feed the settlement now; record what was sacrificed for the larger harvest. -> sb_orchard_1_verse_b
+
+=== sb_orchard_1_verse_a ===
+The pouches hold only a few shrivelled seeds. The gleaner writes the planting depth on the cloth, then crosses it out and writes it again. Her hands remember more than her certainty.
+
+The party returns with something too small to call a harvest, and too deliberate to call hope.
+
+* Continue&C consequences: fragment:cast Lucidity +2; score:sb_orchard_seed +1; unlock_event:sb_orchard_2
+-> sb_orchard_1_outro
+
+=== sb_orchard_1_verse_b ===
+The baskets come home heavy. The gleaner helps lift them. Nobody has mistaken caution for a full stomach.
+
+Before leaving, the Director copies the names of the vanished crops. A list is less than a seed. It is more than forgetting.
+
+* Continue&C consequences: resource:Food +12; fragment:cast Acceptance +2; score:sb_orchard_harvest +1; unlock_event:sb_orchard_2
+-> sb_orchard_1_outro
+
+=== sb_orchard_1_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_orchard_2 ===
+# title: The Measure of an Orchard, Verse II: A Field Must Rest
+# description: Who carries the cost of an experiment?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_orchard_2 < 1; event_completed:sb_orchard_1 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Scholar
+# cast: area:economy, co:1
+# ballad: sb_orchard
+# ballad_title: The Measure of an Orchard
+# verse: 2
+# locked: true
+A small patch beside the Heartlands has been offered for the orchard's lesson. The growers argue over it before the first furrow is cut.
+
+One wants a bed where an unfamiliar crop can fail without starving anyone. Another lays out the evening's bowls and asks which of them should be left empty while the council learns patience. Both have dirt under their nails. Neither has spare land.
+
+* Hear the question
+-> sb_orchard_2_chorus
+
+=== sb_orchard_2_chorus ===
+Who carries the cost of an experiment?
+
+* Idealism. Reserve a trial bed&D Keep the experiment small and supply the growers while they work.&C requirements:cost:resource:Food 8 -> sb_orchard_2_verse_a
+* Realism. Keep a shared growing record&D Start with observation rather than promise food the settlement cannot spare. -> sb_orchard_2_verse_b
+
+=== sb_orchard_2_verse_a ===
+The bed is measured with a kitchen string. Its fence would not stop a determined goat. Each grower receives enough food to finish a Seventh without borrowing from a neighbour.
+
+On the marker they write the planting date, not the promised yield.
+
+* Continue&C consequences: fragment:cast Vision +3; score:sb_orchard_trial +1; unlock_event:sb_orchard_3
+-> sb_orchard_2_outro
+
+=== sb_orchard_2_verse_b ===
+The growers compare which trees flower first, which roots keep, which leaves turn before the fruit spoils. Their record contains several disagreements.
+
+For once the disagreements are copied carefully. A future harvest may depend on knowing where certainty ended.
+
+* Continue&C consequences: fragment:cast Lucidity +2; score:sb_orchard_record +1; unlock_event:sb_orchard_3
+-> sb_orchard_2_outro
+
+=== sb_orchard_2_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_orchard_3 ===
+# title: The Measure of an Orchard, Verse III: What We Leave for Spring
+# description: How will the orchard's lesson be kept?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_orchard_3 < 1; event_completed:sb_orchard_2 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Scholar
+# cast: area:economy, co:1
+# ballad: sb_orchard
+# ballad_title: The Measure of an Orchard
+# verse: 3
+# locked: true
+At the Field Kitchen, the orchard record lies beside a pot that has been scraped clean. It offers no miracle: some observations disagree, and the trial work is too small to rescue a civilization.
+
+The gleaner asks for one last decision. Who will own what has been learned? A grower folds the corner of the page with a floury thumb. Someone will need to read it with hungry hands.
+
+* Hear the question
+-> sb_orchard_3_chorus
+
+=== sb_orchard_3_chorus ===
+How will the orchard's lesson be kept?
+
+* Idealism. Return the seed record to the growers&D Make the saved seed names and planting notes common knowledge.&C requirements:score:sb_orchard_seed >= 1 -> sb_orchard_3_verse_a
+* Realism. Publish the harvest's full account&D Write the meals gained beside the crops that were lost.&C requirements:score:sb_orchard_harvest >= 1 -> sb_orchard_3_verse_b
+
+=== sb_orchard_3_verse_a ===
+The seed-pouches are hung above the kitchen door, with the record beneath them. Children learn that an empty pouch can be a warning rather than a failure.
+
+When someone praises the orchard's sweetness, the gleaner answers, gently, 'And what will we eat beside it?'
+
+* Continue&C consequences: fragment:cast Rebirth +3; resource:Research +10; lesser_opus:cast orchard-seeds +1
+-> sb_orchard_3_outro
+
+=== sb_orchard_3_verse_b ===
+The account begins with twelve measures of fruit and ends with three names for roots. Neither column cancels the other.
+
+The last line is the Director's: 'We ate. Now we must learn how to keep eating.' The kitchen reader leaves space beneath it for another hand.
+
+* Continue&C consequences: fragment:cast Meaning +3; resource:Research +10; lesser_opus:cast orchard-harvest +1
+-> sb_orchard_3_outro
+
+=== sb_orchard_3_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_crossing_1 ===
+# title: A Road with Two Names, Verse I: The Broken Measure
+# description: What must the guides do before anyone crosses?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_crossing_1 < 1; map_feature:reedwater-crossing >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Leader
+# cast: area:logistics, co:1
+# ballad: sb_crossing
+# ballad_title: A Road with Two Names
+# verse: 1
+At Reedwater Crossing, two expedition guides draw different paths in the wet sand. One follows the remains of a causeway. The other loops upstream toward firmer ground.
+
+Both call their route the old road. Each learned it from someone who did not come home. By evening the argument has reached the companions, and one bedroll has been moved outside the firelight.
+
+* Hear the question
+-> sb_crossing_1_chorus
+
+=== sb_crossing_1_chorus ===
+What must the guides do before anyone crosses?
+
+* Idealism. Measure both routes together&D Spend provisions on a shared survey instead of choosing a winner.&C requirements:cost:resource:Food 6 -> sb_crossing_1_verse_a
+* Realism. Hear the guides before choosing&D Let each finish the account that the argument interrupted. -> sb_crossing_1_verse_b
+
+=== sb_crossing_1_verse_a ===
+They take the same rope. At the broken causeway they find footing that once held, and a gap neither remembered. Upstream, the longer route has its own washed-out bank.
+
+When they return, their map contains two corrections and no victor.
+
+* Continue&C consequences: fragment:cast Lucidity +2; score:sb_crossing_measured +1; unlock_event:sb_crossing_2
+-> sb_crossing_1_outro
+
+=== sb_crossing_1_verse_b ===
+One guide had been sent ahead for help. The other had been ordered to stay. Their quarrel has been repeating those commands for years.
+
+The Director gives the next crossing a new rule: nobody receives an order that leaves the others guessing where they went.
+
+* Continue&C consequences: fragment:cast Catharsis +2; score:sb_crossing_heard +1; unlock_event:sb_crossing_2
+-> sb_crossing_1_outro
+
+=== sb_crossing_1_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_crossing_2 ===
+# title: A Road with Two Names, Verse II: The Weight on the Rope
+# description: What can the settlement put on the far bank?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_crossing_2 < 1; event_completed:sb_crossing_1 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Leader
+# cast: area:logistics, co:1
+# ballad: sb_crossing
+# ballad_title: A Road with Two Names
+# verse: 2
+# locked: true
+The crossing party asks for supplies to mark a dependable passage. The council receives a sketch of the reeds, the broken stone and a rope with too many knots.
+
+The guides have signed the same request. They disagree about the route but agree that the next travellers should not have to discover the danger by falling into it.
+
+* Hear the question
+-> sb_crossing_2_chorus
+
+=== sb_crossing_2_chorus ===
+What can the settlement put on the far bank?
+
+* Idealism. Supply stakes and a crossing line&D Pay for visible markers; this is a local crossing aid, not a trade road.&C requirements:cost:resource:Elderwood 8 -> sb_crossing_2_verse_a
+* Realism. Keep a watch and written instructions&D Use people and an honest warning where materials are scarce. -> sb_crossing_2_verse_b
+
+=== sb_crossing_2_verse_a ===
+The stakes go in above the waterline. Each is cut with the same simple sign, deep enough to read after rain.
+
+One guide ties the rope. The other tests it. A companion who had stopped speaking to both agrees to cross first.
+
+* Continue&C consequences: fragment:cast Vision +3; score:sb_crossing_stakes +1; unlock_event:sb_crossing_3
+-> sb_crossing_2_outro
+
+=== sb_crossing_2_verse_b ===
+The instructions begin, 'Do not cross alone.' Beneath that are the depths, the missing stones and the place to turn back.
+
+No one calls the paper a bridge. It is passed from hand to hand anyway.
+
+* Continue&C consequences: fragment:cast Defiance +2; score:sb_crossing_watch +1; unlock_event:sb_crossing_3
+-> sb_crossing_2_outro
+
+=== sb_crossing_2_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_crossing_3 ===
+# title: A Road with Two Names, Verse III: The Return Path
+# description: What will the register remember?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_crossing_3 < 1; event_completed:sb_crossing_2 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Leader
+# cast: area:logistics, co:1
+# ballad: sb_crossing
+# ballad_title: A Road with Two Names
+# verse: 3
+# locked: true
+A copy of the crossing instructions reaches the Outskirts with two names at the top. A clerk asks which one to erase so the register can be tidy.
+
+The guides have come to answer together. One carries the rope. The other carries the little map. Behind them stands the companion who first moved a bedroll away from the fire.
+
+* Hear the question
+-> sb_crossing_3_chorus
+
+=== sb_crossing_3_chorus ===
+What will the register remember?
+
+* Idealism. Keep both names and the corrections&D The common survey matters more than a single discoverer.&C requirements:score:sb_crossing_measured >= 1 -> sb_crossing_3_verse_a
+* Realism. Record the promise to return together&D Keep the guides' testimony with the route instructions.&C requirements:score:sb_crossing_heard >= 1 -> sb_crossing_3_verse_b
+
+=== sb_crossing_3_verse_a ===
+The clerk makes a wider heading. Under it, both routes keep their hazards and the date they were checked.
+
+The companion draws a small fire at the meeting point. On the next journey the bedroll stays beside it.
+
+* Continue&C consequences: fragment:cast Meaning +3; resource:Research +8; lesser_opus:cast crossing-measure +1
+-> sb_crossing_3_outro
+
+=== sb_crossing_3_verse_b ===
+There is no room in the register for what the guides lost. There is room for the order they will no longer give.
+
+'We wait where we can see one another,' the clerk reads back. For the first time, both guides agree that the words describe the road.
+
+* Continue&C consequences: fragment:cast Rebirth +3; stat:morale +2; lesser_opus:cast crossing-promise +1
+-> sb_crossing_3_outro
+
+=== sb_crossing_3_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_threshold_1 ===
+# title: The House That Kept a Place, Verse I: A Chair at the Door
+# description: What can be offered without making a false promise?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_threshold_1 < 1; map_feature:survivor-hamlet >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Emotional Core
+# cast: area:governance, co:1
+# ballad: sb_threshold
+# ballad_title: The House That Kept a Place
+# verse: 1
+The expedition's report from a Survivor Hamlet includes a drawing of a chair. Its legs have been shortened to stand on a sloping threshold. Every shelter around it has been repaired more recently than the chair.
+
+The woman who keeps the house sets it outside each morning. Her child left to seek another settlement. She has stopped promising a return. She has not stopped making a place.
+
+* Hear the question
+-> sb_threshold_1_chorus
+
+=== sb_threshold_1_chorus ===
+What can be offered without making a false promise?
+
+* Idealism. Carry a description along the roads&D Ask travellers; promise only that the question will be asked. -> sb_threshold_1_verse_a
+* Realism. Help repair the occupied house&D Give care to the person who is here, without closing the door on the absent.&C requirements:cost:resource:Elderwood 8 -> sb_threshold_1_verse_b
+
+=== sb_threshold_1_verse_a ===
+The woman describes a crooked finger and a habit of whistling before opening a door. These details travel better than the word 'missing.'
+
+The Director repeats them back. The woman corrects the tune.
+
+* Continue&C consequences: fragment:cast Lucidity +2; score:sb_threshold_search +1; unlock_event:sb_threshold_2
+-> sb_threshold_1_outro
+
+=== sb_threshold_1_verse_b ===
+The roof takes eight lengths of Elderwood. The chair takes none. The woman watches the repairs, then brings out a second cup.
+
+For an hour the expedition hears about an ordinary child, irritating and funny and late for everything. It is a different kind of record.
+
+* Continue&C consequences: fragment:cast Vision +2; score:sb_threshold_care +1; unlock_event:sb_threshold_2
+-> sb_threshold_1_outro
+
+=== sb_threshold_1_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_threshold_2 ===
+# title: The House That Kept a Place, Verse II: The Wrong Coat
+# description: How should the news be carried?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_threshold_2 < 1; event_completed:sb_threshold_1 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Emotional Core
+# cast: area:governance, co:1
+# ballad: sb_threshold
+# ballad_title: The House That Kept a Place
+# verse: 2
+# locked: true
+A travelling mender brings a coat to the settlement. Its sleeve has been repaired in the pattern described by the hamlet's keeper. Several people decide this is an answer before the mender has finished speaking.
+
+She bought it from a basket of discarded clothing. She knows no name and no last road. The coat can prove that someone once mended it. Nothing more.
+
+* Hear the question
+-> sb_threshold_2_chorus
+
+=== sb_threshold_2_chorus ===
+How should the news be carried?
+
+* Idealism. Take the coat with its uncertainties&D Buy the coat, but do not turn a resemblance into a verdict.&C requirements:cost:resource:Food 4 -> sb_threshold_2_verse_a
+* Realism. Send the account, not a conclusion&D Preserve the mender's words exactly and let the keeper decide what they mean. -> sb_threshold_2_verse_b
+
+=== sb_threshold_2_verse_a ===
+The messenger rehearses the limits of the story before leaving. 'Found' is crossed out. 'Recognized' is crossed out too.
+
+At the hamlet, the keeper touches the stitching and asks to keep the mender's name with it. Another person has carried the question for a little while.
+
+* Continue&C consequences: fragment:cast Acceptance +3; score:sb_threshold_coat +1; unlock_event:sb_threshold_3
+-> sb_threshold_2_outro
+
+=== sb_threshold_2_verse_b ===
+The written account is short enough to fit on a scrap. It contains the place of purchase, the pattern and the words 'I do not know.'
+
+The messenger is thanked for the last part. It was the hardest part to bring.
+
+* Continue&C consequences: fragment:cast Lucidity +2; score:sb_threshold_account +1; unlock_event:sb_threshold_3
+-> sb_threshold_2_outro
+
+=== sb_threshold_2_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_threshold_3 ===
+# title: The House That Kept a Place, Verse III: An Unclaimed Seat
+# description: What should become of the waiting place?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_threshold_3 < 1; event_completed:sb_threshold_2 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Emotional Core
+# cast: area:governance, co:1
+# ballad: sb_threshold
+# ballad_title: The House That Kept a Place
+# verse: 3
+# locked: true
+The keeper has asked that the chair's story be read at the Residential District. She will not call it a funeral. She will not call it proof of survival.
+
+There are people listening who have left doors unlatched for years. Others have no door yet. At the end of the reading, a neighbour asks whether the chair could make room for someone who has arrived.
+
+* Hear the question
+-> sb_threshold_3_chorus
+
+=== sb_threshold_3_chorus ===
+What should become of the waiting place?
+
+* Idealism. Keep the question travelling&D Let the missing person's description remain beside the chair.&C requirements:score:sb_threshold_search >= 1 -> sb_threshold_3_verse_a
+* Realism. Make it a place of welcome&D Keep the absent child's name, and offer the seat to the living.&C requirements:score:sb_threshold_care >= 1 -> sb_threshold_3_verse_b
+
+=== sb_threshold_3_verse_a ===
+A stranger rests there that evening and reads the notice before standing. The keeper asks where the stranger came from. Then she asks whether they have eaten.
+
+The search continues. It has learned how to welcome someone else.
+
+* Continue&C consequences: fragment:cast Meaning +3; stat:morale +2; lesser_opus:cast threshold-search +1
+-> sb_threshold_3_outro
+
+=== sb_threshold_3_verse_b ===
+The chair is moved a little sideways so it no longer blocks the threshold. Its old name remains carved beneath the seat.
+
+When a weary traveller sits down, the keeper pours another cup. Nobody has been replaced.
+
+* Continue&C consequences: fragment:cast Rebirth +3; stat:morale +2; lesser_opus:cast threshold-welcome +1
+-> sb_threshold_3_outro
+
+=== sb_threshold_3_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_stillhour_1 ===
+# title: The Hour That Would Not Leave, Verse I: The Bowl in the Quiet
+# description: How will the moment be approached?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_stillhour_1 < 1; age: >= 1; map_feature:memory-field >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Sacrificial Lamb
+# cast: area:culture, co:1
+# ballad: sb_stillhour
+# ballad_title: The Hour That Would Not Leave
+# verse: 1
+At an explored Memory Field, outside sounds fall away. A woman bends to lift a clay bowl from a table. Before her fingers reach it, the same motion begins again.
+
+The expedition marks the time outside the quiet and sends a report to the council. No one knows the woman's name. The field preserves a moment, not an invitation to command it.
+
+* Hear the question
+-> sb_stillhour_1_chorus
+
+=== sb_stillhour_1_chorus ===
+How will the moment be approached?
+
+* Idealism. Observe one repetition carefully&D Record what is visible; do not call an interpretation a memory. -> sb_stillhour_1_verse_a
+* Realism. Leave a witness outside the quiet&D Keep a living voice and a route home while the others listen. -> sb_stillhour_1_verse_b
+
+=== sb_stillhour_1_verse_a ===
+A second figure is just visible by the door. The bowl is empty. The hand begins to tremble before it reaches the table.
+
+The record separates each observation from what the observers think it means. The space between the two grows longer than the account.
+
+* Continue&C consequences: fragment:cast Lucidity +3; score:sb_stillhour_observe +1; unlock_event:sb_stillhour_2
+-> sb_stillhour_1_outro
+
+=== sb_stillhour_1_verse_b ===
+The witness calls at agreed intervals. Inside, the calls thin to almost nothing. Outside, a companion answers each one anyway.
+
+When the observers return, they argue over how long they were away. They agree on the usefulness of the answering voice.
+
+* Continue&C consequences: fragment:cast Defiance +2; score:sb_stillhour_witness +1; unlock_event:sb_stillhour_2
+-> sb_stillhour_1_outro
+
+=== sb_stillhour_1_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_stillhour_2 ===
+# title: The Hour That Would Not Leave, Verse II: The Meal That Cannot Arrive
+# description: Where should the prepared meal go?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_stillhour_2 < 1; event_completed:sb_stillhour_1 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Sacrificial Lamb
+# cast: area:culture, co:1
+# ballad: sb_stillhour
+# ballad_title: The Hour That Would Not Leave
+# verse: 2
+# locked: true
+A kitchen worker hears the account and prepares a bowl of food for the next visit. 'An empty bowl is a simple thing,' he says. 'We know what to do with it.'
+
+The scholars cannot promise that a preserved gesture can receive a meal. They can point to people beyond the field who have not eaten today. The worker does not ask to be mocked for trying.
+
+* Hear the question
+-> sb_stillhour_2_chorus
+
+=== sb_stillhour_2_chorus ===
+Where should the prepared meal go?
+
+* Idealism. Share it with the living witnesses&D Acknowledge the impulse without pretending the past has been changed.&C requirements:cost:resource:Food 5 -> sb_stillhour_2_verse_a
+* Realism. Record the offer beside the observation&D Let the account retain an act of care and the limit of what it accomplished. -> sb_stillhour_2_verse_b
+
+=== sb_stillhour_2_verse_a ===
+They eat beyond the boundary of quiet. The kitchen worker keeps the empty serving bowl in his hands for a long time.
+
+Inside the field, the woman begins to reach again. Outside, someone passes the bread.
+
+* Continue&C consequences: fragment:cast Acceptance +3; score:sb_stillhour_shared +1; unlock_event:sb_stillhour_3
+-> sb_stillhour_2_outro
+
+=== sb_stillhour_2_verse_b ===
+The entry reads: 'A meal was offered. No alteration of the preserved moment was observed.'
+
+Below it, the worker writes, 'I would have fed her.' The council keeps both sentences.
+
+* Continue&C consequences: fragment:cast Catharsis +2; score:sb_stillhour_offer +1; unlock_event:sb_stillhour_3
+-> sb_stillhour_2_outro
+
+=== sb_stillhour_2_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+=== sb_stillhour_3 ===
+# title: The Hour That Would Not Leave, Verse III: Leave the Bowl Its Name
+# description: What belongs in the account?
+# conditions: age: <= 1; population: >= 1; legends_met: >= 1; event_completed:sb_stillhour_3 < 1; event_completed:sb_stillhour_2 >= 1; no_event_in_sevenths:2
+# event_type: Social
+# priority: 10
+# theme: Sacrificial Lamb
+# cast: area:culture, co:1
+# ballad: sb_stillhour
+# ballad_title: The Hour That Would Not Leave
+# verse: 3
+# locked: true
+The White-Haven Library can receive a local account of the field. The proposed title is 'The Last Supper of the Nameless Woman.' None of those words, except 'woman,' has been established.
+
+The expedition is asked for a better title. The image is still there. It does not owe them an ending.
+
+* Hear the question
+-> sb_stillhour_3_chorus
+
+=== sb_stillhour_3_chorus ===
+What belongs in the account?
+
+* Idealism. The Bowl in the Quiet&D Publish observations and uncertainty; grant no hidden truth from a guessed identity.&C requirements:score:sb_stillhour_observe >= 1 -> sb_stillhour_3_verse_a
+* Realism. The Voice Outside&D Keep the visitors' experience without claiming the woman's history.&C requirements:score:sb_stillhour_witness >= 1 -> sb_stillhour_3_verse_b
+
+=== sb_stillhour_3_verse_a ===
+The page names its witnesses, dates its visits and describes a hand that has not reached a bowl. Where a story might have supplied a death, it leaves an honest blank.
+
+The field keeps its moment. The witnesses keep their responsibility to it.
+
+* Continue&C consequences: fragment:cast Lucidity +4; resource:Research +12; lesser_opus:cast stillhour-record +1
+-> sb_stillhour_3_outro
+
+=== sb_stillhour_3_verse_b ===
+The final account begins with the answering calls. It tells future visitors to mark their time and leave someone beyond the quiet.
+
+No one has been rescued from the past. Several people have learned to bring one another home.
+
+* Continue&C consequences: fragment:cast Acceptance +4; resource:Research +12; lesser_opus:cast stillhour-voice +1
+-> sb_stillhour_3_outro
+
+=== sb_stillhour_3_outro ===
+The account is kept with the settlement's stories.
+
+* Return
+-> DONE
+
+

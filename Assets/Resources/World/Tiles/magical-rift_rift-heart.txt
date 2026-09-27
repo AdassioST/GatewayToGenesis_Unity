@@ -1,0 +1,10 @@
+# Where the rift runs deepest.
+tile: magical-rift/rift-heart
+biome: magical-rift
+weight: 1
+rotations: any
+legend: R=rift-scar X=leyline-ravine
+---
+ R R R
+R X X R
+ R R R

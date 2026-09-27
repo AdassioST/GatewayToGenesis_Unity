@@ -90,6 +90,32 @@ public static class WeatherRules
         return total > 0f ? Math.Max(0f, weights[index]) / total * 100f : 100f / weights.Count;
     }
 
+    /// <summary>
+    /// A seventh's phase durations normalized to 100%: a shortfall is added to the shortest phase, an excess is
+    /// trimmed from the longest (never below 0). Ties go to the earliest phase, so the sky never flickers between
+    /// two answers. Returns a new array; <paramref name="durations"/> is not changed.
+    /// </summary>
+    public static float[] NormalizePhaseDurations(IReadOnlyList<float> durations)
+    {
+        var result = new float[durations.Count];
+        float total = 0f;
+        for (int i = 0; i < result.Length; i++)
+        {
+            result[i] = durations[i];
+            total += durations[i];
+        }
+        if (result.Length == 0 || Math.Abs(total - 100f) < 0.01f) return result;
+
+        int target = 0;
+        for (int i = 1; i < result.Length; i++)
+        {
+            bool better = total < 100f ? result[i] < result[target] : result[i] > result[target];
+            if (better) target = i;
+        }
+        result[target] = Math.Max(0f, result[target] + (100f - total));
+        return result;
+    }
+
     private static float Total(IReadOnlyList<float> weights)
     {
         float total = 0f;

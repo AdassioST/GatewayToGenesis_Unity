@@ -77,6 +77,7 @@ public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
 
     private void Update()
     {
+        if (SaveMenu.BlocksGameplay) return;
         if (!isTimePaused && canTrackTime)
         {
             timeSinceLastSeventh += Time.deltaTime / (isSlowMotionActive ? Mathf.Max(1f, slowMotionFactor) : 1f);
@@ -142,18 +143,18 @@ public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
     {
         if (expandible == null || HUD == null || !expandible.activeSelf || !HUD.activeSelf) return;
 
-        if (cycleText != null) cycleText.text = $"Cycle {CurrentCycle} ◦ {currentCycleName}";
+        if (cycleText != null) cycleText.text = KeywordMarkup.SafeGlyphs($"Cycle {CurrentCycle} ◦ {currentCycleName}");
 
-        if (echoes != null && CurrentEcho - 1 < echoes.Length && echoText != null)
+        var echo = CurrentEchoUnit;
+        if (echo != null && echoText != null)
         {
-            var echo = echoes[CurrentEcho - 1];
             echoText.text = echo.unitName;
-            SetTooltip(echoText, echo.description, null);
+            SetTooltip(echoText, echo.unitName, echo.description);
         }
 
-        if (phases != null && totalPhaseIndex < phases.Length && phaseImage != null)
+        var phase = CurrentPhaseUnit;
+        if (phase != null && phaseImage != null)
         {
-            var phase = phases[totalPhaseIndex];
             phaseImage.sprite = phase.icon;
             SetTooltip(phaseImage, phase.unitName, phase.description);
         }
@@ -166,11 +167,18 @@ public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
         }
     }
 
+    /// <summary>The echo now playing (null when the calendar has no echoes configured).</summary>
+    public TimeUnit CurrentEchoUnit => echoes != null && CurrentEcho >= 1 && CurrentEcho <= echoes.Length ? echoes[CurrentEcho - 1] : null;
+
+    /// <summary>The phase now playing (null when the calendar has no phases configured).</summary>
+    public TimeUnit CurrentPhaseUnit => phases != null && totalPhaseIndex < phases.Length ? phases[totalPhaseIndex] : null;
+
+    // The title is also the calendar term's keyword, so the tooltip carries its lore.
     private static void SetTooltip(Component anchor, string title, string description)
     {
         var tooltip = anchor.GetComponentInParent<TooltipTrigger>();
         if (tooltip == null) return;
-        tooltip.SetCustom(title, description ?? tooltip.customDescription, tooltip.customType);
+        tooltip.SetCustom(title, description ?? tooltip.customDescription, tooltip.customType, keyword: title);
     }
 
     public void PauseTime(bool pause)

@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// A named group of game units ("Vital Resource", "Hearthlands"...). Sections are loaded by
+/// A named group of game units ("Vital Resource", "Heartlands"...). Sections are loaded by
 /// <see cref="GameCatalog.Sections"/> from Resources/Sections, keyed by <see cref="name"/>, and can be
 /// targeted by effects with Section scope.
 /// </summary>

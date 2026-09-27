@@ -87,11 +87,11 @@ public class CoreSystemsTests
     [Test]
     public void Targets_CoversMatchesByScope()
     {
-        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.All, "Hut", "Hearthlands", "Residence"));
-        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.Section("hearthlands"), "Hut", "Hearthlands", "Residence"));
-        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.Type("Residence"), "Hut", "Hearthlands", "Residence"));
-        Assert.IsTrue(ModifierTargets.Covers("hut", "Hut", "Hearthlands", "Residence"));
-        Assert.IsFalse(ModifierTargets.Covers(ModifierTargets.Section("Academia"), "Hut", "Hearthlands", "Residence"));
+        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.All, "Hut", "Heartlands", "Residence"));
+        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.Section("heartlands"), "Hut", "Heartlands", "Residence"));
+        Assert.IsTrue(ModifierTargets.Covers(ModifierTargets.Type("Residence"), "Hut", "Heartlands", "Residence"));
+        Assert.IsTrue(ModifierTargets.Covers("hut", "Hut", "Heartlands", "Residence"));
+        Assert.IsFalse(ModifierTargets.Covers(ModifierTargets.Section("Academia"), "Hut", "Heartlands", "Residence"));
     }
 
     // ===== EFFECTS =====

@@ -109,6 +109,38 @@ Enhance your stories with these optional fields:
 - **`# background:`** - Background image specification
 - **`# priority:`** - Event priority for selection system (default: 0)
 
+### Ballad actors, ballads and Lyrical Fragments
+
+Every story has faces: its **ballad actors**, a protagonist and co-protagonist roles (like an expedition's Director
+and companions), shown beside the event screens. They are found in this order (`BalladActors.Resolve`):
+
+1. a ballad's actors, carried from its earlier verses;
+2. the expedition that found the story (its Director leads, its companions are co-protagonists);
+3. a legend the story names;
+4. the council seat that answers for the story's **area**, else the seat of the closest related area;
+5. the Head of State;
+6. no one: the player chooses (the council is offered first). The player can also change the lead, remove an actor
+   or fill an open co-protagonist role while the story is told.
+
+| Tag | Meaning |
+|---|---|
+| `# cast: area:defense` | The seat that answers for defense plays it. Use areas, never seat titles: any seat can be added, renamed or granted by a civic and still be called on. Areas and their aliases live in `Resources/Council/Council Areas` (defense, security, justice, diplomacy, governance, welfare, economy, industry, logistics, exploration, lore, innovation, mysticism, faith, culture). |
+| `# cast: legend:Name` / `seat:Title` / `expedition` / `open` / `co:N` | A named legend; a seat by title (discouraged); the finding party; no default protagonist (the player chooses); N co-protagonist roles. Combine with commas. |
+| `# theme: Scholar` | What the story is about: a Role Archetype (Leader, Resistor, Scholar, Emotional Core, Sacrificial Lamb) or a kind of fragment (Meaning, Lucidity, Catharsis, Acceptance, Defiance, Vision, Rebirth, or its binding). Each actor earns 1 fragment of the theme's primary kind. |
+| `# ballad: ruin_song` `# verse: 2` | A verse of a ballad (a storyline of several events). Verses run 1..N; the highest is the finale. |
+| `# ballad_title: ...` | The ballad's name, on any verse. |
+
+A ballad's finale pays its theme: the primary kind ×5 and the secondary ×3 to the protagonist (Scholar: Lucidity and
+Rebirth), a share (0.6, at least 1) to each co-protagonist. Tuning is in `Resources/Legends/LegendSettings.asset`.
+
+Consequence: `fragment:<who> <Kind> +N`, where who is `protagonist`, `co`, `cast` (everyone on stage), `council`, a
+legend's name, or `leader` (the older form). `renown:<who> +N` still works and pays Fragments of Meaning.
+
+Conditions: `fragments:Name` (or `fragments:Name Vision`), `ballad:ruin_song` (1 once sung), `ballad_verses:ruin_song`.
+
+The Fate Stage proper (vault: Fate Stage.md) is for super ballads (World Events and Age Crises with the five Role
+Archetypes as roles); it is not built yet. Ballad actors are its local, one-story form.
+
 ---
 
 ## 🎯 Chorus Choice Metadata (`&C`)

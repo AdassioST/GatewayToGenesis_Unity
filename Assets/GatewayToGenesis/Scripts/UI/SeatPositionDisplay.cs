@@ -1,10 +1,16 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System;
 
 /// <summary>
-/// Displays a single council seat position in the government tab
+/// One council position on the Government tab: the regular seats (spawned by <see cref="GovernmentTab"/>) and the
+/// Head of State (placed in the scene). A view is bound once and re-bound in place whenever the council changes, so
+/// it is never destroyed just to show new state.
+///
+/// Activity indicator: red = no legend, yellow = legend seated (the seat's bonuses already apply) but still
+/// activating, green = the legend's own bonuses apply too (<see cref="CouncilRules"/>). Cooldown indicator: deep blue
+/// while the legend cannot be changed, cyan when it can.
 /// </summary>
 public class SeatPositionDisplay : MonoBehaviour, ITooltipSource
 {
@@ -13,173 +19,71 @@ public class SeatPositionDisplay : MonoBehaviour, ITooltipSource
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Image spriteImage;
     [SerializeField] private Button seatButton;
-    [SerializeField] private Image activeIndicator; // Red = inactive, Green = active
-    [SerializeField] private Image cooldownIndicator; // Deep blue = on cooldown, Cyan = ready
+    [SerializeField] private Image activeIndicator;
+    [SerializeField] private Image cooldownIndicator;
+
     [Header("Default Assets")]
-    [Tooltip("Default icon to show when no legend is assigned to this seat")]
-    [SerializeField] private Sprite defaultIcon; // Default icon for unassigned seats
-    
+    [Tooltip("Portrait shown while no legend sits in the seat")]
+    [SerializeField] private Sprite defaultIcon;
+
     [Header("Status Colors")]
     [SerializeField] private Color activeColor = Color.green;
+    [Tooltip("Legend seated: the seat's bonuses apply, the legend's own are still activating")]
+    [SerializeField] private Color activatingColor = new Color(1f, 0.85f, 0.2f, 1f);
     [SerializeField] private Color inactiveColor = Color.red;
     [SerializeField] private Color readyColor = Color.cyan;
-    [SerializeField] private Color cooldownColor = new Color(0f, 0f, 0.5f, 1f); // Deep blue
-    
-    private CouncilSeat councilSeat;
-    private int seatIndex;
-    
-    // Events
+    [SerializeField] private Color cooldownColor = new Color(0f, 0f, 0.5f, 1f);
+
+    private CouncilSeat _seat;
+    private int _seatIndex;
+
+    /// <summary>The player clicked this position (and its legend can be changed now).</summary>
     public event Action<int> OnSeatClicked;
-    
+
+    public CouncilSeat Seat => _seat;
+
     private void Awake()
     {
-        if (seatButton != null)
-        {
-            seatButton.onClick.AddListener(OnSeatButtonClicked);
-        }
+        if (seatButton != null) seatButton.onClick.AddListener(OnSeatButtonClicked);
     }
-    
-    // Removed per-frame updates; status is now refreshed via event-driven calls
-    
+
     private void OnDestroy()
     {
-        if (seatButton != null)
-        {
-            seatButton.onClick.RemoveListener(OnSeatButtonClicked);
-        }
+        if (seatButton != null) seatButton.onClick.RemoveListener(OnSeatButtonClicked);
     }
-    
-    /// <summary>
-    /// Initialize the seat display with data
-    /// </summary>
-    public void Initialize(CouncilSeat seat, int index)
+
+    /// <summary>Show <paramref name="seat"/> at position <paramref name="index"/> (Head of State = -1). Cheap: call it on every change.</summary>
+    public void Bind(CouncilSeat seat, int index)
     {
-        councilSeat = seat;
-        seatIndex = index;
-        
-        UpdateDisplay();
-    }
-    
-    /// <summary>
-    /// Update the visual display
-    /// </summary>
-    private void UpdateDisplay()
-    {
-        if (councilSeat == null) return;
-        
-        // Update title
-        if (titleText != null)
-        {
-            titleText.text = councilSeat.GetEffectiveTitle();
-        }
-        
-        // Update name and sprite based on legend assignment
-        if (councilSeat.assignedLegend != null)
-        {
-            if (nameText != null)
-                nameText.text = councilSeat.assignedLegend.legendName;
-            if (spriteImage != null)
-                spriteImage.sprite = councilSeat.assignedLegend.portrait;
-        }
-        else
-        {
-            if (nameText != null)
-                nameText.text = "Unassigned";
-            if (spriteImage != null)
-                spriteImage.sprite = defaultIcon;
-        }
-        
-        // Update status indicators
-        UpdateStatusIndicators();
-        
-        // Update button interactability (only locked seats should be non-interactable)
-        // Seats on cooldown can still be clicked to show messages, but won't trigger actions
-        if (seatButton != null)
-        {
-            bool canInteract = councilSeat.isUnlocked; // Remove cooldown check from interactability
-            seatButton.interactable = canInteract;
-        }
-    }
-    
-    /// <summary>
-    /// Update the active and cooldown status indicators
-    /// </summary>
-    private void UpdateStatusIndicators()
-    {
-        // Update active indicator (red = inactive, green = active)
+        _seat = seat;
+        _seatIndex = index;
+        if (_seat == null) return;
+
+        if (titleText != null) titleText.text = _seat.GetEffectiveTitle();
+        var legend = _seat.assignedLegend;
+        if (nameText != null) nameText.text = legend != null ? legend.legendName : "Unassigned";
+        if (spriteImage != null) spriteImage.sprite = legend != null && legend.portrait != null ? legend.portrait : defaultIcon;
+
         if (activeIndicator != null)
         {
-            bool isActive = councilSeat != null && councilSeat.IsActive();
-            activeIndicator.color = isActive ? activeColor : inactiveColor;
+            activeIndicator.color = legend == null ? inactiveColor : _seat.IsActive() ? activeColor : activatingColor;
         }
-        
-        // Update cooldown indicator (deep blue = on cooldown, cyan = ready)
-        if (cooldownIndicator != null)
-        {
-            bool onCooldown = IsOnCooldown();
-            cooldownIndicator.color = onCooldown ? cooldownColor : readyColor;
-        }
+        if (cooldownIndicator != null) cooldownIndicator.color = IsOnCooldown() ? cooldownColor : readyColor;
+        if (seatButton != null) seatButton.interactable = _seat.isUnlocked;
     }
-    
-    /// <summary>
-    /// Check if this seat is currently on cooldown
-    /// </summary>
-    private bool IsOnCooldown()
-    {
-        if (GovernmentLogic.Instance == null) return false;
-        return !GovernmentLogic.Instance.CanChangeSeat(seatIndex);
-    }
-    
-    /// <summary>
-    /// Handle seat button click
-    /// </summary>
+
+    private bool IsOnCooldown() => GovernmentLogic.Instance != null && !GovernmentLogic.Instance.CanChangeSeat(_seatIndex);
+
     private void OnSeatButtonClicked()
     {
-        if (councilSeat != null && councilSeat.isUnlocked)
+        if (_seat == null || !_seat.isUnlocked) return;
+        if (IsOnCooldown())
         {
-            // Check cooldown before allowing interaction
-            if (IsOnCooldown())
-            {
-                int remainingCooldown = GovernmentLogic.Instance.GetSeatCooldownRemaining(seatIndex);
-                GameLog.Event($"Seat {seatIndex} ({councilSeat.GetEffectiveTitle()}) is on cooldown for {remainingCooldown} more sevenths", LogChannel.GovernmentUI);
-                return;
-            }
-            
-            OnSeatClicked?.Invoke(seatIndex);
+            // The cooldown indicator and its tooltip tell the player how long is left.
+            GameLog.Event($"{_seat.GetEffectiveTitle()} can change again in {GovernmentLogic.Instance.GetSeatCooldownRemaining(_seatIndex)} sevenths", LogChannel.GovernmentUI);
+            return;
         }
-    }
-    
-    /// <summary>
-    /// Get the council seat data
-    /// </summary>
-    public CouncilSeat GetCouncilSeat()
-    {
-        return councilSeat;
-    }
-    
-    /// <summary>
-    /// Get the seat index
-    /// </summary>
-    public int GetSeatIndex()
-    {
-        return seatIndex;
-    }
-    
-    /// <summary>
-    /// Check if the leader/civic selection should be shown (only if not on cooldown)
-    /// </summary>
-    /// <returns>True if selection UI should be shown, false if on cooldown</returns>
-    public bool ShouldShowSelection()
-    {
-        return !IsOnCooldown();
-    }
-    
-    /// <summary>
-    /// Refresh the display (called when seat data changes)
-    /// </summary>
-    public void Refresh()
-    {
-        UpdateDisplay();
+        OnSeatClicked?.Invoke(_seatIndex);
     }
 
     /// <summary>
@@ -188,11 +92,11 @@ public class SeatPositionDisplay : MonoBehaviour, ITooltipSource
     /// </summary>
     public bool BuildTooltip(TooltipTrigger trigger, TooltipData data)
     {
-        if (councilSeat == null) return false;
+        if (_seat == null) return false;
         var target = trigger.gameObject;
-        if (spriteImage != null && target == spriteImage.gameObject) return TooltipContent.SeatPortrait(councilSeat, data);
-        if (activeIndicator != null && target == activeIndicator.gameObject) return TooltipContent.SeatActivity(councilSeat, data);
-        if (cooldownIndicator != null && target == cooldownIndicator.gameObject) return TooltipContent.SeatCooldownIndicator(councilSeat, data);
-        return TooltipContent.Seat(councilSeat, data);
+        if (spriteImage != null && target == spriteImage.gameObject) return TooltipContent.SeatPortrait(_seat, data);
+        if (activeIndicator != null && target == activeIndicator.gameObject) return TooltipContent.SeatActivity(_seat, data);
+        if (cooldownIndicator != null && target == cooldownIndicator.gameObject) return TooltipContent.SeatCooldownIndicator(_seat, data);
+        return TooltipContent.Seat(_seat, data);
     }
 }

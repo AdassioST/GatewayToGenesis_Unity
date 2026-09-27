@@ -82,17 +82,26 @@ public enum CivicTier
 }
 
 /// <summary>
-/// The six main classes of legends in the game
-/// Used by both legend data and civic requirements
+/// The seven classes of Great Spellweaver a legend can be (vault: Stellar Legacy Score), each with an affinity
+/// in the Principles of Magic and a function of Civilization. Seats accept specific classes.
+/// Serialized by index: append new values, never reorder (Architect and Concertist were Steward and Weaver).
 /// </summary>
 public enum LegendClass
 {
-    Sovereign,      // Noble rulers and political leaders
-    Vanguard,       // Military commanders and protectors
-    Steward,        // Economic managers and resource overseers
-    Weaver,         // Craftsmen and artisans
-    Seer,           // Mystics and knowledge keepers
-    Justiciar       // Law enforcers and judges
+    [InspectorName("Great Sovereign")] Sovereign,     // Resonance: Unity, Identity, Diplomacy, Purpose
+    [InspectorName("Great Vanguard")] Vanguard,       // Cindergale: War, Momentum, Conflict, Defense
+    [InspectorName("Great Architect")] Architect,     // Crystal: Economy, Infrastructure, Ambition, Growth
+    [InspectorName("Great Concertist")] Concertist,   // Flux: Culture, Emotion, Arts, Social Engineering
+    [InspectorName("Great Seer")] Seer,               // Luminance: Truth, Science, Faith, World-view
+    [InspectorName("Great Justiciar")] Justiciar,     // Void: Sacrifice, Law, Justice, Morality
+    [InspectorName("Great Chronicler")] Chronicler    // Strand: History, Wealth, Reliquaries, Vaults
+}
+
+/// <summary>Names of the <see cref="LegendClass"/> values as players read them.</summary>
+public static class LegendClasses
+{
+    /// <summary>"Great Sovereign", the class's title (and its keyword).</summary>
+    public static string Title(LegendClass legendClass) => "Great " + legendClass;
 }
 
 /// <summary>
@@ -106,7 +115,7 @@ public enum RequirementType
     GovernmentType,       // Required government type
     CivicPresent,         // Required civic to be present
     CivicAbsent,          // Required civic to be absent
-    EraUnlock,            // Required era (future system)
+    EraUnlock,            // Required Age: target an Age id (reached), or empty to compare the Age number
     SatisfactionLevel,    // Required satisfaction level
     MoraleLevel           // Required morale level
 }

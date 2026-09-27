@@ -1,0 +1,25 @@
+# The world's composition stencil (the owner's reference sheet, Sept 26, 2026; Docs/Planning/WORLD_GENERATION.md §1).
+# 20 x 20 cells, columns A-T, rows 1-20 (north at the top). W = ocean, P = procedural connective terrain,
+# S1-S7 = sector cells; each same-sector block is one sector instance (a biome slot).
+# Column O was hidden in the sheet: it is inferred as the mirror of column F (it separates N from P).
+# Cell E10 read "S7S" in the sheet and is taken as S7.
+W  W  W  W  W  W  W  W  P  P  P  P  W  W  W  W  W  W  W  W
+W  W  W  W  W  W  W  W  P  S7 S7 P  W  W  W  W  W  W  W  W
+W  W  W  W  W  P  P  P  P  S7 S7 P  P  P  P  W  W  W  W  W
+W  W  W  W  W  P  S4 S4 P  S7 S7 P  S4 S4 P  W  W  W  W  W
+W  W  W  W  W  P  S4 S4 P  S7 S7 P  S4 S4 P  W  W  W  W  W
+W  W  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  W  W
+W  W  P  S4 S4 P  S3 S3 P  S3 S3 P  S3 S3 P  S4 S4 P  W  W
+W  W  P  S4 S4 P  S3 S3 P  S3 S3 P  S3 S3 P  S4 S4 P  W  W
+P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P
+P  S7 S7 S7 S7 P  S2 S2 P  S1 S1 P  S2 S2 P  S7 S7 S7 S7 P
+P  S7 S7 S7 S7 P  S2 S2 P  S1 S1 P  S2 S2 P  S7 S7 S7 S7 P
+P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P
+W  W  P  S6 S6 P  S6 S6 P  S3 S3 P  S5 S5 P  S5 S5 P  W  W
+W  W  P  S6 S6 P  S6 S6 P  S3 S3 P  S5 S5 P  S5 S5 P  W  W
+W  W  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  W  W
+W  W  W  W  W  P  S6 S6 P  S7 S7 P  S5 S5 P  W  W  W  W  W
+W  W  W  W  W  P  S6 S6 P  S7 S7 P  S5 S5 P  W  W  W  W  W
+W  W  W  W  W  P  P  P  P  S7 S7 P  P  P  P  W  W  W  W  W
+W  W  W  W  W  W  W  W  P  S7 S7 P  W  W  W  W  W  W  W  W
+W  W  W  W  W  W  W  W  P  P  P  P  W  W  W  W  W  W  W  W

@@ -9,7 +9,7 @@ using UnityEngine;
 public class CouncilSeat
 {
     [Header("Seat Information")]
-    public string seatTitle; // Title of the seat (e.g., "High Arbiter", "Treasurer")
+    public string seatTitle; // Title of the seat (e.g., "High Arbiter", "Treasurer"); legends of several classes can hold it
     public int seatIndex; // Position in the council (0-5 for regular seats, -1 for Head of State)
     public bool isUnlocked = false; // Whether this seat is available
     public Sprite seatIcon; // Icon representing this seat
@@ -21,6 +21,7 @@ public class CouncilSeat
     [Header("Seat Bonuses")]
     public List<SeatBonus> seatBonuses = new List<SeatBonus>(); // Bonuses provided by the seat itself
     public string roleplayDescription; // Flavor text describing the role
+    public List<string> areas = new List<string>(); // Areas the seat answers for, main charge first (CouncilAreaRules); stories call seats by area
     
     [Header("Assignment")]
     public LegendData assignedLegend; // Currently assigned legend (null if empty)

@@ -1,0 +1,12 @@
+# A fracture corridor of ravines and scarred ground.
+tile: magical-rift/fracture
+biome: magical-rift
+weight: 2
+rotations: any
+legend: R=rift-scar X=leyline-ravine
+---
+R R . . .
+ R X R . .
+  . R X R .
+   . . R X R
+    . . . R R

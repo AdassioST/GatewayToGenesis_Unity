@@ -1,0 +1,178 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baf93441cb594fa29b6f65064a3b4239, type: 3}
+  m_Name: Council Areas
+  m_EditorClassIdentifier: 
+  maxDistance: 2
+  areas:
+  - id: defense
+    name: Defense
+    description: "The walls, the army, threats at the gates."
+    aliases:
+    - military
+    - war
+    - army
+    related:
+    - security
+    - logistics
+  - id: security
+    name: Security
+    description: "Order within: the watch, crime, unrest."
+    aliases:
+    - order
+    - watch
+    - policing
+    related:
+    - defense
+    - justice
+    - governance
+  - id: justice
+    name: Justice
+    description: "Law, judgment and disputes."
+    aliases:
+    - judicial
+    - law
+    - judgment
+    related:
+    - security
+    - diplomacy
+    - governance
+  - id: diplomacy
+    name: Diplomacy
+    description: "Strangers, envoys, caravans and other peoples."
+    aliases:
+    - diplomatic
+    - foreign
+    - envoys
+    related:
+    - justice
+    - economy
+    - culture
+  - id: governance
+    name: Governance
+    description: "Administration of the settlements and their people."
+    aliases:
+    - administration
+    - civil
+    - civic
+    related:
+    - justice
+    - welfare
+    - logistics
+  - id: welfare
+    name: Welfare
+    description: "Food, health, shelter and the people's spirits."
+    aliases:
+    - health
+    - people
+    - morale
+    related:
+    - governance
+    - faith
+  - id: economy
+    name: Economy
+    description: "The treasury, trade and markets."
+    aliases:
+    - treasury
+    - trade
+    - finance
+    - commerce
+    related:
+    - diplomacy
+    - industry
+    - logistics
+  - id: industry
+    name: Industry
+    description: "Craft, building and production."
+    aliases:
+    - craft
+    - construction
+    - production
+    related:
+    - economy
+    - innovation
+    - logistics
+  - id: logistics
+    name: Logistics
+    description: "Stores, supplies and roads."
+    aliases:
+    - supply
+    - supplies
+    - storage
+    related:
+    - defense
+    - governance
+    - exploration
+  - id: exploration
+    name: Exploration
+    description: "The wilds beyond the settlements and those who walk them."
+    aliases:
+    - expeditions
+    - wilds
+    - discovery
+    related:
+    - logistics
+    - lore
+  - id: lore
+    name: Lore
+    description: "Records, history and the relics of the old world."
+    aliases:
+    - history
+    - records
+    - knowledge
+    related:
+    - innovation
+    - mysticism
+    - exploration
+  - id: innovation
+    name: Innovation
+    description: "Research and invention."
+    aliases:
+    - research
+    - science
+    - invention
+    related:
+    - lore
+    - industry
+  - id: mysticism
+    name: Mysticism
+    description: "Magic, omens and the heavens."
+    aliases:
+    - magic
+    - omens
+    - arcane
+    - celestial
+    related:
+    - faith
+    - lore
+  - id: faith
+    name: Faith
+    description: "Rites, the dead and the spirit."
+    aliases:
+    - rites
+    - religion
+    - spiritual
+    related:
+    - mysticism
+    - welfare
+    - culture
+  - id: culture
+    name: Culture
+    description: "Song, art and festivals."
+    aliases:
+    - arts
+    - music
+    - festivals
+    related:
+    - faith
+    - diplomacy
+    - welfare

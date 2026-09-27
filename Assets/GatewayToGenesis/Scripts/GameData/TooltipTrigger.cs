@@ -20,6 +20,9 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private static readonly List<ITooltipSource> SourceBuffer = new List<ITooltipSource>();
     private Transform _display;
     private bool _displayLooked;
+    // Set from code (SetCustom): the keyword whose lore a custom tooltip carries.
+    private string _loreKeyword;
+    private bool _loreSummary = true;
 
     /// <summary>The trigger on <paramref name="target"/>, added when missing.</summary>
     public static TooltipTrigger Ensure(GameObject target)
@@ -28,8 +31,13 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         return trigger != null ? trigger : target.AddComponent<TooltipTrigger>();
     }
 
-    /// <summary>Fixed text for this element; an open tooltip for it updates at once.</summary>
-    public void SetCustom(string title, string description, string type = null, string breakdown = null, TooltipStyle layout = TooltipStyle.Standard)
+    /// <summary>
+    /// Fixed text for this element; an open tooltip for it updates at once. <paramref name="keyword"/> (a keyword id
+    /// or word) adds that keyword's lore under the text (<see cref="Keywords.AddLore"/>); its summary is left out
+    /// when <paramref name="loreSummary"/> is false (the element's own text already says it).
+    /// </summary>
+    public void SetCustom(string title, string description, string type = null, string breakdown = null, TooltipStyle layout = TooltipStyle.Standard,
+        string keyword = null, bool loreSummary = true)
     {
         useCustomTooltip = true;
         customTitle = title ?? string.Empty;
@@ -38,6 +46,8 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         customStorageBreakdown = breakdown ?? string.Empty;
         isBreakdownDisplay = !string.IsNullOrEmpty(breakdown);
         style = layout;
+        _loreKeyword = keyword;
+        _loreSummary = loreSummary;
         var system = TooltipSystemLogic.Instance;
         if (system != null) system.RefreshIfShowing(this);
     }
@@ -55,6 +65,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             data.description = customDescription;
             data.type = customType;
             if (isBreakdownDisplay) data.breakdown = customStorageBreakdown;
+            if (!string.IsNullOrEmpty(_loreKeyword)) Keywords.AddLore(data, _loreKeyword, _loreSummary);
             return data.HasContent;
         }
 

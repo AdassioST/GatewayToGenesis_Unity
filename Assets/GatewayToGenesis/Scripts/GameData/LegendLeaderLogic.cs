@@ -7,7 +7,8 @@ using UnityEngine.InputSystem;
 /// The legend roster and the council activation delay.
 ///
 /// Legends are read from <see cref="GameCatalog.Legends"/> (Resources/Legends): add a LegendData asset and it
-/// is available everywhere. Seating, activation timers and bonuses belong to <see cref="GovernmentLogic"/>;
+/// is available everywhere, once the civilization has met it (<see cref="LegendProgress"/>: a few are known from the
+/// start, the rest are found on the world map). Seating, activation timers and bonuses belong to <see cref="GovernmentLogic"/>;
 /// the methods here are conveniences that forward to it.
 /// </summary>
 public class LegendLeaderLogic : SingletonBehaviour<LegendLeaderLogic>
@@ -25,16 +26,25 @@ public class LegendLeaderLogic : SingletonBehaviour<LegendLeaderLogic>
 
     // ===== ROSTER =====
 
-    public List<LegendData> GetAvailableLegends() => GameCatalog.Legends.All.ToList();
+    /// <summary>The legends the civilization has met and has at home (every legend when <see cref="LegendProgress"/> is absent).</summary>
+    public List<LegendData> GetAvailableLegends() => Met().ToList();
 
-    public List<LegendData> GetLegendsByClass(LegendClass legendClass) => GameCatalog.Legends.All.Where(l => l.legendClass == legendClass).ToList();
+    public List<LegendData> GetLegendsByClass(LegendClass legendClass) => Met().Where(l => l.legendClass == legendClass).ToList();
+
+    // Met, not lost, and not away with an expedition (a legend on the road cannot sit on the council).
+    private static IEnumerable<LegendData> Met()
+    {
+        var progress = LegendProgress.Instance;
+        var world = WorldSystem.Instance != null && WorldSystem.Instance.Map != null ? WorldSystem.Instance : null;
+        return GameCatalog.Legends.All.Where(l => l != null && (progress == null || progress.IsRecruited(l.legendName)) && (world == null || world.ExpeditionOf(l.legendName) == null));
+    }
 
     /// <summary>Unseated legends that qualify for a seat.</summary>
     public List<LegendData> GetCompatibleLegends(int seatIndex)
     {
         var seat = GovernmentLogic.Instance != null ? GovernmentLogic.Instance.GetCouncilSeat(seatIndex) : null;
         if (seat == null) return new List<LegendData>();
-        return GameCatalog.Legends.All.Where(l => seat.CanAssignLegend(l) && !IsLegendAssigned(l.legendName)).ToList();
+        return Met().Where(l => seat.CanAssignLegend(l) && !IsLegendAssigned(l.legendName)).ToList();
     }
 
     // ===== ASSIGNMENT (forwarded to GovernmentLogic) =====

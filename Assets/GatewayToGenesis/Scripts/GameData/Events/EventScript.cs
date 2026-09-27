@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -12,6 +13,8 @@ using System.Text.RegularExpressions;
 ///   # title: The Lost Caravan          # conditions: technology:Reconstruction; no_event_in_sevenths:2
 ///   # description: ...                # consequences: score:caravan_encountered +1; weather:clear
 ///   # event_type: Crisis               # cooldown: 8     # priority: 0     # locked: true
+///   Ballad actors (<see cref="BalladActors"/>): # cast: area:defense, co:1    # theme: Resistor
+///   # ballad: ruin_song    # verse: 2    # ballad_title: The Ballad of the Ruin-Song
 ///
 /// Choice text:  Type. Title &amp;D description &amp;C metadata
 ///   metadata is ';'-separated. Scalar keys: pillar, strength, challenge (pillar:strength), success, failure,
@@ -22,7 +25,8 @@ using System.Text.RegularExpressions;
 /// Conditions:   domain:target op value | domain:target value (means >=) | domain:target (means == 1)
 ///   Any <see cref="GameValues"/> domain works (resource, stat, score, technology, building, civic, weather, ...).
 /// Consequences: type:target +value | technology:Name enlightened | weather:Profile[, permanent] | weather:clear
-///   | unlock_event:knot. "duration:sevenths:N" (or "duration:N") times the consequence before it.
+///   | unlock_event:knot | fragment:Who Kind +N (who: protagonist, co, cast, council or a legend; kind: Meaning, Lucidity,
+///   Catharsis, Acceptance, Defiance, Vision, Rebirth). "duration:sevenths:N" (or "duration:N") times the consequence before it.
 /// </summary>
 public static class EventScript
 {
@@ -97,6 +101,10 @@ public static class EventScript
         { "click_power_section", EventConsequence.ConsequenceType.ClickPowerChangeSection },
         { "click_power_percent_section", EventConsequence.ConsequenceType.ClickPowerPercentChangeSection },
         { "weather", EventConsequence.ConsequenceType.WeatherChange },
+        { "renown", EventConsequence.ConsequenceType.RenownChange },
+        { "fragment", EventConsequence.ConsequenceType.FragmentChange },
+        { "fragments", EventConsequence.ConsequenceType.FragmentChange },
+        { "lesser_opus", EventConsequence.ConsequenceType.LesserOpus },
     };
 
     // Consequences whose target is implied by the type ("population:-10" needs no target name).
@@ -116,7 +124,8 @@ public static class EventScript
     };
     private static readonly HashSet<string> StoryTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "title", "description", "conditions", "consequences", "cooldown", "locked", "screen_flow"
+        "title", "description", "conditions", "consequences", "cooldown", "locked", "screen_flow",
+        "ballad", "verse", "ballad_title", "theme", "cast", "issue"
     };
 
     // ===== KNOTS =====
@@ -318,6 +327,11 @@ public static class EventScript
         if (target.Length == 0 && !ImpliedTargets.TryGetValue(type, out target))
         {
             problems?.Add($"Consequence '{t}' needs a target before the amount.");
+            return null;
+        }
+        if (type == EventConsequence.ConsequenceType.FragmentChange && !BalladActors.SplitTarget(target, out _, out _))
+        {
+            problems?.Add($"Consequence '{t}' needs who and a kind of fragment, e.g. 'fragment:protagonist Lucidity +3' (kinds: {string.Join(", ", LyricalFragments.All)}).");
             return null;
         }
         return new EventConsequence
@@ -553,12 +567,22 @@ public static class EventScript
             storyTitle = title,
             storyDescription = Get(values, "description") ?? string.Empty,
             isUnlocked = !IsTrue(Get(values, "locked")),
+            isIssue = IsTrue(Get(values, "issue")),
             cooldownSevenths = ParseInt(Get(values, "cooldown"), 0, $"{knotName}: cooldown", problems),
             priority = ParseInt(Get(values, "priority"), 0, $"{knotName}: priority", problems),
             storyConditions = ParseConditions(conditions, problems),
             storyConsequences = ParseConsequences(Get(values, "consequences"), problems),
             uiMetadata = ui,
+            ballad = Get(values, "ballad"),
+            verse = ParseInt(Get(values, "verse"), 0, $"{knotName}: verse", problems),
+            balladTitle = Get(values, "ballad_title"),
+            theme = Get(values, "theme"),
+            cast = Get(values, "cast"),
         };
+        if (!string.IsNullOrEmpty(node.theme) && !LyricalFragments.TryParseTheme(node.theme, out _, out _))
+            problems?.Add($"{knotName}: theme '{node.theme}' is neither a Role Archetype ({string.Join(", ", LyricalFragments.Archetypes.Select(LyricalFragments.ArchetypeName))}) nor a kind of Lyrical Fragment.");
+        if (!string.IsNullOrEmpty(node.ballad) && node.verse <= 0) problems?.Add($"{knotName}: a verse of the ballad '{node.ballad}' needs '# verse: N' (1 or more).");
+        BalladActors.ParseCast(node.cast, problems, knotName);
         node.screenFlow.Add(new ScreenFlowStep
         {
             flowType = ScreenFlowStep.FlowType.Splash,

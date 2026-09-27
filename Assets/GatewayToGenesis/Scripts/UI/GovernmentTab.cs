@@ -1,700 +1,210 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 
 /// <summary>
-/// Main UI controller for the Government Tab
-/// Displays Head of State, Council Seats, equipped Civics, and manages leader/civic assignment
+/// The Government tab: the Head of State, the open council positions, the active civics, and the two pools that open
+/// when a position is clicked (legends to seat there, and other seats to put there instead).
+///
+/// A view, never a rule: every change goes through <see cref="GovernmentLogic"/> / <see cref="CivicManager"/>, whose
+/// events only mark parts of the tab dirty. The tab redraws each dirty part once, at the end of the frame, re-binding
+/// its existing views in place (<see cref="ViewList{TView}"/>), so a burst of events (seating a legend raises three
+/// or four) or the per-seventh cooldown tick costs one cheap redraw and no new objects. Showing and hiding the tab
+/// itself is <see cref="TabHotkeys"/>'s job.
 /// </summary>
-public class GovernmentTab : MonoBehaviour, ITooltipSource
+public class GovernmentTab : MonoBehaviour
 {
     [Header("UI References")]
+    [Tooltip("The tab's Display (shown and hidden by TabHotkeys); the pools close while it is hidden")]
     [SerializeField] private CanvasGroup displayCanvasGroup;
     [SerializeField] private CanvasGroup civicPoolCanvasGroup;
     [SerializeField] private CanvasGroup leaderPoolCanvasGroup;
-    
-    [Header("Content Containers")]
+
+    [Header("Council")]
+    [Tooltip("The Head of State's seat view (HeadOfState in the scene)")]
+    [SerializeField] private SeatPositionDisplay headOfStateSeat;
+    [SerializeField] private Transform councilSeatsContainer;
+
+    [Header("Pools")]
     [SerializeField] private Transform leaderPoolContent;
     [SerializeField] private Transform civicPoolContent;
-    [SerializeField] private Transform councilSeatsContainer;
-    [SerializeField] private Transform headOfStateContainer;
-    
+
     [Header("Civic Tier Containers")]
     [SerializeField] private Transform aeonicCivicsContainer;
     [SerializeField] private Transform majorCivicsContainer;
     [SerializeField] private Transform minorCivicsContainer;
-    
+
     [Header("Prefabs")]
     [SerializeField] private GameObject seatPositionPrefab;
     [SerializeField] private GameObject leaderSlotPrefab;
     [SerializeField] private GameObject civicDisplayPrefab;
+    [Tooltip("A seat in the seat pool")]
     [SerializeField] private GameObject civicDetailedPrefab;
-    
-    [Header("Default Assets")]
-    [SerializeField] private Sprite defaultIcon; // Default icon for unassigned Head of State
-    
-    [Header("UI State")]
-    [SerializeField] private bool isDisplayVisible = false;
-    
-    // Internal state
-    private int selectedSeatIndex = -1; // -1 = Head of State, 0-5 = Regular seats
-    
-    // Spawned UI elements
-    private List<GameObject> spawnedCivics = new List<GameObject>();
-    private List<GameObject> spawnedSeats = new List<GameObject>();
-    private List<GameObject> spawnedLeaders = new List<GameObject>();
-    private List<GameObject> spawnedCivicDetails = new List<GameObject>();
 
+    private const LogChannel Log = LogChannel.GovernmentUI;
+
+    // Position the pools are open for (Head of State = -1).
+    private int _selectedSeatIndex = GovernmentLogic.HeadOfStateIndex;
+
+    private ViewList<SeatPositionDisplay> _seats;
+    private ViewList<LeaderSlotDisplay> _leaders;
+    private ViewList<CivicDetailedDisplay> _seatOptions;
+    private readonly Dictionary<CivicTier, ViewList<CivicDisplay>> _civicsByTier = new Dictionary<CivicTier, ViewList<CivicDisplay>>();
+
+    private bool _councilDirty, _civicsDirty, _poolsDirty;
+    private GovernmentLogic _government;
+    private CivicManager _civics;
+
+    // ===== LIFECYCLE =====
+
+    private void Awake()
+    {
+        _seats = new ViewList<SeatPositionDisplay>(seatPositionPrefab, councilSeatsContainer, view => view.OnSeatClicked += OnSeatClicked);
+        _leaders = new ViewList<LeaderSlotDisplay>(leaderSlotPrefab, leaderPoolContent, view => view.OnLeaderSelected += OnLeaderSelected);
+        _seatOptions = new ViewList<CivicDetailedDisplay>(civicDetailedPrefab, civicPoolContent, view => view.OnCivicClicked += OnSeatOptionClicked);
+        _civicsByTier[CivicTier.Aeonic] = new ViewList<CivicDisplay>(civicDisplayPrefab, aeonicCivicsContainer);
+        _civicsByTier[CivicTier.Major] = new ViewList<CivicDisplay>(civicDisplayPrefab, majorCivicsContainer);
+        _civicsByTier[CivicTier.Minor] = new ViewList<CivicDisplay>(civicDisplayPrefab, minorCivicsContainer);
+
+        if (headOfStateSeat != null) headOfStateSeat.OnSeatClicked += OnSeatClicked;
+        else GameLog.Warning("GovernmentTab has no Head of State seat view assigned; the Head of State cannot be changed.", Log);
+    }
+
+    // Singletons register in Awake, so the systems exist here; the council itself is built in GovernmentLogic.Start,
+    // which has run by the first LateUpdate, where the tab draws for the first time.
     private void Start()
     {
-        StartCoroutine(InitializeWhenReady());
-    }
-
-    private System.Collections.IEnumerator InitializeWhenReady()
-    {
-        // Wait for GovernmentLogic to be ready
-        while (GovernmentLogic.Instance == null)
+        _government = GovernmentLogic.Instance;
+        _civics = CivicManager.Instance;
+        if (_government != null)
         {
-            yield return null;
+            _government.OnCouncilCompositionChanged += MarkCouncilDirty;
+            _government.OnCouncilSeatChanged += OnCouncilSeatChanged;
+            _government.OnLeaderPoolChanged += MarkCouncilDirty; // every seventh: cooldowns and activation
+            _government.OnCivicPoolChanged += MarkPoolsDirty;
         }
-        
-        // Wait a frame to ensure GovernmentLogic is fully initialized
-        yield return null;
-        
-        InitializeUI();
-        SubscribeToEvents();
-        
-        // Set default icon for Head of State if no legend is assigned
-        SetDefaultHeadOfStateIcon();
-    }
-    
-    private void SetDefaultHeadOfStateIcon()
-    {
-        if (headOfStateContainer == null || defaultIcon == null) return;
-        
-        // Find the Sprite child GameObject (HeadOfState/Sprite) for the actual portrait
-        Transform spriteChild = headOfStateContainer.Find("Sprite");
-        var spriteImage = spriteChild != null ? spriteChild.GetComponent<Image>() : null;
-        
-        if (spriteImage != null)
+        if (_civics != null)
         {
-            spriteImage.sprite = defaultIcon;
+            _civics.OnActiveCivicsChanged += MarkCivicsDirty;
+            _civics.OnCivicPoolChanged += MarkPoolsDirty;
         }
+        SetPool(leaderPoolCanvasGroup, false);
+        SetPool(civicPoolCanvasGroup, false);
+        _councilDirty = _civicsDirty = true;
     }
 
     private void OnDestroy()
     {
-        UnsubscribeFromEvents();
+        if (_government != null)
+        {
+            _government.OnCouncilCompositionChanged -= MarkCouncilDirty;
+            _government.OnCouncilSeatChanged -= OnCouncilSeatChanged;
+            _government.OnLeaderPoolChanged -= MarkCouncilDirty;
+            _government.OnCivicPoolChanged -= MarkPoolsDirty;
+        }
+        if (_civics != null)
+        {
+            _civics.OnActiveCivicsChanged -= MarkCivicsDirty;
+            _civics.OnCivicPoolChanged -= MarkPoolsDirty;
+        }
+        if (headOfStateSeat != null) headOfStateSeat.OnSeatClicked -= OnSeatClicked;
     }
 
-    private void InitializeUI()
+    private void MarkCouncilDirty() { _councilDirty = true; _poolsDirty = true; }
+
+    private void OnCouncilSeatChanged(CouncilSeat seat) => MarkCouncilDirty();
+
+    private void MarkCivicsDirty() => _civicsDirty = true;
+
+    private void MarkPoolsDirty() => _poolsDirty = true;
+
+    private void LateUpdate()
     {
-        // Set initial state
-        if (displayCanvasGroup != null)
-        {
-            displayCanvasGroup.alpha = 0f;
-            displayCanvasGroup.blocksRaycasts = false;
-            displayCanvasGroup.interactable = false;
-        }
-        
-        if (civicPoolCanvasGroup != null)
-        {
-            civicPoolCanvasGroup.alpha = 0f;
-            civicPoolCanvasGroup.blocksRaycasts = false;
-            civicPoolCanvasGroup.interactable = false;
-        }
-        
-        if (leaderPoolCanvasGroup != null)
-        {
-            leaderPoolCanvasGroup.alpha = 0f;
-            leaderPoolCanvasGroup.blocksRaycasts = false;
-            leaderPoolCanvasGroup.interactable = false;
-        }
-        
-        // Refresh displays
-        RefreshAllDisplays();
+        if (PoolsOpen && displayCanvasGroup != null && displayCanvasGroup.alpha <= 0f) ClosePools(); // tab hidden
+        if (_councilDirty) DrawCouncil();
+        if (_civicsDirty) DrawCivics();
+        if (_poolsDirty) DrawPools();
     }
 
-    private void SubscribeToEvents()
+    // ===== DRAWING =====
+
+    private void DrawCouncil()
     {
-        if (GovernmentLogic.Instance != null)
-        {
-            GovernmentLogic.Instance.OnCouncilCompositionChanged += RefreshAllDisplays;
-            GovernmentLogic.Instance.OnCouncilSeatChanged += OnCouncilSeatChangedHandler;
-            GovernmentLogic.Instance.OnCivicPoolChanged += RefreshCivicPoolAndDisplays;
-            GovernmentLogic.Instance.OnLeaderAssigned += OnLeaderAssignedToSeat;
-            GovernmentLogic.Instance.OnLeaderRemoved += OnLeaderRemovedFromSeat;
-            GovernmentLogic.Instance.OnLeaderPoolChanged += OnLeaderPoolChanged;
-        }
-        
-        if (CivicManager.Instance != null)
-        {
-            CivicManager.Instance.OnCivicPoolChanged += RefreshCivicPoolAndDisplays;
-            CivicManager.Instance.OnActiveCivicsChanged += RefreshCivicDisplays;
-        }
-        
-        // Add click handler for Head of State container
-        if (headOfStateContainer != null)
-        {
-            var headOfStateButton = headOfStateContainer.GetComponent<Button>();
-            if (headOfStateButton != null)
-            {
-                headOfStateButton.onClick.AddListener(OnHeadOfStateContainerClicked);
-            }
-        }
+        _councilDirty = false;
+        if (_government == null) return;
+        var head = _government.GetCouncilSeat(GovernmentLogic.HeadOfStateIndex);
+        if (headOfStateSeat != null && head != null) headOfStateSeat.Bind(head, GovernmentLogic.HeadOfStateIndex);
+        var seats = _government.GetActiveRegularSeats().Where(seat => seat != null).ToList();
+        _seats.Show(seats, (view, seat) => view.Bind(seat, seat.seatIndex));
     }
 
-    private void UnsubscribeFromEvents()
+    private void DrawCivics()
     {
-        if (GovernmentLogic.Instance != null)
+        _civicsDirty = false;
+        var active = _civics != null ? _civics.GetAllActiveCivics() : new List<CivicData>();
+        foreach (var pair in _civicsByTier)
         {
-            GovernmentLogic.Instance.OnCouncilCompositionChanged -= RefreshAllDisplays;
-            GovernmentLogic.Instance.OnCouncilSeatChanged -= OnCouncilSeatChangedHandler;
-            GovernmentLogic.Instance.OnCivicPoolChanged -= RefreshCivicPoolAndDisplays;
-            GovernmentLogic.Instance.OnLeaderAssigned -= OnLeaderAssignedToSeat;
-            GovernmentLogic.Instance.OnLeaderRemoved -= OnLeaderRemovedFromSeat;
-            GovernmentLogic.Instance.OnLeaderPoolChanged -= OnLeaderPoolChanged;
-        }
-        
-        if (CivicManager.Instance != null)
-        {
-            CivicManager.Instance.OnCivicPoolChanged -= RefreshCivicPoolAndDisplays;
-            CivicManager.Instance.OnActiveCivicsChanged -= RefreshCivicDisplays;
-        }
-        
-        // Remove click handler for Head of State container
-        if (headOfStateContainer != null)
-        {
-            var headOfStateButton = headOfStateContainer.GetComponent<Button>();
-            if (headOfStateButton != null)
-            {
-                headOfStateButton.onClick.RemoveListener(OnHeadOfStateContainerClicked);
-            }
+            pair.Value.Show(active.Where(civic => civic.tier == pair.Key).ToList(), (view, civic) => view.Bind(civic));
         }
     }
 
-    public void RefreshAllDisplays()
+    private void DrawPools()
     {
-        RefreshCivicDisplays();
-        RefreshCouncilSeats();
-        // Head of State is now persistent and gets updated directly, no need to refresh
+        _poolsDirty = false;
+        if (_government == null) return;
+        if (IsOpen(leaderPoolCanvasGroup)) _leaders.Show(LegendsForSelectedSeat(), (view, legend) => view.Bind(legend, _selectedSeatIndex));
+        if (IsOpen(civicPoolCanvasGroup)) _seatOptions.Show(SeatOptions(), (view, title) => view.Bind(title));
     }
 
-    private void RefreshCivicDisplays()
+    /// <summary>Legends that qualify for the selected seat and can move now: free legends first, then seated ones (a swap).</summary>
+    private List<LegendData> LegendsForSelectedSeat()
     {
-        ClearSpawnedCivics();
-        
-        if (CivicManager.Instance != null)
-        {
-            var activeCivics = CivicManager.Instance.GetAllActiveCivics();
-            
-            foreach (var civic in activeCivics)
-            {
-                SpawnCivicDisplay(civic);
-            }
-        }
+        return _government.GetAvailableLegendsForSeat(_selectedSeatIndex)
+            .OrderBy(legend => _government.GetSeatWithLegend(legend.legendName) != null)
+            .ToList();
     }
 
-    /// <summary>
-    /// Spawn a civic display for ACTIVE civics (goes in tier-specific containers)
-    /// These show currently equipped/active civics in the government
-    /// </summary>
-    private void SpawnCivicDisplay(CivicData civic)
-    {
-        if (civicDisplayPrefab == null) return;
-        
-        // Determine the appropriate container based on civic tier
-        Transform targetContainer = GetCivicContainer(civic.tier);
-        if (targetContainer == null) return;
-        
-        var civicObj = Instantiate(civicDisplayPrefab, targetContainer);
-        var civicDisplay = civicObj.GetComponent<CivicDisplay>();
-        
-        if (civicDisplay != null)
-        {
-            civicDisplay.Initialize(civic, civic.tier);
-        }
-        
-        spawnedCivics.Add(civicObj);
-        
-        GameLog.Event($"Spawned Civic '{civic.civicName}' (Tier: {civic.tier}) in {targetContainer.name}", LogChannel.GovernmentUI);
-    }
+    /// <summary>Seats that can take the selected position: every default or civic seat not already on the council.</summary>
+    private List<string> SeatOptions() => _government.GetAvailableSeatTitles().Where(title => !_government.IsSeatTitleActive(title)).ToList();
 
-    private void RefreshCouncilSeats()
-    {
-        if (councilSeatsContainer == null) return;
-        
-        ClearSpawnedSeats();
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            var activeSeats = GovernmentLogic.Instance.GetActiveRegularSeats();
-            
-            for (int i = 0; i < activeSeats.Length; i++)
-            {
-                var seat = activeSeats[i];
-                if (seat != null)
-                {
-                    // Use the actual seat index from the seat object, not the loop index
-                    SpawnSeatDisplay(seat, seat.seatIndex);
-                }
-            }
-        }
-    }
+    // ===== INTERACTION =====
 
-    private void SpawnSeatDisplay(CouncilSeat seat, int seatIndex)
-    {
-        if (seatPositionPrefab == null || councilSeatsContainer == null) return;
-        
-        var seatObj = Instantiate(seatPositionPrefab, councilSeatsContainer);
-        var seatDisplay = seatObj.GetComponent<SeatPositionDisplay>();
-        
-        if (seatDisplay != null)
-        {
-            seatDisplay.Initialize(seat, seatIndex);
-            seatDisplay.OnSeatClicked += OnSeatClicked;
-        }
-        
-        spawnedSeats.Add(seatObj);
-    }
-
-    private void UpdateHeadOfStateDisplay(CouncilSeat headOfState)
-    {
-        if (headOfStateContainer == null) return;
-        
-        // Find existing UI elements in the Head of State container (don't spawn new ones)
-        var titleText = headOfStateContainer.GetComponentInChildren<TextMeshProUGUI>();
-        
-        // Find the Sprite child GameObject (HeadOfState/Sprite) for the actual portrait
-        Transform spriteChild = headOfStateContainer.Find("Sprite");
-        var spriteImage = spriteChild != null ? spriteChild.GetComponent<Image>() : null;
-        
-        if (headOfState.assignedLegend != null)
-        {
-            var legend = headOfState.assignedLegend;
-            
-            // Update title text - just show the legend name
-            if (titleText != null)
-            {
-                titleText.text = legend.legendName;
-            }
-            
-            // Update sprite image (HeadOfState/Sprite)
-            if (spriteImage != null && legend.portrait != null)
-            {
-                spriteImage.sprite = legend.portrait;
-            }
-        }
-        else
-        {
-            // No legend assigned - show default state
-            if (titleText != null)
-            {
-                titleText.text = "Unassigned";
-            }
-            
-            if (spriteImage != null && defaultIcon != null)
-            {
-                spriteImage.sprite = defaultIcon;
-            }
-        }
-    }
-
+    /// <summary>A position was clicked: offer legends for it, and (regular positions only) other seats to put there.</summary>
     private void OnSeatClicked(int seatIndex)
     {
-        selectedSeatIndex = seatIndex;
-        
-        // Open both pools simultaneously for intuitive selection
-        OpenLeaderPool();
-        OpenCivicPool();
-    }
-
-    private void OnHeadOfStateContainerClicked()
-    {
-        selectedSeatIndex = -1; // Head of State
-        
-        // Head of State can only have legends assigned, not be replaced by civics
-        OpenLeaderPool();
-    }
-
-    private void OpenLeaderPool()
-    {
-        if (leaderPoolCanvasGroup == null) return;
-        
-        leaderPoolCanvasGroup.alpha = 1f;
-        leaderPoolCanvasGroup.blocksRaycasts = true;
-        leaderPoolCanvasGroup.interactable = true;
-        
-        RefreshLeaderPool();
-    }
-
-    private void CloseLeaderPool()
-    {
-        if (leaderPoolCanvasGroup == null) return;
-        
-        leaderPoolCanvasGroup.alpha = 0f;
-        leaderPoolCanvasGroup.blocksRaycasts = false;
-        leaderPoolCanvasGroup.interactable = false;
-    }
-
-    private void RefreshLeaderPool()
-    {
-        if (leaderPoolContent == null) return;
-        
-        ClearSpawnedLeaders();
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            List<LegendData> availableLegends;
-            
-            if (selectedSeatIndex >= 0)
-            {
-                // For regular seats, get legends available for this specific seat
-                availableLegends = GovernmentLogic.Instance.GetAvailableLegendsForSeat(selectedSeatIndex);
-            }
-            else if (selectedSeatIndex == -1)
-            {
-                // For Head of State, get legends available for Head of State
-                availableLegends = GovernmentLogic.Instance.GetAvailableLegendsForSeat(-1);
-            }
-            else
-            {
-                // No seat selected, show all available legends
-                availableLegends = GovernmentLogic.Instance.GetAllAvailableLegends();
-            }
-            
-            // Separate legends into unequipped (priority) and equipped (for swapping)
-            var unequippedLegends = new List<LegendData>();
-            var equippedLegends = new List<LegendData>();
-            
-            foreach (var legend in availableLegends)
-            {
-                var currentSeat = GovernmentLogic.Instance.GetSeatWithLegend(legend.legendName);
-                if (currentSeat == null)
-                {
-                    // Legend is not equipped anywhere - highest priority
-                    unequippedLegends.Add(legend);
-                }
-                else
-                {
-                    // Legend is equipped somewhere - available for swapping
-                    equippedLegends.Add(legend);
-                }
-            }
-            
-            // Log the organization for debugging
-            GameLog.Event($"Organizing {availableLegends.Count} available legends for seat {selectedSeatIndex}: {unequippedLegends.Count} unequipped, {equippedLegends.Count} equipped", LogChannel.GovernmentUI);
-            
-            // Spawn unequipped legends first (priority)
-            foreach (var legend in unequippedLegends)
-            {
-                SpawnLeaderSlot(legend);
-            }
-            
-            // Spawn equipped legends second (for swapping)
-            foreach (var legend in equippedLegends)
-            {
-                SpawnLeaderSlot(legend);
-            }
-        }
-    }
-
-    private void SpawnLeaderSlot(LegendData legend)
-    {
-        if (leaderSlotPrefab == null || leaderPoolContent == null) return;
-        
-        var leaderObj = Instantiate(leaderSlotPrefab, leaderPoolContent);
-        var leaderSlot = leaderObj.GetComponent<LeaderSlotDisplay>();
-        
-        if (leaderSlot != null)
-        {
-            leaderSlot.Initialize(legend, selectedSeatIndex);
-            leaderSlot.OnLeaderSelected += OnLeaderSelected;
-        }
-        
-        spawnedLeaders.Add(leaderObj);
+        _selectedSeatIndex = seatIndex;
+        SetPool(leaderPoolCanvasGroup, true);
+        SetPool(civicPoolCanvasGroup, seatIndex != GovernmentLogic.HeadOfStateIndex);
+        _poolsDirty = true;
     }
 
     private void OnLeaderSelected(LegendData legend)
     {
-        if (GovernmentLogic.Instance != null)
-        {
-            bool success = GovernmentLogic.Instance.AssignLegendToSeat(legend, selectedSeatIndex);
-            
-            if (success)
-            {
-                // Close both pools after successful assignment
-                CloseBothPools();
-                RefreshAllDisplays();
-            }
-        }
+        if (_government != null && _government.AssignLegendToSeat(legend, _selectedSeatIndex)) ClosePools();
     }
 
-    private void OpenCivicPool()
+    private void OnSeatOptionClicked(string seatTitle)
     {
-        if (civicPoolCanvasGroup == null) return;
-        
-        civicPoolCanvasGroup.alpha = 1f;
-        civicPoolCanvasGroup.blocksRaycasts = true;
-        civicPoolCanvasGroup.interactable = true;
-        
-        RefreshCivicPool();
+        if (_government == null || _selectedSeatIndex == GovernmentLogic.HeadOfStateIndex) return;
+        if (_government.ReplaceSeatWithAvailable(_selectedSeatIndex, seatTitle)) ClosePools();
+        else MarkPoolsDirty(); // the pool was stale: show what is available now
     }
 
-    private void CloseCivicPool()
+    private bool PoolsOpen => IsOpen(leaderPoolCanvasGroup) || IsOpen(civicPoolCanvasGroup);
+
+    private void ClosePools()
     {
-        if (civicPoolCanvasGroup == null) return;
-        
-        civicPoolCanvasGroup.alpha = 0f;
-        civicPoolCanvasGroup.blocksRaycasts = false;
-        civicPoolCanvasGroup.interactable = false;
+        SetPool(leaderPoolCanvasGroup, false);
+        SetPool(civicPoolCanvasGroup, false);
     }
 
-    private void RefreshCivicPool()
-    {
-        if (civicPoolContent == null) return;
-        
-        ClearSpawnedCivicDetails();
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            var availableSeats = GovernmentLogic.Instance.GetAvailableSeatTitles();
-            
-            foreach (var seatTitle in availableSeats)
-            {
-                SpawnCivicDetailed(seatTitle);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Refresh both civic pool (CivicDetailed objects) and civic displays (active civics)
-    /// Called when civic pool changes to ensure both are updated
-    /// </summary>
-    private void RefreshCivicPoolAndDisplays()
-    {
-        RefreshCivicPool();
-        RefreshCivicDisplays();
-    }
-    
-    /// <summary>
-    /// Get the appropriate container for a civic based on its tier
-    /// </summary>
-    private Transform GetCivicContainer(CivicTier tier)
-    {
-        Transform targetContainer = null;
-        
-        switch (tier)
-        {
-            case CivicTier.Aeonic:
-                targetContainer = aeonicCivicsContainer;
-                break;
-            case CivicTier.Major:
-                targetContainer = majorCivicsContainer;
-                break;
-            case CivicTier.Minor:
-                targetContainer = minorCivicsContainer;
-                break;
-            default:
-                targetContainer = civicPoolContent;
-                break;
-        }
-        
-        // Debug logging to help troubleshoot
-        if (targetContainer == null)
-        {
-            GameLog.Warning($"No container found for {tier} tier civics. Falling back to civicPoolContent.", LogChannel.GovernmentUI);
-            targetContainer = civicPoolContent;
-        }
-        else
-        {
-            GameLog.Event($"Using {tier} container: {targetContainer.name}", LogChannel.GovernmentUI);
-        }
-        
-        return targetContainer;
-    }
+    private static bool IsOpen(CanvasGroup group) => group != null && group.alpha > 0f;
 
-    /// <summary>
-    /// Spawn a CivicDetailed display for the CIVIC POOL (always goes in civicPoolContent)
-    /// These are for seat replacement options, not active civic displays
-    /// </summary>
-    private void SpawnCivicDetailed(string seatTitle)
+    private static void SetPool(CanvasGroup group, bool open)
     {
-        if (civicDetailedPrefab == null) return;
-        
-        // CivicDetailed objects ALWAYS go in the civicPoolContent (not tier-specific containers)
-        // These are for the civic pool display, not active civic displays
-        Transform targetContainer = civicPoolContent;
-        
-        if (targetContainer == null) return;
-        
-        var civicObj = Instantiate(civicDetailedPrefab, targetContainer);
-        var civicDetailed = civicObj.GetComponent<CivicDetailedDisplay>();
-        
-        if (civicDetailed != null)
-        {
-            civicDetailed.Initialize(seatTitle);
-            civicDetailed.OnCivicClicked += OnCivicClicked;
-        }
-        
-        spawnedCivicDetails.Add(civicObj);
-    }
-
-    private void OnCivicClicked(string seatTitle)
-    {
-        // Head of State cannot be replaced with civics
-        if (selectedSeatIndex == -1)
-        {
-            GameLog.Warning("Cannot replace Head of State with civics", LogChannel.GovernmentUI);
-            return;
-        }
-        
-        if (GovernmentLogic.Instance != null)
-        {
-            // Safety check: Ensure the seat is still available before attempting replacement
-            var availableSeats = GovernmentLogic.Instance.GetAvailableSeatTitles();
-            if (!availableSeats.Contains(seatTitle))
-            {
-                GameLog.Warning($"Seat '{seatTitle}' is no longer available. Refreshing civic pool to remove orphaned UI objects.", LogChannel.GovernmentUI);
-                
-                // Refresh the civic pool to clean up orphaned CivicDetailed objects
-                RefreshCivicPool();
-                return;
-            }
-            
-            bool success = GovernmentLogic.Instance.ReplaceSeatWithAvailable(selectedSeatIndex, seatTitle);
-            
-            if (success)
-            {
-                // Close both pools after successful replacement
-                CloseBothPools();
-                RefreshAllDisplays();
-            }
-        }
-    }
-
-    private void CloseBothPools()
-    {
-        CloseLeaderPool();
-        CloseCivicPool();
-    }
-
-    private void ClearSpawnedCivics()
-    {
-        foreach (var civic in spawnedCivics)
-        {
-            if (civic != null)
-            {
-                Destroy(civic);
-            }
-        }
-        spawnedCivics.Clear();
-    }
-
-    private void ClearSpawnedSeats()
-    {
-        foreach (var seat in spawnedSeats)
-        {
-            if (seat != null)
-            {
-                Destroy(seat);
-            }
-        }
-        spawnedSeats.Clear();
-    }
-
-    private void ClearSpawnedLeaders()
-    {
-        foreach (var leader in spawnedLeaders)
-        {
-            if (leader != null)
-            {
-                Destroy(leader);
-            }
-        }
-        spawnedLeaders.Clear();
-    }
-
-    private void ClearSpawnedCivicDetails()
-    {
-        foreach (var civicDetail in spawnedCivicDetails)
-        {
-            if (civicDetail != null)
-            {
-                Destroy(civicDetail);
-            }
-        }
-        spawnedCivicDetails.Clear();
-    }
-
-    public void ToggleDisplay()
-    {
-        isDisplayVisible = !isDisplayVisible;
-        
-        if (displayCanvasGroup != null)
-        {
-            displayCanvasGroup.alpha = isDisplayVisible ? 1f : 0f;
-            displayCanvasGroup.blocksRaycasts = isDisplayVisible;
-            displayCanvasGroup.interactable = isDisplayVisible;
-        }
-        
-        if (!isDisplayVisible)
-        {
-            // Close pools when hiding the tab
-            CloseBothPools();
-        }
-    }
-
-    private void OnLeaderAssignedToSeat(CouncilSeat seat, LegendData legend)
-    {
-        // Update Head of State display if this is the Head of State
-        if (seat.seatIndex == -1)
-        {
-            UpdateHeadOfStateDisplay(seat);
-        }
-    }
-
-    private void OnLeaderRemovedFromSeat(CouncilSeat seat)
-    {
-        // Update Head of State display if this is the Head of State
-        if (seat.seatIndex == -1)
-        {
-            UpdateHeadOfStateDisplay(seat);
-        }
-    }
-    
-    private void OnLeaderPoolChanged()
-    {
-        // Refresh seat visuals to reflect cooldown/activation changes at each seventh or change
-        RefreshCouncilSeats();
-        
-        // Refresh leader pool if it's currently open to reflect cooldown changes
-        if (leaderPoolCanvasGroup != null && leaderPoolCanvasGroup.alpha > 0f)
-        {
-            RefreshLeaderPool();
-        }
-    }
-
-    private void OnCouncilSeatChangedHandler(CouncilSeat seat)
-    {
-        // Seat composition changed at a position – refresh seat visuals
-        RefreshCouncilSeats();
-        
-        // If Head of State title/sprite needs updating, handle it here too
-        if (seat != null && seat.seatIndex == -1)
-        {
-            UpdateHeadOfStateDisplay(seat);
-        }
-    }
-
-    /// <summary>Tooltips inside the Head of State container: the portrait shows the legend, the rest the seat.</summary>
-    public bool BuildTooltip(TooltipTrigger trigger, TooltipData data)
-    {
-        if (headOfStateContainer == null || !trigger.transform.IsChildOf(headOfStateContainer)) return false;
-        var seat = GovernmentLogic.Instance != null ? GovernmentLogic.Instance.GetCouncilSeat(GovernmentLogic.HeadOfStateIndex) : null;
-        if (seat == null) return false;
-        return trigger.transform == headOfStateContainer.Find("Sprite") ? TooltipContent.SeatPortrait(seat, data) : TooltipContent.Seat(seat, data);
+        if (group == null) return;
+        group.alpha = open ? 1f : 0f;
+        group.blocksRaycasts = open;
+        group.interactable = open;
     }
 }

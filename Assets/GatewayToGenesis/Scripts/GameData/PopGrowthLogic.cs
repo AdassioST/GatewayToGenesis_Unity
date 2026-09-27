@@ -81,6 +81,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
 
     private void Update()
     {
+        if (SaveMenu.BlocksGameplay) return;
         if (IsPaused()) return;
         TryGrowPopulation(1);
         UpdateFoodDemand();
@@ -94,12 +95,9 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
     /// <summary>Food needed for the next person, scaled by morale (positive morale makes growth cheaper).</summary>
     public float GetEffectiveFoodThreshold()
     {
-        float moraleDelta = StatManager.Instance != null ? Mathf.Round(StatManager.Instance.GetMoraleDeltaPercent()) : 0f;
-        float factor = Mathf.Clamp(1f - moraleDelta / 100f, minMoraleThresholdFactor, maxMoraleThresholdFactor);
-        return Mathf.Max(1f, foodThreshold * factor);
+        float moraleDelta = StatManager.Instance != null ? StatManager.Instance.GetMoraleDeltaPercent() : 0f;
+        return PopulationRules.FoodThreshold(foodThreshold, moraleDelta, minMoraleThresholdFactor, maxMoraleThresholdFactor);
     }
-
-    private bool CanGrow() => housing - population > 0 || allowVagrants;
 
     /// <summary>
     /// Largest Food gain that can still turn into growth. Stops clicks and rewards from piling up Food
@@ -107,11 +105,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
     /// </summary>
     public float GetMaxUsefulFoodGain(float currentFood)
     {
-        if (allowVagrants) return float.MaxValue;
-        float threshold = GetEffectiveFoodThreshold();
-        int free = housing - population;
-        if (free <= 0) return Mathf.Max(0f, threshold - currentFood);
-        return Mathf.Max(0f, free * threshold);
+        return PopulationRules.MaxUsefulFoodGain(allowVagrants, GetEffectiveFoodThreshold(), housing - population, currentFood);
     }
 
     /// <summary>React to Food changing outside the per-frame check (clicks, production ticks, events).</summary>
@@ -128,23 +122,14 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
         if (foodSlot == null) return 0;
 
         float threshold = GetEffectiveFoodThreshold();
-        int grown = 0;
-        while (grown < maxSteps && foodSlot.amount + 1e-3f >= threshold && CanGrow())
-        {
-            foodSlot.ChangeAmount(-threshold);
-            if (housing - population > 0)
-            {
-                population++;
-                SpawnVillagers(1);
-            }
-            else
-            {
-                vagrants++;
-            }
-            grown++;
-        }
+        var growth = PopulationRules.Grow(foodSlot.amount, threshold, housing - population, allowVagrants, maxSteps);
+        int grown = growth.Arrivals;
         if (grown > 0)
         {
+            foodSlot.ChangeAmount(-growth.foodSpent);
+            population += growth.housed;
+            vagrants += growth.vagrants;
+            if (growth.housed > 0) SpawnVillagers(growth.housed);
             UpdateResearchGenerationRate();
             GameLog.Event($"{grown} arrival(s) for {threshold:F1} Food each: population {population}, vagrants {vagrants}", Log);
             RefreshHUD();
@@ -159,7 +144,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
 
     private void UpdateFoodDemand()
     {
-        _foodDemand = (foodDemandBuffer + Mathf.Exp(demandRateConstant / Mathf.Max(0.0001f, sustainabilityTier) * population)) * demandModifier;
+        _foodDemand = PopulationRules.FoodDemand(foodDemandBuffer, demandRateConstant, sustainabilityTier, population, demandModifier);
         GlobalProductionManager.Instance?.SetFlatRate(_food.name, FoodDemandSource, _foodDemand > 0f ? -_foodDemand : 0f);
     }
 
@@ -174,7 +159,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
     {
         if (IsPaused() || GlobalProductionManager.Instance == null) return;
 
-        isFoodScarce = GlobalProductionManager.Instance.GetNetProductionRate(_food.name) < 0f && GetResourceAmount(_food.name) <= 0f;
+        isFoodScarce = PopulationRules.IsStarving(GlobalProductionManager.Instance.GetNetProductionRate(_food.name), GetResourceAmount(_food.name));
         if (isFoodScarce && population > 0)
         {
             population--;
@@ -189,7 +174,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
         freeHousing = Mathf.Max(0, housing - population);
         if (vagrants > 0 && freeHousing > 0)
         {
-            int moving = Mathf.Min((int)vagrantToPopulationRate, Mathf.Min(vagrants, freeHousing));
+            int moving = PopulationRules.VagrantsMovingIn(vagrants, freeHousing, (int)vagrantToPopulationRate);
             if (moving > 0)
             {
                 vagrants -= moving;
@@ -236,7 +221,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
     private void RecalculateHousing()
     {
         int oldHousing = housing;
-        housing = Mathf.Max(0, Mathf.RoundToInt(HousingModifiers.Total(HousingKey).ApplyTo(GetBaseHousing())));
+        housing = PopulationRules.Housing(GetBaseHousing(), HousingModifiers.Total(HousingKey));
         if (housing < population)
         {
             int homeless = population - housing;

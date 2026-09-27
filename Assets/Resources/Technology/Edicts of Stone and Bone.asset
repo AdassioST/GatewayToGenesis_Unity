@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Edicts of Stone and Bone
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 4102ab2da44091b34512acb930dc323a, type: 2}
+  isEventTech: 0
+  tier: 6
+  satisfactionPoints: 0
+  techRequirements:
+  - Advanced Woodworking
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 90
+  enlightenedConditions:
+  - type: 6
+    trigger: stories_completed
+    requiredAmount: 1
+    description: Trigger a Storyline Quest
+  techUnlockables:
+  - {fileID: 11400000, guid: b1d5a8b2da801712c0e9471a3bf86841, type: 2}
+  - {fileID: 11400000, guid: c9dbf117977f795839ec4096bd059c1c, type: 2}

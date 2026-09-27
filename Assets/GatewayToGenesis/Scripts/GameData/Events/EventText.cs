@@ -3,6 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
+/// <summary>Whether a consequence is good or bad news, for colouring it.</summary>
+public enum ConsequenceTone
+{
+    Neutral,
+    Good,
+    Bad
+}
+
 /// <summary>
 /// Player-facing wording for event consequences and requirements. The outro, verse tooltips, chorus
 /// choice tooltips and requirement slots all use it, so a new consequence type is worded once.
@@ -19,8 +27,19 @@ public static class EventText
     /// </summary>
     public static string DescribeConsequences(IEnumerable<EventConsequence> consequences, bool withTotals = true, IEnumerable<EventConsequence> appliedFirst = null)
     {
-        if (consequences == null) return string.Empty;
         var sb = new StringBuilder();
+        foreach (var line in ConsequenceLines(consequences, withTotals, appliedFirst)) sb.Append("- ").AppendLine(line.text);
+        return sb.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// The same lines as <see cref="DescribeConsequences"/>, unprefixed and each with its <see cref="ToneOf"/>,
+    /// for views that colour them (tooltips).
+    /// </summary>
+    public static List<(string text, ConsequenceTone tone)> ConsequenceLines(IEnumerable<EventConsequence> consequences, bool withTotals = true, IEnumerable<EventConsequence> appliedFirst = null)
+    {
+        var lines = new List<(string, ConsequenceTone)>();
+        if (consequences == null) return lines;
         var running = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         if (withTotals && appliedFirst != null)
         {
@@ -30,9 +49,32 @@ public static class EventText
         {
             if (c == null) continue;
             int? total = withTotals ? Advance(running, c) : null;
-            sb.Append("- ").AppendLine(DescribeConsequence(c, total));
+            lines.Add((DescribeConsequence(c, total), ToneOf(c)));
         }
-        return sb.ToString().TrimEnd();
+        return lines;
+    }
+
+    /// <summary>Whether a consequence helps or hurts the settlement; story flags and weather are neutral.</summary>
+    public static ConsequenceTone ToneOf(EventConsequence c)
+    {
+        if (c == null) return ConsequenceTone.Neutral;
+        switch (c.type)
+        {
+            case EventConsequence.ConsequenceType.ScoreChange:
+            case EventConsequence.ConsequenceType.VagrantsChange:
+            case EventConsequence.ConsequenceType.DeathRecordsRevision:
+            case EventConsequence.ConsequenceType.WeatherChange:
+                return ConsequenceTone.Neutral;
+            case EventConsequence.ConsequenceType.TechnologyEnlightened:
+            case EventConsequence.ConsequenceType.UnlockEvent:
+                return ConsequenceTone.Good;
+            case EventConsequence.ConsequenceType.PopulationChange:
+                return ConsequenceTone.Bad; // events only ever remove population
+            case EventConsequence.ConsequenceType.DeathsChange:
+                return c.value > 0 ? ConsequenceTone.Bad : ConsequenceTone.Neutral;
+            default:
+                return c.value > 0 ? ConsequenceTone.Good : c.value < 0 ? ConsequenceTone.Bad : ConsequenceTone.Neutral;
+        }
     }
 
     // Moves the running total for c's value; null when it has none.
@@ -70,6 +112,10 @@ public static class EventText
                 return $"You've Gained Enlightenment on {c.targetName}";
             case EventConsequence.ConsequenceType.UnlockEvent:
                 return $"A New Story Awaits: {Humanize(c.targetName)}";
+            case EventConsequence.ConsequenceType.LesserOpus:
+                return LesserOpusCatalog.SplitTarget(c.targetName, out string opusWho, out var opus)
+                    ? $"{WhoLabel(opusWho)}: Lesser Opus — {opus.name}. Title remains locked: {opus.futureTitle}."
+                    : "Unknown Lesser Opus";
             case EventConsequence.ConsequenceType.PopulationChange:
                 // Events can only remove population; newcomers arrive as vagrants.
                 return $"{amount} Population Have Been Killed{total}";
@@ -96,6 +142,11 @@ public static class EventText
             case EventConsequence.ConsequenceType.WeatherChange:
                 if (string.Equals(c.targetName, "clear", StringComparison.OrdinalIgnoreCase)) return "The Winds Have Fallen Silent";
                 return c.value == 1 ? $"The Weather Has Permanently Changed To {c.targetName}" : $"The Weather Has Changed To {c.targetName}";
+            case EventConsequence.ConsequenceType.RenownChange:
+                return $"{WhoLabel(c.targetName)} {(gain ? "Gain" : "Lose")}{Plural(c.targetName)} {amount} {LyricalFragments.Name(FragmentKind.Meaning, amount)}";
+            case EventConsequence.ConsequenceType.FragmentChange:
+                if (!BalladActors.SplitTarget(c.targetName, out string who, out var kind)) return $"{c.targetName} {c.value:+#;-#;0} Lyrical Fragments";
+                return $"{WhoLabel(who)} {(gain ? "Gain" : "Lose")}{Plural(who)} {amount} {LyricalFragments.Name(kind, amount)}";
             default:
                 return $"{c.type} {c.targetName} {c.value:+#;-#;0}";
         }
@@ -127,27 +178,28 @@ public static class EventText
         return $"Needs {Phrase(c.comparison)} {c.requiredValue} {name}";
     }
 
-    /// <summary>Required vs current value and a Met / Not Met line, coloured for the tooltip.</summary>
+    /// <summary>Required vs current value and whether it holds, as aligned tooltip rows.</summary>
     public static string DescribeRequirementStatus(EventCondition c, bool isCost = false)
     {
         if (c == null) return string.Empty;
         bool met = c.Evaluate();
-        string color = met ? "green" : "red";
-        var sb = new StringBuilder();
+        var lines = new List<string>();
         if (c.IsYesNo)
         {
-            if (c.type == EventCondition.ConditionType.TechnologyCheck) sb.Append($"Status: <color={color}>{(met ? "Unlocked" : "Locked")}</color>");
-            else sb.Append($"Status: <color={color}>{(met ? "Yes" : "No")}</color>");
+            string state = c.type == EventCondition.ConditionType.TechnologyCheck ? (met ? "Unlocked" : "Locked") : (met ? "Yes" : "No");
+            lines.Add(TooltipText.Row("Now", TooltipText.Judge(state, met)));
         }
         else
         {
             bool known = c.TryGetCurrentValue(out float current);
-            sb.AppendLine(isCost ? $"Cost: {Math.Abs(c.requiredValue)}" : $"Required: {Symbol(c.comparison)} {c.requiredValue}");
-            sb.Append($"Current: <color={color}>{(known ? Math.Round(current).ToString(CultureInfo.InvariantCulture) : "?")}</color>");
+            lines.Add(isCost
+                ? TooltipText.Row("Cost", TooltipText.Value(Math.Abs(c.requiredValue).ToString(CultureInfo.InvariantCulture)))
+                : TooltipText.Row("Required", TooltipText.Value(TooltipText.Symbol(Symbol(c.comparison)) + $" {c.requiredValue}")));
+            lines.Add(TooltipText.Row(isCost ? "You have" : "Now", TooltipText.Judge(known ? Math.Round(current).ToString(CultureInfo.InvariantCulture) : "?", met)));
         }
-        sb.AppendLine();
-        sb.Append($"Status: <b><color={color}>{(met ? (isCost ? "Affordable" : "Met") : (isCost ? "Cannot Afford" : "Not Met"))}</color></b>");
-        return sb.ToString();
+        string verdict = met ? (isCost ? "Affordable" : "Met") : (isCost ? "Cannot afford" : "Not met");
+        lines.Add(TooltipText.Judge(verdict, met));
+        return TooltipText.Lines(lines);
     }
 
     public static string Symbol(ComparisonOperator op)
@@ -208,6 +260,8 @@ public static class EventText
                 return Humanize(c.domain); // "morale", "satisfaction": the domain is the value
             case EventCondition.ConditionType.ValueCheck when c.domain == "government" && Enum.TryParse(c.targetName, true, out GovernmentType government):
                 return $"A {GovernmentCompass.Name(government)} Government";
+            case EventCondition.ConditionType.ValueCheck when c.domain == "age_reached":
+                return GameCatalog.Ages.TryGet(c.targetName, out var age) && !string.IsNullOrEmpty(age.title) ? age.title : Humanize(c.targetName);
             default: return Humanize(c.targetName);
         }
     }
@@ -218,6 +272,38 @@ public static class EventText
         string domain = DomainOf(c.type);
         if (domain == null) return null;
         return domain == "population" || domain == "housing" || domain == "vagrants" || domain == "deaths" ? domain : domain + ":" + c.targetName;
+    }
+
+    /// <summary>
+    /// Names the legends behind a ballad actor role while a story is told ("protagonist" -> "Vittoria Frauter"); set by
+    /// the event system. Null (or an empty answer) leaves the role's own name.
+    /// </summary>
+    public static Func<string, List<string>> CastOf;
+
+    // Who a fragment consequence names: a ballad actor role (with the legends playing it, when known) or a legend.
+    private static string WhoLabel(string who)
+    {
+        string role = (who ?? string.Empty).Trim().Replace("-", string.Empty).Replace("_", string.Empty).ToLowerInvariant();
+        string label;
+        switch (role)
+        {
+            case BalladActors.Protagonist: label = "The Protagonist"; break;
+            case BalladActors.Leader: label = "The Expedition's Director"; break;
+            case BalladActors.Co: case BalladActors.CoProtagonists: label = "The Co-protagonists"; break;
+            case BalladActors.Cast: label = "Everyone On Stage"; break;
+            case BalladActors.Council: label = "Every Legend Of The Council"; break;
+            default: return who;
+        }
+        var names = CastOf?.Invoke(who);
+        return names != null && names.Count > 0 ? $"{label} ({string.Join(", ", names)})" : label;
+    }
+
+    // "Gains" for one legend, "Gain" for a group.
+    private static string Plural(string who)
+    {
+        string role = (who ?? string.Empty).Trim().Replace("-", string.Empty).Replace("_", string.Empty).ToLowerInvariant();
+        bool group = role == BalladActors.Co || role == BalladActors.CoProtagonists || role == BalladActors.Cast || role == BalladActors.Council;
+        return group ? string.Empty : "s";
     }
 
     private static string DomainOf(EventConsequence.ConsequenceType type)
