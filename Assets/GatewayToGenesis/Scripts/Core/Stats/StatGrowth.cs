@@ -83,6 +83,8 @@ public static class StatGrowth
         { "moraleRecoveryMod", C(OutputKind.OnePlusPercent, Q(-0.06f, 4.8f, 1f), L(0.6f, -1.8f, 168f, -0.6f, 0.8f), S(0.3f, 0.6f), S(0.15f, 0.4f)) },
         { "clickPowerBonus", C(OutputKind.Percent, Q(-0.08f, 6.4f, 1f), L(0.8f, -2.4f, 224f, -0.8f, 0.8f), S(0.4f, 0.6f), S(0.2f, 0.4f)) },
         { "magicEffectiveness", C(OutputKind.Percent, Q(-0.2f, 16f, 1f), L(2f, -6f, 560f, -2f, 0.8f), S(1f, 0.6f), S(0.5f, 0.4f)) },
+        // Proposal: Secrecy's Communion bonus grows like Legend Effectiveness until the Communion system sets its own.
+        { "communionEffectiveness", C(OutputKind.Percent, Q(-0.1f, 8f, 1f), L(1f, -3f, 280f, -1f, 0.8f), S(0.5f, 0.6f), S(0.25f, 0.4f)) },
     };
 
     /// <summary>Sum of per-level bonuses for levels 1..level, walking the tier boundaries.</summary>

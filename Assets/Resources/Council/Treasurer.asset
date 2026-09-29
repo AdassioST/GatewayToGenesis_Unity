@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 993133f17500b0a459b2f7ccc00282ee, type: 3}
   order: 4
   allowedClasses: 020000000000000004000000
+  requiredStars: 1
   areas:
   - economy
   - logistics

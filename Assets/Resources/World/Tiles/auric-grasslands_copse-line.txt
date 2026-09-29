@@ -1,6 +1,6 @@
 # A line of copses along the meadow.
 tile: auric-grasslands/copse-line
-biome: auric-grasslands
+macrobiome: auric-grasslands
 weight: 1
 rotations: any
 legend: A=auric-meadow C=auric-copse

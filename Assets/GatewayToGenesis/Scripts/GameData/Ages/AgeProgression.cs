@@ -81,6 +81,8 @@ public class AgeProgression : SingletonBehaviour<AgeProgression>
     public IReadOnlyList<int> EraScoreByAct => _eraScoreByAct;
     /// <summary>The last awards, newest first ("+2 The Rekindling (Event Technology)").</summary>
     public IReadOnlyList<string> EraScoreLog => _eraLog;
+    /// <summary>Every award of Era Score since the world began, dated by Age, Act, Cycle, Echo, Phase and Seventh (<see cref="EraTimeline"/>).</summary>
+    public IReadOnlyList<EraAward> EraTimelineAwards => _eraTimeline;
     /// <summary>Era Score was awarded: points and why.</summary>
     public event Action<int, string> EraScoreAwarded;
 
@@ -101,6 +103,8 @@ public class AgeProgression : SingletonBehaviour<AgeProgression>
     private bool _subscribed, _begun, _resting;
     private List<int> _eraScoreByAct = new List<int>();
     private List<string> _eraLog = new List<string>();
+    // Every award, never cleared (the Chronicle); older saves have none.
+    [SaveOptionalField] private List<EraAward> _eraTimeline = new List<EraAward>();
     private List<string> _gates;
     private string _gatesFor;
 
@@ -215,6 +219,15 @@ public class AgeProgression : SingletonBehaviour<AgeProgression>
         _eraScoreByAct[Act] += points;
         _eraLog.Insert(0, $"{points:+0;-0} {reason}");
         if (_eraLog.Count > 12) _eraLog.RemoveAt(_eraLog.Count - 1);
+        // The Chronicle: dated to the calendar and the Act.
+        var time = TimeSystemLogic.Instance;
+        _eraTimeline = _eraTimeline ?? new List<EraAward>();
+        _eraTimeline.Add(new EraAward
+        {
+            points = points, reason = reason, ageId = Current.id, ageTitle = Current.title, ageNumber = Current.number, act = Act, ageSeventh = Sevenths,
+            cycle = time != null ? time.CurrentCycle : 1, echo = time != null ? time.CurrentEcho : 1, phase = time != null ? time.CurrentPhase : 1,
+            seventh = time != null ? time.CurrentSeventh : 1, cycleName = time?.CycleName, order = _eraTimeline.Count,
+        });
         GameLog.Event($"Era Score {points:+0;-0}: {reason} (Act {Act + 1}: {EraScoreThisAct}, Age: {EraScore})", Log);
         EraScoreAwarded?.Invoke(points, reason);
         Changed?.Invoke();
@@ -305,7 +318,11 @@ public class AgeProgression : SingletonBehaviour<AgeProgression>
             case AgeBeatKind.ActOfFate:
                 GameLog.Event($"{Current.title}: {Current.ActLabel(beat.index)} begins with an Act of Fate", Log);
                 if (beat.index - 1 < Current.actOfFateStories.Count) Enqueue(Current.actOfFateStories[beat.index - 1]);
-                if (LegendProgress.Instance != null) LegendProgress.Instance.HonourCouncil(LegendLore.FragmentTuning.actOfFate, $"Stood through an Act of Fate in the {Current.title}");
+                if (LegendProgress.Instance != null)
+                {
+                    LegendProgress.Instance.HonourCouncil(LegendLore.FragmentTuning.actOfFate, $"Stood through an Act of Fate in the {Current.title}");
+                    LegendProgress.Instance.ServeSeats($"Served through an Act of Fate in the {Current.title}");
+                }
                 break;
             case AgeBeatKind.CrisisStage:
                 StageReached = beat.index;

@@ -1,6 +1,6 @@
 # Deep taiga around a boggy tarn.
 tile: taiga/deep-forest
-biome: taiga
+macrobiome: taiga
 weight: 2
 rotations: any
 legend: T=taiga-forest B=taiga-bog L=lake

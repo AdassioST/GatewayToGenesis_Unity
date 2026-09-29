@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56fa04d4184ec8340a3828b6259f319b, type: 3}
+  m_Name: River Fish
+  m_EditorClassIdentifier: 
+  name: River Fish
+  type: Stored Food
+  section: Stored Food
+  description: Trout and eels from rivers and pools. Good food that does not keep long.
+  icon: {fileID: 21300000, guid: bd323d5395833c042a27c771790e70f0, type: 3}
+  role: 0

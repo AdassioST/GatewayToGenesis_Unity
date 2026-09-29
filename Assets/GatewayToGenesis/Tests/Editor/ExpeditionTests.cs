@@ -164,6 +164,70 @@ public class ExpeditionTests
         Assert.AreEqual(a.attrition * 0.5f, b.attrition, 1e-4);
     }
 
+    // ===== AMBITION =====
+
+    [Test]
+    public void Ambition_NoneChangesNothing()
+    {
+        var x = Settings();
+        var without = Expeditions.Effective(PerLegend, Party("Vaelia"), null, x);
+        var none = Expeditions.Effective(PerLegend, Party("Vaelia"), null, x, ambition: ExpeditionAmbition.None);
+        Assert.AreEqual(without.stamina, none.stamina, 1e-5);
+        Assert.AreEqual(without.wearMultiplier, none.wearMultiplier, 1e-5);
+        Assert.AreEqual(without.supplyUsePerSeventh, none.supplyUsePerSeventh, 1e-5);
+        Assert.IsNull(Expeditions.AmbitionSummary(ExpeditionAmbition.None), "nothing to say on the card");
+    }
+
+    [Test]
+    public void Ambition_CostLightensTheWearAndTheRationsAndTimeQuickensTheMarch()
+    {
+        var x = Settings();
+        var ambition = new ExpeditionAmbition { cost = 0.8f, time = 0.8f };
+        var plain = Expeditions.Effective(PerLegend, Party("Vaelia", "Orphael"), null, x);
+        var ambitious = Expeditions.Effective(PerLegend, Party("Vaelia", "Orphael"), null, x, ambition: ambition);
+        Assert.AreEqual(plain.wearMultiplier * 0.8f, ambitious.wearMultiplier, 1e-5, "attrition: the road's cost");
+        Assert.AreEqual(plain.supplyUsePerSeventh * 0.8f, ambitious.supplyUsePerSeventh, 1e-5, "rations: the road's cost");
+        Assert.AreEqual(plain.stamina * 1.25f, ambitious.stamina, 1e-4, "80% of the time: it advances 25% faster");
+        Assert.AreEqual(plain.supplyCapacity, ambitious.supplyCapacity, 1e-5, "it carries as much");
+        Assert.AreEqual(plain.surveySevenths, ambitious.surveySevenths, 1e-5, "surveys take as long");
+
+        // Over the same road: less wear taken, and the same journey done in 80% of the Sevenths.
+        var danger = new UnitSurroundings { weather = 1f, danger = 1f };
+        var a = new WorldUnit { supplies = 0f, provisionsInitialized = true, microInitialized = true };
+        var b = new WorldUnit { supplies = 0f, provisionsInitialized = true, microInitialized = true };
+        WorldUnits.Needs(a, plain, new ProvisionRules(), danger, UnitActivity.Moving, 1f);
+        WorldUnits.Needs(b, ambitious, new ProvisionRules(), danger, UnitActivity.Moving, 1f);
+        Assert.AreEqual(a.attrition * 0.8f, b.attrition, 1e-4);
+        var walker = new WorldUnit();
+        Assert.AreEqual(WorldUnits.SeventhsFor(walker, plain, 30f) * 0.8f, WorldUnits.SeventhsFor(walker, ambitious, 30f), 1e-4);
+
+        StringAssert.Contains("20% cheaper outfit, less wear and rations", Expeditions.AmbitionSummary(ambition));
+        StringAssert.Contains("walks 25% faster", Expeditions.AmbitionSummary(ambition));
+    }
+
+    [Test]
+    public void Ambition_TheOutfitCostsLessRoundedUp()
+    {
+        var outfit = new List<ResourceAmount> { new ResourceAmount { resource = "Elderwood", amount = 15f }, new ResourceAmount { resource = "Food", amount = 4f } };
+        Assert.AreEqual("15 Elderwood, 4 Food", WorldSystem.CostText(outfit));
+        Assert.AreEqual("12 Elderwood, 4 Food", WorldSystem.CostText(outfit, 0.8f), "20% cheaper: 12 Elderwood, 3.2 Food rounds up to 4");
+    }
+
+    [Test]
+    public void Ambition_AMishapsWearAndSpoiledRationsCostLessButItsWearinessDoesNot()
+    {
+        var plain = new WorldUnit { supplies = 10f };
+        var ambitious = new WorldUnit { supplies = 10f };
+        var spec = new MishapSpec { attrition = 10f, fatigue = 20f, rationsLost = 0.5f };
+        Expeditions.Afflict(plain, spec);
+        Expeditions.Afflict(ambitious, spec, cost: 0.5f);
+        Assert.AreEqual(10f, plain.attrition, 1e-4);
+        Assert.AreEqual(5f, ambitious.attrition, 1e-4, "half the cost: half the wear");
+        Assert.AreEqual(5f, plain.supplies, 1e-4);
+        Assert.AreEqual(7.5f, ambitious.supplies, 1e-4, "a quarter spoiled instead of half");
+        Assert.AreEqual(plain.fatigue, ambitious.fatigue, 1e-4, "weariness is the time's, not the cost's");
+    }
+
     // ===== HARDSHIP =====
 
     [Test]
@@ -210,6 +274,59 @@ public class ExpeditionTests
         Assert.AreEqual(30f + 3f - t.expeditionRecovery, ComposureRules.Next(30f, road, t), 1e-4);
         var camped = new ComposureContext { onExpedition = true, restingAtSettlement = true };
         Assert.AreEqual(t.restRecovery, ComposureRules.Recovery(camped, t), 1e-4, "camped in a settlement it rests as at home");
+    }
+
+    [Test]
+    public void Weight_CargoAndRationsChangePaceAndTravelFatigue()
+    {
+        var x = Settings();
+        x.loadPerLegend = 10f;
+        x.rationWeight = 1f;
+        x.overloadSlowdown = 0.6f;
+        x.overloadFatigue = 0.5f;
+        x.cargoWeights = new List<ResourceAmount> { new ResourceAmount { resource = "Sky Glass", amount = 2f } };
+        var unit = Party("Vaelia");
+        unit.supplies = 10f;
+        unit.cargo = new List<ResourceAmount> { new ResourceAmount { resource = "Sky Glass", amount = 10f } };
+
+        Assert.AreEqual(20f, Expeditions.CargoWeight(unit, x), 1e-4);
+        Assert.AreEqual(30f, Expeditions.Load(unit, x), 1e-4);
+        Assert.AreEqual(10f, Expeditions.LoadAtEase(unit, x), 1e-4);
+        Assert.AreEqual(3f, Expeditions.Burden(unit, x), 1e-4);
+        Assert.AreEqual(0.35f, Expeditions.LoadPace(x, 3f), 1e-4, "the configured floor protects a party from a negative pace");
+        Assert.AreEqual(2f, Expeditions.LoadFatigue(x, 3f), 1e-4);
+    }
+
+    [Test]
+    public void Solace_SilverWaterBeautyAndGroundStackAndFalloutDrownsIt()
+    {
+        var x = Settings();
+        x.silverRiverSolace = 0.6f;
+        x.silverLakeSolace = 0.8f;
+        x.beautySolace = 1f;
+        x.maxSolace = 4f;
+        var at = new UnitSurroundings { mapped = true, solace = 1f, beauty = 0.5f, silverRiverSteps = 0, silverLakeSteps = 0 };
+        Assert.AreEqual(2.9f, Expeditions.Solace(at, x), 1e-4);
+        at.fallout = 0.5f;
+        Assert.AreEqual(1.45f, Expeditions.Solace(at, x), 1e-4);
+    }
+
+    [Test]
+    public void ForageRichness_FertilityAndLivingSitesIncreaseGathering()
+    {
+        var rules = new ProvisionRules { fertileFrom = 0.4f, fertilityForage = 0.8f, siteForage = 0.6f, grandfieldForage = 0.5f, maxForageBonus = 1.5f };
+        Assert.AreEqual(1f, WorldUnits.ForageRichness(rules, new UnitSurroundings()), 1e-4);
+        Assert.AreEqual(2.5f, WorldUnits.ForageRichness(rules, new UnitSurroundings { fertility = 1f, bounty = 1f, grandfield = 1f }), 1e-4);
+    }
+
+    [Test]
+    public void Vibration_FalloutIsPermanentAndMakesTravelCostMore()
+    {
+        var v = new VibrationSettings { falloutFrom = 0.2f, falloutFull = 0.4f, travel = 2f };
+        Assert.AreEqual(0f, WorldVibration.Fallout(v, 0.2f, false), 1e-4);
+        Assert.AreEqual(0.5f, WorldVibration.Fallout(v, 0.3f, false), 1e-4);
+        Assert.AreEqual(0f, WorldVibration.Fallout(v, 0.4f, true), 1e-4, "Sacred ground is protected from ordinary Dissonance");
+        Assert.AreEqual(2f, WorldVibration.TravelFactor(v, 0.5f), 1e-4);
     }
 
     // ===== MISHAPS =====
@@ -566,5 +683,44 @@ public class ExpeditionTests
         StringAssert.Contains("no one to help", PartyShapes.Summary(PartyShapes.Of(x, 1)));
         StringAssert.Contains("can retreat", PartyShapes.Summary(PartyShapes.Of(x, 2)));
         StringAssert.Contains("quarrels from Clouded", PartyShapes.Summary(PartyShapes.Of(x, 4)));
+    }
+    // ===== WHAT SURVEYS TURN UP =====
+
+    [Test]
+    public void Surveys_ASentSurveyTurnsUpMoreThanAPartyPassingBy()
+    {
+        var x = Settings();
+        Assert.Greater(x.surveyEventChance, x.passingEventChance, "events are likelier on a survey");
+        Assert.Greater(x.surveyCacheChance, x.passingCacheChance, "and so are spare resources");
+        // A draw between the two chances: found by the survey, not in passing.
+        double between = (x.passingEventChance + x.surveyEventChance) / 2.0, cacheBetween = (x.passingCacheChance + x.surveyCacheChance) / 2.0;
+        var surveyed = Expeditions.RollSurvey(x, true, between, 0.0, cacheBetween);
+        var passing = Expeditions.RollSurvey(x, false, between, 0.0, cacheBetween);
+        Assert.IsNotNull(surveyed.find);
+        Assert.IsTrue(surveyed.cache);
+        Assert.IsNull(passing.find);
+        Assert.IsFalse(passing.cache);
+        Assert.IsNull(Expeditions.RollSurvey(x, true, 0.99, 0.0, 0.99).find, "a high draw finds nothing");
+
+        // The pick draw chooses by weight, across every find.
+        var finds = Expeditions.SurveyFinds(x);
+        Assert.AreSame(finds[0], Expeditions.RollSurvey(x, true, 0.0, 0.0, 1.0).find);
+        Assert.AreSame(finds[finds.Count - 1], Expeditions.RollSurvey(x, true, 0.0, 0.9999, 1.0).find);
+        var own = new ExpeditionSettings { surveyFinds = new List<SurveyFindSpec> { new SurveyFindSpec { kind = SurveyFindKind.Story, name = "Tale", story = "tale", weight = 1f } } };
+        Assert.AreEqual("Tale", Expeditions.RollSurvey(own, true, 0.0, 0.5, 1.0).find.name, "the settings' own finds replace the defaults");
+    }
+
+    [Test]
+    public void Surveys_SpareResourcesComeFromTheCellsForageOrItsYields()
+    {
+        var x = Settings();
+        var gen = new WorldGenSettings();
+        gen.terrains.Add(new TerrainSpec { id = "wood", name = "Wood", passable = true, forage = new List<ResourceAmount> { new ResourceAmount { resource = "Food", amount = 4f } } });
+        gen.terrains.Add(new TerrainSpec { id = "rock", name = "Rock", passable = true, yields = new List<ResourceAmount> { new ResourceAmount { resource = "Stone", amount = 0.1f } } });
+        var wood = Expeditions.Cache(x, gen, new WorldTile { terrain = "wood" }, 2f);
+        Assert.AreEqual("Food", wood.Single().resource);
+        Assert.AreEqual(4f * x.cacheForage * 2f, wood.Single().amount, 1e-4f, "forage times the cache share, times the party's multiplier");
+        var rock = Expeditions.Cache(x, gen, new WorldTile { terrain = "rock" }, 1f);
+        Assert.AreEqual(0.1f * x.cacheYieldSeconds, rock.Single().amount, 1e-4f, "nothing to forage: the ground's yields for a while");
     }
 }

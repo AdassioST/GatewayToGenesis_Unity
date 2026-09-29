@@ -73,6 +73,8 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
     public BalladCast CurrentCast { get; private set; }
     /// <summary>The story's actors changed (cast at its start, or changed by the player).</summary>
     public event Action CastChanged;
+    public string LatestStoryChoice { get; private set; }
+    public void RememberStoryChoice(string text) { if (isEventActive) LatestStoryChoice = text; }
     /// <summary>A ballad's finale was sung and its actors rewarded.</summary>
     public event Action<BalladRecord> BalladCompleted;
 
@@ -254,6 +256,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
             return;
         }
         currentStoryNode = storyNode;
+        CultureSystem.Instance?.BeginPublicMemoryStory(storyNode.nodeName);
         isEventActive = true;
         TimeSystem.PauseTime(true);
         var hotkeys = TabHotkeys.Instance;
@@ -421,6 +424,13 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
             case EventConsequence.ConsequenceType.TechnologyEnlightened:
                 EnlightenTechnology(consequence.targetName, storyTitle);
                 break;
+            case EventConsequence.ConsequenceType.PopulationPercentChange:
+                if (consequence.value < 0) pop?.LosePopulationPercent(-(float)consequence.value, storyTitle);
+                break;
+            case EventConsequence.ConsequenceType.HousingPercentChange:
+                if (pop != null) pop.ModifyHousing((consequence.value < 0 ? -1 : 1)
+                    * GrowthRules.PercentOf(pop.housing, System.Math.Abs((float)consequence.value)));
+                break;
             case EventConsequence.ConsequenceType.PopulationChange:
                 if (consequence.value < 0) pop?.ModifyPopulation(consequence.value);
                 else GameLog.Warning($"PopulationChange {consequence.value} in '{storyTitle}' ignored: population can only be removed. Use VagrantsChange to add people.", Log);
@@ -442,6 +452,13 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
             case EventConsequence.ConsequenceType.WeatherChange:
                 ApplyWeatherChange(consequence);
                 break;
+            case EventConsequence.ConsequenceType.EraScoreChange:
+                AgeProgression.Award(consequence.value, string.IsNullOrEmpty(consequence.targetName) ? storyTitle : consequence.targetName);
+                break;
+            case EventConsequence.ConsequenceType.SettlementDamage:
+                if (WorldSystem.Instance == null || !WorldSystem.Instance.ApplySettlementDamage(consequence.targetName, consequence.value, storyTitle))
+                    GameLog.Warning($"settlement:{consequence.targetName} {consequence.value} in '{storyTitle}': no such settlement.", Log);
+                break;
             case EventConsequence.ConsequenceType.UnlockEvent:
                 if (Volumes == null || !Volumes.UnlockStory(consequence.targetName))
                 {
@@ -455,6 +472,17 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
             case EventConsequence.ConsequenceType.FragmentChange:
                 if (BalladActors.SplitTarget(consequence.targetName, out string who, out var kind)) ApplyFragments(who, kind, consequence.value, storyTitle);
                 else GameLog.Warning($"fragment '{consequence.targetName}' in '{storyTitle}': needs who and a kind of fragment.", Log);
+                break;
+            case EventConsequence.ConsequenceType.AffectionTest:
+                if (LegendRelationshipRules.SplitTarget(consequence.targetName, out string from, out string to, out string thread) && (consequence.value == 1 || consequence.value == -1))
+                    foreach (var source in BalladActors.Targets(from, CurrentCast, LegendProgress.Council, LastLeader))
+                        foreach (var target in BalladActors.Targets(to, CurrentCast, LegendProgress.Council, LastLeader))
+                            LegendProgress.Instance?.Relate(source, target, $"story:{currentStoryNode?.nodeName}:{GetCompletionCount(currentStoryNode?.nodeName)}",
+                                $"{storyTitle}: {(consequence.value > 0 ? "Relation Growth" : "Relation Fracture")}" + (string.IsNullOrEmpty(LatestStoryChoice) ? "" : " — " + LatestStoryChoice), consequence.value, thread, true);
+                break;
+            case EventConsequence.ConsequenceType.CultureChange:
+                if (CultureSystem.Instance == null || !CultureSystem.Instance.ApplyConsequence(consequence.targetName, consequence.value, storyTitle))
+                    GameLog.Warning($"culture:{consequence.targetName} {consequence.value} in '{storyTitle}' did not apply (no culture, or not founded yet).", Log);
                 break;
             default:
                 GameLog.Error($"Unhandled consequence type {consequence.type} in '{storyTitle}'.", Log);
@@ -482,6 +510,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
     // Who plays the story: its ballad's actors, the party that found it, the seat of its area, the Head of State, or no one yet.
     private void CastStory(StoryNode story)
     {
+        LatestStoryChoice = null;
         _currentSummons = null;
         if (story.nodeName != null && _summons.TryGetValue(story.nodeName, out var summoned))
         {
@@ -523,7 +552,7 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
     public bool IsFreeToPlay(string legend)
     {
         var legends = LegendProgress.Instance;
-        if (string.IsNullOrEmpty(legend) || legends == null || !legends.IsRecruited(legend)) return false;
+        if (string.IsNullOrEmpty(legend) || legends == null || !legends.IsRecruited(legend) || legends.IsMissing(legend)) return false;
         var world = WorldSystem.Instance;
         if (world == null || world.Map == null || world.ExpeditionOf(legend) == null) return true;
         return _currentSummons != null && _currentSummons.Has(legend);
@@ -585,6 +614,12 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
         string theme = !string.IsNullOrEmpty(story.theme) ? story.theme : info.theme;
         if (legends != null && CurrentCast != null)
         {
+            bool wounded = CurrentCast.Members.Any(n => legends.Composure(n) >= ComposureState.Fractured);
+            string thread = string.Equals(theme, "Scholar", StringComparison.OrdinalIgnoreCase) ? "Luminance" :
+                string.Equals(theme, "Resistor", StringComparison.OrdinalIgnoreCase) ? "Cindergale" : "Resonance";
+            legends.ShareExperience(CurrentCast.Members, $"story:{story.nodeName}:{GetCompletionCount(story.nodeName)}",
+                $"Lived through {title}" + (string.IsNullOrEmpty(LatestStoryChoice) ? "." : $": {LatestStoryChoice}"),
+                wounded ? 1 : 0, thread, wounded);
             foreach (var actor in CurrentCast.Members.Distinct().ToList())
                 legends.RecordBalladParticipation(actor, story, BalladActors.RoleOf(CurrentCast, actor));
             var reward = BalladActors.ThemedEventReward(theme, tuning);
@@ -598,6 +633,9 @@ public class EventSystemLogic : SingletonBehaviour<EventSystemLogic>
         if (ballad == null) _ballads.Add(ballad = new BalladRecord { id = story.ballad });
         ballad.title = !string.IsNullOrEmpty(info.title) ? info.title : ballad.title ?? story.ballad;
         ballad.theme = theme ?? ballad.theme;
+        ballad.lastDevelopment = title + (string.IsNullOrEmpty(story.storyDescription) ? "" : ": " + story.storyDescription);
+        ballad.lastChoice = LatestStoryChoice;
+        ballad.lastDate = BalladJournal.Date;
         if (!ballad.versesTold.Contains(story.verse)) ballad.versesTold.Add(story.verse);
         if (CurrentCast != null && !CurrentCast.Empty) ballad.cast = CurrentCast.Clone();
         if (ballad.complete || story.verse < BalladActors.FinaleVerse(stories, story.ballad)) return;

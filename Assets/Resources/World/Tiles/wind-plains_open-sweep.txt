@@ -1,6 +1,6 @@
 # Grass combed flat by the wind.
 tile: wind-plains/open-sweep
-biome: wind-plains
+macrobiome: wind-plains
 weight: 1
 rotations: any
 legend: W=wind-plain O=plains

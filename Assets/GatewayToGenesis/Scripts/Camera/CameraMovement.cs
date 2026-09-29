@@ -102,7 +102,7 @@ public class CameraMovement : MonoBehaviour
                 WorldView.ZoomOutOfCapital();
                 return;
             }
-            SetZoom(currentZoom - scrollInput * zoomSpeed);
+            SetZoom(currentZoom - scrollInput * zoomSpeed * GameSettings.ZoomSpeed);
         }
     }
 
@@ -112,8 +112,10 @@ public class CameraMovement : MonoBehaviour
 
         float moveX = CalculateEdgeMovement(mousePos.x, screenSize.x, edgeX);
         float moveY = CalculateEdgeMovement(mousePos.y, screenSize.y, edgeY);
+        // Options: edge scrolling can be turned off, and its speed set.
+        if (!GameSettings.EdgeScrolling) moveX = moveY = 0f;
 
-        targetPosition = cameraFollowPoint.position + new Vector3(moveX, moveY, 0) * moveSpeed * Time.deltaTime;
+        targetPosition = cameraFollowPoint.position + new Vector3(moveX, moveY, 0) * moveSpeed * GameSettings.PanSpeed * Time.deltaTime;
 
         targetPosition = ClampPositionWithinBounds(targetPosition);
 

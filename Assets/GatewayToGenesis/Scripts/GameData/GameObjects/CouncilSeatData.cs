@@ -16,8 +16,10 @@ public class CouncilSeatData : ScriptableObject
     public Sprite icon;
     [Tooltip("Order in the seat pool: council positions open with the lowest first.")]
     public int order;
-    [Tooltip("Legend classes that can hold this seat (several: a High Arbiter can be a Great Sovereign, Justiciar or Architect).")]
+    [Tooltip("The Greats this seat asks for (several: a High Arbiter can be a Great Sovereign, Justiciar or Architect), its main one first: serving in it grows that Great (LegendProgress.ServeSeats).")]
     public LegendClass[] allowedClasses;
+    [Tooltip("Stars a legend needs in one of those Greats to hold the seat (0: any legend, an Unattuned Legend too; 3 the most). LegendGreats.")]
+    [Range(0, 3)] public int requiredStars;
     [Tooltip("Areas the seat answers for, its main charge first (ids or aliases from Resources/Council/Council Areas): stories call on a seat by area, never by title.")]
     public string[] areas;
     [Tooltip("Bonuses the seat gives as soon as a legend sits in it.")]

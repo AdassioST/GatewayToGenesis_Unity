@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 75faacdf0f1a6b544824e7b4fec50945, type: 3}
   order: 1
   allowedClasses: 0400000003000000
+  requiredStars: 0
   areas:
   - mysticism
   - faith

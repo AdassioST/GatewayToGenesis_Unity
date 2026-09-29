@@ -26,6 +26,11 @@ MonoBehaviour:
   - type: 3
     trigger: Emberwhisper
     requiredAmount: 1
-    description: Acquire Emberwisp
+    description: Acquire Emberwhisper
+    riddle: A red spire sings where the ground remembers fire. Carry a breath of its embers home.
+    clue: The spires show from afar once your people come near. An expedition may harvest what it does not claim.
+    clueAt: 0.5
+    clueTrigger: journeys
+    clueAmount: 2
   techUnlockables:
   - {fileID: 11400000, guid: 34840888851390a4fb6d599ccd34af1d, type: 2}

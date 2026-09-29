@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>One slot's biome and the direction its uphill side faces.</summary>
+/// <summary>One slot's Macro Biome and the direction its uphill side faces.</summary>
 public class SlotPlacement
 {
     public StencilSlot slot;
-    /// <summary>Null when the sector's catalog could not fill it (an authoring error): P's ground fills it.</summary>
-    public BiomeSpec biome;
+    /// <summary>Null when the quadrant's catalog could not fill it (an authoring error): the intersections' ground fills it.</summary>
+    public MacroBiomeSpec macroBiome;
     /// <summary>Sixths of a turn from east, counter-clockwise.</summary>
     public int orientation;
 
-    public override string ToString() => $"{slot.id}: {(biome != null ? biome.id : "(none)")} facing {WorldGenerator.DirectionName(orientation)}";
+    public override string ToString() => $"{slot.id}: {(macroBiome != null ? macroBiome.id : "(none)")} facing {WorldGenerator.DirectionName(orientation)}";
 }
 
 /// <summary>What the slot solver decided and why.</summary>
@@ -29,12 +29,12 @@ public class SlotSolution
 }
 
 /// <summary>
-/// Roadmap WG04: assigns each sector's biome catalog to its slots and picks each biome's orientation, with a seeded
+/// Roadmap WG04: assigns each quadrant's biome catalog to its slots and picks each biome's orientation, with a seeded
 /// constraint search (no scene state; tested in <c>WorldGenerationTests</c>).
 ///
-/// Hard constraints: a biome appears at most once in its sector (unless the catalog allows repeats); its slot has
+/// Hard constraints: a biome appears at most once in its quadrant (unless the catalog allows repeats); its slot has
 /// every tag it requires (north, coast, core...); its orientation is one it allows; and the heights of two slots
-/// that only P separates meet within <see cref="MaxSeamStep"/> where they face each other. The most constrained slot
+/// that only an intersection separates meet within <see cref="MaxSeamStep"/> where they face each other. The most constrained slot
 /// is placed first, candidates are shuffled by the seed, and the search backtracks within a node budget. When no
 /// layout exists the solver relaxes the seam heights, then the tag requirements, and reports each relaxation; a
 /// catalog that cannot fill its slots is an authoring error, never a silently dropped biome.
@@ -46,7 +46,7 @@ public static class SlotSolver
 
     private class Candidate
     {
-        public BiomeSpec biome;
+        public MacroBiomeSpec macroBiome;
         public int orientation;
         public double score;
     }
@@ -56,7 +56,7 @@ public static class SlotSolver
         public WorldStencil stencil;
         public List<StencilSlot> slots;
         public Dictionary<int, List<Candidate>> candidates = new Dictionary<int, List<Candidate>>();
-        public Dictionary<string, SectorSpec> sectors = new Dictionary<string, SectorSpec>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, QuadrantSpec> quadrants = new Dictionary<string, QuadrantSpec>(StringComparer.OrdinalIgnoreCase);
         public bool checkSeams = true, checkTags = true;
         public int nodes;
     }
@@ -67,49 +67,49 @@ public static class SlotSolver
         var rng = new Random(WorldNoise.Stream(seed, "slots"));
         var problem = new Problem { stencil = stencil, slots = stencil.Slots };
 
-        // The biomes each sector may use this world: its catalog, drawn down to its slot count when larger.
-        var pools = new Dictionary<string, List<BiomeSpec>>(StringComparer.OrdinalIgnoreCase);
-        foreach (string sectorId in stencil.SectorIds)
+        // The biomes each quadrant may use this world: its catalog, drawn down to its slot count when larger.
+        var pools = new Dictionary<string, List<MacroBiomeSpec>>(StringComparer.OrdinalIgnoreCase);
+        foreach (string quadrantId in stencil.QuadrantIds)
         {
-            var sector = settings.Sector(sectorId);
-            int slotCount = stencil.SlotsOf(sectorId).Count();
-            if (sector == null)
+            var quadrant = settings.Quadrant(quadrantId);
+            int slotCount = stencil.SlotsOf(quadrantId).Count();
+            if (quadrant == null)
             {
-                solution.errors.Add($"Sector {sectorId} is in the stencil but has no SectorSpec: its {slotCount} slot(s) get P's ground.");
-                pools[sectorId] = new List<BiomeSpec>();
+                solution.errors.Add($"Quadrant {quadrantId} is in the stencil but has no QuadrantSpec: its {slotCount} slot(s) get the intersections' ground.");
+                pools[quadrantId] = new List<MacroBiomeSpec>();
                 continue;
             }
-            problem.sectors[sectorId] = sector;
-            var biomes = new List<BiomeSpec>();
-            foreach (string id in sector.biomes)
+            problem.quadrants[quadrantId] = quadrant;
+            var biomes = new List<MacroBiomeSpec>();
+            foreach (string id in quadrant.macroBiomes)
             {
-                var biome = settings.Biome(id);
-                if (biome == null) solution.errors.Add($"Sector {sectorId} names unknown biome '{id}'.");
+                var biome = settings.MacroBiome(id);
+                if (biome == null) solution.errors.Add($"Quadrant {quadrantId} names unknown Macro Biome '{id}'.");
                 else if (!biomes.Contains(biome)) biomes.Add(biome);
             }
-            if (biomes.Count == 0) solution.errors.Add($"Sector {sectorId} has an empty biome catalog: its {slotCount} slot(s) get P's ground.");
-            else if (biomes.Count < slotCount && !sector.allowRepeats)
+            if (biomes.Count == 0) solution.errors.Add($"Quadrant {quadrantId} has an empty Macro Biome catalog: its {slotCount} slot(s) get the intersections' ground.");
+            else if (biomes.Count < slotCount && !quadrant.allowRepeats)
             {
-                solution.errors.Add($"Sector {sectorId} has {biomes.Count} biome(s) for {slotCount} slots and does not allow repeats: biomes are repeated.");
-                solution.repairs.Add($"{sectorId}: repeats allowed to fill {slotCount} slots with {biomes.Count} biome(s).");
+                solution.errors.Add($"Quadrant {quadrantId} has {biomes.Count} Macro Biome(s) for {slotCount} slots and does not allow repeats: biomes are repeated.");
+                solution.repairs.Add($"{quadrantId}: repeats allowed to fill {slotCount} slots with {biomes.Count} Macro Biome(s).");
             }
             else if (biomes.Count > slotCount)
             {
                 Shuffle(biomes, rng);
                 biomes = biomes.Take(slotCount).ToList();
             }
-            pools[sectorId] = biomes;
+            pools[quadrantId] = biomes;
         }
 
         foreach (var slot in problem.slots)
         {
-            var pool = pools[slot.sector];
+            var pool = pools[slot.quadrant];
             var list = new List<Candidate>();
             foreach (var biome in pool)
             {
                 var orientations = biome.orientations != null && biome.orientations.Count > 0 ? biome.orientations.Where(o => o >= 0 && o < 6).Distinct().ToList() : Enumerable.Range(0, 6).ToList();
                 double preference = biome.prefers.Count(t => slot.tags.Contains(t));
-                foreach (int o in orientations) list.Add(new Candidate { biome = biome, orientation = o, score = preference + rng.NextDouble() * 0.9 });
+                foreach (int o in orientations) list.Add(new Candidate { macroBiome = biome, orientation = o, score = preference + rng.NextDouble() * 0.9 });
             }
             // Seeded order, best preference first.
             problem.candidates[slot.index] = list.OrderByDescending(c => c.score).ToList();
@@ -122,7 +122,7 @@ public static class SlotSolver
             problem.checkSeams = false;
             assigned.Clear();
             solved = Search(problem, assigned);
-            if (solved) solution.repairs.Add($"No layout met every seam height (step {MaxSeamStep}); seam heights were relaxed and P will carry the slopes.");
+            if (solved) solution.repairs.Add($"No layout met every seam height (step {MaxSeamStep}); seam heights were relaxed and the intersections will carry the slopes.");
         }
         if (!solved)
         {
@@ -146,12 +146,12 @@ public static class SlotSolver
         foreach (var slot in problem.slots)
         {
             assigned.TryGetValue(slot.index, out var pick);
-            solution.placements.Add(new SlotPlacement { slot = slot, biome = pick?.biome, orientation = pick?.orientation ?? 0 });
+            solution.placements.Add(new SlotPlacement { slot = slot, macroBiome = pick?.macroBiome, orientation = pick?.orientation ?? 0 });
         }
         // Requirements no biome of the catalog can meet are authoring errors too.
         foreach (var slot in problem.slots)
         {
-            var biome = solution.For(slot.index).biome;
+            var biome = solution.For(slot.index).macroBiome;
             if (biome == null) continue;
             var missing = biome.requires.Where(t => !slot.tags.Contains(t)).ToList();
             if (missing.Count > 0) solution.errors.Add($"{slot.id} holds {biome.id}, which requires {string.Join(", ", missing)} (the slot is {string.Join(", ", slot.tags)}).");
@@ -192,14 +192,14 @@ public static class SlotSolver
 
     private static bool Allowed(Problem problem, StencilSlot slot, Candidate candidate, Dictionary<int, Candidate> assigned)
     {
-        if (problem.checkTags && candidate.biome.requires.Any(t => !slot.tags.Contains(t))) return false;
-        problem.sectors.TryGetValue(slot.sector, out var sector);
-        bool repeats = sector == null || sector.allowRepeats || problem.candidates[slot.index].Select(c => c.biome).Distinct().Count() < problem.stencil.SlotsOf(slot.sector).Count();
+        if (problem.checkTags && candidate.macroBiome.requires.Any(t => !slot.tags.Contains(t))) return false;
+        problem.quadrants.TryGetValue(slot.quadrant, out var quadrant);
+        bool repeats = quadrant == null || quadrant.allowRepeats || problem.candidates[slot.index].Select(c => c.macroBiome).Distinct().Count() < problem.stencil.SlotsOf(slot.quadrant).Count();
         if (!repeats)
         {
-            foreach (var other in problem.stencil.SlotsOf(slot.sector))
+            foreach (var other in problem.stencil.SlotsOf(slot.quadrant))
             {
-                if (other.index != slot.index && assigned.TryGetValue(other.index, out var taken) && taken != null && taken.biome == candidate.biome) return false;
+                if (other.index != slot.index && assigned.TryGetValue(other.index, out var taken) && taken != null && taken.macroBiome == candidate.macroBiome) return false;
             }
         }
         if (problem.checkSeams)
@@ -208,8 +208,8 @@ public static class SlotSolver
             {
                 if (!assigned.TryGetValue(n, out var neighbour) || neighbour == null) continue;
                 var other = problem.stencil.Slots[n];
-                float here = EdgeHeight(candidate.biome, candidate.orientation, slot, other);
-                float there = EdgeHeight(neighbour.biome, neighbour.orientation, other, slot);
+                float here = EdgeHeight(candidate.macroBiome, candidate.orientation, slot, other);
+                float there = EdgeHeight(neighbour.macroBiome, neighbour.orientation, other, slot);
                 if (Math.Abs(here - there) > MaxSeamStep) return false;
             }
         }
@@ -217,7 +217,7 @@ public static class SlotSolver
     }
 
     /// <summary>Height of <paramref name="biome"/> at the side of <paramref name="slot"/> that faces <paramref name="toward"/>.</summary>
-    public static float EdgeHeight(BiomeSpec biome, int orientation, StencilSlot slot, StencilSlot toward)
+    public static float EdgeHeight(MacroBiomeSpec biome, int orientation, StencilSlot slot, StencilSlot toward)
     {
         double dx = toward.centerCol - slot.centerCol, dy = slot.centerRow - toward.centerRow; // y grows north
         double facing = Math.Atan2(dy, dx), uphill = orientation * Math.PI / 3.0;

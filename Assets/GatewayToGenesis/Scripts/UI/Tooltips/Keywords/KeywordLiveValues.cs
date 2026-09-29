@@ -68,14 +68,12 @@ public static class KeywordLiveValues
         d.type = parent != null ? $"Aspect of {Title(parent)}" : "Civilization Stat";
         var lines = new List<string>();
         if (stats != null) lines.Add(TooltipText.Row("Current", TooltipText.Value(stats.GetStatValue(stat).ToString())));
-        foreach (var derived in StatDefinitions.DerivedSource.Where(p => string.Equals(p.Value, stat, StringComparison.OrdinalIgnoreCase)))
+        // What the aspect does now, in words (the capped or floored value the game plays with).
+        if (stats != null)
         {
-            float value = stats != null ? stats.GetDerivedValue(derived.Key) : 0f;
-            lines.Add(TooltipText.Bullet(TooltipText.Row(SplitCamel(derived.Key), TooltipText.Value($"{value:0.#}"))));
-        }
-        if (key == "piety" && stats != null)
-        {
-            lines.Add(TooltipText.Row("Saving Roll", TooltipText.Good($"+{stats.GetSavingRollChancePercentCapped():0.#}")));
+            foreach (var derived in StatDefinitions.DerivedSource.Where(p => string.Equals(p.Value, stat, StringComparison.OrdinalIgnoreCase)))
+                lines.Add(TooltipText.Bullet(CivilizationProperties.Describe(derived.Key, CivilizationProperties.EffectiveValue(derived.Key))));
+            if (key == "secrecy") lines.Add(TooltipText.Bullet(CivilizationProperties.Describe(StatDefinitions.CommunionStage, stats.GetCommunionStage())));
         }
         d.effects = TooltipText.Lines(lines);
         return true;
@@ -127,7 +125,7 @@ public static class KeywordLiveValues
             if (production != null) lines.Add(TooltipText.Row("Per Second", TooltipText.Signed(production.GetNetProductionRate(unit.name), "/s")));
         }
         else lines.Add(TooltipText.Muted("Not yet discovered"));
-        if (unit.role == ResourceRole.Food) lines.Add(TooltipText.Muted("Feeds the Population; stored Food brings newcomers"));
+        if (unit.role == ResourceRole.Food) lines.Add(TooltipText.Muted("Daily ration equivalents for all residents; provisions help the finite founding group settle"));
         if (unit.role == ResourceRole.Research) lines.Add(TooltipText.Muted("Every citizen produces it"));
         d.effects = TooltipText.Lines(lines);
         return true;
@@ -206,7 +204,19 @@ public static class KeywordLiveValues
             case "population":
                 d.title = "Population";
                 d.type = "Settlement";
-                if (people != null) d.effects = TooltipText.Row("Citizens", TooltipText.Value(people.population.ToString()));
+                if (people != null)
+                {
+                    // Active health pressures only: dormant ones are hidden.
+                    var lines = new List<string> { TooltipText.Row("Citizens", TooltipText.Value(people.population.ToString())) };
+                    lines.Add(TooltipText.Row("All residents", TooltipText.Value(people.TotalPeople.ToString("N0"))));
+                    lines.Add(TooltipText.Row("Daily rations", TooltipText.Value((people.TotalPeople * people.DailyRations).ToString("N0"))));
+                    lines.Add(TooltipText.Row("Food supply supports", TooltipText.Value(people.SupportedPeople.ToString("N0"))));
+                    if (people.WaitingMigrants > 0) lines.Add(TooltipText.Row("Survivors awaiting shelter", TooltipText.Value(people.WaitingMigrants.ToString())));
+                    if (people.PeopleOnTheRoad > 0) lines.Add(TooltipText.Row("Survivors on the road", TooltipText.Value(people.PeopleOnTheRoad.ToString())));
+                    if (people.Births > 0) lines.Add(TooltipText.Row("Born since the founding", TooltipText.Value(people.Births.ToString("N0"))));
+                    if (PopulationHealth.Instance != null) lines.AddRange(PopulationHealth.Instance.TooltipRows());
+                    d.effects = TooltipText.Lines(lines);
+                }
                 return true;
             case "housing":
                 d.title = "Housing";

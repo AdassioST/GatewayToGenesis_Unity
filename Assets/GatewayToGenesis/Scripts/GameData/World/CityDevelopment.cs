@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>One of the things a place's City Development is made of (each lens of the world view shows one).</summary>
-public enum DevelopmentTerm { LandFertility, Freshwater, Coherence, MagicalFertility, Leylines, Trade, Grandfields, Sacred, Danger, Dissonance, Beauty }
+public enum DevelopmentTerm { LandFertility, Freshwater, Coherence, MagicalFertility, Leylines, Trade, Grandfields, Sacred, Danger, Dissonance, Beauty, Resources, Outskirts }
 
 /// <summary>What City Development a place can reach and why: named terms in points, and the Coherence ceiling.</summary>
 public class DevelopmentBreakdown
@@ -41,6 +41,15 @@ public static class CityDevelopment
 {
     public static readonly DevelopmentTerm[] Terms = (DevelopmentTerm[])Enum.GetValues(typeof(DevelopmentTerm));
 
+    /// <summary>
+    /// Coherence lent to a cell on top of its ground (an owned overlay: the culture's later choruses, T08), or null. The
+    /// ground's own <see cref="WorldTile.coherence"/> never changes; every development read goes through <see cref="CoherenceOf"/>.
+    /// </summary>
+    public static Func<WorldTile, float> CoherenceOverlay;
+
+    /// <summary>A cell's Coherence as development reads it: its ground's, plus any overlay, 0-1.</summary>
+    public static float CoherenceOf(WorldTile t) => t == null ? 0f : Math.Max(0f, Math.Min(1f, t.coherence + (CoherenceOverlay?.Invoke(t) ?? 0f)));
+
     public static string Name(DevelopmentTerm term)
     {
         switch (term)
@@ -55,6 +64,8 @@ public static class CityDevelopment
             case DevelopmentTerm.Sacred: return "Sacred ground";
             case DevelopmentTerm.Danger: return "Danger";
             case DevelopmentTerm.Beauty: return "Beauty";
+            case DevelopmentTerm.Resources: return "Resources";
+            case DevelopmentTerm.Outskirts: return "Outskirts";
             default: return "Dissonance";
         }
     }
@@ -81,10 +92,18 @@ public static class CityDevelopment
         bool anyWater = false, anyLeyline = false, sacred = false;
         int junction = 0;
         fields.Clear();
+        // Identified resource sites worked (each once, however many of its cells are in reach).
+        float resources = 0f;
+        int lastSite = -1;
         foreach (var offset in offsets)
         {
             var c = map.Get(t.coord + offset);
             if (c == null) continue;
+            if (c.resourceSite >= 0 && c.resourceSite != lastSite && WorldResources.Identified(map, WorldResources.SiteAt(map, c)) && fields.Add(-2 - c.resourceSite))
+            {
+                resources += map.ResourceSites[c.resourceSite].landValue;
+                lastSite = c.resourceSite;
+            }
             maxDanger = Math.Max(maxDanger, c.danger);
             anyWater |= c.river || c.lake;
             anyLeyline |= c.leylines != 0;
@@ -94,7 +113,7 @@ public static class CityDevelopment
             if (c.water || c.impassable) continue;
             landCount++;
             sumLand += c.landFertility;
-            sumCoherence += c.coherence;
+            sumCoherence += CoherenceOf(c);
             sumMagic += c.magicFertility;
             sumDissonance += c.dissonance;
             sumBeauty += c.beauty;
@@ -104,20 +123,24 @@ public static class CityDevelopment
         {
             landCount = 1;
             sumLand = t.landFertility;
-            sumCoherence = t.coherence;
+            sumCoherence = CoherenceOf(t);
             sumMagic = t.magicFertility;
             sumDissonance = t.dissonance;
             sumBeauty = t.beauty;
             maxInfluence = t.leylineInfluence;
         }
-        bool freshAdjacent = t.river, road = t.road, nexus = t.nexus != null;
+        bool freshAdjacent = t.river, nexus = t.nexus != null;
+        // A rebuilt road alongside counts in full, a restored Old World stretch only in part (OldWorldRules.restoredWorth).
+        float restoredWorth = Math.Max(0f, Math.Min(1f, rules.loss?.oldWorld?.restoredWorth ?? 0.5f));
+        float RoadWorth(WorldTile x) => !x.road ? 0f : x.restoredRoad ? restoredWorth : 1f;
+        float road = RoadWorth(t);
         for (int d = 0; d < 6; d++)
         {
             int nb = map.Neighbour(cell, d);
             if (nb < 0) continue;
             var n = map[nb];
             freshAdjacent |= n.river || n.lake;
-            road |= n.road;
+            road = Math.Max(road, RoadWorth(n));
             nexus |= n.nexus != null;
         }
         float fresh = freshAdjacent ? 1f : anyWater ? 0.5f : 0f;
@@ -135,19 +158,21 @@ public static class CityDevelopment
         Add(DevelopmentTerm.Coherence, rules.coherenceWeight * sumCoherence / landCount);
         Add(DevelopmentTerm.MagicalFertility, rules.magicWeight * sumMagic / landCount);
         Add(DevelopmentTerm.Leylines, rules.leylineWeight * leyline + (junction >= 3 ? rules.basinWeight : junction == 2 ? rules.convergenceWeight : 0f));
-        Add(DevelopmentTerm.Trade, (road ? rules.roadWeight : 0f) + (networked ? rules.networkWeight : 0f) + (nexus ? rules.nexusWeight * (networked ? 1f : 0.5f) : 0f));
-        Add(DevelopmentTerm.Grandfields, rules.grandfieldWeight * Math.Min(2, fields.Count));
+        Add(DevelopmentTerm.Trade, road * rules.roadWeight + (networked ? rules.networkWeight : 0f) + (nexus ? rules.nexusWeight * (networked ? 1f : 0.5f) : 0f));
+        Add(DevelopmentTerm.Grandfields, rules.grandfieldWeight * Math.Min(2, fields.Count(f => f >= 0)));
         Add(DevelopmentTerm.Sacred, sacred ? rules.sacredWeight : 0f);
         Add(DevelopmentTerm.Danger, -rules.dangerWeight * maxDanger);
         Add(DevelopmentTerm.Dissonance, -rules.dissonanceWeight * sumDissonance / landCount);
         Add(DevelopmentTerm.Beauty, rules.beautyWeight * sumBeauty / landCount);
+        float cap = Math.Max(0f, rules.resourceCap);
+        Add(DevelopmentTerm.Resources, Math.Max(-cap, Math.Min(cap, rules.resourceWeight * resources)));
         if (result != null) result.raw = raw;
         return raw;
     }
 
     /// <summary>The most a settlement on this cell can develop (Coherence decides how far).</summary>
     public static float Ceiling(SettlementRules rules, WorldTile t) =>
-        rules.ceilingBase + (100f - rules.ceilingBase) * Math.Max(0f, Math.Min(1f, t.coherence));
+        rules.ceilingBase + (100f - rules.ceilingBase) * CoherenceOf(t);
 
     /// <summary>
     /// A cell's own share of one term, 0-1 (what a lens paints: the ground under the cursor, not its neighbourhood).
@@ -160,14 +185,16 @@ public static class CityDevelopment
         {
             case DevelopmentTerm.LandFertility: return t.landFertility;
             case DevelopmentTerm.Freshwater: return t.river || t.lake ? 1f : map != null && map.NeighboursOf(t).Any(n => n.river || n.lake) ? 0.6f : 0f;
-            case DevelopmentTerm.Coherence: return t.coherence;
+            case DevelopmentTerm.Coherence: return CoherenceOf(t);
             case DevelopmentTerm.MagicalFertility: return t.magicFertility;
             case DevelopmentTerm.Leylines: return t.junction >= 3 ? 1f : t.junction == 2 ? 0.85f : t.leylines != 0 ? 0.7f : 0.6f * t.leylineInfluence;
-            case DevelopmentTerm.Trade: return t.nexus != null ? 1f : t.tradeNode ? 0.8f : t.road ? 0.6f : 0f;
+            case DevelopmentTerm.Trade: return t.nexus != null ? 1f : t.tradeNode ? 0.8f : t.road ? (t.restoredRoad ? 0.3f : 0.6f) : 0f;
             case DevelopmentTerm.Grandfields: return t.grandfield >= 0 ? 0.35f + 0.65f * t.grandfieldDensity : 0f;
             case DevelopmentTerm.Sacred: return t.sacred ? 1f : 0f;
             case DevelopmentTerm.Danger: return t.danger;
             case DevelopmentTerm.Beauty: return (t.beauty + 1f) * 0.5f;
+            case DevelopmentTerm.Resources: return Math.Max(0f, Math.Min(1f, 0.5f + WorldResources.LandValue(map, t) / 10f));
+            case DevelopmentTerm.Outskirts: return t.settlement >= 0 && t.settlement < map?.Settlements.Count && map.Settlements[t.settlement].kind == SettlementKind.Tributary ? 1f : 0f;
             default: return t.dissonance;
         }
     }

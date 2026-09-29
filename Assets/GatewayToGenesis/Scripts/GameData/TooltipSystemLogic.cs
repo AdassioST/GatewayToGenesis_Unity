@@ -164,7 +164,9 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
         var top = _layers[_layers.Count - 1];
         if (!top.solid && top.view.Interactive)
         {
-            float progress = theme.lockDelay <= 0f ? 1f : (now - Mathf.Max(_stillSince, top.openedAt)) / theme.lockDelay;
+            // Options, General: the player's hold time scales the theme's.
+            float lockDelay = theme.lockDelay * GameSettings.TooltipHold;
+            float progress = lockDelay <= 0f ? 1f : (now - Mathf.Max(_stillSince, top.openedAt)) / lockDelay;
             top.view.SetLockProgress(progress);
             if (progress >= 1f) MakeSolid(top, pointer);
         }

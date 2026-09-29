@@ -15,6 +15,6 @@ MonoBehaviour:
   name: Food
   type: Unique
   section: Vital Resource
-  description: '"Peaches, perhaps?"'
+  description: 'A reserve of daily ration equivalents. One Food represents 2,100 kcal; needs and distribution losses determine how many people it feeds. Food supports life, not instant births.'
   icon: {fileID: 21300000, guid: 1c3bbd4bf4a5f6f4d8d78163f754215e, type: 3}
   role: 1

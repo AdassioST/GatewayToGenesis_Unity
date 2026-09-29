@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public enum WeatherExtent { Radius, Sectors, World }
+public enum WeatherExtent { Radius, Quadrants, World }
 
 /// <summary>A saved weather footprint. Higher priority wins; newer id breaks ties. Zero lifetime is permanent.</summary>
 [Serializable]
@@ -14,14 +14,14 @@ public class WorldWeatherFront
     public WeatherExtent extent;
     public HexCoord center;
     public int radius = 6;
-    public List<string> sectors = new List<string>();
+    public List<string> quadrants = new List<string>();
     public int remainingSevenths;
     public int priority;
     public bool procedural;
 
     public bool Covers(WorldTile tile) => tile != null && (extent == WeatherExtent.World ||
         (extent == WeatherExtent.Radius && HexCoord.Distance(center, tile.coord) <= radius) ||
-        (extent == WeatherExtent.Sectors && sectors != null && sectors.Any(s => string.Equals(s, tile.sector, StringComparison.OrdinalIgnoreCase))));
+        (extent == WeatherExtent.Quadrants && quadrants != null && quadrants.Any(s => string.Equals(s, tile.quadrant, StringComparison.OrdinalIgnoreCase))));
 }
 
 public static class WorldWeather
@@ -65,17 +65,17 @@ public partial class CelestialWeatherSystemLogic
         return front == null || isHardSetWeather && front.procedural ? activeWeatherProfile : front.profile;
     }
 
-    /// <summary>Event API: radius, named sectors, or a world-wide crisis; returns an id for cancellation.</summary>
+    /// <summary>Event API: radius, named quadrants, or a world-wide crisis; returns an id for cancellation.</summary>
     public int AddWeatherFront(WeatherProfileSO profile, WeatherExtent extent, HexCoord center,
-        int radius = 6, int durationSevenths = 4, int priority = 100, IEnumerable<string> sectors = null)
+        int radius = 6, int durationSevenths = 4, int priority = 100, IEnumerable<string> quadrants = null)
     {
         var map = WorldSystem.Instance?.Map;
         if (profile == null || map == null || radius < 0 || durationSevenths < 0 || !Enum.IsDefined(typeof(WeatherExtent), extent)) return -1;
-        var regionNames = sectors?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? new List<string>();
+        var regionNames = quadrants?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList() ?? new List<string>();
         if (extent == WeatherExtent.Radius && !map.InBounds(center) ||
-            extent == WeatherExtent.Sectors && !map.Tiles.Any(t => regionNames.Any(s => string.Equals(s, t.sector, StringComparison.OrdinalIgnoreCase)))) return -1;
+            extent == WeatherExtent.Quadrants && !map.Tiles.Any(t => regionNames.Any(s => string.Equals(s, t.quadrant, StringComparison.OrdinalIgnoreCase)))) return -1;
         var front = new WorldWeatherFront { id = ++nextFrontId, profile = profile, extent = extent,
-            center = center, radius = radius, remainingSevenths = durationSevenths, priority = priority, sectors = regionNames };
+            center = center, radius = radius, remainingSevenths = durationSevenths, priority = priority, quadrants = regionNames };
         regionalWeather.Add(front);
         RefreshWeatherTiles();
         SyncCapitalWeather();

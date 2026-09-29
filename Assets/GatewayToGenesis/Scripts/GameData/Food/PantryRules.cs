@@ -24,20 +24,28 @@ public struct FoodStock
 /// </summary>
 public static class PantryRules
 {
-    /// <summary>Food value of everything held.</summary>
-    public static float Value(IEnumerable<FoodStock> stock) => stock?.Sum(s => s.Value) ?? 0f;
+    /// <summary>Food value of everything held (spices feed no one, so they count for nothing).</summary>
+    public static float Value(IEnumerable<FoodStock> stock) => stock?.Where(s => s.kind == null || CultureRules.Feeds(s.kind.cuisine)).Sum(s => s.Value) ?? 0f;
+
+    /// <summary>What eating <paramref name="amount"/> of a kind leaves for the kitchen (Peach Pits from dried peaches): (resource, amount), or null.</summary>
+    public static (string resource, float amount)? Leftover(FoodKind kind, float amount)
+    {
+        if (kind == null || string.IsNullOrEmpty(kind.leaves) || kind.leavesPerUnit <= 0f || amount <= 0f) return null;
+        return (kind.leaves, amount * kind.leavesPerUnit);
+    }
 
     /// <summary>
-    /// What to take to raise <paramref name="value"/> of food value: the most perishable kinds first (then the least
-    /// valuable, so rich food is kept). Takes everything when the stores hold less. Returns (resource, amount) pairs.
+    /// What to take to raise <paramref name="value"/> of food value: edibles and teas before ingredients, and the
+    /// cellar's beverages last (spices are never eaten to fill a belly; <see cref="CultureRules.EatingTier"/>), and within them the most perishable kinds first (then the least valuable, so rich food is
+    /// kept). Takes everything edible when the stores hold less. Returns (resource, amount) pairs.
     /// </summary>
     public static List<(string resource, float amount)> Draw(IEnumerable<FoodStock> stock, float value)
     {
         var taken = new List<(string, float)>();
         float need = Math.Max(0f, value);
         if (stock == null || need <= 0f) return taken;
-        foreach (var s in stock.Where(s => s.kind != null && s.kind.foodValue > 0f && s.amount > 0f)
-                     .OrderByDescending(s => s.kind.spoilPerSeventh).ThenBy(s => s.kind.foodValue).ThenBy(s => s.kind.resource, StringComparer.Ordinal))
+        foreach (var s in stock.Where(s => s.kind != null && s.kind.foodValue > 0f && s.amount > 0f && CultureRules.Feeds(s.kind.cuisine))
+                     .OrderBy(s => CultureRules.EatingTier(s.kind.cuisine)).ThenByDescending(s => s.kind.spoilPerSeventh).ThenBy(s => s.kind.foodValue).ThenBy(s => s.kind.resource, StringComparer.Ordinal))
         {
             if (need <= 1e-6f) break;
             float amount = Math.Min(s.amount, need / s.kind.foodValue);
@@ -64,6 +72,19 @@ public static class PantryRules
         if (netWithoutStores >= 0f || storesValue <= 0f) return 0f;
         float lasting = storesValue / Math.Max(0.01f, seconds);
         return Math.Min(-netWithoutStores, Math.Min(Math.Max(0f, maxPerSecond), lasting));
+    }
+
+    /// <summary>
+    /// Food to move into the stores now: what is held beyond <paramref name="keep"/>, as far as the kind's room allows
+    /// (<paramref name="held"/> of <paramref name="room"/>, one Food making 1 / <paramref name="foodValue"/> of it). 0 when
+    /// there is no surplus or no room.
+    /// </summary>
+    public static float Banked(float food, float keep, float held, float room, float foodValue)
+    {
+        if (foodValue <= 0f || float.IsNaN(food)) return 0f;
+        float surplus = food - Math.Max(0f, keep);
+        float space = Math.Max(0f, room - Math.Max(0f, held)) * foodValue;
+        return Math.Max(0f, Math.Min(surplus, space));
     }
 
     /// <summary>Kinds held with at least <paramref name="minimumValue"/> of food value.</summary>

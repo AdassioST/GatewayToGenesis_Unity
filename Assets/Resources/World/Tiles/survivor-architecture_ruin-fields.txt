@@ -1,6 +1,6 @@
 # A quarter of ruins being quarried.
 tile: survivor-architecture/ruin-fields
-biome: survivor-architecture
+macrobiome: survivor-architecture
 weight: 1
 rotations: any
 legend: F=fallow-steppe R=ruin-field

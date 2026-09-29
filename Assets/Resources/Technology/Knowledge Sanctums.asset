@@ -27,5 +27,15 @@ MonoBehaviour:
     trigger: technologies
     requiredAmount: 10
     description: Unlock 10 Technologies.
+  - type: 6
+    trigger: species_known
+    requiredAmount: 2
+    description: Identify 2 creatures.
+    riddle: What lives beyond the firelight has no names yet. Give two of them names.
+    clue: Sighting a den is not knowing it. Send someone to stand where it stands.
+    clueAt: 0.5
+    clueTrigger: 
+    clueAmount: 1
   techUnlockables:
   - {fileID: 11400000, guid: 140060ca367a55d81c50b1615630e748, type: 2}
+  - {fileID: 11400000, guid: 35a7795bdabe48fca78dc09b076ddcdb, type: 2}

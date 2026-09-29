@@ -16,6 +16,7 @@ public class CouncilSeat
     
     [Header("Legend Requirements")]
     public List<LegendClass> allowedLegendClasses = new List<LegendClass>(); // Which legend classes can fill this seat
+    public int requiredStars; // Stars needed in one of the allowed Greats (0: any legend, an Unattuned Legend too)
     public bool isHeadOfState = false; // Whether this is the Head of State position
     
     [Header("Seat Bonuses")]
@@ -51,7 +52,11 @@ public class CouncilSeat
     {
         if (legend == null) return false;
         if (isHeadOfState) return legend.canBeHeadOfState;
-        return allowedLegendClasses.Contains(legend.legendClass);
+        // Greats are earned, not born (LegendGreats): the seat asks for stars in one of its Greats, and 0 takes anyone.
+        if (requiredStars <= 0) return true;
+        var progress = LegendProgress.Instance;
+        if (progress == null) return allowedLegendClasses.Contains(legend.legendClass);
+        return progress.Meets(legend.legendName, allowedLegendClasses, requiredStars);
     }
     
     /// <summary>

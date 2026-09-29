@@ -286,7 +286,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
 
     private static CouncilSeat CreateSeatFromData(CouncilSeatData data)
     {
-        var seat = new CouncilSeat(data.title, -999) { roleplayDescription = data.description, seatIcon = data.icon };
+        var seat = new CouncilSeat(data.title, -999) { roleplayDescription = data.description, seatIcon = data.icon, requiredStars = Math.Max(0, Math.Min(LegendGreats.MaxStars, data.requiredStars)) };
         if (data.allowedClasses != null) seat.allowedLegendClasses.AddRange(data.allowedClasses);
         if (data.areas != null) seat.areas.AddRange(data.areas);
         foreach (var bonus in data.bonuses ?? Array.Empty<DefaultSeatBonus>())
@@ -312,7 +312,8 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
             seatIcon = template.seatIcon,
             roleplayDescription = template.roleplayDescription,
             sourceCivic = template.sourceCivic,
-            civicSeatTitle = template.civicSeatTitle
+            civicSeatTitle = template.civicSeatTitle,
+            requiredStars = template.requiredStars
         };
         seat.allowedLegendClasses.AddRange(template.allowedLegendClasses);
         seat.areas.AddRange(template.areas);
@@ -680,6 +681,7 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
 
         bool anyClass = position == null || position.allowAnyLegendClass || position.allowedClasses == null || position.allowedClasses.Length == 0;
         seat.allowedLegendClasses.AddRange(anyClass ? AllLegendClasses : position.allowedClasses);
+        seat.requiredStars = Math.Max(0, Math.Min(LegendGreats.MaxStars, position?.requiredStars ?? 0));
         if (position?.areas != null) seat.areas.AddRange(position.areas);
 
         foreach (var bonus in position?.bonuses ?? Array.Empty<CivicSeatBonus>())
@@ -893,17 +895,15 @@ public class GovernmentLogic : SingletonBehaviour<GovernmentLogic>
         var seat = FindSeatInPool(seatTitle);
         if (seat == null) return (seatTitle, "Effects: N/A", "Leader Classes: N/A", null);
         string effects = seat.seatBonuses.Count > 0 ? string.Join("\n", seat.seatBonuses.Select(b => b.GetAutoDescription())) : "No bonuses";
-        return (seat.GetEffectiveTitle(), effects, FormatLeaderClasses(seat.allowedLegendClasses), seat.seatIcon);
+        return (seat.GetEffectiveTitle(), effects, FormatLeaderClasses(seat.allowedLegendClasses, seat.requiredStars), seat.seatIcon);
     }
 
     public CivicData GetCivicDataForSeatTitle(string seatTitle) => civicCouncilSeats.Values.FirstOrDefault(seat => seat.seatTitle == seatTitle)?.sourceCivic;
 
-    private static string FormatLeaderClasses(List<LegendClass> allowedClasses)
+    private static string FormatLeaderClasses(List<LegendClass> allowedClasses, int requiredStars)
     {
-        if (allowedClasses == null || allowedClasses.Count == 0) return "No leader classes allowed";
-        var distinct = allowedClasses.Distinct().ToList();
-        if (distinct.Count >= AllLegendClasses.Length) return "Council Position for Any/All Classes";
-        return $"Council Position for {string.Join(", ", distinct.Select(c => LegendClasses.Title(c) + "s"))}";
+        if ((allowedClasses == null || allowedClasses.Count == 0) && requiredStars > 0) return "No Greats allowed";
+        return "Council Position for " + LegendGreats.Requirement(allowedClasses, requiredStars);
     }
 
     // ===== DEBUG =====

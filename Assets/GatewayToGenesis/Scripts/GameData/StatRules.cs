@@ -27,6 +27,15 @@ public static class StatRules
         return atLeastOne ? Mathf.Max(1, value) : value;
     }
 
+    /// <summary>
+    /// The reduction an Ambition multiplier gives (0.9 → 0.1), from 0 up to <paramref name="cap"/> (a 0-1 fraction), the
+    /// way the Saving Roll is capped: never a penalty, never past the cap.
+    /// </summary>
+    public static float CappedReduction(float multiplier, float cap) => Mathf.Min(Mathf.Max(0f, 1f - multiplier), Mathf.Clamp01(cap));
+
+    /// <summary>A percentage effectiveness (Magic, Communion) as a multiplier: 12 → ×1.12, never below 0.</summary>
+    public static float EffectivenessMultiplier(float percent) => Mathf.Max(0f, 1f + percent / 100f);
+
     /// <summary>One Communion stage per 5 points of Secrecy.</summary>
     public static int CommunionStage(int secrecy) => Mathf.FloorToInt(secrecy / 5f);
 

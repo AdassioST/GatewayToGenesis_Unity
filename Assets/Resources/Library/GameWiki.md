@@ -19,9 +19,13 @@ The citizens of your settlement. Each needs [[Housing]] and eats [[Food]], and e
 
 ### Growth
 
-Whenever stored [[Food]] reaches the growth threshold, one threshold of Food is eaten and one person arrives: a
-citizen when there is free [[Housing]], otherwise one of the [[Vagrants]], once vagrants are unlocked. [[Morale]]
-moves the threshold: above its balance, growth needs less Food.
+Each citizen is one person, at every settlement size. Families have children and people die as the calendar passes; a Cycle represents one year. Health and food shortages affect the balance.
+
+At the beginning, 50 survivors seek a place here. Each arrival needs a roof (or permission to settle without one) and 12 rations for the journey. This group is finite. Later newcomers arrive through the world's migration and story events. Filling the food stores does not create children.
+
+All residents eat, including those without homes. One Food represents a daily ration equivalent of 2,100 kcal, with an additional distribution allowance. Better rationing reduces waste, never the need to eat. Full housing does not prevent storing food for winter.
+
+A small community shows each person in the settlement. As it grows, a bounded crowd represents the rest in the distance; the population count remains the full number of people.
 
 ## Housing
 shelf: Settlement
@@ -37,7 +41,9 @@ shelf: Settlement
 category: Game Rule
 also: Vagrant
 
-People without a home. They join the [[Population]] as [[Housing]] frees up.
+People without a home. They join the [[Population]] as [[Housing]] frees up. Once the council issues [[Edicts]],
+*The Roofless* decides whether they are let in at all (Homes First turns them away; the Almshouse Charter houses them
+twice as fast).
 
 ## Stored Food
 shelf: Settlement
@@ -57,13 +63,136 @@ one Behemoth Meat like five.
   expedition can forage the ground once each Age, and sites and stories give more.
 - **The famine reads them.** Their food value counts as reserve against [[Crisis Severity]]; several kinds in quantity
   ease it, and stores that are nearly all peaches make it worse.
+- **Edibles, Teas, Beverages, Ingredients and Spices.** Every store is labelled for the kitchen. Edibles are actual
+  food and are eaten first. Teas, the Eleos brews steeped from the [[Eleos Bloom]]s and ordinary infusions, are drunk
+  like food alongside the edibles, but are a category of their own: there will be many kinds, and a nation can have a
+  national tea. Beverages are the cellar's ales, meads, wines and spirits, brewed and distilled in the cellar from
+  grain, honey, rice and peaches and never from a bloom (a bloom steeped or distilled is a tea). They are drunk for
+  joy rather than hunger: a luxury of their own, and the last thing the stores open when Food runs short. Ingredients
+  (Peach Pits, Wild Honey) are what dishes are made from, eaten raw only once the edibles and teas run out; eating
+  dried peaches leaves Peach Pits behind. Spices ([[Glimmerfern]]) feed no one and are never drawn on for hunger. All
+  five grow into your [[Culture]]'s foodways.
+
+## Culture
+shelf: Civilization
+category: Game Rule
+also: Nation, Founding Myth, National Food, Foodways, Culture Lens, Reform, Cohesion, Rootedness, Local Customs
+
+Your nation's own ways: unique to it, and grown from what it lives. Open it from **Your Nation** on the capital's HUD
+or the nation's banner in the world view's top left corner.
+
+- **The founding myth.** Researching [[Horology]] lets the people count the Sevenths, and the children ask what came
+  before the first. "Why were we founded?" has three answers: to keep the song (Idealism), to share the hearth
+  (Realism), to build on the ruins (Pragmatism). The answer founds the culture on a baseline and gives a small effect
+  for as long as the myth is told. Then the people name the nation, what its citizens are called and what its
+  culture is called (Iridia; Citizens: Iridian; Culture: Iridian). A nation may rename itself later.
+- **Leanings and character.** The culture leans toward the ten ways of living the [[Civic]]s and [[Enclave]]s are
+  divided into (Agromagical, Militant, Auric, Weaver, Domestication, Trading, Industrious, Regal, Indulgent,
+  Esoteric). Each [[Seventh]] it drifts a little toward what it lives: its founding myth, its [[Pillars]] (Aureus
+  leans Auric, Regalia Regal, Waltz Weaver, Chorus Esoteric), its civics, what its people eat and work, the land it
+  lives on and its districts. Its strongest leaning is its character, which gives a small effect of its own.
+- **Foodways and national foods.** What the people keep and eat grows familiar, Edibles, Teas, Beverages, Ingredients
+  and Spices each apart (see [[Stored Food]]). When one has been the first of its class for a whole Phase and is familiar enough, a
+  story asks whether it is the nation's own. Embraced, it becomes the national food (or tea, or drink, or ingredient, or spice) and its
+  output grows; the people may instead keep their table varied. Embracing the Auric peach deepens the monocrop.
+- **The land.** The culture takes root on the land you hold, fastest near settlements, and fades from land you lose.
+  Rootedness is how much of your land it has become: how long your people have lived there, not whether they
+  agree. The Culture lens on the [[The World Map|world map]] shows it.
+- **Local customs.** Each settlement keeps its own customs, begun where its ground knows them (Crossing Songs on a
+  river, the Rite of the First Golden Fruit among orchards, the [[Moonlit Vigil]] in Glimmerfern groves) with a
+  gathering from its card on the world map. Customs travel only by real contact: an open road between settlements,
+  a cultural party that takes a custom up in one town and performs it at a festival in another, the founders of a
+  new settlement, and returning settlers. A community takes a custom up only after it has come to know it and
+  gathered for it; its card shows who brought each one. A road cut by a threat or another authority stops new
+  contact but takes nothing away. People who arrive from an unknown origin bring no assumed custom.
+- **Reform.** Once in a while the culture can be turned toward another way. Taking in the ways of the investigated
+  ruins of a fallen settlement is a Digestive Rebirth; with no ruins to digest, the people follow slowly and the
+  culture loosens its hold on the land.
+- **Its life.** Once founded, the culture also sings, feasts, cooks, names and celebrates: see
+  [[The Life of the People]].
+
+## The Life of the People
+shelf: Civilization
+category: Game Rule
+also: Unity, Happiness, Luxuries, Festival, Holiday, Cultural Party, Kitchen, Landmark, Flavor Log, Trial Batch, Whispered Recipes
+
+What your people do once surviving is not all they do. Everything here opens once the [[Culture]] is founded; every
+number is a proposal.
+
+- **Unity.** The shared life of your people, a resource: an orchestra over a soloist. It is made by song (the more the
+  culture leans Weaver, the more it sings), civics of music, rite and feast, districts of song, faith and pleasure,
+  their landmarks, and in bursts by rites, festivals and holidays. Happy people make more of it. It is spent to raise
+  landmarks and to set holidays apart.
+- **Rites and gatherings** (Culture window: Rites). An Evening of Song, a Rite of Remembrance for those the Hunger
+  took, the Rite of the First Golden Fruit (once an Echo), the Feast of Abundance: each costs a little, gives Unity,
+  morale for a while and joy, and leans the culture toward its way of living.
+- **Cultural parties and festivals.** An expedition forms with a charter: an Expedition explores, Builders only work
+  the land (faster, wearing less), and a Cultural Party (after The Rekindling) holds festivals. Walked into one of your
+  settlements, a party sets a festival's table from the stores and celebrates for a couple of Sevenths: Unity, morale,
+  joy, the settlement's Composure eased, the culture taking root around it, and Fragments of Meaning for every legend
+  in the party. A settlement can celebrate once a Phase.
+- **Holidays** (Culture window: Holidays). Once your people have held a festival, with morale well above its balance
+  and Unity to spend, they may set the day apart. The holiday records its date (the Seventh, the Phase, the Echo and
+  the Cycle it was set apart on) and remembers the latest moment of the heritage (a national food, a festival, a
+  landmark, or simply their joy). It returns on that Seventh of that Phase of every Echo: a table set from the stores,
+  Unity, morale and joy; each holiday on the calendar raises max morale for good. The eve is announced.
+- **Names.** The culture names what it builds in its own voice: its character picks the words (a Weaver people names
+  in verses and canticles, an Esoteric one in veils and moons) and its founding myth the memory (the Last Verse, the
+  Shared Fire, the Standing Wall). New hamlets and new districts take the names it gives; so do landmarks and
+  holidays.
+- **Landmarks.** Districts of faith raise a shrine, then a temple, then a cathedral (a Religious Haven can too);
+  districts of song a Hall of Song and an Amphitheatre; districts of pleasure a Feast Hall and a Pleasure Garden. Each
+  is raised from the district's card on the map, is named by your people, and gives Unity (faith landmarks Faith too)
+  and a place in their happiness.
+- **The kitchen** (Culture window: Kitchen). The Flavor Log turns what your [[Stored Food]] holds into dishes that feed
+  more than their ingredients: Peach Soup, Pit-Oil Flatbread, Riverfish Rice, Hunter's Stew, Honeyed Grain Porridge,
+  the Ash-Loaf baked in memory of the starved, the Behemoth Feast Roast, Saffron Riverfish Pilaf and Honeyed Peach Tart. Cook a batch, or leave a standing order to
+  cook every Seventh as far as the stores allow. Dishes grow familiar like any food, and may become national.
+- **The cellar** (Culture window: Kitchen, then The cellar). The same Flavor Log brews Beverages: Rootgrain Ale from
+  grain, Wild Honey Mead, Highland Rice Wine and Auric Peach Wine, and, once the fire is mastered, distils spirits
+  from what was fermented (Bitterroot Spirit from ale, Auric Peach Brandy from peach wine). A drink need not feed
+  more than went into it: it is kept for joy, ales sour quickly, wines keep and spirits never spoil. Drinks meet
+  the people's want for wines and spirits, grow familiar, and may become the national drink. Peach wine and brandy
+  are still the peach. No drink is ever made from an [[Eleos Bloom]]: that is a tea.
+- **Dishes and drinks of your own** (Culture window: Kitchen, then Invent a dish, or in the cellar Invent a drink).
+  Choose what goes in (up to four stored foods, as much of each as you like), whether a drink is brewed or distilled,
+  and name it. It is made the way of the dish or drink your people already know that is closest to it: that decides
+  how much a batch makes, how much more it feeds, how it keeps (a spirit never spoils), its luxury and its look. What
+  it does comes from its ingredients, each scaled down by its share of the batch: food value, spoilage, the peach,
+  the ways of living it leans your culture toward, the Faith a sacred tea gives, and the luxury of any ingredient
+  that makes up enough of it (honey in a sweet). It is cooked, brewed and ordered like any other recipe. Your people
+  take to their own sooner than to anything else: it grows familiar faster, comes first at the table, needs less to
+  be offered as national, and is offered before anything else. A drink is still never made from a bloom or a tea,
+  and a spirit is still distilled from something fermented.
+- **Trial batches.** No one names a dish they have never tasted. Before keeping a mix, choose **Try a batch**: it is
+  cooked or brewed once and uses up what goes in, and only then do your people know what it makes. The kitchen tries
+  three batches a Seventh. Every trial is remembered with its numbers, whatever the batch size, so the same mix is
+  never a mystery twice.
+- **Whispered recipes.** The Flavor Log also whispers of recipes no one ever wrote down, one riddle at a time. Each
+  trial says how near it came to one (nothing, a faint hint, close, very close); coming close brings its next hint to
+  light, and only a batch that makes it finds it. Finding one earns 2 Era Score and a place in your people's
+  history, and the dish or drink they keep from it is finer than its ingredients alone: it feeds more, and may never
+  spoil, count as a luxury, or give Unity or Faith.
+- **Happiness and luxuries.** Happiness is surviving (fed, housed, stores that feel secure, a varied cellar) and living
+  (luxuries, fine dishes, the joy of festivals and holidays, landmarks). On the frontier only surviving counts; past
+  150 citizens living starts to weigh in, and a grown people cares as much about living as about surviving. Luxuries
+  (sweets, fine dishes, teas, wines and spirits, spices, fine cloth, ornaments and living gardens) are wanted per hundred citizens,
+  one more kind as the people grow. Each Seventh only the best available categories needed are used. Happiness
+  moves morale and how much Unity is made. Edible luxuries are reserved for survival during food shortages.
+- **Lasting amenities and Faith.** Sky Glass is enjoyed without consuming it, so it remains available for cathedrals.
+  Surveyed Vow Orchids, Candlevein Blooms, Xochi-Singers, Memory Marigolds and Lullroots on land you hold provide living
+  garden amenities, scaled by their vigor and the share of the patch you hold. Withered blooms provide none; nothing
+  needs to be picked. These gardens, Sky Glass and sacred Eleos teas also give Faith when enjoyed. Candlevein Grief
+  Tea and Lullroot Tea have their own stocks; ordinary Hearthleaf Tea brings comfort without Faith.
+- **Specialty resources.** Auric Saffron and Hearthleaf grow on naturally desirable land. Silver Salt comes from
+  highly coherent sea shores touched by leylines. Sky Glass lies on coherent high ground and beside sacred sites.
+  Auric Saffron and Silver Salt are spices, not sustenance; combine them with fish and rice in the kitchen.
 
 ## Morale
 shelf: Civilization
 category: Game Rule
 
-The mood of your people. Above its balance, growth needs less [[Food]] and production runs faster; below it, both
-suffer.
+The mood of your people. Above its balance production runs faster; below it, production suffers. Morale does not reduce a person's nutritional needs.
 
 ## Piety
 shelf: Decisions
@@ -127,6 +256,34 @@ end of the first Act of Fate. Civics in force add positions of their own.
   few [[Seventh]]s later. An empty seat gives nothing.
 - The Head of State multiplies the bonuses of the legend who holds it.
 - Once a seat's legend changes, it cannot change again until its cooldown has passed.
+- Once the council holds three seats, counting the Head of State, it issues [[Edicts]].
+
+## Edicts
+shelf: The Council
+category: Game Rule
+also: Edict, Stance, Stances, Laws, Council Accord, Decree
+
+The realm's laws and decrees, set from the **Edicts** section of the Government tab. They are established once the
+council holds three seats, counting the Head of State ([[Edicts of Stone and Bone]] usually opens the third); until
+then the realm keeps its customs.
+
+- **Stances** are the standing laws: one option is always in force for each. *The Roofless* (who may enter without a
+  home: Homes First, Open Gates, the Almshouse Charter), *Strangers at the Gates* (Welcome the Wanderers draws more
+  caravans, Sealed Gates draws none), *Hearth and Cradle* (more or fewer births), *The Borders* (the Realm's border
+  policy: Claim the Horizon, Measured Borders, Hold the Borders), and the two questions of the [[Pillars]]: *Who May
+  Weave* (the Guarded Solo or the Open Orchestra) and *Where Power Is Heard* (inward or outward). A changed stance
+  stands for a Phase before it can change again.
+- **Laws shape the government.** Each leaning option adds to its pillar, so the laws you keep pull your political
+  compass, and with it your government type.
+- **Edicts** are decrees the Head of State seals for a cost: open the granaries, call every hand to toil, keep the
+  scholars' vigil, muster the wardens. Each fills one slot while it lasts (three seats hold one, a full council of
+  seven holds five), then rests before it can be sealed again. The legend whose seat answers for an edict's area
+  (defense, lore, welfare...) carries it out, and makes it stronger. With no legend in the Head of State's seat, no
+  edict can be sealed.
+- **The council's accord.** Each seated legend weighs the laws in force by the areas their seat answers for: a
+  Supreme Commander approves of Sealed Gates, a Treasurer objects. The government weighs them too: a law that leans
+  the way its compass leans sits well, one against a pillar it holds firmly does not. A council in harmony makes its
+  legends more effective; one in discord costs morale, and its laws take twice as long to change.
 
 ## The Calendar
 shelf: Time
@@ -193,24 +350,76 @@ view.
   of the cell, or the
   nearest ground it can reach. Units walk the small hexes one by one, a few every [[Seventh]]: rough ground, climbing
   and fording rivers slow them, roads and leylines speed them, and the crags of steep escarpments must be walked
-  around. Hold Shift to survey where it arrives. Expeditions are legends: see [[Expeditions]].
+  around. Hold Shift to survey the cell you click. Expeditions are legends: see [[Expeditions]].
 - Units live on rations. Inside your authority your stores keep them fed, a settlement best of all; beyond it they
   eat what they carry, and a camp gathers what the land gives. Walking and working tire them; harsh weather, danger,
   dissonance and above all hunger wear them down. A tired, worn or hungry unit walks and works slower, an exhausted
   one makes camp and goes on once rested, and one worn out entirely is lost. Make camp to rest, and send a unit back
   for rations before they run out.
-- An expedition comes to know the hexes it walks beside. Surveying explores them: the hexes around it, or a whole
-  cell at once. A cell is explored when all its hexes are: then its ground yields if you hold it, and what stands on
-  it is found.
+- An expedition comes to know the hexes it walks on and beside. A cell is explored once an expedition has seen all
+  seven of its hexes up close: then its ground yields if you hold it, and what stands on it is found. Now and then a
+  party passing by also stumbles on spare resources or something more.
+- **Surveying**: select an expedition and choose *Survey this meso hex* or *Survey another meso hex* (then click it),
+  or Shift + right click a cell, or select a cell and send the nearest expedition from its card. The party walks to
+  each of the cell's hexes in turn and surveys it there. It is slower than passing by, but a survey is far likelier to
+  turn up an event (old waymarks, a hidden spring, traces of those before) and spare resources. A tag over the
+  party shows how far along it is ("Surveying 43%"), and the map shows its plan like the research plan in the
+  technology tree: each hex still to survey is ringed and numbered in the order the party will walk it (gold on the
+  one under way, violet after), with its way drawn from the party. While you pick a cell to survey, hovering one shows
+  the tour it would walk there. Moving it within the cell keeps the survey going; resting,
+  retreating or walking back for rations only interrupt it. Any other order sets the survey aside with its progress
+  kept: choose *Resume survey*, or send the party back into the cell. *Survey by itself* has a party survey cell after
+  cell, resting and resupplying as it needs.
 - Your authority begins at the capital's own cell; everything around it is wilderness. Once an expedition has passed
-  over a cell (not only seen it from afar), click it and claim it for [[Food]] and Elderwood if it borders your
-  authority. Each claim costs a little more than the last. See [[Territory and Administration]] for how your land
-  also grows by itself.
+  over a cell (not only seen it from afar), click it and claim it for stored food and Elderwood if it borders your
+  authority. It joins your authority at once, all seven of its hexes. Each claim costs a little more than the last.
+  See [[Territory and Administration]] for how your land also grows by itself.
 - Held, explored ground yields resources every second, and what stands on it pays once when it is reached: ruins,
   orchards, hamlets where a legend waits to be met, spires whose songs become ballads.
 - Every new Age turns the Grand Thread Rings: the leylines move, rivers they cross run silver, and new things appear
   on the map. The land itself, its rivers and its Sacred Sites stay where they are.
 - Every legend of an expedition earns renown for its long roads, its finds and the settlements it founds.
+- Landmarks, wonders and ruins do not show through the fog. A landmark shows from afar once your people's sight
+  reaches it; before that, only [[Rumours]] tell of it.
+
+## Rumours
+shelf: The World
+category: Game Rule
+also: Rumour, Rumoured Creatures
+
+What travellers, hunters and pilgrims speak of: something worth the walk, somewhere beyond the fog. A rumour is a
+guess about the map that only going there can test.
+
+- Your people already tell two rumours when the world begins. Travellers bring one more each Echo, and every
+  expedition that completes a journey brings one home. No more are heard while five wait to be followed.
+- A rumour gives a direction from the capital (and the region, once its biome has been seen), how far it lies (a few
+  days away, far, or at the edge of what anyone knows) and a vague word of what is there. It never names the thing.
+  Things close to the capital are never rumoured: your people can see them.
+- The map marks the area a rumour points at with a pale haze, never the place itself: the thing lies somewhere near,
+  and the haze is not centred on it. Hovering a cell under the haze reads the rumour out.
+- Rumours tell of landmarks and places worth the walk, Sacred Sites, wonders seen from afar, the ruins of the Old
+  World, Enclaves, and the dens of creatures (told by their size and ways, never by name: the Bestiary lists these as
+  rumoured creatures).
+- Find the thing and the rumour is confirmed: it is named, and it earns 1 Era Score on top of whatever finding it
+  pays. The Rumours button on the world map lists what is heard and what was found.
+
+## Hypotheses
+shelf: The World
+category: Game Rule
+also: Hypothesis, Guess, Insight, What your people think
+
+Once your people identify a creature, the Bestiary asks what they cannot see at a glance: *When does it breed?*
+*Where does it thrive?* and, for a meat-eater, *What does it hunt?* Choose a guess under **What your people think**;
+watching and hunting then test the guess you chose, and only that guess.
+
+- **Watching**: every Echo, a creature with an identified den within two cells of land you hold is watched. A watch
+  tests where it thrives, and tests a breeding guess only in the Echo guessed (its young crowd its dens then, or they
+  do not). "No season of its own" holds once it has been watched through all four Echoes with no crowding.
+- **Hunting**: every hunt of it by your people tests what it hunts (what it had eaten tells).
+- A guess the evidence refutes is ruled out, and the Bestiary keeps it ruled out: choose another. A guess confirmed
+  with nothing ruled out before it is **insight**: 1 Era Score.
+- Answer every question and your people understand the creature without the research. Until then its niche and its
+  breeding season stay hidden, in the Bestiary and on the map.
 
 ## Territory and Administration
 shelf: The World
@@ -219,11 +428,16 @@ also: Territorial Pull, Administrative Capacity, Border Policy, Beauty
 
 Everything you build on the map pulls the land around it into your [[Administrative Authority]]. The capital pulls
 hardest and farthest, then Major Settlements, a Trade Nexus joined to your roads, Developing Towns, extracted
-grandfields, Religious Havens, the Trade Nodes along your roads and Outposts. Pull fades over hard ground: open plains
+grandfields, [[Outskirts and Districts|outskirt tributaries]], Religious Havens, the Trade Nodes along your roads and
+Outposts. Pull fades over hard ground: open plains
 carry it far, forests and marshes less, highlands and cliffs little; roads and river valleys carry it farther.
 
-- **Your society adopts land by itself**, a cell at a time every [[Seventh]], from what borders your land and is known
-  to your people. It takes the best land first: fertile, watered, coherent and beautiful ground, grandfields and sites;
+- **Your society adopts land by itself**, one small hex at a time, from what borders your land and is known to your
+  people; a cell joins your land once all seven of its hexes are settled, and your people finish a cell before
+  starting the next. It needs people: nothing moves until the capital has 25 citizens, and the more it has, the likelier
+  each [[Seventh]] brings in a new hex. The map shows what comes next: the hexes each settlement will bring in glow in
+  your border's colour, the next one pulsing, with about how many Sevenths until each joins (up close) or until the
+  whole cell is yours (farther out). It takes the best land first: fertile, watered, coherent and beautiful ground, grandfields and sites;
   dangerous, dissonant and mountainous ground last. Each settlement holds only so many cells by its own pull: to hold
   more, found or grow another. Land drawn in by an Outpost stays detached, like the Outpost itself. An enclave's pull
   keeps your people away from its land.
@@ -235,10 +449,77 @@ carry it far, forests and marshes less, highlands and cliffs little; roads and r
   what you hold pays more. Over capacity your people stop adopting land, and far past it the weakest-held land slips
   back into the wilderness. The Realm panel on the world map shows where you stand and where each threshold lies.
 - **Border policy** (Realm panel): *Expand* keeps adopting until the administration is full; *Measured* stops where
-  more land stops paying; *Hold the borders* adopts nothing. Claiming still brings a cell in at once.
+  more land stops paying; *Hold the borders* adopts nothing. Claims still go ahead, at once. Once the council
+  issues [[Edicts]], the policy is the stance *The Borders*: changing it is a decree, and it then stands a Phase.
 - **Beauty**: some places are fair, some hideous: rolling meadows, groves and lakes in view, Sacred ground and the
   lights of leylines against ash, ruins, scars, dissonance and danger. People settle and work beautiful land first;
   it yields a little more, develops a little further and is easier to govern. The Beauty lens shows it.
+
+## Outskirts and Districts
+shelf: The World
+category: Game Rule
+also: Tributary, Tributaries, Outskirt Tributary, District, Districts, Desirability, Minor Hub
+
+There are two ways to settle. An expedition escorting settlers founds an **independent settlement**, a major hub:
+a Developing Town inside your authority, an Outpost out in the wilderness, a Religious Haven by Sacred ground. From
+[[The Rekindling]] on, you can also raise an **outskirt tributary** from home: a minor hub on land you already hold,
+serving a major hub within three cells, the way homes and fields spill out past a city's walls.
+
+- **Desirability**: people want to live on fair, coherent, fertile ground, rich in magic and near the leylines, among
+  neighbouring hexes just as good; danger and dissonance drive them off. Every settlement grows faster on desirable
+  ground, and a tributary develops toward its ground's desirability (never far above its hub). The Desirability lens
+  shows it, and lights up where a tributary could stand now.
+- **A tributary leads back to its hub**: it is raised with a road home, stands as a Trade Node on your roads, answers to
+  its hub and lends it City Development. It pulls the land around it into your authority and adds Administrative
+  Capacity, without being a full settlement: it forms no expeditions (a Barracks aside), holds no Resonance Anchor and
+  is never promoted. Each hub keeps only so many (more as its City Development grows), and each costs more than the
+  last.
+- **Never side by side**: a tributary never stands right beside another settlement, but two cells apart their
+  districts touch, and the whole quarter reads as one.
+- **Districts**: every tributary begins as an Outskirt Hamlet, homes for the Capital's people. Once it has grown, it
+  can be upgraded to one district, one for each kind of [[Enclave]] (changing an upgraded district again costs more
+  and rebuilds the quarter):
+  - **Agromagical**: growth, health, sanitation, sustenance. Food and a little Glimmerfern, homes kept in health.
+  - **Militant**: tactics, weapons, mercenaries, hunters. Wards off danger and holds the land it watches, pulls hard,
+    adds an expedition slot and outfits expeditions; Game Meat and Hides; raises Ambition.
+  - **Auric**: Research and Faith; raises [[Aureus]].
+  - **Weaver**: culture, poetry, songs, communal arts. Lends its hub City Development; raises [[Waltz]].
+  - **Domestication**: creatures, [[Pure Light]], taming, druids. Game Meat, Hides and Lumenwool.
+  - **Trading**: economics, wealth, efficiency. Much City Development for its hub, Administrative Capacity.
+  - **Industrious**: equipment, forges, artisans, metalworks. Elderwood and Duskstone.
+  - **Regal**: politics, diplomacy, prestige, espionage. Much Administrative Capacity and pull; raises [[Regalia]].
+  - **Indulgent**: entertainment, pleasure, joy, luxuries. Houses travellers and raises [[Morale]]; Wild Honey.
+  - **Esoteric**: Outer Gods, dark Magic Arts, witchcraft, spirits. A little Research and Sky Glass; raises
+    [[Chorus]].
+- **Adjacency**: a district's effects grow with what lies around it, with the districts linked to it and with an
+  enclave of its own kind nearby (twice if you hold its Suzerainty; a Regal District's envoys count every enclave).
+  An Auric District thrives on leylines, Coherence and Sacred ground, a Militant one on heights and danger, a Trading
+  one on roads and a Trade Nexus, an Agromagical one on fertile, watered land, an Esoteric one where dissonance runs.
+  Neighbours matter: Weaver and Indulgent quarters feed each other, Agromagical fields help the Domestication herds, a
+  Militant District buys the Industrious forges' equipment; but Militant drill yards trouble the Auric scholars, the
+  forges' soot troubles the hamlets, and danger spoils the fields unless a Militant District stands beside them. A
+  tributary's card shows every district's adjacency on its ground before you choose.
+- **A lost hub**: if the hub a tributary serves is lost, the tributary rejoins the nearest hub still standing
+  (one with room first) and lays a road to it, keeping its district. One that no road joins to a hub withers away.
+
+## Loss and Ruins
+shelf: The World
+category: Game Rule
+also: Ruins, Damage, Pillage, Repair, Fallen Settlement
+
+Nothing on the map is safe for ever. Every settlement can be damaged: by the danger around it, by stories of raids and
+pillage, and, for an outskirt tributary that no road joins to a hub, by slowly withering away. Damage wears its City
+Development down and slows its growth; a settlement heals when nothing harms it (faster on the Capital's roads), or you
+can pay to repair it at once. The settlement's card shows its damage and what harms it.
+
+- **Anything but the Capital can be lost.** At full damage a settlement falls. The Capital can be profoundly damaged,
+  and while it is the whole realm yields less, but it never falls.
+- **Loss is transformation.** A fallen settlement leaves its ruins on the map, and its roads stay. Send an expedition
+  to investigate them, once: the party salvages what the settlement used to produce, recovers Research from its
+  records, and sometimes its records enlighten a technology. Sometimes the ways its people lived by survive: that civic
+  can then be adopted from the ruins, without its usual requirements.
+- The larger and more cultured the fallen settlement was (a town, a Major Settlement, a haven, a Weaver, Regal or Auric
+  district), the likelier its ways survive.
 
 ## Expeditions
 shelf: The World
@@ -380,6 +661,10 @@ is: gather so much by hand, build so many of something, witness an event. Meet e
 enlightened: it shows in the tree at once, even before its prerequisites, and part of its research (30% of every
 cost) is paid on the spot. The bar turns gold. A technology you can research now that the gift pays in full is
 researched at once. Some stories enlighten technologies too.
+
+Some goals are riddles: the card says only "A riddle", and hovering it reads the riddle out, with no goal and no
+progress. Once your people are on the right path (halfway to the goal, or some other sign such as journeys made), a
+plainer clue appears under it. A riddle met says what it was.
 
 Enlightening an Event or Crisis Technology is a great deed of the Age: it earns 1 Era Score (researching an Event
 Technology earns 2 more). Other technologies earn none for their Enlightenment.

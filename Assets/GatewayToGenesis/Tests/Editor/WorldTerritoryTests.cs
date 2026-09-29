@@ -159,13 +159,32 @@ public class WorldTerritoryTests
             Assert.GreaterOrEqual(c.pull, WorldTerritory.RulesOf(map).adoptThreshold);
         }
 
+        // One hex at a time: the first touches the held land, and the cell stays wilderness until all seven are settled.
         var progress = new Dictionary<string, float> { [candidates[0].seat.key] = 0.99f };
         float drift = 0f;
         var result = WorldTerritory.Tick(map, settings, context, 0.02f, progress, ref drift);
-        CollectionAssert.AreEqual(new[] { candidates[0].cell }, result.adopted, "society adopts the best candidate");
-        Assert.AreEqual(WorldAuthority.Player, map[candidates[0].cell].authorityId);
-        CollectionAssert.Contains(map.Adopted, candidates[0].cell);
-        Assert.Less(progress[candidates[0].seat.key], 1f, "the fraction of the next cell carries over");
+        var cell = map[candidates[0].cell];
+        Assert.AreEqual(1, result.settled.Count, "one hex settled");
+        Assert.AreEqual(cell.index, result.settled[0] / MicroNavigation.PerCell, "in the best candidate");
+        Assert.IsEmpty(result.adopted, "a hex is not the cell");
+        Assert.AreEqual(WorldAuthority.Wilderness, cell.authorityId);
+        Assert.AreEqual(1, WorldMap.SettledHexes(cell));
+        Assert.IsTrue(Enumerable.Range(0, 6).Select(d => MicroNavigation.Neighbour(map, result.settled[0], d)).Any(nb => nb >= 0 && map[nb / MicroNavigation.PerCell].authorityId == WorldAuthority.Player),
+            "the first hex touches the land already held");
+        Assert.Less(progress[candidates[0].seat.key], 1f, "the fraction of the next hex carries over");
+        Assert.AreEqual(cell.index, WorldTerritory.Candidates(map, settings, 1)[0].cell, "a cell begun is finished first");
+
+        // The Capital settles a hex a Seventh: the rest of the cell in the Sevenths after.
+        int open = WorldMap.OpenHexes(cell);
+        for (int i = 1; i < open; i++)
+        {
+            Assert.AreEqual(WorldAuthority.Wilderness, cell.authorityId, "not yet whole");
+            result = WorldTerritory.Tick(map, settings, context, 1f, progress, ref drift);
+        }
+        CollectionAssert.AreEqual(new[] { cell.index }, result.adopted, "the last hex adopts the cell");
+        Assert.IsTrue(WorldTerritory.FullySettled(cell));
+        Assert.AreEqual(WorldAuthority.Player, cell.authorityId);
+        CollectionAssert.Contains(map.Adopted, cell.index);
     }
 
     [Test]
@@ -222,7 +241,7 @@ public class WorldTerritoryTests
         Assert.AreEqual(SeatKind.Outpost, seat.kind);
         Assert.AreEqual(WorldAuthority.Outpost, seat.authorityId);
 
-        Adopt(map, settings, new RealmContext { policy = BorderPolicy.Expand }, 40f);
+        Adopt(map, settings, new RealmContext { policy = BorderPolicy.Expand }, 160f);
         var pocket = map.Tiles.Where(t => t.authorityId == WorldAuthority.Outpost && t.index != site.index).ToList();
         Assert.IsNotEmpty(pocket, "an Outpost pulls in a little land of its own");
         Assert.LessOrEqual(pocket.Count + 1, seat.maxCells, "no more than its seat holds");
@@ -306,7 +325,7 @@ public class WorldTerritoryTests
         {
             var map = Fresh(7, settings, Small());
             Know(map, settings, map.Capital, 6);
-            int n = Adopt(map, settings, new RealmContext { governmentCapacity = 0, policy = policy }, 60f);
+            int n = Adopt(map, settings, new RealmContext { governmentCapacity = 0, policy = policy }, 420f);
             report = WorldTerritory.Realm(map, settings, new RealmContext { governmentCapacity = 0, policy = policy });
             return n;
         }
@@ -326,7 +345,7 @@ public class WorldTerritoryTests
         var rules = new TerritoryRules();
         var map = Fresh(7, settings, rules);
         Know(map, settings, map.Capital, 5);
-        int adopted = Adopt(map, settings, new RealmContext { policy = BorderPolicy.Expand }, 12f);
+        int adopted = Adopt(map, settings, new RealmContext { policy = BorderPolicy.Expand }, 40f);
         Assert.Greater(adopted, 3);
 
         rules.baseCapacity = 0.5f;
@@ -340,7 +359,138 @@ public class WorldTerritoryTests
         {
             CollectionAssert.Contains(before, c);
             Assert.AreEqual(WorldAuthority.Wilderness, map[c].authorityId);
+            Assert.AreEqual(0, map[c].microHeldMask, "its settlers leave with it");
         }
         Assert.IsEmpty(result.adopted, "an overextended realm adopts nothing");
+    }
+
+    // ===== PEOPLE, CHANCE AND CLAIMS =====
+
+    [Test]
+    public void Population_NoOneSettlesBelowTheMinimumAndMorePeopleSettleMore()
+    {
+        var rules = new TerritoryRules();
+        Assert.AreEqual(0f, WorldTerritory.PopulationShare(rules, rules.adoptionMinPopulation - 1), "too few citizens");
+        Assert.AreEqual(rules.adoptionLeastShare, WorldTerritory.PopulationShare(rules, rules.adoptionMinPopulation), 1e-5f);
+        Assert.AreEqual(1f, WorldTerritory.PopulationShare(rules, rules.adoptionFullPopulation), 1e-5f);
+        Assert.AreEqual(1f, WorldTerritory.PopulationShare(rules, -1), "not counted: full pace");
+        Assert.Less(WorldTerritory.PopulationShare(rules, 40), WorldTerritory.PopulationShare(rules, 70));
+
+        var settings = Gen();
+        int Settled(int population)
+        {
+            var map = Fresh(7, settings);
+            Know(map, settings, map.Capital, 4);
+            float drift = 0f;
+            var result = WorldTerritory.Tick(map, settings, new RealmContext { population = population }, 10f, new Dictionary<string, float>(), ref drift);
+            var realm = WorldTerritory.Realm(map, settings, new RealmContext { population = population });
+            if (population < rules.adoptionMinPopulation) Assert.AreEqual(0f, realm.adoptionRate, "the Realm says it waits for people");
+            return result.settled.Count;
+        }
+        Assert.AreEqual(0, Settled(rules.adoptionMinPopulation - 1), "no one to send");
+        int few = Settled(rules.adoptionMinPopulation), many = Settled(rules.adoptionFullPopulation);
+        Assert.Greater(few, 0, "the minimum is enough to begin");
+        Assert.Greater(many, few, "more citizens, more hexes settled");
+    }
+
+    [Test]
+    public void Chance_TheSeatsPaceIsAChanceRolledEachSeventh()
+    {
+        var settings = Gen();
+        var rules = new TerritoryRules();
+        rules.seats.Find(s => s.kind == SeatKind.Capital).adoptPerSeventh = 0.3f;
+        int Settled(double draw, float sevenths)
+        {
+            var map = Fresh(7, settings, rules);
+            Know(map, settings, map.Capital, 4);
+            float drift = 0f;
+            int rolls = 0;
+            var progress = new Dictionary<string, float>();
+            var result = WorldTerritory.Tick(map, settings, new RealmContext(), sevenths, progress, ref drift, () => { rolls++; return draw; });
+            Assert.AreEqual((int)sevenths, rolls, "one roll per seat and whole Seventh");
+            return result.settled.Count;
+        }
+        Assert.AreEqual(0, Settled(0.5, 5f), "a draw above the chance settles nothing");
+        Assert.AreEqual(5, Settled(0.1, 5f), "a draw under it settles a hex each Seventh");
+        Assert.AreEqual(0, Settled(0.1, 0.5f), "half a Seventh rolls nothing yet");
+    }
+
+    [Test]
+    public void Claims_TakeTheirWholeCellAtOnce()
+    {
+        var settings = Gen();
+        var map = Fresh(7, settings);
+        Know(map, settings, map.Capital, 3);
+        var near = map.NeighboursOf(map.Get(map.Capital)).First(t => !t.water && !t.impassable && WorldAuthority.WhyNotClaim(map, t) == null);
+        // Society had begun settling it: the claim takes the rest.
+        near.microHeldMask = 1 << (WorldTerritory.NextHex(map, near, WorldAuthority.Player) % MicroNavigation.PerCell);
+        var settled = new List<int>();
+        Assert.IsTrue(WorldTerritory.ClaimNow(map, settings, near.index, settled));
+        Assert.AreEqual(WorldAuthority.Player, near.authorityId, "yours at once");
+        Assert.IsTrue(WorldTerritory.FullySettled(near), "every hex settled");
+        Assert.AreEqual(WorldMap.OpenHexes(near) - 1, settled.Count, "only the hexes not yet settled are counted");
+        CollectionAssert.Contains(map.Claims, near.index);
+        Assert.IsFalse(WorldTerritory.ClaimNow(map, settings, near.index), "no longer wilderness");
+        Assert.AreEqual(1, map.Claims.Count(c => c == near.index), "claimed once");
+    }
+
+    [Test]
+    public void Claims_LeftHalfSettledByAnOlderSaveFinishAtOnce()
+    {
+        var settings = Gen();
+        var map = Fresh(7, settings);
+        Know(map, settings, map.Capital, 3);
+        var near = map.NeighboursOf(map.Get(map.Capital)).First(t => !t.water && !t.impassable && WorldAuthority.WhyNotClaim(map, t) == null);
+        map.Claiming.Add(near.index);
+        StringAssert.Contains("already settling", WorldAuthority.WhyNotClaim(map, near));
+        Assert.AreEqual("It is being claimed.", WorldTerritory.WhyNotAdopt(map, settings, near, map.territory.Seat(near.pullSeat)), "society leaves a claim to its settlers");
+
+        var result = WorldTerritory.AdvanceClaims(map, settings);
+        CollectionAssert.AreEqual(new[] { near.index }, result.claimed);
+        Assert.AreEqual(WorldMap.OpenHexes(near), result.settled.Count);
+        Assert.AreEqual(WorldAuthority.Player, near.authorityId);
+        CollectionAssert.Contains(map.Claims, near.index);
+        CollectionAssert.IsEmpty(map.Claiming);
+    }
+
+    [Test]
+    public void Forecast_NamesTheHexesSocietySettlesNextInOrderAndWhen()
+    {
+        var settings = Gen();
+        var map = Fresh(7, settings);
+        Know(map, settings, map.Capital, 4);
+        var seat = map.territory.Seats.First(s => s.IsPlayers && s.HasRoom && s.adoptPerSeventh > 0f && WorldTerritory.Candidates(map, settings, 1, s).Count > 0);
+        var plans = WorldTerritory.Forecast(map, settings, new RealmContext());
+        var plan = plans.First(p => p.seats.Contains(seat.name));
+        var t = map[plan.cell];
+        int mask = t.microHeldMask;
+        Assert.AreEqual(WorldMap.OpenHexes(t) - WorldMap.SettledHexes(t), plan.hexes.Count, "every hex still to settle");
+        Assert.AreEqual(plan.hexes.Count, plan.sevenths.Count);
+        for (int i = 1; i < plan.sevenths.Count; i++) Assert.GreaterOrEqual(plan.sevenths[i], plan.sevenths[i - 1], "later hexes come later");
+        Assert.AreEqual(mask, t.microHeldMask, "forecasting changes nothing");
+        Assert.AreEqual(WorldTerritory.Candidates(map, settings, 1, seat)[0].cell, plan.cell, "the cell the seat settles next");
+        Assert.AreEqual(WorldTerritory.NextHex(map, t, WorldAuthority.Player), plan.hexes[0], "the hex Tick settles next");
+
+        // Time already waited brings the next hex nearer; too few citizens stop it altogether.
+        var waited = WorldTerritory.Forecast(map, settings, new RealmContext(), new Dictionary<string, float> { [seat.key] = 0.5f });
+        Assert.Less(waited.First(p => p.cell == plan.cell).sevenths[0], plan.sevenths[0]);
+        var few = WorldTerritory.Forecast(map, settings, new RealmContext { population = WorldTerritory.RulesOf(map).adoptionMinPopulation - 1 });
+        CollectionAssert.IsEmpty(few, "no settlers below the minimum population");
+    }
+
+    [Test]
+    public void NextHex_FillsACellFromTheBorderInwardAndSkipsCrags()
+    {
+        var settings = Gen();
+        var map = Fresh(7, settings);
+        var near = map.NeighboursOf(map.Get(map.Capital)).First(t => !t.water && !t.impassable);
+        near.microBlockedMask = 1 << 4;
+        var order = new List<int>();
+        int id;
+        while ((id = WorldTerritory.SettleHex(map, near, WorldAuthority.Player)) >= 0) order.Add(id % MicroNavigation.PerCell);
+        Assert.AreEqual(6, order.Count, "every hex but the crag");
+        CollectionAssert.DoesNotContain(order, 4);
+        Assert.AreNotEqual(0, order[0], "the heart is not where settling starts");
+        Assert.IsTrue(WorldTerritory.FullySettled(near), "the crag comes with the rest");
     }
 }

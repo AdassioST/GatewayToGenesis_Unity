@@ -1,6 +1,6 @@
 # A bare ridge through the forest; it keeps its east-west run (turned only end over end).
 tile: taiga/frozen-ridge
-biome: taiga
+macrobiome: taiga
 weight: 1
 rotations: 0 3
 legend: T=taiga-forest H=highlands P=peaks

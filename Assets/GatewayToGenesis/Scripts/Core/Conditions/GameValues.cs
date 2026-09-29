@@ -42,6 +42,9 @@ public static class GameValues
         Register("deaths", (string t, out float v) => Pop(p => p.deaths, out v));
         Register("vagrant_deaths", (string t, out float v) => Pop(p => p.vagrantDeaths, out v));
         Register("true_deaths", (string t, out float v) => Pop(p => p.trueDeaths, out v));
+        // Children born since the founding (not arrivals), and the frontier caravans that reached the gates.
+        Register("births", (string t, out float v) => Pop(p => p.Births, out v));
+        Register("caravans", (string t, out float v) => Pop(p => p.Caravans, out v));
         Register("morale", (string t, out float v) => Stat("morale", out v));
         Register("satisfaction", (string t, out float v) => Stat("satisfactionlevel", out v));
         Register("civic", (string t, out float v) => Civics(c => c.IsCivicActive(t) ? 1f : 0f, out v));
@@ -63,6 +66,15 @@ public static class GameValues
         // Exact discovered feature IDs: seeing a silhouette is not enough to tell its story.
         Register("map_feature", (string t, out float v) => World(w => w.Map == null ? 0 :
             w.Map.Tiles.Count(tile => tile.explored && string.Equals(tile.feature, t, StringComparison.OrdinalIgnoreCase)), out v));
+        // Discoveries (SpeciesKnowledge; rewards for Enlightenment, never requirements): "species_known" the species
+        // identified (with a species id: its level, 1 sighted, 2 identified, 3 observed, 4 understood); "sites_identified"
+        // the resource sites identified (with a kind word such as "fauna", or a site id: only those). The living species,
+        // by id: "species_population" its numbers over what its land holds (0-100), "species_behavior" its temper toward
+        // your people (-100 to +100).
+        Register(SpeciesKnowledge.SpeciesKnownDomain, (string t, out float v) => World(w => SpeciesKnowledge.Value(w.Map, w.Settings.generation, SpeciesKnowledge.SpeciesKnownDomain, t, SpeciesLoreKeeper.View), out v));
+        Register(SpeciesKnowledge.SitesIdentifiedDomain, (string t, out float v) => World(w => SpeciesKnowledge.Value(w.Map, w.Settings.generation, SpeciesKnowledge.SitesIdentifiedDomain, t), out v));
+        Register(SpeciesKnowledge.SpeciesPopulationDomain, (string t, out float v) => World(w => SpeciesKnowledge.Value(w.Map, w.Settings.generation, SpeciesKnowledge.SpeciesPopulationDomain, t), out v));
+        Register(SpeciesKnowledge.SpeciesBehaviorDomain, (string t, out float v) => World(w => SpeciesKnowledge.Value(w.Map, w.Settings.generation, SpeciesKnowledge.SpeciesBehaviorDomain, t), out v));
         Register("expedition_party", (string t, out float v) => World(w => w.ExpeditionUnits.Count(u => u.companions != null && u.companions.Count > 0), out v));
         Register("expedition_worn", (string t, out float v) => World(w => w.ExpeditionUnits.Count(u => u.fatigue >= 40f), out v));
         Register("expedition_mishaps", (string t, out float v) => World(w => w.ExpeditionUnits.Sum(u => u.mishaps), out v));
@@ -92,6 +104,34 @@ public static class GameValues
         // The food stores: their food value, and the kinds held in quantity.
         Register("stored_food", (string t, out float v) => { v = Pantry.StoredValue; return Pantry.Instance != null; });
         Register("stored_food_kinds", (string t, out float v) => { v = Pantry.Instance != null ? Pantry.Instance.Variety : 0f; return Pantry.Instance != null; });
+        // The culture: "culture" (founded, named, cohesion 0-100, sevenths, reforms, cells, national_foods, pending_food, unity,
+        // happiness 0-100, joy 0-100, luxury 0-100, holidays, festivals, landmarks, dishes, drinks, traditions, observances,
+        // observances_kept, observance:<id>,
+        // myth:<id>, or a family's share 0-100: "culture:Weaver"); "national_food" 1 when a resource is national.
+        Register("culture", (string t, out float v) => { v = CultureSystem.Instance != null ? CultureSystem.Instance.Value(t) : 0f; return CultureSystem.Instance != null; });
+        // Hypotheses (SpeciesHypotheses): "species_deduced" species whose every question was worked out; ":<id>" questions answered for one.
+        Register("species_deduced", (string t, out float v) => World(w =>
+        {
+            var lore = SpeciesLoreKeeper.View;
+            if (string.IsNullOrWhiteSpace(t)) return SpeciesHypotheses.DeducedCount(lore?.state, w.Settings.generation);
+            var record = lore?.Of(t.Trim());
+            return record?.hypotheses?.Count(h => h != null && h.confirmed) ?? 0;
+        }, out v));
+        // Rumours (WorldRumours): "rumours" heard, "rumours:open", "rumours:confirmed", "rumours:confirmed:landmark".
+        Register("rumours", (string t, out float v) => { v = RumourKeeper.Value(t); return RumourKeeper.Instance != null; });
+        // The kitchen's trials (KitchenTrials): "kitchen" batches tried, "kitchen:found" hidden recipes found, "kitchen:found:<id>" 1 once found.
+        Register("kitchen", (string t, out float v) => { v = CultureSystem.Instance != null ? CultureSystem.Instance.KitchenValue(t) : 0f; return CultureSystem.Instance != null; });
+        Register("national_food", (string t, out float v) => { v = CultureSystem.Instance != null && CultureSystem.Instance.IsNationalFood(t) ? 1f : 0f; return CultureSystem.Instance != null; });
+        // Teaching keeps the same keys as culture (teaching_orders, teaching_bearers, institution:<id>, ...).
+        Register("teaching", (string t, out float v) => { v = CultureSystem.Instance != null ? CultureSystem.Instance.TeachingValue(t) : 0f; return CultureSystem.Instance != null && !float.IsNaN(v); });
+        // The culture's memory (T03): "memory" or "memory:kept" (causes kept lately), "memory:causes" (remembered),
+        // "memory:dedications" (active), "memory:morale" (the Remembrance morale now), "memory:cause:<evidence id>" 1 once remembered.
+        Register("memory", (string t, out float v) => { v = CultureSystem.Instance != null ? MemoryValue(CultureSystem.Instance, t) : 0f; return CultureSystem.Instance != null; });
+        // The Edicts: "edicts" (established, capacity, active, accord -100..100, decrees); "stance" 1 while
+        // "<stance>:<option>" is the law ("stance:strangers:sealed"); "edict" 1 while an edict is in force.
+        Register("edicts", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("edicts", t) : 0f; return EdictSystem.Instance != null; });
+        Register("stance", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("stance", t) : 0f; return EdictSystem.Instance != null; });
+        Register("edict", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("edict", t) : 0f; return EdictSystem.Instance != null; });
         // Placeholder: Keynote Relics (Celestial Astrology) have no system yet, so none is ever held.
         Register("keynote_relics", (string t, out float v) => { v = 0f; return true; });
         // Legends: "legend" 1 once met, "legend_rank" 1-5, "fragments" (a legend's Lyrical Fragments, or one kind:
@@ -104,6 +144,12 @@ public static class GameValues
         Register("ballad", (string t, out float v) => Events(e => e.IsBalladComplete(t) ? 1f : 0f, out v));
         Register("ballad_verses", (string t, out float v) => Events(e => e.BalladVersesTold(t), out v));
         Register("legends_met", (string t, out float v) => Legends(l => l.RecruitedCount, out v));
+        Register("affection", LegendRelationshipValues.Affection);
+        Register("affection_progress", LegendRelationshipValues.Progress);
+        Register("relationship", LegendRelationshipValues.Significant);
+        // The people's health: "health:Nutrition" (or "Disease Burden", "Sanitation", "Exposure", "Harmonic Stability")
+        // is the pressure's level 0-100 while active, 0 while dormant; "health" alone counts the active pressures.
+        Register("health", (string t, out float v) => { v = 0f; return PopulationHealth.Instance != null && PopulationHealth.Instance.TryValue(t, out v); });
     }
 
     /// <summary>Add or replace the resolver for a domain.</summary>
@@ -280,5 +326,21 @@ public static class GameValues
         var weather = CelestialWeatherSystemLogic.Instance;
         value = weather != null ? read(weather) : 0f;
         return weather != null;
+    }
+
+    // The culture's memory, read through its public questions (the memory's own file stays T03's).
+    private static float MemoryValue(CultureSystem culture, string target)
+    {
+        string t = (target ?? string.Empty).Trim();
+        if (t.StartsWith("cause:", StringComparison.OrdinalIgnoreCase)) return culture.RememberedCause(t.Substring(6).Trim()) != null ? 1f : 0f;
+        switch (t.ToLowerInvariant())
+        {
+            case "":
+            case "kept": return culture.KeptMemories.Count;
+            case "causes": return culture.MemoryCauses().Count;
+            case "dedications": return culture.MemorialDedications().Count(d => d.Counts);
+            case "morale": return culture.RemembranceMorale;
+            default: return 0f;
+        }
     }
 }

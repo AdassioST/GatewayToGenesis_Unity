@@ -68,6 +68,7 @@ public static class EventText
             case EventConsequence.ConsequenceType.TechnologyEnlightened:
             case EventConsequence.ConsequenceType.UnlockEvent:
                 return ConsequenceTone.Good;
+            case EventConsequence.ConsequenceType.PopulationPercentChange:
             case EventConsequence.ConsequenceType.PopulationChange:
                 return ConsequenceTone.Bad; // events only ever remove population
             case EventConsequence.ConsequenceType.DeathsChange:
@@ -116,6 +117,10 @@ public static class EventText
                 return LesserOpusCatalog.SplitTarget(c.targetName, out string opusWho, out var opus)
                     ? $"{WhoLabel(opusWho)}: Lesser Opus — {opus.name}. Title remains locked: {opus.futureTitle}."
                     : "Unknown Lesser Opus";
+            case EventConsequence.ConsequenceType.PopulationPercentChange:
+                return $"{amount}% of the residents lost (rounded down to whole people)";
+            case EventConsequence.ConsequenceType.HousingPercentChange:
+                return $"Housing {sign}{amount}% (rounded down to whole places)";
             case EventConsequence.ConsequenceType.PopulationChange:
                 // Events can only remove population; newcomers arrive as vagrants.
                 return $"{amount} Population Have Been Killed{total}";
@@ -139,6 +144,12 @@ public static class EventText
                 return $"Click Power {sign}{amount} For Section {c.targetName}{duration}";
             case EventConsequence.ConsequenceType.ClickPowerPercentChangeSection:
                 return $"Click Power {sign}{amount}% For Section {c.targetName}{duration}";
+            case EventConsequence.ConsequenceType.SettlementDamage:
+            {
+                string place = string.Equals(c.targetName, "capital", StringComparison.OrdinalIgnoreCase) ? "The Capital"
+                    : string.Equals(c.targetName, "exposed", StringComparison.OrdinalIgnoreCase) ? "Your Most Exposed Settlement" : c.targetName;
+                return gain ? $"{place} Is Repaired By {amount}" : $"{place} Is Pillaged For {amount} Damage";
+            }
             case EventConsequence.ConsequenceType.WeatherChange:
                 if (string.Equals(c.targetName, "clear", StringComparison.OrdinalIgnoreCase)) return "The Winds Have Fallen Silent";
                 return c.value == 1 ? $"The Weather Has Permanently Changed To {c.targetName}" : $"The Weather Has Changed To {c.targetName}";
@@ -147,6 +158,13 @@ public static class EventText
             case EventConsequence.ConsequenceType.FragmentChange:
                 if (!BalladActors.SplitTarget(c.targetName, out string who, out var kind)) return $"{c.targetName} {c.value:+#;-#;0} Lyrical Fragments";
                 return $"{WhoLabel(who)} {(gain ? "Gain" : "Lose")}{Plural(who)} {amount} {LyricalFragments.Name(kind, amount)}";
+            case EventConsequence.ConsequenceType.AffectionTest:
+                return LegendRelationshipRules.SplitTarget(c.targetName, out string from, out string to, out string thread)
+                    ? $"{WhoLabel(from)} toward {WhoLabel(to)}: {(gain ? "Relation Growth (+12 affection)" : "Relation Fracture (-12 affection)")} ({thread} Thread; changes stage only if already at its threshold)" : "Unspecified relationship test";
+            case EventConsequence.ConsequenceType.EraScoreChange:
+                return $"{sign}{amount} Era Score";
+            case EventConsequence.ConsequenceType.CultureChange:
+                return CultureSystem.ExpandText(CultureRules.Describe(c.targetName, c.value));
             default:
                 return $"{c.type} {c.targetName} {c.value:+#;-#;0}";
         }

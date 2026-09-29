@@ -69,6 +69,7 @@ public static class SaveSession
     {
         Initialize();
         Current = new SaveDocument { identity = WorldIdentity.Create(Catalog(), WorldGenerator.Version, Storage), name = string.IsNullOrWhiteSpace(name) ? "Arcanoria" : name.Trim() };
+        RuntimeUnits.Clear();
         Achievements.Tracker.Restore(Array.Empty<string>());
     }
     public static SaveDocument Read(string id, bool backup = false)

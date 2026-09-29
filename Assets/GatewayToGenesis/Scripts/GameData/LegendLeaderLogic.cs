@@ -36,7 +36,7 @@ public class LegendLeaderLogic : SingletonBehaviour<LegendLeaderLogic>
     {
         var progress = LegendProgress.Instance;
         var world = WorldSystem.Instance != null && WorldSystem.Instance.Map != null ? WorldSystem.Instance : null;
-        return GameCatalog.Legends.All.Where(l => l != null && (progress == null || progress.IsRecruited(l.legendName)) && (world == null || world.ExpeditionOf(l.legendName) == null));
+        return GameCatalog.Legends.All.Where(l => l != null && (progress == null || (progress.IsRecruited(l.legendName) && !progress.IsMissing(l.legendName))) && (world == null || world.ExpeditionOf(l.legendName) == null));
     }
 
     /// <summary>Unseated legends that qualify for a seat.</summary>

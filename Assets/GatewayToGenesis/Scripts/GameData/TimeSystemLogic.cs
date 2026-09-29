@@ -41,6 +41,9 @@ public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
 
     public bool IsRitualSeventh => CurrentSeventh == SeventhsPerPhase;
 
+    /// <summary>The current Cycle's name ("Overture").</summary>
+    public string CycleName => currentCycleName;
+
     public event Action<int> OnPhaseChange, OnEchoChange, OnCycleChange, OnRitualSeventh, OnSeventhChange;
 
     private float timeSinceLastSeventh;

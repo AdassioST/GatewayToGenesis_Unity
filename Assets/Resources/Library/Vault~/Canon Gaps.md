@@ -27,6 +27,81 @@ Kept as it was; each needs a vault note (or a line in one) before it can change.
 
 - **Resources**: Food ("Peaches, perhaps?"; the vault's Age 0 food is the Auric peach, now linked from Food's
   tooltip), Duskstone, Elderwood, Faith, Research.
+- **Bestiary** (Sept 28, 2026; `World.asset` `species`, `CreatureTaxonomy`, vault: Arcanorian Ecology.md, "The Nature of a Species"): the diet,
+  stance and subgroup taxonomy is the owner's own AECOR design (2021), not vault canon, and never applies to the
+  Atonalis. Every species name and assignment is a game proposal: the twelve Fauna sites' species (Moonveil Moths as
+  detritivores whose larvae eat fallen leaves; Choir Cicadas and Steppe Aurochs as Wrathful; River Trout as Benign
+  omnivores) and the three predatory blooms as Trapper Apex Predators. Auric Structure shares follow the table in
+  Pure Light.md where it has a row (ordinary mammals 0.9, insects 0.95); the Pure Light animals' (0.3-0.5) and the
+  blooms' (0.3) have none. Group sizes, mating and pace that AECOR leaves open are proposals.
+- **Ecology** (Sept 28, 2026; `World.asset` `ecology`, `WorldEcology`, vault: Arcanorian Ecology.md, "Where Creatures Live"): every number is a game
+  proposal (groups per cell, growth by pace, pressure, Pure Light Coherence need 0.6 x Pure Light share, predation,
+  hunt take 6% of the land's capacity, a hunt bringing 35% of the den's listed harvest, depletion at 20%, dispersal,
+  new dens at 35%), and so are the prey lists (Grey Wolf on the five grazers, Bog Eel on River Trout). The Pure Light
+  fragility follows Pure Light.md (the more Pure Light, the more a lineage depends on precise Coherence); the numbers do
+  not come from the vault. Owner decision (Sept 28): a den is hunted once a **Phase** (other sites once an Age); the
+  take and haul were rebalanced for it (hunted every Phase a herd wears down; once an Echo a medium-pace one holds).
+- **Behavior** (Sept 28, 2026; `World.asset` `behavior`, `WorldBehavior`, vault: Arcanorian Ecology.md, "Behavior: The Memory of a Lineage"): the idea (a species
+  remembers who hunted or spared it and spreads the word) is the owner's, from AECOR; the ladders (fleeing species:
+  lets you near / flees when threatened / flees on sight; the rest: lets you near / defends itself / defends its
+  territory / attacks on sight), the new "lets you come near" response, and every number (a step per 0.34 temper, hunt
+  -0.06, habitat taken -0.6 per whole habitat, living beside it +0.04 an Echo up to one step, 35% of every change spread
+  to the lineage, 30% kept at each Age, hunts bring 60% from a species that learned to flee you, 0.35 danger around a
+  den turned hostile) are proposals.
+- **Echo rhythms** (Sept 28, 2026; `World.asset` `rhythm`, `WorldRhythm`, vault: Arcanorian Ecology.md, "The Creatures' Calendar"): the calendar is canon
+  (Cycle.md: each Echo's theme and three Phases, the Ritual Seventh as attunement's peak with the Full Moon and the
+  fullest Lunehymn flow), but the vault has no note on what each Echo does to creatures. So these are proposals read
+  from the themes: births in Resonance (x1.6) and Resonance forgiving twice as fast; range and yields in Crescendo
+  (x1.3); decay feeding decomposers (x1.8) and trust fracturing (x1.5) in Dissonance; dormancy (births x0.4, yields
+  x0.7) and hungry predators straying onto settled land (0.25 danger) in Silence; effects peaking in each Echo's middle
+  Phase (0.5 / 1 / 0.5); at each Ritual Seventh Pure Light species (50%+) surging 8% or overloading 5% by their range's
+  Coherence, silver water counting +0.15, creatures calming +0.03 toward whoever let them be that Phase, and a hunt
+  then costing twice the trust. The Resonance Tides of the Lunar Abyss wait for the Crescent Mist Peaks.
+- **Species knowledge and the Bestiary** (Sept 28, 2026; `SpeciesKnowledge`, `BestiaryWindow`, vault: Arcanorian Ecology.md,
+  "Knowledge of Creatures"): the knowledge levels (Sighted, Identified) and the Bestiary window are game design, not vault canon (the vault's
+  Bestiary folder holds Pure Light, Auric Structure and Eleos Bloom, and says nothing of how a people records
+  creatures). Proposals: **Knowledge Sanctums** unlocks the
+  Bestiary (unlockable "Bestiary", its line "Write down what walks beyond the walls."); the eurekas "Identify 2
+  creatures" (Knowledge Sanctums), "Identify a resource site" (The Rekindling) and "Identify the Wild Bee, whose honey
+  never spoils" (Resource Preservation).
+  Second half (Sept 28, 2026; `SpeciesLore`): the levels **Observed** and **Understood**, and what each reveals, are game
+  design. Proposals: 3 observations make a species Observed (an Echo with an identified den within 2 hexes of your
+  land, a hunt, and each further place a den of it was found each count 1); the Special unlockable **Creature Studies**
+  ("Watch long enough, and the herd tells you what it remembers.") makes Observed species Understood and sits on
+  **Vital Winds Mastery** (Knowledge Sanctums' child; its theme is windmills, so the alternative is Celestial
+  Astrology); the notice "The ways of the {species}".
+- **Resource sites** (Sept 27, 2026; `World.asset` `resourceSites`, WORLD_GENERATION.md): the owner named highland
+  rice, earth-beans, Pure Light animals, lesser Glimmerfern groves, rays of Aetherlight, Emberwhisper spires and
+  Lunehymn wells; the other names are game proposals with no vault note: Lanternback Grazers, Ember Salamander Den
+  (the vault's fire-lizard Pure Light), Moonveil Moths, Choir Cicada Swarm (the vault's Pure Light concert that ruins
+  the Auric peach trees), Elderwood Sentinel, Silverreed Beds, Hollow Thornbriar, Skyglass Shards, Sour Tar Seep,
+  Resonant Hot Spring, Bitter Root Hollow, Deep-Rooted Grain Stand, Feral Auric Peach Trees, Duskstone Outcrop. The new
+  resources Highland Rice, Sky Glass, Silverreed and Lumenwool and the Valuables section have placeholder text and
+  borrowed icons. Every land value, aura, harvest, grievance and planting number is a proposal, as is the prose of the
+  four event lines (The Terraces No One Planted, The Moonlit Vigil, Lanterns in the Grass, The Whispering Spire).
+- **Cover and ordinary animals** (Sept 27, 2026; `World.asset` `covers`, WORLD_GENERATION.md): the owner asked for deep
+  forests; Mistfen, Reed Sea, Canyon Maze, Bramble Thicket and Ashen Haze are game proposals with no vault note, as are
+  the animals (Steppe Aurochs, Highland Ibex, Taiga Elk, River Trout, Wild Bees, Bog Eels, Wild Boar, Grey Wolves), the
+  hidden sites (Heartwood Hollow, Drowned Cache, Echo Vault, Ash-Buried Relics) and the resources Game Meat, River Fish,
+  Wild Honey, Hides and Peat (placeholder text, borrowed icons). Whether ordinary animals share the world with Pure
+  Light species this way is not settled in the vault.
+- **Eleos Blooms** (Sept 27, 2026; `World.asset` `resourceSites` kind Bloom and `eleos`, WORLD_GENERATION.md): the
+  eleven species and their tiers come from Eleos Bloom.md (Shame Moss, Sorrowbells, Memory Marigolds, Vow Orchids,
+  Lullroots; Candlevein Bloom, Xochi-Singers, Skyroot Matriarch; Threshold Cushion, Glottis-Mouth Trap, Hearth-Eater),
+  and so do Eleos Tea, Lumen Seeds needing an emotional imprint, and withering without residue. Game proposals with no
+  vault source: the ground each grows on; the healer/listener/predator split as a map mechanic; Emotional Residue as a
+  number fed by settlements, their strain, ruins and Dissonance plus a small "wild" baseline; every land value, aura,
+  danger, soothe and residue number; the "Lured by a bloom" mishap; the untouchable lines; the harvest and card
+  wording (condensed from the note, with nothing explicit kept); Eleos Tea's icon (borrowed). Soul-Stitcher, Tier 3
+  Nymphic blooms (Bride-of-the-Bell, Velvet Widows) and Tier 4 dryads are left out: later Ages and Lazarus's garden.
+  Fated Flowers, Forsaken Flowers and Glimmerfern (owner direction, same night) are sterile blooms that grow by
+  themselves. Canon: Rose Seeds come from slain Atonalis, Forsaken Flowers are Fated ones decayed by sorrow, and
+  Glimmerfern rises from that decay. Game proposals: "history" as a number (ruins, Atonalis Nests, Old World roads,
+  landmarks, Sacred Sites, old settlements, ruin-like ground) and "hurt" (ruins' grief, strain, Dissonance); the
+  landscape moving once an Echo (sprouting, decay over about three Echoes and within one where Dissonance is high,
+  Forsaken Flowers healing at Coherence 0.7+, Glimmerfern fading when its source is gone); Moonlit Glimmerfern along
+  silver rivers and the Glimmerfern Lakeshore around lakes they feed (from Glimmerfern.md's "thrives in moonlit
+  groves"); every threshold and count; their descriptions and untouchable lines.
 - **Sections**: Academia, Golden Hymn Citadel, Great Fields *and* The Great Fields (two sections with near-identical
   names), Heartlands, Industrial Valley, Residential District, The Outskirts, Vital Resource (banner lines and
   quotes), and Old World Remnants' quote. The Age of Desolation's note mentions "sparse lookout towers sending
@@ -41,6 +116,53 @@ Kept as it was; each needs a vault note (or a line in one) before it can change.
   Meat** has no vault source (the vault only names the later Age of Behemoths): its description is empty. Every food
   value, spoilage rate, forage amount and land yield is a proposal. Icons are placeholders borrowed from other art
   (plant, Elderwood2, Duskstone, beef). The "Stored Food" section's banner line is game text.
+- **Culture** (Sept 27, 2026; GameData/Culture, Resources/Culture/Culture, Resources/Events/Culture.ink): the ten
+  leaning families are the vault's civic/Enclave categories (Civic.md), and each civic's family in the table is the
+  vault's. Game proposals with no vault source: the three founding myths ("To Keep the Song", "To Share the Hearth",
+  "To Build on the Ruins") and all of Culture.ink's prose (the game's own writing); the myths' baselines and effects;
+  the pillar-to-family mapping for Chorus (Esoteric, from Civic.md's "Chorus Pillar" line under Esoteric); the
+  resource and land-word tables; each family's character effect; every drift, spread, familiarity and reform number;
+  national foods as a mechanic (the owner's design, no note yet); the demonym suggestion rule. Kitchen labels
+  (Edible, Ingredient, Spice, and Eleos Tea as a category of its own, drunk like food, because there will be many
+  teas) are the owner's; Glimmerfern as a spice leans on Registers of Magic (Culinary Arts: Eleos Blooms,
+  Glimmerfern), Eleos Tea on Eleos Bloom.md ("the original Eleos Tea"). Eleos Tea's food value (0.5) is a proposal. **Peach Pits** quote The Inescapable Hunger
+  ("trade is rich in pits and saplings"); their food value, the 0.25 left per dried peach eaten and the icon (borrowed
+  from the peaches) are proposals. Wild Honey is labelled an Ingredient (a sweetener) by the game.
+- **The life of the culture** (Sept 28, 2026; GameData/Culture/CultureLifeTuning.cs, CultureLifeRules.cs,
+  CultureNaming.cs, CultureSystem.Life.cs, GameData/World/WorldSystem.Culture.cs): the owner asked for Unity, cultural
+  parties, festivals, holidays, culture-given names, recipes, happiness and luxuries. The vault has no note on any of
+  them. Anchored where it speaks: Unity leans on the Waltz Pillar ("a massive orchestra of Spellweavers"); the Rite of
+  the First Golden Fruit on The Inescapable Hunger ("the first golden fruit of each year becomes the focus of minor
+  rites, named offerings, and tiny festivals"); the Rite of Remembrance and the **Ash-Loaf** on its mourning bakeries
+  ("Recipes explicitly dedicated to those who starved"); the kitchen on the Culinary Alchemists' Flavor Log and the
+  Feast of Abundance on Civic.md; "anything else is luxury" on the orchard economy; happiness from Indulgent Enclaves
+  (Enclave.md). Game proposals: Unity as a resource (its name, icon borrowed from Lunehymn, every source and cost),
+  the four rites, cultural parties and builders as expedition charters (The Rekindling; Woodcraft Mastery), every
+  festival and holiday number (a holiday kept every Echo on its Seventh of its Phase, 40 Unity + 20 per holiday, +20
+  morale over balance, +2 max morale each), the landmark lines (Shrine / Temple / Cathedral, Hall of Song /
+  Amphitheatre, Feast Hall / Pleasure Garden) and their costs, the naming vocabularies per family and per myth, the
+  seven dishes (Peach Soup follows the Field Kitchen's "the perfect kitchen for peach soup"; the others are the game's)
+  with their food values and icons (borrowed), the luxury categories, and the happiness model (living weighing from
+  150 citizens to as much as surviving at 1,500).
+- **Beverages and the cellar** (Sept 28, 2026; FoodClass.Beverage, the Ferment/Distill recipes in
+  CultureLifeTuning.cs, Resources/Food/Pantry.asset): the owner asked for drinks as their own class, apart from
+  edibles and from Eleos teas, covering alcohol, wines and other distillations not made from an Eleos Bloom, and
+  customizable like dishes. The vault has no note on alcohol. Game proposals: the six drinks (Rootgrain Ale, Wild
+  Honey Mead, Highland Rice Wine, Auric Peach Wine, Bitterroot Spirit, Auric Peach Brandy), their inputs, yields,
+  food values (0.4-0.6), spoilage (ales sour, wines keep, spirits never spoil), icons (borrowed from Food), the tech
+  gates (Rites of Harvest, Resource Preservation; distilling on Chants of Ash, "once the fire is mastered"), their
+  culture leanings, the "Wines & Spirits" luxury, the "national drink", and beverages being the last store opened
+  for hunger. The rule that a bloom steeped or distilled is always a tea, never a beverage, is the owner's.
+- **Invented dishes and drinks** (Sept 28, 2026; GameData/Culture/CultureInvention.cs, CultureSystem.Invention.cs,
+  UI/Culture/RecipeInventionDialog.cs): the owner asked that dishes and drinks be player made, draw their effects from
+  their ingredients scaled down by the amount of each, be treated as whatever is closest to what is being built, and
+  be the most eligible to become national. Owner's: those four rules. Game proposals: "closest" as shared ingredients
+  by share, plus half the likeness of their mix of kinds and a quarter of their leanings, among recipes of the same
+  method whose technology is known; "scaled by amount" as each ingredient's share of the batch (food value times the
+  template's gain, spoilage bettered or worsened as the template keeps against its own ingredients, peach at half or
+  more, leanings, Faith; an ingredient lends its luxury at 30% of the batch; a memorial template's Unity by the
+  ingredients shared); at most 12 recipes of 4 ingredients; joy 0.05 when invented; national eligibility 1.5x
+  familiarity rate, 1.5x preference for first at the table, 70% of the familiarity and Sevenths, offered first.
 - **Expedition lines** (Resources/Events/Expeditions.ink): The Ballad of the Infinite Hum (Fallen Auric Resonators,
   three verses) and The Golden Orchard's Seeds quote the vault where it has in-world lines (Crumbling Infrastructure,
   Relics as fertilizer, Resonator Arts' infinite hum, the abandoned crops); the connective prose between them (the
@@ -77,9 +199,10 @@ Kept as it was; each needs a vault note (or a line in one) before it can change.
   no description; the ground they lay down is named after them as placeholders (Violet Woods, Violet Glade, Expanse
   Steppe, Expanse Scrub, Taiga Forest, Taiga Bog, Rift Scar, Windswept Plain, Wind Mesa, Auric Meadow, Auric Copse),
   and so are the generic grounds (Open Sea, Shallows, Lake, Peaks, Highlands, Foothills, Open Plains, Scrubland,
-  Marsh, Woodland). The S1, S3, S4 and S6 catalogs reuse the four Age 0 environments as placeholder biomes (Survivor
-  Architecture, Crumbling Infrastructure, The Golden Ash, Broken Leyline Channels, with their vault lines); S7's is
-  "Sector 7 (placeholder)". The handmade tiles' one-line comments are design notes, not lore.
+  Marsh, Woodland). The Q1, Q3, Q4 and Q6 catalogs reuse the four Age 0 environments as placeholder Macro Biomes
+  (Survivor Architecture, Crumbling Infrastructure, The Golden Ash, Broken Leyline Channels, with their vault lines);
+  Q7's is "Quadrant 7 (placeholder)". The scale names (Quadrant, Macro Biome, Sector) are the owner's AECOR terms.
+  The handmade tiles' one-line comments are design notes, not lore.
 - **Civilization layer on the map** (Sept 27, 2026, `World.asset` → grandfields, enclaves, threats, settlements):
   the rules follow Arcanoria.md's Map Features, but these parts have no vault words and are placeholders:
   settlement names ("Developing Town 1", "Outpost 2"); the enclaves' origin wounds (Independent Watch Community,
@@ -117,10 +240,263 @@ Kept as it was; each needs a vault note (or a line in one) before it can change.
   Ornament, +2 per evolved trait; drawn origin traits fit a Scaled Cost budget by rarity (Common 0 ... Mythic 150).
   The vault's own numbers (the +5 of a primary binding, each origin trait's Binding Effect, the proficiency table)
   are used as written. The six placeholder legends draw their traits; their Soul Leitmotif is their class's affinity.
+- **Population health** (Sept 28, 2026; Resources/Population/Health.asset, vault: Arcanorian Ecology.md, "Creatures and the Health of People", all proposals):
+  the vault has no note for a people's health, so the five pressures and their names (Nutrition, Disease Burden,
+  Sanitation, Exposure, Harmonic Stability) and descriptions are game design after the owner's AECOR conditions.
+  Canon used: the Peach Sickness of The Inescapable Hunger (Nutrition), the Great Plague's waves (Disease Burden),
+  Pure Light.md's Scar Spectra (severe stress leaves marks that raise sensitivity), Static Criticality, and
+  Enclave.md (Agromagical Enclaves keep Health and Sanitation; Domestication and Agromagical Enclaves sanitize and
+  control the Luminant Moths). The numbers: a pressure wakes at 0.15 and sleeps below 0.08, rises at most 0.08 and
+  falls 0.05 a Seventh, treatments take at most 85%; scars from 0.45 (+0.02 a Seventh, heal 0.005, cap 0.5, weight 1).
+  Causes: stores of one kind 0.12 (halved by a second kind, gone at three), peaches above 60% of the stores up to 0.1,
+  starvation 0.35; crowding 0.3 (Disease) and 0.25 (Sanitation) × the unhoused share, disease vectors 0.6 (0 until
+  the ecology feeds them); settlement strain 0.3, ruins within 2 cells 0.05 each up to 0.15; the Echo of Silence
+  0.12, harsh weather 0.25 × its harshness (Boiling Rain 0.6, Weeping Sky 0.3), the unhoused 0.35; Dissonance 0.35,
+  Vibrational Fallout 0.5, Static Criticality 0.6; the Hunger's stages 0.1/0.2/0.3/0.4 (Nutrition) and 0/0/0.15/0.1
+  (Exposure), the Plague's 0.15/0.35/0.5 (Disease) and 0/0.1/0.2 (Harmonic Stability). Effects at level 1 (growth
+  needs × more Food / deaths a Seventh / morale): Nutrition 0.6/1%/15, Disease 0.4/3%/25, Sanitation
+  0.25/0.5%/10, Exposure 0.3/1.5%/12 (vagrants first), Harmonic 0.3/1%/20; growth factor at most 2.5; never below 5
+  citizens. Treatments that ease (share, full at): varied stores 0.45 at 2 kinds beyond the first, Agromagical Enclave
+  0.15 (Nutrition) / 0.3 (Disease) / 0.2 (Sanitation), Domestication Enclave 0.15, plague_preparation 0.4 at 5, spare
+  homes 0.3 at 5% of the people, Coherence 0.4 at 0.8, Resonance Anchors 0.35 at 2. Technologies that raise the
+  population checkpoints (capacity, +1 = one doubling of room): Agricultural Renewal 1, Rites of Harvest 0.5,
+  Efficient Rations 0.25 (Nutrition); Reconstruction 1, Fortified Living 0.5 (Sanitation); Fortified Living 1,
+  Woodcraft Mastery 0.5 (Exposure); Songs of the Moon 0.5 (Harmonic). Cascades: Disease ← Nutrition 0.6, Sanitation
+  0.5, Harmonic 0.4, Exposure 0.3; Nutrition ← Disease 0.3; Sanitation ← Disease 0.3; Exposure ← Nutrition 0.3.
+  Population checkpoints (people at which a pressure appears → counts in full, logarithmic between): Nutrition 25→150,
+  Disease Burden 100→1,000, Sanitation 300→3,000, Exposure 1,000→8,000, Harmonic Stability 2,500→10,000; a
+  checkpoint's notice is re-armed below 80% of it; the five notice titles ("Hunger of one crop", "Sickness takes
+  root", "The town's filth", "Too many for the roofs", "Many hearts, one Loom") and their lines are game text. The
+  order follows real societies (band, settled village, crowded village, town, city; Docs/Planning/POPULATION_GROWTH.md).
+  Placing Harmonic Stability last, as the strain of many minds on the Loom, is game design: the vault says only that
+  emotional resonance spikes shift the local amplitude. Missing from the vault: how many people make a village, town
+  or city in Arcanoria. **Scale contradiction:** Great Plague.md counts cities losing 50,000 each and 100,000 deaths
+  across a civilization in Age I, while the game plans settlements of about 10,000 by Age VI; either the plague note
+  counts real people across every settlement or the Capital's number is compressed. Also missing: any cure,
+  medicine or sanitation practice of the Age of Renewal (no technology or civic treats Disease Burden directly yet;
+  the "magical wax" of the plague doctors in Enclave.md is a natural one), and what the Plague's stages do to bodies
+  beyond "A Simple Cough".
+- **Enclave ecology** (Sept 28, 2026; World.asset `enclaves` and `enclaveEcology`, vault: Arcanorian Ecology.md, "Enclaves and Creatures", all
+  proposals): canon used is Enclave.md's families (Domestication: creatures, Pure Light, taming, druids; Militant:
+  hunters; Agromagical: growth, health, sanitation, sustenance; Auric: knowledge, science) and its Sprite-Light
+  Conclave ("a Domestication Enclave of Pure Light Elemental Sprites"; the card's description paraphrases it). Game
+  design: the Conclave stands from Age 0 on high-Coherence ground (coherence 0.6+) and keeps species at least 50% Pure
+  Light within 6 cells; "The Aureate Cloister" is an invented name for the first Auric Enclave, from the Age of
+  Renewal (the vault names no Auric Enclave). Keepers befriend what they keep by 0.08 an Echo and their suzerain by
+  0.04; your hunts of a kept species do a quarter of the harm; herds bring 0.1 Food/s per kept species at full
+  numbers; a species you know that your suzerain keepers keep is **Mastered** (a fifth knowledge level). Agromagical
+  Enclaves tend the land within 6 cells (its creatures recover 15% of what they lack each Echo). An Auric Enclave's
+  Suzerainty lets your people understand every creature they observed. Commissions at an identified den within 12
+  cells of the Enclave, once a Phase, from standing 50 (spends 10; a suzerain spends none) for 20 Food: a Militant
+  cull takes 30% of what the land holds and weighs as three hunts toward you and the hunters; Domestication taming
+  +0.25 temper; Agromagical restoring half the gap; Auric study makes the species understood. Missing from the vault:
+  the Conclave's founding Age, site and wound, how Enclaves treat creatures they do not keep, which Domestication
+  Enclave trades the Luminant Moths (E9 needs a darker one; the Conclave is "the light worth saving"), and any named
+  Auric or Militant hunting Enclave.
+- **Full creature schema** (Sept 28, 2026; World.asset `species`, `resourceSites`, `plagues`, `ecology`, `rhythm`;
+  SpeciesLore.asset tuning; vault: Arcanorian Ecology.md, "The Nature of a Species", all proposals unless quoted). Canon used (Pure Light.md,
+  Soliton.md): a Pure Light being is under 65% Auric Structure or has a dedicated Coherence-Binding organ; CBT sits in
+  wings (moths), Resonance Boxes (song), glands (pheromones, roars), fins, or armored scales; cockroach-like insects
+  95% Structure, rats 90%; Fallout barely touches a 95% "cockroach"; Pure Light-heavy lineages are near-immune to
+  ordinary sickness but die of narrowly tuned resonance plagues (Dragon's Bane, Slime Blight: their descriptions
+  paraphrase the vault); the Age of Behemoths' "gentle giant beasts". Game design: the organs' names (Hide, Wings,
+  Voice, Gland, Fins, Matrix) and the three harmonic niches (Coherent, Discordant, Leyline); Fallout harm 2 × Pure
+  Light; Leyline lineages keep 30% away from leylines; breeding Echoes (births ×2.2 there, ×0.6 elsewhere: Choir Cicada
+  in Crescendo, River Trout in Dissonance, Wild Bee and Meadow Hare in Resonance); commensal species (Granary Rat 0.9,
+  Hearth Roach 0.9) and vectors (rats 0.7, roaches 0.4; full pressure at 25 groups per settlement within 2 cells);
+  plague folklore names ("the scale-rot", "the melting") and three invented plagues (Lantern Gutter, Veil Blight, Chorus
+  Fever) with every number in World.asset `plagues`; plagues break out on torn ground (Dissonance 0.15-0.2), likelier in
+  the Echo of Dissonance (×1.8); discovery Era Score (Identified 1, Understood 1, Mastered 1; Dawnhorn Behemoth +2,
+  Screech Sabrecat +1; the Behemoth's study +40 Research). Eight invented species: Meadow Hare, Mire Ox, Dawnhorn
+  Behemoth, Cave Bear, Granary Rat, Screech Sabrecat, Hearth Roach, Ashfall Beetle; Ember Salamander made Discordant and
+  Moonveil Moth Leyline. Missing from the vault: whether 65% (Pure Light.md) or 70% (Soliton.md, "less than 70% Auric
+  Structure — or possessing dedicated Coherence-Binding Tissue") is the Pure Light line (the game uses 65%); any
+  creature disease other than the two species plagues; the slimes' Age of appearance (so no slime ecotypes yet); the
+  Behemoths' Structure share.
+- **Aftermath ecology** (Sept 28, 2026; World.asset `aftermath`, `WorldAftermath`, vault: Arcanorian Ecology.md, "The Aftermath of Creatures", all
+  proposals). Canon used (Pure Light.md): high Pure Light is magic and fragility, high Auric Structure persistence;
+  ecotypes adapt across generations, the parents never. Game design: at an Age's end each lineage loses severity ×
+  (20% + 120% × its Pure Light share), and is gone from a Macro Biome under 10% of itself; a lineage whose Macro Biome
+  has no habitat left in the new Age moves to the neighbouring ones that do; a Macro Biome left under 30% of its
+  creatures is settled by one new lineage from a list, starting at 15% of what the land holds (Dead-zone lineages only
+  where Fallout ≥ 0.2 covers their share of the range, and before the others); a lineage that lost half or more keeps
+  60% of its memory across the Age instead of the usual 30%. The list is empty: no ecotype species the vault names
+  (Dead-zone Slimes among them) has content yet. Missing from the vault: how crisis severity maps to creature losses,
+  which lineages resettle which Macro Biomes, and how rivers and forests move after a crisis.
+- **The Great Plague's moths** (Sept 28, 2026; World.asset species `luminant-moth`, den `luminant-swarm`, Enclave
+  `amberwing-lanternry`, `greatPlague`; `WorldGreatPlague`; vault: Arcanorian Ecology.md, "The Great Plague's Moths", all proposals unless quoted).
+  Canon used (Great Plague.md): Luminant Moths are beloved lantern-light, farmed and traded; their part is found
+  midway ("The Moths Are Everywhere"); in the plague era they feed on the sick; the moths are the mechanism, not the
+  root. Owner: they are not the Moonveil Moths. Game design: the Luminant Moth (70% Pure Light, Wings, Leyline,
+  commensal 0.5, vector 0.6, fast), its swarm den (Age 0, 3, on Coherence ≥ 0.2), The Amberwing Lanternry (a
+  Domestication Enclave from Age 1 that farms them; the name is invented); trade routes carry 10% of a Macro Biome's
+  moths into each other Macro Biome they pass each Echo; the Lanternry brings 0.5 groups each Echo to each Macro Biome
+  of your settlements within 16 cells; while the plague runs, moths near settlements grow by 50% × Disease Burden each
+  Echo; their part is told from Wave II (or once they are Understood, or after the Age); the Lanternry can be asked to
+  close its farms for 4 Echoes (standing 40 needed, 15 spent, 10 Food; a suzerain always agrees and spends no
+  standing). Missing from the vault: which Enclave trades the moths and its name, how fast the moths spread by trade,
+  and what ends the moth trade.
+- **Edicts** (Sept 28, 2026; `EdictCatalog`, `EdictTuning`, the Government tab's Edicts section): Government Logic.md
+  names [[Edicts]] beside Civics and council seats, but the vault has no Edicts note. Every stance, option, edict,
+  title, effect and number is a game proposal: the six stances (The Roofless, Strangers at the Gates, Hearth and
+  Cradle, The Borders, Who May Weave, Where Power Is Heard: the last two ask Pillars.md's own two questions), their
+  options, pillar leans (+3), levers (births x1.25/x0.75, caravans x1.5/x0, arrival rations x0.75, vagrants housed
+  x2) and favoring/opposing council areas; the seven edicts, their costs, durations (7-21 Sevenths) and rests
+  (21-42); three seats (counting the Head of State) to establish them, one slot per seat past two, a changed stance
+  standing 21 Sevenths (twice as long in discord), accord at +25/-25, harmony +5% Legend Effectiveness, discord -5
+  morale, an answering legend sealing at 1.25x (1.1x from a related seat). Only a Head of State may seal an edict is
+  a game rule, not canon. Dissonant laws (the vault's Slave & Servitude Auctions, Species Caste System) are left out
+  until the vault says how edicts sit on the Consonance/Dissonance spectrum; only Call to Toil is marked Dissonant.
+
+- **Living traditions** (Sept 28, 2026; GameData/Culture/Traditions/*, Culture/Integration/*; plan
+  Docs/Planning/CULTURE_REDESIGN.md T01): what the people do repeatedly becomes a named practice where it happened,
+  with its origin, bearers and history. Anchored where the vault speaks: Civic.md ("Civic are what makes them real
+  through practices, tradition, culture, and everyday life"), Enclave.md (a community formed around a wound whose
+  "recipes preserve their memory"), The Inescapable Hunger (names spoken, mourning bakeries, Ash-Loaf), the Waltz
+  Pillar (collective song). Canon-supported adaptations: The Evening Song, The Naming of the Lost, The Ash-Loaf Table.
+  Game proposals: the whole lifecycle (emerging / practised / dormant / revived), its thresholds (3 distinct Sevenths
+  and 3 occasions to become a custom, dormant after 42 Sevenths, revived by 2, 2 credit a Seventh at most), recognition
+  for Unity (25-30), local preservation (lapses 2x slower), deferral (21 Sevenths), at most 4 customs giving benefits,
+  every benefit (+3% Research, +1 max morale, +1 morale, +5% Ash-Loaf; recognised: a pillar point or +2 max morale),
+  the new free gathering **Tales at the Hearth** (its text and numbers), and The National Table (a national food's
+  record; its bonus stays the national food's). An older save's national foods get records marked "recorded before
+  traditions were kept"; nothing else is reconstructed.
+
+- **Local cultures and routes of exchange** (Sept 28, 2026; GameData/Culture/Local/*, WorldSystem.CulturalContact.cs;
+  plan Docs/Planning/CULTURE_REDESIGN.md T02): each settlement keeps its own customs; they travel only by real contact
+  (an open road, a cultural party's completed festival, founders, people admitted from a known settlement). Anchored
+  where the vault speaks: Enclave.md (autonomous communities, their interdependence along Trade Routes), Civic.md
+  (Moonlit Vigil, Ages 0-III, "practiced by ... peasants and refugees"; Sky Glass Burials, Ages 0-III, at the peaks
+  where Sky Glass forms; Culinary Alchemists, Ages I-III, "each village maintains a Flavor Log"), The Inescapable
+  Hunger (the first golden fruit's rites and tiny festivals). Explicit canon kept as local customs: Moonlit Vigil, Sky
+  Glass Burial, Village Flavor Log (keeping them in one settlement before any civic is an adaptation);
+  canon-supported: Rite of the First Golden Fruit (Age 0 only). New game rules: **Crossing Songs** (the vault names no
+  river custom; written so a river town has a voice) and the local Evening of Song. Game proposals: which ground words
+  let each begin, every number (exposure 0.6 per visit or founding, 0.3 per arrival, 0.04 a Seventh per open road,
+  2% fade; adoption at 60% exposure and 50% participation; gatherings 3 food value, +2 Unity, -4 strain, once in
+  7 Sevenths per settlement; quiet after 42 silent Sevenths; parties carry 2 customs), what interrupts a road (a threat's source on it,
+  another authority holding a cell of it), variants named "<custom> of <settlement>". Arrivals keep exactly the origin
+  reported: caravans and the founding band are of unknown origin, survivors are "found at" a place (no culture is
+  assumed for them), returning settlers name the settlement they left. The map's culture presence is labelled
+  rootedness (how long the people have lived on the land), not agreement.
+- **Hospitality and shared tables** (Sept 28, 2026; GameData/Culture/Hospitality/*; plan
+  Docs/Planning/CULTURE_REDESIGN.md T05): a settlement sets a communal table from finished food the stores hold, under
+  an explicit policy. Anchored where the vault speaks: Civic.md, Feast of Abundance (Indulgent, Ages I-III: surplus
+  thrown to the public squares, hoarding taxed, "Legends in power who give the most" earn legitimacy, communities keep
+  records of each feast's distribution), Enclave.md (the All-Welcome Cozy Inn: "everyone deserves a place"), Civic.md
+  (Culinary Alchemists' village Flavor Logs). Canon-supported adaptations: the public welcome (the Cozy Inn's open door),
+  the patron's table (a Legend giving from the stores for standing), Unity for an open table growing while the Feast of
+  Abundance is in force, and luxuries held but never shared openly being named as hoarding. New game rules: recovery
+  support (a table for a community under strain), the policies' differences and every number: table sizes (6/4/5 food
+  value, +0.05 per point of development), 3 foods at most, once in 7 Sevenths per settlement, a survival reserve of 0.25
+  food value per citizen and no table while Food falls; Unity 3/1/5 (+2 under the Feast of Abundance), strain eased
+  6/15/2 (recovery support from strain 20), joy 4-6 (+4 with a luxury shared openly), reach 100%/100%/25%, 0.15 exposure
+  each way between the host and each neighbour by open road, 1 Meaning fragment for the patron at most once in 21
+  Sevenths, a settlement counting as reached for 21 Sevenths, and up to +0.1 living (of 1) at full coverage, apart from
+  the luxuries' demand. Coverage is per settlement, never per head: the simulation keeps no local population, so the
+  guests are named only as far as they are known (recent arrivals by their reported origin, Legends whose parties
+  stand there, neighbours by open road).
+- **Ensembles and performance** (Sept 28, 2026; GameData/Culture/Performance/*; plan Docs/Planning/CULTURE_REDESIGN.md
+  T08): a cultural party performs a piece for a purpose at the end of its festival, and who performs decides how it
+  lands. Anchored where the vault speaks: the Waltz Pillar (a resonant orchestra over "a few virtuous soloists who can
+  miss a note"), Legend Relationship.md and Echoing Bonds (seven significant bonds, asymmetrical readings, "a
+  leitmotif ... when it carries weight and history"), The Inescapable Hunger (names spoken for the lost), Civic.md
+  (Polyphonic Choral Singers, Weaver, Ages IV-VI: overlaid voices, bells and Magical Relics "to enhance the Coherence of
+  regions", for recovery and rebuilding), Coherence.md. Explicit canon: the Polyphonic Chorus and its Ages, civic and
+  regional Coherence. Canon-supported adaptations: The Evening Song and the Song of the Named as performed pieces, a
+  Legend's Composure and binding (Resonance for song, Strand for memory) as readiness, the Legends' own readings of each
+  other heard in the result. New game rules and every number: outcome bands (Faltering below 0.3, Steady, Moving from
+  0.55, Resonant from 0.8), readiness by Composure (1, 0.85, 0.5, 0.2, 0) and binding (+0.01 a point above 5, -0.04 to
+  +0.1), readiness weighing 0.6, the weakest voice counting 1/n, +0.05 a voice past the first (at most 0.15), ties
+  +0.02 a consonant stage and -0.03 a dissonant one per direction (+0.02 for a shared wound in a remembrance; each pair
+  within 0.15, all within -0.25/+0.2), the place (+0.08 a town keeping the custom, up to +0.05 rootedness, +0.08 a loss
+  within 2 cells, -0.06 from strain 40); echoes of 7 Sevenths (21 for a chorus) easing strain 3/1.5/1/2 a Seventh by
+  purpose, morale +1 only when Moving (+2 Resonant) for the 2 strongest echoes, one echo per settlement, a chorus lending
+  +0.1 Coherence within 1 cell (at most 0.2 on a cell; an overlay, the ground never changes); a plan lapsing after 7
+  Sevenths; affection +1/+2/+3 on an existing significant bond, never a new tie or a stage; no Meaning of its own.
+- **Apprenticeships and institutions** (Sept 28, 2026; GameData/Culture/Transmission/*; plan
+  Docs/Planning/CULTURE_REDESIGN.md T06): a custom is carried on because someone learned it. A Legend who carries it,
+  or the community that keeps it (no Legend is needed for a village custom), teaches it at a settlement's hearth or at an
+  institution. Preserve makes a new bearer, adapt makes a documented local form that keeps its parent, and an
+  institution that keeps records can write it down (a record is not a practitioner). Anchored where the vault speaks:
+  Civic.md, Culinary Alchemists (Agromagical, Ages I-III, "each village maintains a Flavor Log"), Ballad & Fantasy Plays
+  (Weaver, Ages II-IV, guilds that "preserve the Ballads of Legends"), Cooking Guilds (Agromagical, Ages IV-VI, the
+  "evolution of Culinary Alchemists"). Explicit canon: the three institutions and their Ages. Canon-supported
+  adaptations: where each meets (Flavor Log: a Feast Hall; the guild of plays: a Hall of Song or Amphitheatre; Cooking
+  Guild: a Feast Hall or Pleasure Garden), and a Flavor Log in the same hall growing into a Cooking Guild. New game
+  rules: the Hearth (informal teaching everywhere from the Age of Desolation, 1 seat, up to complexity 2), teaching
+  orders and every number: seats (Flavor Log 2, guild of plays 2, Cooking Guild 3), the most complex practice each
+  teaches (3, 3, 4), founding Unity (15, 20, 40), 3 Sevenths per point of complexity, +1 complexity to adapt, x1.5 when
+  taught from a record, nothing of complexity 3+ from a record alone, complexities (tales, evening song, naming of the
+  lost 1; Ash-Loaf Table, National Table 2; other food 2, other 1), a paused order keeping its progress and seat, and
+  40 finished orders kept. Teaching grants no technology, ingredient or recipe.
+- **Public memory and civic legitimacy** (Sept 28, 2026; GameData/Culture/PublicMemory/*, Events/PublicMemory.ink; plan
+  Docs/Planning/CULTURE_REDESIGN.md T09): the council says a practised tradition shows a promise in force, and what the
+  culture recorded is compared with it. What is said (accounts, versioned) is kept apart from what was recorded (tables,
+  admissions, dedications, deaths, memories), which no account changes. Anchored where the vault speaks: Civic.md, Feast
+  of Abundance (Indulgent, Ages I-III: redistribution, hoarding taxed, legitimacy for those who give, records of each
+  feast's yields), Harmonic Quorum (Regal, Ages I-III: a policy cannot pass without Resonance), The Ballad of Hollow
+  Banquet, and The Inescapable Hunger (mourning bakeries, bread for the starved). Explicit canon: the Feast of Abundance
+  as a promise of redistribution, and the Harmonic Quorum refusing a revision or a sponsored account while the council is
+  in discord. Canon-supported adaptations: the two disputes (The Hollow Table, The Loaf No One Bakes) and the Lesson of
+  the Hunger read from the Measured Cradle stance. New game rules: the Open Gate and Almshouse Charter promises (over
+  Edicts stances that are themselves proposals), the link itself, and every number: a 42-Seventh window of records, a
+  gap at 2 or more records against and more against than for, at most 3 links, 10 Unity to link, answers (acknowledge
+  10 Unity, revise free, a Legend's account 20 Unity), 42 Sevenths' rest before newer records can reopen a dispute, 63
+  before a revised claim can be made again, and the culture's part of the council's accord (+3 a promise borne out, -5
+  an open dispute, +2 for 21 Sevenths after an acknowledgement, -3 for up to 42 Sevenths for a contested account the
+  records still contradict, capped at 10 either way). Places stand by what was recorded there, never by their customs or
+  origin. The stories' prose is the game's.
+- **Kitchen trials** (Sept 28, 2026; `KitchenTrials`, `Experiments`, `CultureSystem.Experiments`, `CultureLifeTuning`
+  `trialsPerSeventh`/`hiddenRecipes`; plan Docs/Planning/DISCOVERY_LOOP.md): a dish or drink must be tasted in a
+  trial batch (which uses up its ingredients) before it can be named, and the Flavor Log whispers of recipes no one
+  wrote down, found only by making them. Anchored where the vault speaks: Civic.md, Culinary Alchemists ("each village
+  maintains a Flavor Log"). New game rules, every one a proposal: 3 trials a Seventh, 40 trials remembered (found ones
+  kept), a mix recognised by its shares whatever the batch size, warmth (a part at its share counts whole, at the
+  wrong share half; Faint above 0, Close at half, Very close at three quarters; an exclusive recipe spoiled by
+  anything else), three hints each (the first from the start, the next at Close, the last at Very close), 2 Era Score
+  per recipe found. The four whispered recipes are game inventions, names, parts, shares, hints and rewards alike:
+  Everkeep Honeycake (Wild Honey, Deep-Rooted Grain, Peach Pits; x1.25 food, never spoils), Moonwater Broth (River
+  Fish, Glimmerfern, Silver Salt; x1.3, Fine Dishes, +0.15 Faith a unit), Ashen Hearthbread (Ash-Bread, Bitter Roots,
+  Wild Honey; x1.2, +1.5 Unity a batch) and Sunmead of the First Harvest (fermented Wild Honey, Dried Auric Peaches
+  and Auric Saffron and nothing else; x1.2, Sweets, +0.1 Faith a unit).
+- **Rumours** (Sept 28, 2026; `WorldRumours`, `RumourKeeper`, `RumoursWindow`, `FeatureSpec.rumour`; plan
+  Docs/Planning/DISCOVERY_LOOP.md): landmarks, wonders, ruins, Sacred Sites, Enclaves and dens no longer show through
+  the fog; the people hear of them as a direction and distance from the capital and a vague word, and the map marks a
+  haze near the thing, never on it. No vault note speaks of rumours; the mechanism, its wording ("a few days away",
+  "at the edge of what anyone knows") and every number are proposals: 2 at the start, 1 each Echo, 1 per expedition
+  journey completed, at most 5 open, an area within 3 cells of the thing with a radius of 5, nothing within 5 cells
+  of the capital, 12 and 30 cells for "near" and "far", +1 Era Score when one is confirmed. A feature's authored
+  `rumour` line replaces the generated one; none is authored yet.
+- **Species hypotheses and tech riddles** (Sept 28, 2026; `SpeciesHypotheses`, `SpeciesLoreKeeper`, `BestiaryWindow`,
+  `TechnologyData` `riddle`/`clue`; plan Docs/Planning/DISCOVERY_LOOP.md; vault: Arcanorian Ecology.md): the Bestiary
+  asks when an identified species breeds, where it thrives and (meat-eaters only) what it hunts; the player guesses,
+  and watching (an identified den within 2 cells of held land, each Echo) and hunting test only the guess made.
+  Arcanorian Ecology.md gives Pure Light lineages a harmonic niche and some species a breeding Echo, but not that a
+  people learns them by guessing; the questions, the rule that "no season of its own" needs all four Echoes watched,
+  refuted guesses kept as ruled out, insight (+1 Era Score for a first guess confirmed) and answering every question
+  standing in for the research (Understood) are game design. Niche and breeding now stay hidden on the map card and in
+  the Bestiary until worked out. Riddles on Enlightenment goals are game text, not canon: Chants of Ash (the red
+  spire), Knowledge Sanctums (name two creatures), Resource Preservation (the wild bees), Songs of the Moon (the
+  Glimmerfern) and The Rekindling (identify a hidden site), each with a clue at half the goal (Chants of Ash, Songs of
+  the Moon and The Rekindling also after 2, 3 and 1 journeys); every riddle, clue and threshold is a proposal.
+
+## Population rework supersedes the earlier proposal (September 28, 2026)
+
+The owner explicitly set aside canon population numbers. The preceding population ladder and the compressed 10,000 target are historical design notes, not current game rules. One resident now always means one person. The 50,000 plague loss is not calibration evidence. The implemented model uses calorie-equivalent rations, annual demographic rates, explicit migration sources and actual food supply; see Docs/Planning/POPULATION_GROWTH.md for sources, assumptions and limits. Physical health pressures have no small-population immunity. No Age automatically grants a city-sized population or capacity.
+
+The frontier (owner direction, same day): the world begins with 21 founding members at the gates. Until the settlement reaches 150 people, gameplay pacing applies: births up to 100x faster, fading out; caravans drawn by stored food; and survivor bands found by expeditions. All these numbers are proposals, not history (POPULATION_GROWTH.md, "The frontier"). One Cycle lasting one year is this model's choice: Environment Logic.md gives the Seventh/Phase/Echo/Cycle counts but no length in years. The first-birth story (StarterVolume `first_birth`, "The First Cry": +1 Era Score, morale) is placeholder prose. Only its achievement, "There is Beauty in That", is canon (Achievement.md).
 
 ## Gaps and contradictions in the vault
 
 For the vault (nothing there was changed).
+
+- **The Pure Light line**: Pure Light.md says a species with "less than **65%** Auric Structure" or a dedicated
+  Coherence-Binding organ is a Pure Light being; Soliton.md says "less than 70%". The game uses 65% (Sept 28, 2026, E10).
+- **Glimmerfern.md** says it "thrives in moonlit groves", while Eleos Bloom.md and the Auric Aria's myth have it rise
+  from the decay of Forsaken Flowers. The game keeps both, by the owner's direction (Sept 27, 2026): a sterile bloom
+  with no seeds that grows by itself around Forsaken Flowers or on hurtful ground (ruins, Dissonance), and in moonlit
+  groves read as silver rivers (a leyline on real water) and the shores of lakes they run into.
 
 - **Glimmerfern.md** still says "Resonates with Moonshine." The game now calls it Lunehymn; "Moonshine" is an alias
   of the Lunehymn entry so the line still links.

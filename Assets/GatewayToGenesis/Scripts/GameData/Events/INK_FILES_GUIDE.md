@@ -333,6 +333,7 @@ Use these snippets to compose `# conditions:` blocks, `&C requirements:` blocks,
   - Time: `seventh {op} {int}`, `phase {op} {int}`, `echo {op} {int}`, `cycle {op} {int}`, `ritual_seventh == 1`
   - Population: `population:population {op} {int}`, `housing:housing {op} {int}`, `vagrants:vagrants {op} {int}`
   - Deaths: `deaths:deaths {op} {int}`, `vagrant_deaths:vagrant_deaths {op} {int}`, `true_deaths:true_deaths {op} {int}`
+  - Births and caravans: `births: {op} {int}` (children born since the founding; arrivals never count), `caravans: {op} {int}` (frontier caravans that reached the gates)
   - Event Spacing: `no_event_in_sevenths:{int}` (checks if no events happened in X sevenths)
   
 ### Event Cooldown
@@ -386,6 +387,7 @@ The forest grows darker as you venture deeper into its heart...
   - `resource:{Name} +/-{int}`
   - `production:{Unit Name} +/-{int}` (changes production units)
   - `stat:{Stat Name} +/-{int}` (e.g., `stat:morale +10`)
+  - `era_score:{reason} +/-{int}` awards Era Score to the current Act; the reason is what the Chronicle shows (e.g. `era_score:The first child born +1`)
   - Population: `population:population -{int}`, `housing:housing +/-{int}`, `vagrants:vagrants +/-{int}`
   - Deaths: `deaths:{label} +/-{int}` (use dedicated types below as preferred), `death_records_revision:deaths +/-{int}`
   - Technology enlightened: `technology:{Tech Name} enlightened`
@@ -394,6 +396,9 @@ The forest grows darker as you venture deeper into its heart...
   - Click power: `click_power:{Resource} +/-{int}`, `click_power_percent:{Resource} +/-{int}`
   - Section click power: `click_power_section:{Section} +/-{int}`, `click_power_percent_section:{Section} +/-{int}`
   - **Weather changes**: `weather:{WeatherName}` (temporary), `weather:{WeatherName}, permanent` (permanent), `weather:clear` (clear all weather)
+  - **Settlements**: `settlement:capital -{int}` pillages the Capital (never lost, profoundly damaged at most), `settlement:exposed -{int}` the most endangered settlement, `settlement:{Settlement Name} -{int}` a named one; at full damage anything but the Capital falls into ruins. A positive amount repairs.
+  - **Culture**: `culture:myth {song|hearth|ruins} +1` founds the culture (the founding myth, Culture.ink), `culture:embrace +1` / `culture:decline +1` answer the food waiting to become national, `culture:leaning {Family} +/-{int}` turns the culture N% toward or away from one of the ten families, `culture:presence +{int}` adds N% presence on held land. Conditions `culture:{founded|named|cohesion|pending_food|traditions|tradition:{id}|...}`, `national_food:{Resource}` and `memory:{kept|causes|dedications|morale|cause:{evidence id}}`; story text may write `\{nation\}`, `\{citizens\}`, `\{people\}`, `\{culture\}`, `\{myth\}`, `\{national_food\}`, `\{national_label\}` (escaped: Ink braces are logic). Public memory (T09, PublicMemory.ink): `culture:account {hollow-table|unbaked-loaf} {acknowledge|revise|sponsor} +1` answers the dispute bound to the active public-memory story (outside that story, the newest open dispute of that kind) (the culture pays its cost, so never add a `cost:` requirement); conditions `culture:dispute:{kind}` (1 while one is open), `culture:answer:{kind}:{answer}` (1 when that answer can be given now), `culture:{accounts|disputes|public_accord|promise:{id}}`, and teaching (T06; also available through the `teaching:` domain) `culture:{teaching_orders|teaching_bearers|teaching_variants|teaching_records|institutions|institution:{spec}}`; read-only story words `\{dispute_tradition\}`, `\{dispute_promise\}`, `\{dispute_against\}`, `\{dispute_for\}`, `\{dispute_places\}`, `\{dispute_sponsor\}`, `\{acknowledge_cost\}`, `\{sponsor_cost\}`.
+  - **Edicts** (conditions only): `edicts:{established|capacity|active|accord|decrees}` (accord -100..100), `stance:{stance}:{option}` is 1 while that option is the law (e.g. `stance:strangers:sealed`, `stance:borders:hold`, `stance:cradle:many_hearths`; stances and options in `EdictCatalog`), `edict:{id}` is 1 while an edict is in force (e.g. `edict:call_to_toil`).
   - **Section-wide modifiers**: `production_percent_section:{SectionName} +/-{int}`, `click_power_section:{SectionName} +/-{int}`, `click_power_percent_section:{SectionName} +/-{int}`
 - Optional durations: append `duration:sevenths:{N}` after a supported effect on the same line
 

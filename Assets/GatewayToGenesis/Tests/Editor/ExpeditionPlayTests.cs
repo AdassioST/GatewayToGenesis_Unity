@@ -9,9 +9,9 @@ using UnityEngine.TestTools;
 /// <summary>
 /// Expeditions of legends in the real scene (ClickerScreen): the map's technology sends the first expedition out free
 /// under a legend no seat holds; a council legend leaves its seat to join it and is no longer offered for the council;
-/// the road's hardship strains every member's Composure, the Director's most; mishaps strike its legends (a Spiraling
-/// companion deserts and comes home); worn out entirely it breaks and its legends limp home strained; settlers join and
-/// rejoin the citizens when the party disbands. Seventh ticks and mishaps are driven directly so the test does not wait
+/// the road's hardship strains every member's Composure, the Director's most, and a place of solace eases it; mishaps
+/// strike its legends (a Spiraling companion deserts and comes home); worn out entirely it breaks and its legends limp
+/// home strained; settlers join and rejoin the citizens when the party disbands. Seventh ticks and mishaps are driven directly so the test does not wait
 /// on the clock or on fortune. Helpers are static: locals captured before Enter Play Mode are lost to the domain reload.
 /// </summary>
 public class ExpeditionPlayTests
@@ -124,13 +124,15 @@ public class ExpeditionPlayTests
         Assert.IsTrue(government.AssignLegendToSeat(legend, index, bypassCooldown: true), $"{name} could not be seated");
     }
 
-    // Worn and hungry, the road strains both legends each Seventh, the Director most.
+    // Worn and hungry, the road strains both legends each Seventh, the Director most; a place of solace eases it.
     private static void CheckHardship(int id, string companion)
     {
         var world = WorldSystem.Instance;
         var legends = LegendProgress.Instance;
         var unit = world.UnitById(id);
         string director = unit.leader;
+        var tile = Calm(unit);
+        Assert.AreEqual(0f, Expeditions.Solace(UnitSurroundings.Of(world.Map, unit), world.ExpeditionRules), 1e-5, "a plain place gives no solace");
         Seventh();
         float directorBefore = legends.Soul(director).strain, companionBefore = legends.Soul(companion).strain;
         unit.attrition = 80f;
@@ -145,6 +147,32 @@ public class ExpeditionPlayTests
         Assert.Greater(legends.Soul(companion).strain, companionBefore, "the road strains its companion");
         Assert.AreEqual(0f, world.MishapRisk(unit), 1e-5, "at the Capital the road's mishaps cannot reach it");
         Assert.Greater(Expeditions.MishapRisk(unit, new UnitSurroundings { weather = 1f }, world.Party(unit), world.ExpeditionRules), 0f, "in the wild a worn, hungry party courts mishaps");
+
+        // The same Seventh from the same strain, without and then with solace (a Glimmerfern's light on the cell): the
+        // difference is the solace, since both stay well above the baseline (hardship >= 0, recovery + solace <= 4.5).
+        float strained = LegendLore.ComposureTuning.baseline + 10f;
+        legends.Soul(companion).strain = strained;
+        Seventh();
+        float plain = legends.Soul(companion).strain;
+        tile.solace = System.Math.Min(1.5f, world.ExpeditionRules.maxSolace);
+        float solace = Expeditions.Solace(UnitSurroundings.Of(world.Map, unit), world.ExpeditionRules);
+        Assert.Greater(solace, 0f, "Glimmerfern's light gives solace");
+        Assert.AreEqual(hardship, world.HardshipOf(companion, out _, out _), 1e-5, "solace eases recovery, not the road's weight");
+        legends.Soul(companion).strain = strained;
+        Seventh();
+        Assert.AreEqual(plain - solace, legends.Soul(companion).strain, 0.01f, "solace eases the road's strain");
+        tile.solace = 0f;
+    }
+
+    // The unit's cell made plain (UnitSurroundings reads only that cell): no solace from its ground, sites, silver water
+    // or beauty, no healing bloom's sanctuary and no Fallout. The world's seed is random per run, and a Capital near
+    // Glimmerfern or a moonlit grove would otherwise out-recover a companion's small hardship.
+    private static WorldTile Calm(WorldUnit unit)
+    {
+        var tile = WorldSystem.Instance.Map.Get(unit.coord);
+        tile.solace = tile.beauty = tile.sanctuary = tile.fallout = 0f;
+        tile.silverRiverSteps = tile.silverLakeSteps = WorldResources.FarFromSilver;
+        return tile;
     }
 
     // A fever strikes the companion; then, Spiraling, it deserts and comes home.
@@ -158,7 +186,7 @@ public class ExpeditionPlayTests
         float before = legends.Soul(companion).strain, attrition = unit.attrition;
         strike.Invoke(world, new object[] { unit, new Mishap { spec = fever, target = companion } });
         Assert.AreEqual(before + fever.strain, legends.Soul(companion).strain, 0.01f, "the fever strains the legend it strikes");
-        Assert.AreEqual(System.Math.Min(100f, attrition + fever.attrition), unit.attrition, 0.01f, "and wears the party");
+        Assert.AreEqual(System.Math.Min(100f, attrition + fever.attrition * CivilizationProperties.Expedition.cost), unit.attrition, 0.01f, "and wears the party (scaled by the civilization's Ambition cost)");
         StringAssert.Contains(companion, world.LastNotice);
 
         legends.Soul(companion).strain = LegendLore.ComposureTuning.spiralingAt + 5f;

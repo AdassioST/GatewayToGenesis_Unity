@@ -79,6 +79,8 @@ public struct ComposureContext
     public bool restingAtSettlement;
     /// <summary>What the road puts on it this Seventh (<see cref="Expeditions.Hardship"/>).</summary>
     public float hardship;
+    /// <summary>Recovery supplied by the expedition's location: beauty, groves and silver water.</summary>
+    public float solace;
     public bool crisisBegun, crisisDeclared;
     /// <summary>The share of the people who died since the last Seventh (0-1).</summary>
     public float griefShare;
@@ -112,16 +114,23 @@ public static class ComposureRules
 
     /// <summary>How fast a legend eases toward the baseline this Seventh.</summary>
     public static float Recovery(in ComposureContext c, ComposureTuning t) =>
-        c.seated ? t.seatedRecovery : c.onExpedition && !c.restingAtSettlement ? t.expeditionRecovery : t.restRecovery;
+        (c.seated ? t.seatedRecovery : c.onExpedition && !c.restingAtSettlement ? t.expeditionRecovery : t.restRecovery)
+        + (c.onExpedition ? Math.Max(0f, c.solace) : 0f);
 
     /// <summary>
     /// Strain after one Seventh: the load is added, then strain eases toward the baseline by the recovery rate
     /// without passing it (joy below the baseline fades back up the same way). Never below 0.
     /// </summary>
-    public static float Next(float strain, in ComposureContext c, ComposureTuning t)
+    public static float Next(float strain, in ComposureContext c, ComposureTuning t) => Ease(strain, Load(c, t), Recovery(c, t), t);
+
+    /// <summary>
+    /// The one Composure step, shared by legends and settlements (<see cref="WorldRuins"/>): <paramref name="load"/> is
+    /// added, then strain eases toward the baseline by <paramref name="recovery"/> without passing it. Never below 0.
+    /// </summary>
+    public static float Ease(float strain, float load, float recovery, ComposureTuning t)
     {
-        float next = strain + Load(c, t);
-        float recovery = Recovery(c, t);
+        float next = strain + Math.Max(0f, load);
+        recovery = Math.Max(0f, recovery);
         if (next > t.baseline) next = Math.Max(t.baseline, next - recovery);
         else if (next < t.baseline) next = Math.Min(t.baseline, next + recovery);
         return Math.Max(0f, next);

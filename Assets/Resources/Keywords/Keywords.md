@@ -76,8 +76,7 @@ id: stat:morale
 wiki: game-morale
 
 @default
-The mood of your people. Above its balance, growth needs less [[Food]] and production runs faster; below it, both
-suffer.
+The mood of your people. Above its balance production runs faster; below it, production suffers. Everyone still needs to eat.
 
 <!-- The vault's Piety.md is empty: the card is the game's rule until it has words. -->
 ## Piety
@@ -87,6 +86,62 @@ wiki: game-piety
 @default
 Every decision roll gains the Saving Roll bonus below (capped), turning some failures into successes. It never
 lowers a roll. With a bonus of 10 or more, a [[Critical Failure]] can no longer happen.
+
+<!-- The other seven aspects of the pillars: the game's rules (civilization stats table) until the vault has words. -->
+<!-- autolink is off: "authority", "innovation", "arcane"... are ordinary words elsewhere. -->
+## Innovation
+id: stat:innovation
+autolink: off
+
+@default
+An aspect of [[Aureus]]: the rate of discovery of new technologies. Its Discovery Efficiency makes research cost
+less (capped).
+
+## Authority
+id: stat:authority
+autolink: off
+
+@default
+An aspect of [[Regalia]]: the effectiveness of appointed legends. Every legend seated on the council gives more.
+
+## Ambition
+id: stat:ambition
+autolink: off
+
+@default
+An aspect of [[Regalia]]: the time and cost of expeditions. An ambitious people outfit them for less, the road wears
+them down less and they eat fewer rations on it (Expedition Cost), and they advance faster (Completion Time). Both are
+capped.
+
+## Symphony
+id: stat:symphony
+autolink: off
+
+@default
+An aspect of [[Waltz]]: the effectiveness of satisfaction. Every gain in satisfaction counts for more.
+
+## Euphony
+id: stat:euphony
+autolink: off
+
+@default
+An aspect of [[Waltz]]: morale losses shrink and morale recovers faster toward its balance.
+
+## Arcane
+id: stat:arcane
+autolink: off
+
+@default
+An aspect of [[Chorus]]: the effectiveness of magic and click power. Every click gathers more, and magic grows
+stronger.
+
+## Secrecy
+id: stat:secrecy
+autolink: off
+
+@default
+An aspect of [[Chorus]]: the effectiveness of every Communion bonus. Each 5 points of Secrecy reach a further
+Communion stage.
 
 ## Critical Failure
 id: term:critical-failure

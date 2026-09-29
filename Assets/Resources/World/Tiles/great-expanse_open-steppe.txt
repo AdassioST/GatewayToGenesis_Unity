@@ -1,6 +1,6 @@
 # A steppe watering place with open approaches.
 tile: great-expanse/open-steppe
-biome: great-expanse
+macrobiome: great-expanse
 weight: 2
 rotations: any
 legend: G=plains S=scrub L=lake

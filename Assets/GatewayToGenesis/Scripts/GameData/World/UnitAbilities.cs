@@ -30,8 +30,10 @@ public sealed class AbilityInfo
 
 /// <summary>
 /// The abilities units work at on the land (groundwork for more: each names its reach, time and toll, and its effect is
-/// one case in <see cref="WorldSystem"/>). Surveys work hex by hex: each micro hex reached becomes surveyed, and a meso
-/// cell whose every hex is surveyed is explored, its sites investigated. With no scene state.
+/// one case in <see cref="WorldSystem"/>). A cell is explored, its sites investigated, once an expedition has seen all
+/// of its hexes in passing, or when one sent to survey it has walked each of them (<see cref="SurveyMeso"/>, one
+/// <see cref="HexSevenths"/> of work per hex): the survey is slower and turns up more (WorldSystem.SurveyCell). The
+/// older <see cref="Survey"/> of the hexes around a unit is kept for saves made while one was under way. With no scene state.
 ///
 /// Adding an ability: a <see cref="UnitAbility"/> flag and a <see cref="UnitTask"/>, an entry here (and in
 /// <see cref="All"/>), its spec numbers in <see cref="UnitSpec"/>, and its effect in WorldSystem.FinishWork.
@@ -54,11 +56,11 @@ public static class UnitAbilities
     {
         ability = UnitAbility.SurveyMeso,
         task = UnitTask.SurveyMeso,
-        name = "Survey meso hex",
-        doing = "sweeping the meso hex",
-        description = "walk and survey all seven micro hexes of the meso hex it stands in",
+        name = "Survey",
+        doing = "surveying",
+        description = "walk to each of a meso hex's seven micro hexes and survey it there (WorldSystem.SurveyCell)",
         reach = AbilityReach.Meso,
-        sevenths = s => s != null ? s.mesoSurveySevenths : 2.5f,
+        sevenths = s => s != null ? s.mesoSurveySevenths : 1.25f,
         fatigue = 1.5f,
         scalesWithGround = true,
     };
@@ -86,8 +88,61 @@ public static class UnitAbilities
         fatigue = 1.5f,
     };
 
+    public static readonly AbilityInfo Harvest = new AbilityInfo
+    {
+        ability = UnitAbility.Harvest,
+        task = UnitTask.Harvest,
+        name = "Harvest",
+        doing = "harvesting",
+        description = "gather an identified resource site's harvest as cargo, once an Age, without claiming the ground",
+        reach = AbilityReach.Meso,
+        sevenths = s => s != null ? s.harvestSevenths : 1f,
+        fatigue = 1.2f,
+    };
+
+    public static readonly AbilityInfo Plant = new AbilityInfo
+    {
+        ability = UnitAbility.Plant,
+        task = UnitTask.Plant,
+        name = "Plant seeds",
+        doing = "planting",
+        description = "plant carried seeds on fertile ground you hold",
+        reach = AbilityReach.Meso,
+        sevenths = s => s != null ? s.plantSevenths : 1.5f,
+        fatigue = 1.2f,
+    };
+
+    /// <summary>
+    /// Investigate the ruins of a fallen settlement where it stands (<see cref="WorldRuins"/>): any unit that surveys can,
+    /// so it rides on <see cref="UnitAbility.SurveyMeso"/> rather than a flag of its own.
+    /// </summary>
+    public static readonly AbilityInfo Investigate = new AbilityInfo
+    {
+        ability = UnitAbility.SurveyMeso,
+        task = UnitTask.Investigate,
+        name = "Investigate the ruins",
+        doing = "investigating the ruins",
+        description = "search the ruins of a fallen settlement for what its failure left behind, once",
+        reach = AbilityReach.Meso,
+        sevenths = s => s != null ? s.investigateSevenths : 3f,
+        fatigue = 1.3f,
+    };
+
+    /// <summary>A cultural party's festival in the settlement it stands in (<see cref="CultureSystem.CelebrateFestival"/>).</summary>
+    public static readonly AbilityInfo Festival = new AbilityInfo
+    {
+        ability = UnitAbility.Celebrate,
+        task = UnitTask.Festival,
+        name = "Hold a festival",
+        doing = "celebrating",
+        description = "hold a festival in the settlement it stands in: Unity, morale, eased Composure, the culture taking root",
+        reach = AbilityReach.Meso,
+        sevenths = s => s != null ? s.festivalSevenths : 2f,
+        fatigue = 0.5f,
+    };
+
     /// <summary>Every ability worked at on the land, in the order the card lists them.</summary>
-    public static readonly IReadOnlyList<AbilityInfo> All = new[] { Survey, SurveyMeso, Forage, Improve };
+    public static readonly IReadOnlyList<AbilityInfo> All = new[] { Survey, SurveyMeso, Forage, Harvest, Plant, Improve, Investigate, Festival };
 
     public static AbilityInfo For(UnitTask task) => All.FirstOrDefault(a => a.task == task);
 
@@ -108,12 +163,31 @@ public static class UnitAbilities
         }).ToList();
     }
 
+    /// <summary>Sevenths a survey spends at work on one micro hex: its share of <see cref="UnitSpec.mesoSurveySevenths"/>.</summary>
+    public static float HexSevenths(UnitSpec spec) => Math.Max(0.05f, SurveyMeso.sevenths(spec) / MicroNavigation.PerCell);
+
+    /// <summary>The micro hexes of <paramref name="tile"/> a survey still has to visit (ids): those that can be entered and are not surveyed yet.</summary>
+    public static List<int> CellTargets(WorldMap map, WorldGenSettings settings, WorldTile tile)
+    {
+        var left = new List<int>();
+        if (map == null || tile == null || tile.water) return left;
+        var grid = MicroNavigation.Grid(map, settings);
+        for (int k = 0; k < MicroNavigation.PerCell; k++)
+        {
+            int id = tile.index * MicroNavigation.PerCell + k;
+            if (!MicroNavigation.Surveyed(map, id) && !float.IsPositiveInfinity(grid.Enter(id))) left.Add(id);
+        }
+        return left;
+    }
+
     /// <summary>Sevenths the work takes for this unit here (a meso survey of a partly surveyed hex takes its share, never less than a fifth).</summary>
     public static float Duration(WorldMap map, WorldGenSettings settings, WorldUnit unit, UnitSpec spec, AbilityInfo ability)
     {
         if (ability == null) return 0f;
         float sevenths = Math.Max(0.1f, ability.sevenths(spec));
         if (!ability.scalesWithGround) return sevenths;
+        // Surveys take longer in dense cover (WorldCover).
+        sevenths *= Math.Max(0.2f, map?.Get(unit.coord)?.coverSurvey ?? 1f);
         var grid = MicroNavigation.Grid(map, settings);
         var area = Area(map, unit, spec, ability).Where(c => !float.IsPositiveInfinity(grid.Enter(MicroNavigation.Index(map, c)))).ToList();
         if (area.Count == 0) return sevenths;

@@ -28,5 +28,14 @@ MonoBehaviour:
     trigger: total_resources
     requiredAmount: 4000
     description: Accumulate 4000 Total Resources.
+  - type: 6
+    trigger: species_known:wild-bee
+    requiredAmount: 2
+    description: Identify the Wild Bee, whose honey never spoils.
+    riddle: Somewhere a small winged people keep a sweetness that no Seventh can spoil. Learn their name.
+    clue: Their dens hum among the flowers. A den is only a shape until someone walks to it and looks.
+    clueAt: 0.5
+    clueTrigger: 
+    clueAmount: 1
   techUnlockables:
   - {fileID: 11400000, guid: 603381acf02c9928936430ce2f3a0797, type: 2}

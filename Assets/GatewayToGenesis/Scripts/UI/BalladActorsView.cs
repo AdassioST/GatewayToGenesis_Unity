@@ -20,10 +20,12 @@ public class BalladActorsView : MonoBehaviour
     private TooltipTheme _theme;
     private CanvasScaler _scaler;
     private RectTransform _root, _body;
+    private ScrollRect _scroll;
     private bool _shown, _dirty, _subscribed;
     // Which list the picker shows: none, the lead (no one plays the story) or a co-protagonist role.
     private enum Picking { None, Lead, Co }
     private Picking _picking;
+    private int _page;
 
     private void Start()
     {
@@ -31,17 +33,27 @@ public class BalladActorsView : MonoBehaviour
         var canvas = CodeUI.Canvas(transform, "Ballad Actors", 6, out _scaler);
         _root = CodeUI.Panel(canvas.transform, "Cast", new Vector2(0f, 1f), new Vector2(0f, 1f));
         _root.pivot = new Vector2(0f, 1f);
-        _root.anchoredPosition = new Vector2(24f, -24f);
+        _root.anchoredPosition = new Vector2(24f, -246f);
         _root.sizeDelta = new Vector2(Width, 100f);
         CodeUI.Plate(_root, _theme, _scaler);
-        _body = CodeUI.Panel(_root, "Body", Vector2.zero, Vector2.one);
-        _body.offsetMin = new Vector2(18f, 16f);
-        _body.offsetMax = new Vector2(-18f, -16f);
+        var viewport = CodeUI.Panel(_root, "Viewport", Vector2.zero, Vector2.one);
+        viewport.offsetMin = new Vector2(18f, 16f);
+        viewport.offsetMax = new Vector2(-18f, -16f);
+        viewport.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+        viewport.gameObject.AddComponent<RectMask2D>();
+        _scroll = viewport.gameObject.AddComponent<ScrollRect>();
+        _scroll.horizontal = false;
+        _scroll.scrollSensitivity = 35f;
+        _body = CodeUI.Panel(viewport, "Body", new Vector2(0f, 1f), Vector2.one);
+        _body.pivot = new Vector2(0.5f, 1f);
+        _scroll.viewport = viewport;
+        _scroll.content = _body;
         var layout = _body.gameObject.AddComponent<VerticalLayoutGroup>();
         layout.spacing = 6f;
         layout.childControlWidth = layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
         layout.childForceExpandHeight = false;
+        _body.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         _root.gameObject.SetActive(false);
     }
 
@@ -85,7 +97,7 @@ public class BalladActorsView : MonoBehaviour
 
         string heading = story != null && !string.IsNullOrEmpty(story.ballad)
             ? $"{(string.IsNullOrEmpty(story.balladTitle) ? "A Ballad" : story.balladTitle)}, verse {story.verse}"
-            : "Ballad Actors";
+            : "Legends in this event";
         Line(TooltipText.Heading(heading), _theme.subtitleSize + 4f, _theme.titleColor);
 
         if (cast.Empty)
@@ -105,7 +117,9 @@ public class BalladActorsView : MonoBehaviour
 
         if (_picking != Picking.None) Picker(events);
         LayoutRebuilder.ForceRebuildLayoutImmediate(_body);
-        _root.sizeDelta = new Vector2(Width, LayoutUtility.GetPreferredHeight(_body) + 34f);
+        float height = ((RectTransform)_root.parent).rect.height;
+        _root.sizeDelta = new Vector2(Width, Mathf.Min(LayoutUtility.GetPreferredHeight(_body) + 34f, Mathf.Max(180f, height - 276f)));
+        _scroll.verticalNormalizedPosition = 1f;
     }
 
     // One actor: face, name, role and how it came to the story; the lead and remove buttons.
@@ -142,6 +156,11 @@ public class BalladActorsView : MonoBehaviour
         string how = legend == cast.protagonist && !string.IsNullOrEmpty(cast.how) ? $", {(cast.how == "chosen" ? "your choice" : cast.how)}" : string.Empty;
         Label(text.transform, legend, _theme.bodySize, _theme.titleColor);
         Label(text.transform, TooltipText.Muted(role + how), _theme.subtitleSize, _theme.bodyColor);
+        if (legend != cast.protagonist && LegendProgress.Instance != null)
+        {
+            var tie = LegendProgress.Instance.Relationships(legend).FirstOrDefault(b => string.Equals(b.other, cast.protagonist, StringComparison.OrdinalIgnoreCase));
+            Label(text.transform, "Toward the protagonist: " + (tie == null ? "Open Rest" : tie.severed ? "Severed" : tie.StageName + $" · {tie.affection}/100" + (tie.Readiness > 0 ? " · Upgrade ready" : tie.Readiness < 0 ? " · Downgrade ready" : "")), _theme.subtitleSize, _theme.bodyColor);
+        }
         var buttons = new GameObject("Buttons", typeof(RectTransform));
         buttons.transform.SetParent(text.transform, false);
         var hb = buttons.AddComponent<HorizontalLayoutGroup>();
@@ -167,7 +186,8 @@ public class BalladActorsView : MonoBehaviour
             Line(TooltipText.Muted("No legend is free to play it (all are away on the road, or none has been met)."), _theme.subtitleSize, _theme.bodyColor);
             return;
         }
-        foreach (var name in candidates.Take(MaxPicks))
+        _page = Math.Min(_page, (candidates.Count - 1) / MaxPicks);
+        foreach (var name in candidates.Skip(_page * MaxPicks).Take(MaxPicks))
         {
             var seat = government != null ? government.GetSeatWithLegend(name) : null;
             string label = seat != null ? $"{name}  {TooltipText.Muted(seat.isHeadOfState ? "Head of State" : seat.GetEffectiveTitle())}" : name;
@@ -178,7 +198,8 @@ public class BalladActorsView : MonoBehaviour
                 _dirty = true;
             });
         }
-        if (candidates.Count > MaxPicks) Line(TooltipText.Muted($"and {candidates.Count - MaxPicks} more"), _theme.subtitleSize, _theme.bodyColor);
+        if (_page > 0) Button("Previous legends", () => { _page--; _dirty = true; });
+        if ((_page + 1) * MaxPicks < candidates.Count) Button("More legends", () => { _page++; _dirty = true; });
         if (_picking == Picking.Co) Button(TooltipText.Muted("Cancel"), () => { _picking = Picking.None; _dirty = true; });
     }
 

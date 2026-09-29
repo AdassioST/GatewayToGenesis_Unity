@@ -1,6 +1,6 @@
 # A moonlit lake with wooded banks and a glade approach.
 tile: violet-grove/moon-hollow
-biome: violet-grove
+macrobiome: violet-grove
 weight: 1
 rotations: any
 legend: V=violet-wood M=moonlit-grove G=violet-glade L=lake

@@ -28,6 +28,15 @@ MonoBehaviour:
     trigger: journeys
     requiredAmount: 1
     description: Complete an Expedition
+  - type: 6
+    trigger: sites_identified
+    requiredAmount: 1
+    description: Identify a resource site.
+    riddle: The land keeps small riches it will not show from afar. Learn what one of them is.
+    clue: What an expedition only glimpsed from the road stays a pale ring until someone surveys its ground.
+    clueAt: 0.5
+    clueTrigger: journeys
+    clueAmount: 1
   techUnlockables:
   - {fileID: 11400000, guid: 591a6299cbdc913f988f5afb943483cf, type: 2}
   - {fileID: 11400000, guid: bc23226717b4300e98c2c8a690cd4a33, type: 2}

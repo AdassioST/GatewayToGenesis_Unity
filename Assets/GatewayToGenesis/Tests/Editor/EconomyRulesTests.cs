@@ -47,6 +47,60 @@ public class EconomyRulesTests
         Assert.AreEqual(stage, StatRules.CommunionStage(secrecy));
     }
 
+    [TestCase(0.9f, 0.25f, 0.1f)]    // 10% cheaper
+    [TestCase(0.5f, 0.25f, 0.25f)]   // never past the cap, like the Saving Roll
+    [TestCase(1.2f, 0.25f, 0f)]      // never a penalty
+    [TestCase(0.5f, 1.5f, 0.5f)]     // the cap is a 0-1 fraction
+    [TestCase(0.5f, -1f, 0f)]
+    public void Stats_AmbitionReductionsAreCappedLikeTheSavingRoll(float multiplier, float cap, float expected)
+    {
+        Assert.AreEqual(expected, StatRules.CappedReduction(multiplier, cap), 1e-5);
+    }
+
+    [TestCase(0f, 1f)]
+    [TestCase(12f, 1.12f)]
+    [TestCase(-150f, 0f)]            // never negative
+    public void Stats_MagicAndCommunionEffectivenessAreMultipliers(float percent, float expected)
+    {
+        Assert.AreEqual(expected, StatRules.EffectivenessMultiplier(percent), 1e-5);
+    }
+
+    [Test]
+    public void Stats_SecrecyGrowsCommunionEffectiveness()
+    {
+        var bounds = StatGrowth.Boundaries.Default;
+        Assert.AreEqual(0f, StatGrowth.Evaluate("communionEffectiveness", 0, bounds), 1e-5);
+        Assert.Greater(StatGrowth.Evaluate("communionEffectiveness", 20, bounds), StatGrowth.Evaluate("communionEffectiveness", 5, bounds));
+        Assert.AreEqual("secrecy", StatDefinitions.DerivedSource["communionEffectiveness"]);
+        Assert.AreEqual(StatDefinitions.StatKind.Derived, StatDefinitions.KindOf("communionEffectiveness"));
+    }
+
+    [Test]
+    public void Properties_AreNeutralWithoutAStatManager()
+    {
+        Assume.That(StatManager.Instance == null, "a StatManager is alive in this domain");
+        Assert.AreEqual(10f, CivilizationProperties.Magic(10f), "magic at its base");
+        Assert.AreEqual(10f, CivilizationProperties.Communion(10f), "communion at its base");
+        Assert.AreEqual(0, CivilizationProperties.CommunionStage);
+        Assert.AreEqual(ExpeditionAmbition.None.cost, CivilizationProperties.Expedition.cost);
+        Assert.AreEqual(ExpeditionAmbition.None.time, CivilizationProperties.Expedition.time);
+        Assert.AreEqual(1f, CivilizationProperties.LegendEffectiveness, 1e-5);
+    }
+
+    [Test]
+    public void Properties_EveryDerivedStatHasANameAndWords()
+    {
+        foreach (var derived in StatDefinitions.DerivedSource.Keys)
+        {
+            StringAssert.DoesNotContain("Mod", CivilizationProperties.Name(derived), $"{derived} has a player-facing name");
+            Assert.IsFalse(CivilizationProperties.Describe(derived, 1f).StartsWith(CivilizationProperties.Name(derived) + " 1"), $"{derived} has its own sentence");
+        }
+        Assert.AreEqual("Expeditions cost 20% less to outfit, suffer that much less attrition and eat that many fewer rations", CivilizationProperties.Describe("expeditionCostMod", 0.8f));
+        Assert.AreEqual("Expeditions take 20% less time: they advance 25% faster", CivilizationProperties.Describe("expeditionTimeMod", 0.8f));
+        Assert.AreEqual("Magic +12% stronger", CivilizationProperties.Describe("magicEffectiveness", 12f));
+        Assert.AreEqual("Communion stage 3", CivilizationProperties.Describe("communionStage", 3f));
+    }
+
     [TestCase(-10, 0f, 0.5f, -10)]
     [TestCase(-10, 30f, 0.5f, -7)]    // losses shrink by the mitigation
     [TestCase(-10, 100f, 0.5f, 0)]    // full mitigation cancels a loss, never turns it into a gain
@@ -142,44 +196,13 @@ public class EconomyRulesTests
 
     // ===== POPULATION =====
 
-    [TestCase(10f, 0f, 10f)]
-    [TestCase(10f, 20f, 8f)]    // morale above balance: cheaper
-    [TestCase(10f, -20f, 12f)]  // below: dearer
-    [TestCase(10f, 90f, 5f)]    // clamped at the min factor
-    [TestCase(10f, -90f, 15f)]  // clamped at the max factor
-    public void Population_FoodThresholdFollowsMorale(float baseThreshold, float moraleDelta, float expected)
-    {
-        Assert.AreEqual(expected, PopulationRules.FoodThreshold(baseThreshold, moraleDelta, minFactor: 0.5f, maxFactor: 1.5f), 1e-4);
-    }
-
     [Test]
-    public void Population_UsefulFoodStopsAtWhatCanBecomePeople()
+    public void Population_FoodDemandIsLinearAndNeverOverflowsAtCityScale()
     {
-        Assert.AreEqual(30f, PopulationRules.MaxUsefulFoodGain(false, 10f, freeHousing: 3, currentFood: 0f), 1e-4);
-        Assert.AreEqual(4f, PopulationRules.MaxUsefulFoodGain(false, 10f, freeHousing: 0, currentFood: 6f), 1e-4);
-        Assert.AreEqual(0f, PopulationRules.MaxUsefulFoodGain(false, 10f, freeHousing: 0, currentFood: 12f), 1e-4);
-        Assert.AreEqual(float.MaxValue, PopulationRules.MaxUsefulFoodGain(true, 10f, 0, 0f));
-    }
-
-    [Test]
-    public void Population_FoodDemandGrowsExponentially()
-    {
-        Assert.AreEqual((1f + System.MathF.Exp(0.1f / 2f * 10f)) * 0.5f, PopulationRules.FoodDemand(1f, 0.1f, 2f, 10, 0.5f), 1e-4);
-    }
-
-    [Test]
-    public void Population_FoodBecomesHousedCitizensThenVagrants()
-    {
-        var growth = PopulationRules.Grow(food: 35f, threshold: 10f, freeHousing: 2, allowVagrants: true, maxArrivals: 99);
-        Assert.AreEqual(2, growth.housed);
-        Assert.AreEqual(1, growth.vagrants);
-        Assert.AreEqual(30f, growth.foodSpent, 1e-4);
-
-        var noVagrants = PopulationRules.Grow(food: 35f, threshold: 10f, freeHousing: 2, allowVagrants: false, maxArrivals: 99);
-        Assert.AreEqual(2, noVagrants.Arrivals, "without vagrants growth stops when homes run out");
-
-        Assert.AreEqual(1, PopulationRules.Grow(35f, 10f, 5, false, maxArrivals: 1).Arrivals);
-        Assert.AreEqual(1, PopulationRules.Grow(9.9995f, 10f, 5, false, 99).Arrivals, "a hair under the threshold still counts");
+        var tuning = new GrowthTuning();
+        Assert.AreEqual(GrowthRules.FoodDemand(1, 180f, tuning) * 1000000,
+            GrowthRules.FoodDemand(1000000, 180f, tuning), 0.01f);
+        Assert.AreEqual(0f, GrowthRules.FoodDemand(0, 180f, tuning));
     }
 
     [Test]

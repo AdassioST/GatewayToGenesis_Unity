@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: d4589dc48b02df44589868b747f0dfb3, type: 3}
   order: 0
   allowedClasses: 000000000500000002000000
+  requiredStars: 0
   areas:
   - justice
   - defense

@@ -156,7 +156,8 @@ public static class GameWikiEntries
         var body = new StringBuilder();
         string summary = pillar != null ? $"An aspect of {Link(Title(pillar))}." : null;
         Paragraph(body, summary);
-        var derived = StatDefinitions.DerivedSource.Where(p => Same(p.Value, substat)).Select(p => KeywordLiveValues.SplitCamel(p.Key)).ToList();
+        var derived = StatDefinitions.DerivedSource.Where(p => Same(p.Value, substat)).Select(p => CivilizationProperties.Name(p.Key)).ToList();
+        if (Same(substat, "secrecy")) derived.Add(CivilizationProperties.Name(StatDefinitions.CommunionStage));
         List(body, "Drives", derived);
         return Entry(Title(substat), Pillars, pillar != null ? "Aspect of " + Title(pillar) : "Civilization Stat", summary, body);
     }

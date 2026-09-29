@@ -181,7 +181,7 @@ public class EventScreenManager : MonoBehaviour
         if (buttonLabel != null)
         {
             string label = FirstChoiceLabel();
-            buttonLabel.text = !string.IsNullOrEmpty(label) ? label : (screen.buttonText ?? "Continue");
+            buttonLabel.text = CultureSystem.ExpandText(!string.IsNullOrEmpty(label) ? label : (screen.buttonText ?? "Continue"));
         }
 
         // The button previews what continuing will do.
@@ -281,6 +281,8 @@ public class EventScreenManager : MonoBehaviour
         DetachReveal();
 
         QueueConsequences(ButtonConsequences());
+        if (currentEventScreen != null && currentEventScreen.screenType != ScreenType.Outro && currentKnot?.FirstChoice != null && currentKnot.FirstChoice.consequences.Count > 0)
+            Events?.RememberStoryChoice(currentKnot.FirstChoice.label);
         string target = currentKnot != null ? currentKnot.ContinueTarget : null;
         GameLog.Event($"Continue from '{currentEventScreen?.inkKnot}' → '{target ?? "(end)"}'", Log);
         if (Volumes == null) return;
@@ -376,7 +378,7 @@ public class EventScreenManager : MonoBehaviour
     private void SetText(string childName, string text)
     {
         var label = FindChild<TextMeshProUGUI>(childName);
-        if (label != null) label.text = text ?? string.Empty;
+        if (label != null) label.text = CultureSystem.ExpandText(text) ?? string.Empty;
     }
 
     private static void SetCustomTooltip(GameObject target, string title, string description, string breakdown = null) =>

@@ -23,9 +23,12 @@ public static class WorldSites
     public static void PlaceAge(WorldMap map, WorldGenSettings settings, int age)
     {
         if (age == 0 && map.NexusSites.Count == 0) FindNexusSites(map, settings);
+        // Cover first: some resource sites stand only inside it.
+        if (age == 0) WorldCover.Place(map, settings);
         PlaceGrandfields(map, settings, age);
         PlaceThreats(map, settings, age);
         PlaceEnclaves(map, settings, age);
+        WorldResources.PlaceAge(map, settings, age);
         WorldCivilization.Rebuild(map, settings);
     }
 
@@ -125,7 +128,7 @@ public static class WorldSites
         if (t.water || t.impassable || t.sacred || t.grandfield >= 0) return false;
         if (settings.Terrain(t.terrain)?.passable == false) return false;
         if (spec.terrains.Count > 0 && !spec.terrains.Any(x => string.Equals(x, t.terrain, StringComparison.OrdinalIgnoreCase))) return false;
-        if (spec.biomes.Count > 0 && !spec.biomes.Any(x => string.Equals(x, t.biome, StringComparison.OrdinalIgnoreCase))) return false;
+        if (spec.macroBiomes.Count > 0 && !spec.macroBiomes.Any(x => string.Equals(x, t.macroBiome, StringComparison.OrdinalIgnoreCase))) return false;
         if (t.coherence < spec.minimumCoherence || t.magicFertility < spec.minimumMagicalFertility) return false;
         return true;
     }
@@ -207,23 +210,26 @@ public static class WorldSites
         RecomputeDanger(map);
     }
 
-    /// <summary>Danger: the strongest threat's reach at each cell (quadratic falloff); Sacred ground is calm.</summary>
-    public static void RecomputeDanger(WorldMap map)
+    /// <summary>The threats' danger at one cell before Sacred calm and wards (what a district reads for adjacency).</summary>
+    public static float ThreatDanger(WorldMap map, HexCoord coord)
     {
-        foreach (var t in map.Tiles) t.danger = 0f;
+        float danger = 0f;
         foreach (var threat in map.Threats)
         {
-            var source = map[threat.cell];
-            int reach = (int)Math.Ceiling(threat.radius);
-            foreach (var coord in HexCoord.Spiral(source.coord, reach))
-            {
-                var t = map.Get(coord);
-                if (t == null) continue;
-                float f = 1f - HexCoord.Distance(coord, source.coord) / (threat.radius + 1f);
-                if (f <= 0f) continue;
-                t.danger = Math.Max(t.danger, threat.strength * f * f);
-            }
+            float f = 1f - HexCoord.Distance(coord, map[threat.cell].coord) / (threat.radius + 1f);
+            if (f > 0f) danger = Math.Max(danger, threat.strength * f * f);
         }
+        return danger;
+    }
+
+    /// <summary>
+    /// Danger: the standing hazards of each cell (a predatory bloom's); Sacred ground is calm, and districts that keep
+    /// watch ward it off around them (<see cref="WorldTributaries.Ward"/>). Threats cast no aura: their bands roam, and
+    /// what hunts is known only by the signs it leaves (<see cref="WorldTile.signs"/>, WorldSystem.Encounters).
+    /// </summary>
+    public static void RecomputeDanger(WorldMap map)
+    {
+        foreach (var t in map.Tiles) t.danger = t.siteDanger;
         var sacred = map.Magic?.SacredSites ?? new List<int>();
         foreach (int s in sacred)
         {
@@ -234,6 +240,7 @@ public static class WorldSites
                 t.danger = HexCoord.Distance(coord, map[s].coord) <= SacredCalm ? 0f : t.danger * 0.5f;
             }
         }
+        WorldTributaries.Ward(map);
     }
 
     // ===== ENCLAVES =====

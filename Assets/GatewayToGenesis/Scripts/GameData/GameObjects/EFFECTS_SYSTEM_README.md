@@ -27,7 +27,7 @@ For how the system is built, see `Scripts/ARCHITECTURE.md`.
 |---|---|---|---|
 | `PillarBonus` | `aureus`, `regalia`, `waltz`, `chorus` | higher pillar | Substats and derived stats follow automatically |
 | `SubstatBonus` | `innovation`, `piety`, `authority`, `ambition`, `symphony`, `euphony`, `arcane`, `secrecy` | higher substat | |
-| `DerivedStatBonus` | `discoveryEfficiency`, `savingRollChance`, `legendEffectiveness`, `expeditionCostMod`, `expeditionTimeMod`, `satisfactionEffectiveness`, `moraleLossMod`, `moraleRecoveryMod`, `clickPowerBonus`, `magicEffectiveness` | higher value | Derived stats are percentages (4.5 = 4.5%) |
+| `DerivedStatBonus` | `discoveryEfficiency`, `savingRollChance`, `legendEffectiveness`, `expeditionCostMod`, `expeditionTimeMod`, `satisfactionEffectiveness`, `moraleLossMod`, `moraleRecoveryMod`, `clickPowerBonus`, `magicEffectiveness`, `communionEffectiveness` | higher value | Derived stats are percentages (4.5 = 4.5%) |
 | `ResourceModifier` | resource, or section with Section scope | more output | `Add` = +N per second; `Percentage` = +N% output |
 | `ProductionModifier` | production unit, section, unit type (`Workshop`...), `units`, or a resource | more output | Always a percentage. A resource target boosts that resource's output from every producer |
 | `ClickPowerBonus` | resource, or section | stronger clicks | `Add` or `Percentage` |

@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>The settlement categories of Arcanoria.md (Map Features, Settlements), plus the Religious Haven of Places.</summary>
-public enum SettlementKind { Capital, Town, Major, Outpost, Haven }
+/// <summary>
+/// The settlement categories of Arcanoria.md (Map Features, Settlements), plus the Religious Haven of Places and the
+/// outskirt Tributary (a minor hub serving one of the others: <see cref="WorldTributaries"/>).
+/// </summary>
+public enum SettlementKind { Capital, Town, Major, Outpost, Haven, Tributary }
 
 /// <summary>A settlement on the map (saved with the world).</summary>
 [Serializable]
@@ -31,6 +34,21 @@ public class Settlement
     public int authorityRadius;
     /// <summary>Id of the Major Settlement or Capital it answers to (-1 for the Capital and detached settlements).</summary>
     public int governedBy = -1;
+    /// <summary>A tributary's hub: the id of the settlement it serves (unused by other kinds).</summary>
+    [SaveOptionalField] public int parent;
+    /// <summary>A tributary's district (<see cref="DistrictSpec.id"/>; null or empty: the generalist).</summary>
+    [SaveOptionalField] public string district;
+    /// <summary>
+    /// Its Composure's strain, 0-100, read through the legends' five states (<see cref="WorldRuins.StateOf"/>): at
+    /// Surrender it falls into a ruin (the Capital never does).
+    /// </summary>
+    [SaveOptionalField] public float strain;
+    /// <summary>What strained it last ("danger", "withering", "pillage"), for its card and its ruin.</summary>
+    [SaveOptionalField] public string harmedBy;
+    /// <summary>What its people feel this moment (<see cref="WorldSuffering.SettlementFeelings"/>): given off into its cell every Seventh, what its blooms catalogue.</summary>
+    [SaveOptionalField] public EmotionalRegister feelings = new EmotionalRegister();
+    /// <summary>Its cell's imprint was told heavy (<see cref="WorldSuffering.WarnImprint"/>): told again only after it eases.</summary>
+    [SaveOptionalField] public bool imprintWarned;
 }
 
 /// <summary>A road between two settlements: the Trade Route's path and its Trade Nodes (saved with the world).</summary>
@@ -43,6 +61,8 @@ public class TradeRoute
     public List<HexCoord> nodes = new List<HexCoord>();
     /// <summary>Share of Coherence and leylines along it (Trade Routes prefer high Coherence; efficiency changes with the Ages).</summary>
     public float efficiency;
+    /// <summary>Its cells that were Old World road restored cheaply (<see cref="OldWorldRules"/>): a lesser road until rebuilt.</summary>
+    [SaveOptionalField] public List<HexCoord> restored = new List<HexCoord>();
 }
 
 /// <summary>An Enclave standing on the map (saved: its influence and suzerainty change through play).</summary>
@@ -62,6 +82,12 @@ public class Enclave
     public float influence;
     public bool suzerain;
     public int authorityRadius;
+    /// <summary>A Domestication Enclave's kept species at the last Echo (<see cref="WorldEnclaveEcology.Echo"/>: what began or ceased to be kept is told).</summary>
+    [SaveOptionalField] public List<string> kept = new List<string>();
+    /// <summary>The Phase it last served you (<see cref="WorldEnclaveEcology.Commission"/>; -1 never): once a Phase.</summary>
+    [SaveOptionalField] public int commissionedPhase = -1;
+    /// <summary>The Echo count (<see cref="WorldSystem.EchoesGrown"/>) until which its moth farms stay restricted (<see cref="WorldGreatPlague.Restrict"/>).</summary>
+    [SaveOptionalField] public int restrictedUntil;
 
     public string AuthorityId => "enclave:" + index;
 
@@ -107,6 +133,9 @@ public struct WorldYield
 /// - Outposts: detached stations for extraction (a grandfield needs one), trade or Resonance Anchors; incorporated
 ///   into a town once authority reaches them. Religious Havens: at Sacred Sites or high Vibrational Density.
 /// - Roads join a settlement to the Capital's network along high Coherence; Trade Nodes stand along them.
+/// - Tributaries: minor hubs raised inside your authority to serve one of the settlements above (their districts,
+///   adjacency and effects live in <see cref="WorldTributaries"/>); every settlement grows faster on desirable ground
+///   (<see cref="WorldDesirability"/>).
 /// </summary>
 public static class WorldCivilization
 {
@@ -118,6 +147,7 @@ public static class WorldCivilization
             case SettlementKind.Town: return "Developing Town";
             case SettlementKind.Major: return "Major Settlement";
             case SettlementKind.Outpost: return "Outpost";
+            case SettlementKind.Tributary: return "Tributary";
             default: return "Religious Haven";
         }
     }
@@ -140,11 +170,16 @@ public static class WorldCivilization
     /// <summary>Re-derive each cell's settlement, enclave, road and node marks, then authority and who governs whom.</summary>
     public static void Rebuild(WorldMap map, WorldGenSettings settings)
     {
+        // A tributary whose hub was lost rejoins the nearest hub first (and may lay a road to it).
+        if (map.rehomed == null) map.rehomed = new List<(int, int)>();
+        foreach (var (tributary, hub) in WorldTributaries.Rehome(map, settings, map.settlementRules))
+            map.rehomed.Add((tributary.id, hub.id));
         foreach (var t in map.Tiles)
         {
             t.settlement = -1;
             t.enclave = -1;
             t.road = false;
+            t.restoredRoad = false;
             t.tradeNode = false;
         }
         for (int i = 0; i < map.Settlements.Count; i++)
@@ -157,11 +192,30 @@ public static class WorldCivilization
             var t = map.Get(map.Enclaves[i].coord);
             if (t != null) t.enclave = i;
         }
+        // A cell is only a restored Old World stretch while no route has it rebuilt.
+        var rebuilt = new HashSet<HexCoord>();
         foreach (var route in map.Routes)
         {
-            foreach (var c in route.cells) { var t = map.Get(c); if (t != null) t.road = true; }
+            var restored = new HashSet<HexCoord>(route.restored ?? new List<HexCoord>());
+            foreach (var c in route.cells)
+            {
+                var t = map.Get(c);
+                if (t == null) continue;
+                t.road = true;
+                if (restored.Contains(c)) t.restoredRoad = true;
+                else rebuilt.Add(c);
+            }
             foreach (var c in route.nodes) { var t = map.Get(c); if (t != null) t.tradeNode = true; }
         }
+        foreach (var c in rebuilt) { var t = map.Get(c); if (t != null) t.restoredRoad = false; }
+        // A tributary is a node of its hub's roads.
+        foreach (var s in map.Settlements.Where(WorldTributaries.IsTributary))
+        {
+            var t = map.Get(s.coord);
+            if (t != null) t.tradeNode = true;
+        }
+        // Resource sites first: they lend or take beauty, Coherence and fertility around them.
+        WorldResources.Refresh(map, settings);
         WorldBeauty.Refresh(map, settings);
         WorldAuthority.Establish(map, settings);
         var territory = WorldTerritory.Compute(map, settings);
@@ -171,6 +225,12 @@ public static class WorldCivilization
         {
             s.governedBy = -1;
             if (s.kind == SettlementKind.Capital || s.kind == SettlementKind.Major || s.detached) continue;
+            // A tributary answers to the hub it serves.
+            if (s.kind == SettlementKind.Tributary)
+            {
+                s.governedBy = WorldTributaries.HubOf(map, s)?.id ?? capital?.id ?? -1;
+                continue;
+            }
             var t = map.Get(s.coord);
             TerritorySeat major = null;
             float strongest = 0f;
@@ -206,10 +266,21 @@ public static class WorldCivilization
     }
 
     /// <summary>The breakdown of a settlement's City Development on its own cell.</summary>
-    public static DevelopmentBreakdown Breakdown(WorldMap map, SettlementRules rules, Settlement s)
+    public static DevelopmentBreakdown Breakdown(WorldMap map, SettlementRules rules, Settlement s) => Evaluate(map, rules, s, Networked(map).Contains(s.id));
+
+    // A settlement's City Development: its ground, plus what its outskirt tributaries lend a hub.
+    private static DevelopmentBreakdown Evaluate(WorldMap map, SettlementRules rules, Settlement s, bool networked)
     {
         var t = map.Get(s.coord);
-        return t == null ? new DevelopmentBreakdown() : CityDevelopment.Evaluate(map, rules, t.index, Networked(map).Contains(s.id));
+        if (t == null) return new DevelopmentBreakdown();
+        var b = CityDevelopment.Evaluate(map, rules, t.index, networked);
+        float outskirts = WorldTributaries.HubDevelopment(map, rules.tributaries ?? WorldTributaries.RulesOf(map), s);
+        if (outskirts >= 0.005f)
+        {
+            b.terms.Add((DevelopmentTerm.Outskirts, outskirts));
+            b.raw += outskirts;
+        }
+        return b;
     }
 
     public static int GovernmentCapacity(SettlementRules rules, int capacityBuildings) => Math.Max(0, rules.governmentCapacity) + Math.Max(0, capacityBuildings);
@@ -224,12 +295,15 @@ public static class WorldCivilization
         var t = map.Get(coord);
         if (t == null) return "Beyond the edge of the world.";
         if (kind == SettlementKind.Capital || kind == SettlementKind.Major) return "Major Settlements grow from Developing Towns.";
+        if (kind == SettlementKind.Tributary) return "Tributaries are raised from home, inside your authority, for a hub nearby.";
         if (t.water) return "Settlements stand on dry land.";
         if (float.IsPositiveInfinity(WorldPaths.StepCost(t, settings))) return "No settlement can stand on this ground.";
         if (kind == SettlementKind.Outpost ? !t.known : !t.explored) return kind == SettlementKind.Outpost ? "A scout must pass over it first." : "Survey it first.";
         if (t.settlement >= 0 || t.enclave >= 0) return "Something already stands here.";
         int spacing = kind == SettlementKind.Outpost ? Math.Max(1, rules.spacing / 2) : Math.Max(1, rules.spacing);
-        var near = map.Settlements.Where(s => HexCoord.Distance(s.coord, coord) < spacing).OrderBy(s => HexCoord.Distance(s.coord, coord)).FirstOrDefault();
+        // Tributaries are minor hubs: an independent settlement keeps only their own spacing from them.
+        int tributarySpacing = Math.Min(spacing, Math.Max(1, rules.tributaries?.spacing ?? 2));
+        var near = map.Settlements.Where(s => HexCoord.Distance(s.coord, coord) < (s.kind == SettlementKind.Tributary ? tributarySpacing : spacing)).OrderBy(s => HexCoord.Distance(s.coord, coord)).FirstOrDefault();
         if (near != null) return $"Too close to {near.name} ({spacing} cells apart at least).";
         if (map.Enclaves.Any(e => HexCoord.Distance(e.coord, coord) < spacing)) return "Too close to an enclave.";
         bool yours = t.authorityId == WorldAuthority.Player;
@@ -365,7 +439,9 @@ public static class WorldCivilization
     /// <summary>Cells of a planned road that are not road yet (what it costs).</summary>
     public static int NewRoadCells(WorldMap map, List<int> path) => path.Count(c => !map[c].road && map[c].settlement < 0);
 
-    public static TradeRoute BuildRoad(WorldMap map, WorldGenSettings settings, SettlementRules rules, Settlement s, List<int> path, int target)
+    /// <summary>Lay a road along <paramref name="path"/> from <paramref name="s"/> to <paramref name="target"/>; <paramref name="rebuild"/> false
+    /// leaves the derived marks to a rebuild already under way (<see cref="WorldTributaries.Rehome"/>).</summary>
+    public static TradeRoute BuildRoad(WorldMap map, WorldGenSettings settings, SettlementRules rules, Settlement s, List<int> path, int target, bool rebuild = true)
     {
         var route = new TradeRoute { id = map.Routes.Count == 0 ? 0 : map.Routes.Max(r => r.id) + 1, from = s.id, to = target };
         int since = 0;
@@ -373,33 +449,50 @@ public static class WorldCivilization
         {
             var t = map[c];
             route.cells.Add(t.coord);
+            // Old World road not yet under a road of yours is restored, cheaply: a lesser road until rebuilt, with no Trade Node.
+            bool restored = t.oldRoad && !t.road && t.settlement < 0;
+            if (restored) route.restored.Add(t.coord);
             since++;
             bool gifted = t.nexus != null && t.settlement < 0;
-            if (t.settlement < 0 && (gifted || since >= Math.Max(2, rules.nodeSpacing)))
+            if (t.settlement < 0 && !restored && (gifted || since >= Math.Max(2, rules.nodeSpacing)))
             {
                 route.nodes.Add(t.coord);
                 since = 0;
             }
         }
-        route.efficiency = Efficiency(map, route);
+        route.efficiency = Efficiency(map, route, rules?.loss?.oldWorld);
         map.Routes.Add(route);
-        Rebuild(map, settings);
+        if (rebuild) Rebuild(map, settings);
         return route;
     }
 
-    /// <summary>A route's efficiency, 0-1: Coherence along it, plus a share for the stretches that run on leylines.</summary>
-    public static float Efficiency(WorldMap map, TradeRoute route)
+    /// <summary>
+    /// A route's efficiency, 0-1: Coherence along it, plus a share for the stretches that run on leylines; its restored
+    /// Old World stretches count only <see cref="OldWorldRules.restoredWorth"/> until rebuilt.
+    /// </summary>
+    public static float Efficiency(WorldMap map, TradeRoute route, OldWorldRules oldWorld = null)
     {
         var cells = route.cells.Select(map.Get).Where(t => t != null).ToList();
         if (cells.Count == 0) return 0f;
         float coherence = cells.Average(t => t.coherence), onLeyline = cells.Count(t => t.leylines != 0) / (float)cells.Count;
-        return Math.Max(0f, Math.Min(1f, 0.75f * coherence + 0.25f * onLeyline));
+        float restored = Math.Min(1f, WorldRuins.RestoredCount(route) / (float)cells.Count);
+        float worth = 1f - restored * (1f - Math.Max(0f, Math.Min(1f, (oldWorld ?? map.settlementRules?.loss?.oldWorld ?? new OldWorldRules()).restoredWorth)));
+        return Math.Max(0f, Math.Min(1f, (0.75f * coherence + 0.25f * onLeyline) * worth));
     }
 
     /// <summary>Recompute every route's efficiency (after an Age moved the leylines; the roads themselves stay).</summary>
     public static void RefreshEfficiency(WorldMap map)
     {
         foreach (var route in map.Routes) route.efficiency = Efficiency(map, route);
+    }
+
+    /// <summary>Rebuild a route's restored Old World stretches into full road (pay <see cref="WorldRuins.RebuildScale"/> first).</summary>
+    public static void RebuildRestored(WorldMap map, WorldGenSettings settings, TradeRoute route)
+    {
+        if (route == null || WorldRuins.RestoredCount(route) == 0) return;
+        route.restored.Clear();
+        route.efficiency = Efficiency(map, route);
+        Rebuild(map, settings);
     }
 
     // ===== RESONANCE ANCHORS =====
@@ -409,6 +502,7 @@ public static class WorldCivilization
         if (s == null) return "No settlement here.";
         if (s.anchor) return "A Resonance Anchor already stands here.";
         if (s.kind == SettlementKind.Capital) return "Anchors are raised at Outposts and settlements beyond the Capital.";
+        if (s.kind == SettlementKind.Tributary) return "A tributary is too small to hold an Anchor: raise it at its hub or an independent settlement.";
         return null;
     }
 
@@ -443,23 +537,32 @@ public static class WorldCivilization
     // ===== GROWTH AND YIELDS =====
 
     /// <summary>
-    /// City Development moves toward each settlement's potential (down at half the rate when above it). Outposts do
-    /// not develop; a settlement cut off from your authority stops growing; an overstretched administration
-    /// (<paramref name="efficiency"/> below 1, <see cref="WorldTerritory.Efficiency"/>) slows the growth. True when any
-    /// whole point changed.
+    /// City Development moves toward each settlement's potential (down at half the rate when above it), faster on
+    /// desirable ground (<see cref="DesirabilityRules.GrowthFactor"/>); a tributary moves toward its own target
+    /// (<see cref="WorldTributaries.Target"/>) at its own rate. Outposts do not develop; a settlement cut off from your
+    /// authority stops growing; an overstretched administration (<paramref name="efficiency"/> below 1,
+    /// <see cref="WorldTerritory.Efficiency"/>) slows the growth. True when any whole point changed.
     /// </summary>
     public static bool Tick(WorldMap map, SettlementRules rules, int sevenths, float efficiency = 1f)
     {
         bool changed = false;
         var network = Networked(map);
-        foreach (var s in map.Settlements)
+        var desirability = rules.desirability ?? WorldDesirability.RulesOf(map);
+        var tributaries = rules.tributaries ?? WorldTributaries.RulesOf(map);
+        // Tributaries after their hubs, so they read this Seventh's hub.
+        foreach (var s in map.Settlements.OrderBy(x => x.kind == SettlementKind.Tributary ? 1 : 0).ToList())
         {
             if (s.kind == SettlementKind.Outpost) continue;
             var t = map.Get(s.coord);
             if (t == null) continue;
             if (!s.detached && t.authorityId != WorldAuthority.Player) continue;
-            float target = CityDevelopment.Evaluate(map, rules, t.index, network.Contains(s.id)).Potential;
-            float before = s.development, step = Math.Max(0f, rules.growthPerSeventh) * Math.Max(0, sevenths) * Math.Max(0f, Math.Min(1f, efficiency));
+            bool tributary = s.kind == SettlementKind.Tributary;
+            float target = tributary ? WorldTributaries.Target(map, tributaries, s) : Evaluate(map, rules, s, network.Contains(s.id)).Potential;
+            float rate = tributary ? tributaries.growthPerSeventh : rules.growthPerSeventh;
+            float pace = desirability.GrowthFactor(WorldDesirability.Of(map, desirability, t));
+            // A shaken settlement (Fractured, Spiraling) grows slower, as it yields less (WorldRuins.Output).
+            float whole = WorldRuins.Output(rules.loss ?? WorldRuins.RulesOf(map), s);
+            float before = s.development, step = Math.Max(0f, rate) * pace * whole * Math.Max(0, sevenths) * Math.Max(0f, Math.Min(1f, efficiency));
             s.development = s.development < target ? Math.Min(target, s.development + step) : Math.Max(target, s.development - step * 0.5f);
             if ((int)before != (int)s.development) changed = true;
         }
@@ -499,7 +602,8 @@ public static class WorldCivilization
         }
         foreach (var s in map.Settlements)
         {
-            float tens = s.development / 10f;
+            // A shaken settlement yields less (WorldRuins.Output).
+            float tens = s.development / 10f * WorldRuins.Output(rules.loss ?? WorldRuins.RulesOf(map), s);
             switch (s.kind)
             {
                 case SettlementKind.Town: Add($"Settlement: {s.name}", rules.townYields, tens); break;
@@ -510,6 +614,7 @@ public static class WorldCivilization
                 case SettlementKind.Haven: Add($"Settlement: {s.name}", rules.havenYields, tens * (map.Get(s.coord)?.coherence ?? 0f)); break;
             }
         }
+        yields.AddRange(WorldTributaries.Yields(map, rules.tributaries ?? WorldTributaries.RulesOf(map)));
         var bonus = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
         foreach (var (field, by, density) in Extractions(map))
         {
@@ -524,6 +629,8 @@ public static class WorldCivilization
         }
         foreach (var e in map.Enclaves.Where(e => e.suzerain))
             Add($"Suzerainty: {e.name}", settings.Enclave(e.spec)?.suzeraintyYields, 1f);
+        // The herds your suzerain keepers keep (WorldEnclaveEcology).
+        yields.AddRange(WorldEnclaveEcology.Yields(map, settings));
         return yields;
     }
 }

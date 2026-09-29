@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using UnityEngine;
 
-/// <summary>A deliberately additive nested save field; older records receive a fresh default instance.</summary>
+/// <summary>A deliberately additive save field: an older record without it gets a fresh default instance (nested objects) or keeps the current value (a system's or a world tile's own fields).</summary>
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class SaveOptionalFieldAttribute : Attribute { }
 
@@ -27,14 +27,20 @@ public static class SaveStateCodec
         }
         return node;
     }
+    // A field marked [SaveOptionalField] may be missing from an older save: it keeps the value it has.
     public static void Restore(object target, StateNode node, params string[] fields)
     {
-        if (node == null || node.kind != "object" || node.children.Count != fields.Length ||
-            node.children.Select(c => c.name).Distinct().Count() != fields.Length) throw new InvalidOperationException("Incomplete state record.");
+        if (node == null || node.kind != "object" || node.children.Select(c => c.name).Distinct().Count() != node.children.Count ||
+            node.children.Any(c => !fields.Contains(c.name))) throw new InvalidOperationException("Incomplete state record.");
         foreach (string name in fields)
         {
             var field = Field(target.GetType(), name);
-            var child = node.children.Single(c => c.name == name);
+            var child = node.children.SingleOrDefault(c => c.name == name);
+            if (child == null)
+            {
+                if (!field.IsDefined(typeof(SaveOptionalFieldAttribute), false)) throw new InvalidOperationException("Incomplete state record.");
+                continue;
+            }
             field.SetValue(target, Read(child, field.FieldType, field.GetValue(target)));
         }
     }
@@ -121,7 +127,7 @@ public static class SaveStateCodec
             if (child == null)
             {
                 if (!field.IsDefined(typeof(SaveOptionalFieldAttribute), false)) throw new InvalidOperationException("State schema changed: " + type.Name);
-                field.SetValue(result, Activator.CreateInstance(field.FieldType));
+                field.SetValue(result, field.FieldType == typeof(string) ? null : Activator.CreateInstance(field.FieldType));
                 continue;
             }
             field.SetValue(result, Read(child, field.FieldType, field.GetValue(result)));

@@ -18,12 +18,21 @@ public static class GenesisLoop
         _host.AddComponent<LegendProgress>();
         _host.AddComponent<AgeProgression>();
         _host.AddComponent<Pantry>();
+        _host.AddComponent<CultureSystem>();
+        _host.AddComponent<EdictSystem>();
         _host.AddComponent<WorldSystem>();
         _host.AddComponent<AgeBanner>();
         _host.AddComponent<WorldView>();
         _host.AddComponent<EraScoreHud>();
+        _host.AddComponent<CultureHud>();
         _host.AddComponent<NotificationFeed>();
         _host.AddComponent<BalladActorsView>();
+        _host.AddComponent<BalladJournalView>();
+        _host.AddComponent<BestiaryHud>();
+        _host.AddComponent<Tutorials>();
+        _host.AddComponent<PopulationHealth>();
+        _host.AddComponent<SpeciesLoreKeeper>();
+        _host.AddComponent<RumourKeeper>();
     }
 
     // Statics survive between play sessions when domain reload is disabled.

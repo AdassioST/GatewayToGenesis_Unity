@@ -21,6 +21,20 @@ public enum AchievementSignal
     MotifAwakened,
     /// <summary>A legend reached the Catalytic Abyss of Emotion (the Awakened State).</summary>
     CatalyticAbyss,
+    /// <summary>A settlement fell into ruins (<see cref="WorldRuins.Fall"/>): <see cref="AchievementEvent.flag"/> that it stood
+    /// beyond your Administrative Authority (an Outpost or a detached settlement).</summary>
+    SettlementLost,
+    /// <summary>A civic left behind by the ruins of a fallen settlement was adopted (<see cref="WorldSystem.AdoptRuinCivic"/>).</summary>
+    RuinCivicAdopted,
+    /// <summary>A settlement was founded on the ruins of one of yours that fell: the lost settlement reclaimed.</summary>
+    SettlementReclaimed,
+    /// <summary>The culture was reformed (<see cref="CultureSystem.Reform"/>): <see cref="AchievementEvent.flag"/> that it digested the
+    /// ways of a fallen settlement's ruins.</summary>
+    CultureReformed,
+    /// <summary>None of the civics in force when the culture was founded is left (<see cref="CultureSystem"/>).</summary>
+    FoundingCivicsGone,
+    /// <summary>Children were born in the Civilization (<see cref="PopGrowthLogic"/>): <see cref="AchievementEvent.amount"/> is the number born since the founding.</summary>
+    PeopleBorn,
 }
 
 /// <summary>
@@ -110,6 +124,21 @@ public static class AchievementTriggers
 
         // Witness any Legend reach the Catalytic Abyss of Emotion.
         ["the-crux-of-nigredo"] = e => e.signal == AchievementSignal.CatalyticAbyss,
+
+        // Reform a culture or adopt a Civic from the ruins of a fallen settlement: "The ruins of the past fuel the roots of the present."
+        ["digestive-rebirth"] = e => e.signal == AchievementSignal.RuinCivicAdopted || (e.signal == AchievementSignal.CultureReformed && e.flag),
+
+        // Have none of your original starting Civics: "Wait, at what point did we change culture?"
+        ["ship-of-theseus"] = e => e.signal == AchievementSignal.FoundingCivicsGone,
+
+        // Lose any settlement beyond the Administrative Authority of your borders.
+        ["404"] = e => e.signal == AchievementSignal.SettlementLost && e.flag,
+
+        // Reclaim a lost settlement back into your Civilization.
+        ["welcome-back-traitors"] = e => e.signal == AchievementSignal.SettlementReclaimed,
+
+        // Witness the first birth of your Civilization: "There is Beauty in That". Founding survivors arriving are migrants, not births.
+        ["there-is-beauty-in-that"] = e => e.signal == AchievementSignal.PeopleBorn && e.amount >= 1,
     };
 
     /// <summary>The achievements <paramref name="happening"/> earns (ids, in the table's order).</summary>

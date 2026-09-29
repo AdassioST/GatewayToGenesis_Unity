@@ -71,6 +71,16 @@ public static class WorldGeometry
         return points;
     }
 
+    /// <summary>The points of an Old World road (cell indices, <see cref="WorldMap.OldRoads"/>), for drawing and the travel grid.</summary>
+    public static List<Point> OldRoadPoints(WorldMap map, List<int> cells)
+    {
+        var points = new List<Point>();
+        if (map == null || cells == null) return points;
+        foreach (int c in cells)
+            if (c >= 0 && c < map.Count) points.Add(new Point(map[c].x, map[c].y));
+        return points;
+    }
+
     /// <summary>Chaikin corner cutting (the renderer's smoothing): each pass keeps the ends and replaces every corner by two points.</summary>
     public static List<Point> Smooth(List<Point> points, int passes = 2)
     {

@@ -192,7 +192,7 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 if (unit != null && string.Equals(unit.name, unitName, StringComparison.OrdinalIgnoreCase)) return unit;
             }
         }
-        return GameCatalog.Units.TryGet(unitName, out var found) ? found : null;
+        return GameCatalog.Units.TryGet(unitName, out var found) || RuntimeUnits.TryGet(unitName, out found) ? found : null;
     }
 
     public Sprite GetGameUnitIconByName(string unitName) => GetGameUnitByName(unitName)?.icon;
@@ -279,7 +279,9 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
         float baseCost = data.buildRequirementsAmount[requirementIndex];
         float costPercent = GetConstructionCostPercent(slot.gameUnit);
         var production = GlobalProductionManager.Instance;
-        bool isBuilding = slot.gameUnit.type != "Unit"; // units cost the same however many you own
+        // Repeated homes and food facilities retain their material cost. An exponential price is not a physical population limit.
+        string foodName = GameCatalog.ResourceNameFor(ResourceRole.Food);
+        bool isBuilding = slot.gameUnit.type != "Unit" && data.housing <= 0 && !data.producedResources.Contains(foodName); // units cost the same however many you own
         return ProductionRules.BuildCost(baseCost, costPercent, minimumConstructionCostShare, isBuilding,
             production != null ? production.costBalance : 0.05f, production != null ? production.techTier : 1f, slot.maxAmount);
     }
@@ -749,6 +751,14 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 break;
             case "Building Material Button":
                 if (buildingMaterialButton != null) buildingMaterialButton.SetActive(true);
+                break;
+            // The Bestiary: its HUD button reads the researched technology itself (BestiaryHud.Unlocked), so a load needs nothing here.
+            case SpeciesKnowledge.BestiaryUnlock:
+                GameLog.Event($"{unlockable.name}: {unlockable.effects}", Log);
+                break;
+            // Creature Studies: understanding reads the researched technology itself (SpeciesLoreKeeper.Understands).
+            case SpeciesLore.StudiesUnlock:
+                GameLog.Event($"{unlockable.name}: {unlockable.effects}", Log);
                 break;
             default:
                 if (unlockable.gameUnit != null && GameCatalog.IsProductionUnit(unlockable.gameUnit.name))

@@ -30,8 +30,10 @@ public static class TooltipContent
         {
             d.description = unit.description;
             d.type = unit.type;
-            string stores = Pantry.Instance != null ? Pantry.Instance.Describe(unit.name) : null;
+            string stores = unit.role == ResourceRole.Food ? Pantry.DescribeFood() : Pantry.Instance != null ? Pantry.Instance.Describe(unit.name) : null;
             if (stores != null) d.summary = stores;
+            string culture = CultureLifeRules.ResourceUse(CultureSystem.Instance != null ? CultureSystem.Instance.Life : new CultureLifeTuning(), unit.name);
+            if (culture != null) d.summary = string.IsNullOrEmpty(d.summary) ? culture : d.summary + "\n" + culture;
             Keywords.AddLore(d, ResourceKeyword(unit.name));
         }
         return true;
@@ -252,10 +254,20 @@ public static class TooltipContent
         foreach (var goal in goals)
         {
             bool met = slot.enlightenedCompleted || goal.IsMet();
+            // A riddle is read, not tracked: no progress, a clue once the people are on the right path, the plain goal once answered.
+            if (goal.IsRiddle && !met)
+            {
+                sb.Append("\n").Append(TooltipText.Bullet($"<i>{goal.riddle.Trim()}</i>", TooltipText.MutedHex));
+                if (goal.ClueShown()) sb.Append("\n").Append(TooltipText.Muted($"   Clue: {goal.clue.Trim()}"));
+                continue;
+            }
             string progress = slot.enlightenedCompleted ? string.Empty : goal.ProgressText();
             string text = string.IsNullOrEmpty(progress) ? goal.Describe() : $"{goal.Describe()} {TooltipText.Muted(progress)}";
+            if (goal.IsRiddle) text += TooltipText.Muted($" (the riddle: {goal.riddle.Trim()})");
             sb.Append("\n").Append(TooltipText.Bullet(met ? TooltipText.Good(text) : text, met ? Good : TooltipText.MutedHex));
         }
+        if (!slot.enlightenedCompleted && goals.Any(g => g.IsRiddle && !g.IsMet()))
+            sb.Append("\n").Append(TooltipText.Muted("A riddle names no goal and counts no progress: work out what it asks, and the technology is enlightened the moment your people do it."));
 
         // Event and Crisis Technologies also earn Era Score when enlightened (AgeProgression awards it).
         var age = AgeProgression.Instance != null ? AgeProgression.Instance.Current : null;
@@ -344,7 +356,7 @@ public static class TooltipContent
 
             case TechUnlockableType.DemandModifier:
                 d.type = "Bonus Modifier";
-                d.effects = $"Reduces the Food Demand of Population by {unlockable.resourceModifier}%";
+                d.effects = $"Reduces food distribution losses; never reduces basic nutritional needs ({unlockable.resourceModifier}% of the original loss allowance)";
                 d.description = "Not starving anymore...";
                 break;
 
@@ -383,7 +395,9 @@ public static class TooltipContent
         if (legend == null) return false;
         d.title = legend.legendName;
         d.description = legend.personalQuote;
-        d.type = $"{legend.rarity} {LegendClasses.Title(legend.legendClass)}";
+        // Greats are earned (LegendGreats): the type line shows what the legend has become, not the Great it leans toward.
+        var standing = LegendProgress.Instance != null && LegendProgress.Instance.IsRecruited(legend.legendName) ? LegendProgress.Instance.GreatsTitle(legend.legendName) : LegendGreats.UnattunedTitle;
+        d.type = $"{legend.rarity} {standing}";
         d.requirements = legend.councilAssignmentDescription;
 
         var government = GovernmentLogic.Instance;
@@ -407,6 +421,7 @@ public static class TooltipContent
         {
             d.summary = LegendSoulText.Summary(soul, LegendLore.ComposureTuning);
             d.details = LegendSoulText.Details(soul, LegendLore.Traits, progress.Bindings(legend.legendName), LegendLore.Composure, LegendLore.ComposureTuning);
+            d.details += "\n\n" + TooltipText.Heading("Relationships") + "\n" + progress.RelationshipText(legend.legendName);
         }
 
         var sb = new StringBuilder();
@@ -515,9 +530,7 @@ public static class TooltipContent
 
     public static string AllowedClasses(CouncilSeat seat)
     {
-        var classes = seat.allowedLegendClasses;
-        int classCount = System.Enum.GetValues(typeof(LegendClass)).Length;
-        return classes == null || classes.Count == 0 || classes.Count >= classCount ? "Any/All Classes" : string.Join(" - ", classes.Select(LegendClasses.Title));
+        return LegendGreats.Requirement(seat.allowedLegendClasses, seat.requiredStars);
     }
 
     private static string SeatBonusLines(CouncilSeat seat)

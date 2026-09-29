@@ -31,6 +31,15 @@ public class EraScoreHud : MonoBehaviour
         var icon = root.transform.Find("Icon");
         _trigger = TooltipTrigger.Ensure(icon != null ? icon.gameObject : root);
         if (_amount != null) TooltipTrigger.Ensure(_amount.gameObject);
+        // Clicking the sun opens the Chronicle, the whole timeline of Era Score.
+        foreach (var go in new[] { icon != null ? icon.gameObject : root, _amount != null ? _amount.gameObject : null })
+        {
+            if (go == null) continue;
+            var graphic = go.GetComponent<UnityEngine.UI.Graphic>();
+            if (graphic != null) graphic.raycastTarget = true;
+            var button = go.GetComponent<UnityEngine.UI.Button>() ?? go.AddComponent<UnityEngine.UI.Button>();
+            button.onClick.AddListener(EraTimelineWindow.Toggle);
+        }
         _ages = AgeProgression.Instance;
         if (_ages != null)
         {
@@ -56,7 +65,7 @@ public class EraScoreHud : MonoBehaviour
     {
         if (_amount == null) return;
         // A brief swell when Era Score is earned.
-        float t = Mathf.Clamp01((_pulseUntil - Time.unscaledTime) / 0.6f);
+        float t = GameSettings.ReduceMotion ? 0f : Mathf.Clamp01((_pulseUntil - Time.unscaledTime) / 0.6f);
         _amount.transform.localScale = _baseScale * (1f + 0.35f * Mathf.Sin(t * Mathf.PI));
     }
 
@@ -75,6 +84,8 @@ public class EraScoreHud : MonoBehaviour
             text.AppendLine();
             foreach (var line in _ages.EraScoreLog.Take(6)) text.AppendLine(TooltipText.Bullet(line));
         }
+        text.AppendLine();
+        text.AppendLine(TooltipText.Muted("Click for the Chronicle: every award since the world began, by Cycle, Echo and Phase."));
         if (_trigger != null) _trigger.SetCustom("Era Score", KeywordMarkup.SafeGlyphs(text.ToString().TrimEnd()));
         if (_amount != null) TooltipTrigger.Ensure(_amount.gameObject).SetCustom("Era Score", KeywordMarkup.SafeGlyphs(text.ToString().TrimEnd()));
     }

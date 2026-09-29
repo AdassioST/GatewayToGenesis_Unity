@@ -126,7 +126,7 @@ public struct HexCoord : IEquatable<HexCoord>
     /// Which quarter of the world a hex lies in, by the direction of its centre from the capital: 0 north-east,
     /// 1 north-west, 2 south-west, 3 south-east (the capital itself is 0).
     /// </summary>
-    public int Quadrant()
+    public int Quarter()
     {
         ToPixel(1f, out float x, out float y);
         bool east = x > 0f || (Math.Abs(x) < 0.0001f && y >= 0f);

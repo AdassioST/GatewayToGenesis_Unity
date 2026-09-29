@@ -32,8 +32,29 @@ public class Pantry : SingletonBehaviour<Pantry>
 
     protected override void OnSingletonAwake()
     {
-        Settings = Resources.Load<PantrySettings>("Food/Pantry");
-        if (Settings == null) GameLog.Warning("No Resources/Food/Pantry: there are no food stores.", Log);
+        // A copy for this world: the kinds the people invent (AddKind) are added to it, never to the asset.
+        var asset = Resources.Load<PantrySettings>("Food/Pantry");
+        if (asset == null) GameLog.Warning("No Resources/Food/Pantry: there are no food stores.", Log);
+        else Settings = Instantiate(asset);
+    }
+
+    protected override void OnSingletonDestroy()
+    {
+        if (Settings == null) return;
+        if (Application.isPlaying) Destroy(Settings);
+        else DestroyImmediate(Settings);
+    }
+
+    /// <summary>
+    /// A kind of stored food made during play (a dish or drink the people invented): added to this world's stores, or
+    /// brought up to date when it is already known. False with no stores.
+    /// </summary>
+    public bool AddKind(FoodKind kind)
+    {
+        if (Settings == null || kind == null || string.IsNullOrEmpty(kind.resource)) return false;
+        Settings.kinds.RemoveAll(k => k != null && string.Equals(k.resource, kind.resource, StringComparison.OrdinalIgnoreCase));
+        Settings.kinds.Add(kind);
+        return true;
     }
 
     // ===== QUERIES =====
@@ -83,6 +104,16 @@ public class Pantry : SingletonBehaviour<Pantry>
 
     public static bool IsStoredFood(string resource) => Instance != null && Instance.Settings != null && Instance.Settings.Kind(resource) != null;
 
+    /// <summary>What a resource is to the kitchen (Edible, Tea, Beverage, Ingredient, Spice), or null when the pantry does not know it.</summary>
+    public static FoodClass? ClassOf(string resource)
+    {
+        var kind = Instance != null && Instance.Settings != null ? Instance.Settings.Kind(resource) : null;
+        return kind != null ? kind.cuisine : (FoodClass?)null;
+    }
+
+    /// <summary>Raised when stored food is eaten to cover a shortfall of Food (resource, amount): the culture's foodways listen.</summary>
+    public static event Action<string, float> Eaten;
+
     /// <summary>Why <paramref name="value"/> of food value cannot be paid now, or null.</summary>
     public static string WhyNotAfford(float value)
     {
@@ -108,7 +139,10 @@ public class Pantry : SingletonBehaviour<Pantry>
         float spoil = kind.spoilPerSeventh * PreservationMultiplier;
         var rows = new List<string>
         {
-            TooltipText.Row("Food value", kind.foodValue == 1f ? "1 (feeds like Food)" : kind.foodValue < 1f ? $"{kind.foodValue:0.##} ({1f / kind.foodValue:0.#} feed like one Food)" : $"{kind.foodValue:0.##} (one feeds like {kind.foodValue:0.#} Food)"),
+            TooltipText.Row("Kitchen", CultureRules.ClassName(kind.cuisine) + (kind.cuisine == FoodClass.Ingredient ? " (eaten raw only when the edibles run out)" : kind.cuisine == FoodClass.Spice ? " (never eaten to fill a belly)"
+                : kind.cuisine == FoodClass.EleosTea ? " (drunk like food; a category of its own at the table)"
+                : kind.cuisine == FoodClass.Beverage ? " (from the cellar: drunk for joy, opened for hunger only once all else is gone)" : string.Empty)),
+            TooltipText.Row("Food value", kind.cuisine == FoodClass.Spice || kind.foodValue <= 0f ? "none" : kind.foodValue == 1f ? "1 (feeds like Food)" : kind.foodValue < 1f ? $"{kind.foodValue:0.##} ({1f / kind.foodValue:0.#} feed like one Food)" : $"{kind.foodValue:0.##} (one feeds like {kind.foodValue:0.#} Food)"),
             TooltipText.Row("Spoils", spoil <= 0f ? "never" : $"{spoil:P1} of the stock each Seventh"),
             TooltipText.Row("All stores", $"{Value:0.#} food value in {Variety} kind{(Variety == 1 ? "" : "s")}"),
         };
@@ -132,9 +166,49 @@ public class Pantry : SingletonBehaviour<Pantry>
         float seconds = _elapsed;
         _elapsed = 0f;
         // What the stores fed in since the last step is taken from them now.
-        if (CoverRate > 0f) Take(CoverRate * seconds);
+        if (CoverRate > 0f) Take(CoverRate * seconds, eaten: true);
         Spoil(units);
         UpdateCover(units);
+        Bank(units);
+    }
+
+    // ===== SURPLUS INTO THE STORES =====
+
+    /// <summary>
+    /// Food gathered beyond a hand's worth (<see cref="PantrySettings.keepInHand"/>) goes into the stores: only once the
+    /// founders are all in (their rations come first) and the storage technology is known.
+    /// </summary>
+    public bool Banking => Settings != null && Settings.Kind(Settings.bankedKind) != null && Researched(Settings.bankTechnology)
+        && (PopGrowthLogic.Instance == null || PopGrowthLogic.Instance.FoundingDone);
+
+    /// <summary>Food kept in hand while the surplus is stored (0 when nothing is banked).</summary>
+    public float KeptInHand => Banking ? Mathf.Max(0f, Settings.keepInHand) : 0f;
+
+    private void Bank(GameUnitsLogic units)
+    {
+        if (!Banking) return;
+        string food = GameCatalog.ResourceNameFor(ResourceRole.Food);
+        var kind = Settings.Kind(Settings.bankedKind);
+        if (food == null || kind.foodValue <= 0f) return;
+        var slot = units.GetResourceSlotFromName(kind.resource);
+        float room = kind.keepsOwnRoom && slot != null ? slot.maxAmount : Capacity;
+        float take = PantryRules.Banked(units.GetResourceAmountExact(food), Settings.keepInHand, units.GetResourceAmountExact(kind.resource), room, kind.foodValue);
+        if (take < 0.01f) return;
+        units.ChangeResourceFromName(food, -take, false);
+        units.ChangeResourceFromName(kind.resource, take / kind.foodValue, false);
+    }
+
+    /// <summary>For the Food counter's tooltip: where gathered Food goes now (the gates, the stores, or it piles up).</summary>
+    public static string DescribeFood()
+    {
+        var pop = PopGrowthLogic.Instance;
+        if (pop != null && pop.FoundersWaiting > 0)
+            return TooltipText.Muted($"{pop.FoundersWaiting} founders wait at the gates. Every {pop.GetArrivalRations():0} Food gathered lets one in, provisioned for good: the founders never draw on the daily food.");
+        var pantry = Instance;
+        if (pantry == null || pantry.Settings == null) return null;
+        if (pantry.Banking)
+            return TooltipText.Muted($"Food beyond {pantry.Settings.keepInHand:0} is put into the stores as {pantry.Settings.bankedKind}, where it keeps (and slowly spoils) until it is needed.");
+        return TooltipText.Muted($"Food piles up here until {pantry.Settings.bankTechnology} is known; then what is gathered beyond {pantry.Settings.keepInHand:0} goes into the stores.");
     }
 
     // The survivors' cellars: given once, when a world begins (a restored save overwrites the amounts).
@@ -153,7 +227,7 @@ public class Pantry : SingletonBehaviour<Pantry>
         foreach (var s in Stock())
         {
             var slot = units.GetResourceSlotFromName(s.kind.resource);
-            if (slot != null && room > 0f && !Mathf.Approximately(slot.maxAmount, room)) slot.maxAmount = room;
+            if (slot != null && room > 0f && !s.kind.keepsOwnRoom && !Mathf.Approximately(slot.maxAmount, room)) slot.maxAmount = room;
             float rate = PantryRules.SpoilPerSecond(s.amount, s.kind.spoilPerSeventh, preservation, perSeventh);
             _spoilRates.TryGetValue(s.kind.resource, out float was);
             if (Mathf.Abs(rate - was) < 1e-5f && (rate > 0f || was == 0f)) continue;
@@ -175,12 +249,21 @@ public class Pantry : SingletonBehaviour<Pantry>
         production.SetFlatRate(food, CoverSource, cover);
     }
 
-    private void Take(float value)
+    // Draw food value from the stores. Eaten food (a shortfall covered) is told to the culture and leaves its
+    // leftovers for the kitchen (Peach Pits); food paid for land is neither.
+    private void Take(float value, bool eaten = false)
     {
         var units = GameUnitsLogic.Instance;
         if (units == null) return;
         foreach (var (resource, amount) in PantryRules.Draw(Stock(), value))
-            if (amount > 0f) units.ChangeResourceFromName(resource, -amount, false);
+        {
+            if (amount <= 0f) continue;
+            units.ChangeResourceFromName(resource, -amount, false);
+            if (!eaten) continue;
+            var left = PantryRules.Leftover(Settings.Kind(resource), amount);
+            if (left.HasValue && units.GetResourceSlotFromName(left.Value.resource) != null) units.ChangeResourceFromName(left.Value.resource, left.Value.amount, false);
+            Eaten?.Invoke(resource, amount);
+        }
     }
 
     private static float SecondsPerSeventh()

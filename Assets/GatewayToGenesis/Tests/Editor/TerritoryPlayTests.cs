@@ -2,7 +2,6 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
-using TMPro;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -52,14 +51,29 @@ public class TerritoryPlayTests
         for (int i = 0; i < 3; i++) Call(world, "TerritoryTick", 1f);
         Assert.AreEqual(before, map.Tiles.Count(t => t.authorityId == WorldAuthority.Player), "held borders adopt nothing");
 
-        // Measured: the Capital's society brings land in, the best first.
+        // Measured, but too few citizens in the Capital: no one goes out to settle.
         world.SetBorderPolicy(BorderPolicy.Measured);
+        var people = PopGrowthLogic.Instance;
+        int citizens = people.population;
+        var rules = world.Rules.territory;
+        people.population = rules.adoptionMinPopulation - 1;
+        for (int i = 0; i < 3; i++) Call(world, "TerritoryTick", 1f);
+        Assert.IsFalse(map.Tiles.Any(t => t.microHeldMask != 0 && t.authorityId == WorldAuthority.Wilderness), "no settlers below the minimum population");
+        StringAssert.Contains("citizens", (string)typeof(WorldView).GetMethod("RealmText", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { world, world.Realm }));
+
+        // Enough citizens: the Capital's society brings land in hex by hex, the best cell first, whole after seven.
+        people.population = rules.adoptionFullPopulation;
         var first = world.NextAdoptions(1).FirstOrDefault();
         Assert.IsNotNull(first.seat, "some known land waits to be adopted");
-        for (int i = 0; i < 4; i++) Call(world, "TerritoryTick", 1f);
+        Call(world, "TerritoryTick", 1f);
+        for (int i = 0; i < 60 && map[first.cell].microHeldMask == 0; i++) Call(world, "TerritoryTick", 1f);
+        Assert.Greater(WorldMap.SettledHexes(map[first.cell]), 0, "a hex of the best candidate is settled");
+        for (int i = 0; i < 120 && map[first.cell].authorityId != WorldAuthority.Player; i++) Call(world, "TerritoryTick", 1f);
+        people.population = citizens;
         int after = map.Tiles.Count(t => t.authorityId == WorldAuthority.Player);
         Assert.Greater(after, before, "society adopts land by itself");
         Assert.AreEqual(WorldAuthority.Player, map[first.cell].authorityId, "the best candidate first");
+        Assert.IsTrue(WorldTerritory.FullySettled(map[first.cell]), "every hex of it settled");
         var realm = world.Realm;
         Assert.AreEqual(after, realm.cells);
         Assert.Greater(realm.capacity, 0f);
@@ -73,9 +87,10 @@ public class TerritoryPlayTests
         var popupType = view.GetType().GetNestedType("Popup", BindingFlags.NonPublic);
         Call(view, "ShowPopup", System.Enum.Parse(popupType, "Realm"));
         yield return null;
-        var ledger = (TextMeshProUGUI)view.GetType().GetField("_realmText", Private).GetValue(view);
-        StringAssert.Contains("Administrative Capacity", ledger.text);
-        StringAssert.Contains("Wide or tall", ledger.text);
+        // The panel is drawn from RealmText into the popup's pooled rows.
+        var ledger = (string)typeof(WorldView).GetMethod("RealmText", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { world, world.Realm });
+        StringAssert.Contains("Administrative Capacity", ledger);
+        StringAssert.Contains("Wide or tall", ledger);
         foreach (var lens in new[] { WorldLens.Beauty, WorldLens.Territory })
         {
             Call(view, "SetLens", lens);

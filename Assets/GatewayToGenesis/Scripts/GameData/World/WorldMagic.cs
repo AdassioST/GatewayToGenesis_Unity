@@ -80,10 +80,10 @@ public class WorldMagic
         var rng = new Random(WorldNoise.Stream(seed, "magic:seeds"));
         var capital = map.Get(map.Capital);
 
-        // Coherence Seeds: in each slot's dry interior, as many as its sector asks.
+        // Coherence Seeds: in each slot's dry interior, as many as its quadrant asks.
         foreach (var placement in map.Placements)
         {
-            int count = settings.Sector(placement.slot.sector)?.coherenceSeeds ?? 1;
+            int count = settings.Quadrant(placement.slot.quadrant)?.coherenceSeeds ?? 1;
             var cells = map.Tiles.Where(t => t.slot == placement.slot.index && !t.water && !t.seam).ToList();
             if (cells.Count == 0) cells = map.Tiles.Where(t => t.slot == placement.slot.index && !t.water).ToList();
             for (int k = 0; k < count && cells.Count > 0 && magic.Seeds.Count < MaxFamilies; k++)
@@ -110,7 +110,7 @@ public class WorldMagic
         for (int i = 0; i < n; i++)
         {
             var t = map[i];
-            float baseline = t.water ? 0.4f : settings.Biome(t.biome)?.coherence ?? 0.45f;
+            float baseline = t.water ? 0.4f : settings.MacroBiome(t.macroBiome)?.coherence ?? 0.45f;
             float plus = 0f, minus = 0f;
             foreach (var source in magic.Seeds)
             {
@@ -129,6 +129,13 @@ public class WorldMagic
         // Sacred Sites: the highest Coherence on dry, passable ground, far apart and away from the capital.
         var ranked = Enumerable.Range(0, n).Where(i => !map[i].water && settings.Terrain(map[i].terrain)?.passable != false && (capital == null || HexCoord.Distance(map[i].coord, capital.coord) >= 8))
             .OrderByDescending(i => magic._baseCoherence[i]).ThenBy(i => i).ToList();
+        // One sacred destination belongs to the opening exploration, before the distant pilgrimage sites.
+        // Prefer the most naturally coherent ground in that band; it receives the same protection as every site.
+        if (settings.sacredSites > 0 && capital != null && settings.resourceSites != null && settings.resourceSites.Any(s => s != null && s.requiresCoherentRefuge))
+        {
+            int nearby = ranked.Where(i => !map[i].impassable && HexCoord.Distance(map[i].coord, capital.coord) <= 16).DefaultIfEmpty(-1).First();
+            if (nearby >= 0) magic.SacredSites.Add(nearby);
+        }
         foreach (int i in ranked)
         {
             if (magic.SacredSites.Count >= settings.sacredSites) break;
@@ -184,6 +191,48 @@ public class WorldMagic
         _anchorCoherence = coherence;
         _anchorRadius = Math.Max(0, radius);
         _anchorPull = Math.Max(0, pull);
+    }
+
+    // Coherence lent or taken by what stands on the land (resource sites: a Lunehymn well steadies, an Emberwhisper
+    // spire unsettles), added to each cell at every commit.
+    private float[] _shifts;
+
+    /// <summary>
+    /// Coherence each cell gains or loses from what stands on it (<see cref="WorldResources"/>). False when nothing
+    /// changed; otherwise call <see cref="Refield"/> (or the next <see cref="Apply"/>) for it to take effect.
+    /// </summary>
+    public bool SetShifts(float[] shifts) => Replace(ref _shifts, shifts);
+
+    // Dissonance drunk or lent by what grows on the land (Eleos Blooms that listen keep it from stagnating in the soil),
+    // added to each cell's Dissonance at every commit.
+    private float[] _dissonanceShifts;
+
+    /// <summary>Dissonance each cell gains or loses from what grows on it (<see cref="WorldResources"/>); as <see cref="SetShifts"/>.</summary>
+    public bool SetDissonanceShifts(float[] shifts) => Replace(ref _dissonanceShifts, shifts);
+
+    /// <summary>A cell's Dissonance before what grows on it (0 on Sacred ground).</summary>
+    public float BaseDissonance(int cell) => _dissonance == null || cell < 0 || cell >= _dissonance.Length || _protected[cell] ? 0f : _dissonance[cell];
+
+    private static bool Replace(ref float[] held, float[] shifts)
+    {
+        bool none = shifts == null || Array.TrueForAll(shifts, s => s == 0f);
+        if (none && held == null) return false;
+        if (!none && held != null && held.Length == shifts.Length)
+        {
+            bool same = true;
+            for (int i = 0; i < shifts.Length && same; i++) same = held[i] == shifts[i];
+            if (same) return false;
+        }
+        held = none ? null : (float[])shifts.Clone();
+        return true;
+    }
+
+    /// <summary>Recompute Coherence and magical fertility for the current Age without re-routing the leylines.</summary>
+    public void Refield(WorldMap map)
+    {
+        if (Age < 0) return;
+        Fields(map, Age);
+        Version++;
     }
 
     /// <summary>Re-route the current Age after an Anchor changed (the geography, rivers and Sacred Sites stay).</summary>
@@ -415,6 +464,7 @@ public class WorldMagic
             }
         }
         float access = _settings.MagicAccess(age);
+        var vibration = _settings.vibration;
         for (int i = 0; i < map.Count; i++)
         {
             var t = map[i];
@@ -422,18 +472,30 @@ public class WorldMagic
             float influence = distance[i] < 0 ? 0f : 1f - distance[i] / (float)(radius + 1);
             influence *= influence;
             t.leylineInfluence = influence;
-            float support = (_settings.leylineDriftStrength * influence) + (t.junction >= 3 ? 0.2f : t.junction == 2 ? 0.1f : 0f) + (t.silver ? 0.05f : 0f) + anchored[i];
-            float coherence = _baseCoherence[i] + support;
+            // Vibrational Fallout, where the Dissonance broke the Loom: nothing built or grown heals it (WorldVibration).
+            float fallout = WorldVibration.Fallout(vibration, _dissonance[i], _protected[i]);
+            float heal = vibration != null && vibration.unhealable ? 1f - fallout : 1f;
+            float support = (_settings.leylineDriftStrength * influence) + (t.junction >= 3 ? 0.2f : t.junction == 2 ? 0.1f : 0f) + (t.silver ? 0.05f : 0f) + anchored[i] * heal;
+            float density = WorldVibration.Density(vibration, t, _settings.seaLevel, fallout);
+            float coherence = _baseCoherence[i] + support + (_shifts != null && i < _shifts.Length ? _shifts[i] : 0f) + WorldVibration.CoherenceShift(vibration, density);
             if (_protected[i])
             {
                 coherence = Math.Max(coherence + _dissonance[i], 0.9f); // Sacred ground shrugs off common dissonance
                 t.dissonance = 0f;
             }
-            else t.dissonance = _dissonance[i];
+            else
+            {
+                float drunk = _dissonanceShifts != null && i < _dissonanceShifts.Length ? _dissonanceShifts[i] : 0f;
+                t.dissonance = Math.Max(0f, _dissonance[i] + (drunk < 0f ? drunk * heal : drunk));
+            }
+            t.fallout = fallout;
+            t.vibrationalDensity = density;
+            t.falloutTravel = WorldVibration.TravelFactor(vibration, fallout);
             t.coherence = Clamp(coherence, 0f, 1f);
             float flow = Math.Min(1f, (0.5f * influence) + 0.4f * t.lunehymn + (t.junction >= 3 ? 0.4f : t.junction == 2 ? 0.25f : 0f) + (t.sacred ? 0.5f : 0f));
             t.magicFertility = t.water && !t.lake ? 0f : Clamp(t.coherence * (0.25f + 0.75f * flow) * access, 0f, 1f);
         }
+        WorldVibration.Cascades(map, vibration);
     }
 
     private static float Clamp(float v, float min, float max) => v < min ? min : v > max ? max : v;

@@ -59,15 +59,15 @@ public class GameResourceSlot : MonoBehaviour, IGameUnitSlot, ITooltipSource
         amountText.text = GameUnitsLogic.Instance.FormatValue(amount);
         productionRateText.text = GameUnitsLogic.Instance.FormatValue(productionRate) + "/s";
 
-        // Food shows progress towards the next population growth instead of storage.
-        if (gameUnit.role == ResourceRole.Food && PopGrowthLogic.Instance != null)
+        // Food fills toward the next founder's rations (0-12) while the founders wait; once surplus Food goes into the
+        // stores, toward the hand's worth kept; otherwise it is a reserve against its storage.
+        float bar = maxAmount;
+        if (gameUnit.role == ResourceRole.Food)
         {
-            fill.fillAmount = Mathf.Clamp01(amount / Mathf.Max(1f, PopGrowthLogic.Instance.GetEffectiveFoodThreshold()));
+            float kept = Pantry.Instance != null ? Pantry.Instance.KeptInHand : 0f;
+            bar = PopGrowthLogic.Instance != null ? PopGrowthLogic.Instance.FoodBarMaximum(kept > 0f ? kept : maxAmount) : maxAmount;
         }
-        else
-        {
-            fill.fillAmount = maxAmount > 0f ? amount / maxAmount : 0f;
-        }
+        fill.fillAmount = bar > 0f ? Mathf.Clamp01(amount / bar) : 0f;
 
         if (_initialized) productionRateText.color = productionRate < 0 ? Color.red : originalProductionRateColor;
     }

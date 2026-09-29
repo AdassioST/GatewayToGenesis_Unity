@@ -4,7 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// The Government tab: the Head of State, the open council positions, the active civics, and the two pools that open
-/// when a position is clicked (legends to seat there, and other seats to put there instead).
+/// when a position is clicked (legends to seat there, and other seats to put there instead). Its Edicts section (the
+/// realm's stances and decrees, <see cref="EdictsSection"/>) is built in code inside the Display.
 ///
 /// A view, never a rule: every change goes through <see cref="GovernmentLogic"/> / <see cref="CivicManager"/>, whose
 /// events only mark parts of the tab dirty. The tab redraws each dirty part once, at the end of the frame, re-binding
@@ -91,6 +92,8 @@ public class GovernmentTab : MonoBehaviour
         SetPool(leaderPoolCanvasGroup, false);
         SetPool(civicPoolCanvasGroup, false);
         _councilDirty = _civicsDirty = true;
+        // The Edicts section lives inside the Display, so it shows and hides with the tab.
+        if (displayCanvasGroup != null) EdictsSection.Attach(displayCanvasGroup.transform as RectTransform);
     }
 
     private void OnDestroy()

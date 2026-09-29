@@ -12,7 +12,8 @@ using UnityEngine.InputSystem;
 /// <see cref="TabHotkeys"/> in the scene); code subscribes to the static C# events, which outlive the scene object (the Library window).
 ///
 /// Hotkeys are ignored while a text field has focus and while Ctrl or Alt is held (Ctrl + key is reserved for
-/// developer shortcuts, <see cref="InputUtils.DebugKeyDown"/>). Cancel always fires.
+/// developer shortcuts, <see cref="InputUtils.DebugKeyDown"/>). Cancel always fires: to the menu while it holds the screen,
+/// else to the open windows, and to the quick menu when no window was open (<see cref="CancelUnclaimed"/>).
 /// </summary>
 [DefaultExecutionOrder(-500)]
 public class GameInput : SingletonBehaviour<GameInput>
@@ -25,12 +26,18 @@ public class GameInput : SingletonBehaviour<GameInput>
     public static event Action MapPressed;
     /// <summary>Escape: close whatever is open.</summary>
     public static event Action CancelPressed;
+    /// <summary>Escape while the menu holds the screen: the menu backs out, and nothing behind it closes.</summary>
+    public static event Action MenuCancelPressed;
+    /// <summary>Escape when no window was open to take it (<see cref="OpenWindows"/>): the quick menu opens.</summary>
+    public static event Action CancelUnclaimed;
 
     private PlayerControls _controls;
 
     protected override void OnSingletonAwake()
     {
         _controls = new PlayerControls();
+        // The player's own keys (Options, Controls) over the defaults.
+        KeyBindings.Register(_controls.asset);
         var map = _controls.DefaultControls;
         map.Storage.performed += _ => Hotkey(() => OnStorageTab?.Invoke());
         map.Production.performed += _ => Hotkey(() => OnProductionTab?.Invoke());
@@ -38,7 +45,18 @@ public class GameInput : SingletonBehaviour<GameInput>
         map.Research.performed += _ => Hotkey(() => OnResearchTab?.Invoke());
         map.Library.performed += _ => Hotkey(() => LibraryPressed?.Invoke());
         map.Map.performed += _ => Hotkey(() => MapPressed?.Invoke());
-        map.Cancel.performed += _ => CancelPressed?.Invoke();
+        map.Cancel.performed += _ => Cancel();
+    }
+
+    private static void Cancel()
+    {
+        // The Escape that ends listening for a new key does nothing else.
+        if (KeyBindings.Busy) return;
+        if (SaveMenu.BlocksGameplay) { MenuCancelPressed?.Invoke(); return; }
+        // Asked before the windows close themselves.
+        bool claimed = OpenWindows.Any;
+        CancelPressed?.Invoke();
+        if (!claimed) CancelUnclaimed?.Invoke();
     }
 
     private void OnEnable() => _controls?.Enable();

@@ -3,35 +3,35 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// One biome slot of the stencil: a block of same-sector cells (WORLD_GENERATION.md §1). Its tags say where it
+/// One biome slot of the stencil: a block of same-quadrant cells (WORLD_GENERATION.md §1). Its tags say where it
 /// lies (north, south, east, west, coast or inland, core), which the biome catalog's requirements are checked against.
 /// </summary>
 public class StencilSlot
 {
     public int index;
-    public string sector;
-    /// <summary>Stable id of the slot: sector, instance and a number ("S5 South-East 2").</summary>
+    public string quadrant;
+    /// <summary>Stable id of the slot: quadrant, instance and a number ("Q5 South-East 2").</summary>
     public string id;
-    /// <summary>Stable id of the sector instance it belongs to ("S5 South-East").</summary>
+    /// <summary>Stable id of the quadrant instance it belongs to ("Q5 South-East").</summary>
     public string instance;
     public readonly List<(int col, int row)> cells = new List<(int col, int row)>();
     /// <summary>Centre in stencil cells (column, row; row 0 is north).</summary>
     public float centerCol, centerRow;
     public readonly HashSet<string> tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    /// <summary>Slots separated from this one by P alone (any sector): their seams are solved together.</summary>
+    /// <summary>Slots separated from this one by an intersection alone (any quadrant): their seams are solved together.</summary>
     public readonly List<int> neighbours = new List<int>();
 
     public override string ToString() => id;
 }
 
 /// <summary>
-/// The composition stencil (Resources/World/Composition.txt): a grid of S1-S7 sector cells, P (procedural connective
+/// The composition stencil (Resources/World/Composition.txt): a grid of Q1-Q7 quadrant cells, I (procedural
 /// terrain) and W (ocean), north at the top. Parsed with no scene state (tested in <c>WorldGenerationTests</c>).
-/// Each connected block of one sector is a slot; blocks of a sector that only P separates form one sector instance.
+/// Each connected block of one quadrant is a slot; blocks of a quadrant that only an intersection separates form one quadrant instance.
 /// </summary>
 public class WorldStencil
 {
-    public const string Ocean = "W", Connective = "P";
+    public const string Ocean = "W", Intersection = "I";
 
     public int Width { get; private set; }
     public int Height { get; private set; }
@@ -42,14 +42,14 @@ public class WorldStencil
 
     public string At(int col, int row) => col >= 0 && row >= 0 && col < Width && row < Height ? _tokens[col, row] : Ocean;
 
-    /// <summary>The slot owning a stencil cell, or -1 (P, W, off the stencil).</summary>
+    /// <summary>The slot owning a stencil cell, or -1 (I, W, off the stencil).</summary>
     public int SlotAt(int col, int row) => col >= 0 && row >= 0 && col < Width && row < Height ? _slotAt[col, row] : -1;
 
-    public static bool IsSector(string token) => token != null && token.Length > 1 && (token[0] == 'S' || token[0] == 's');
+    public static bool IsQuadrant(string token) => token != null && token.Length > 1 && (token[0] == 'Q' || token[0] == 'q');
 
-    public IEnumerable<string> SectorIds => Slots.Select(s => s.sector).Distinct(StringComparer.OrdinalIgnoreCase);
+    public IEnumerable<string> QuadrantIds => Slots.Select(s => s.quadrant).Distinct(StringComparer.OrdinalIgnoreCase);
 
-    public IEnumerable<StencilSlot> SlotsOf(string sector) => Slots.Where(s => string.Equals(s.sector, sector, StringComparison.OrdinalIgnoreCase));
+    public IEnumerable<StencilSlot> SlotsOf(string quadrant) => Slots.Where(s => string.Equals(s.quadrant, quadrant, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Parse the stencil. Lines starting with # are comments; tokens are separated by spaces.</summary>
     public static WorldStencil Parse(string text)
@@ -75,7 +75,7 @@ public class WorldStencil
             for (int c = 0; c < width; c++)
             {
                 string token = rows[r][c].ToUpperInvariant();
-                if (token != Ocean && token != Connective && !IsSector(token)) throw new FormatException($"Stencil cell {c + 1},{r + 1} reads '{rows[r][c]}': expected W, P or S1-S7.");
+                if (token != Ocean && token != Intersection && !IsQuadrant(token)) throw new FormatException($"Stencil cell {c + 1},{r + 1} reads '{rows[r][c]}': expected W, I or Q1-Q7.");
                 stencil._tokens[c, r] = token;
             }
         }
@@ -88,13 +88,13 @@ public class WorldStencil
         _slotAt = new int[Width, Height];
         for (int c = 0; c < Width; c++) for (int r = 0; r < Height; r++) _slotAt[c, r] = -1;
 
-        // Blocks: 4-connected cells of one sector, found in reading order so indices are stable.
+        // Blocks: 4-connected cells of one quadrant, found in reading order so indices are stable.
         for (int r = 0; r < Height; r++)
         {
             for (int c = 0; c < Width; c++)
             {
-                if (_slotAt[c, r] >= 0 || !IsSector(_tokens[c, r])) continue;
-                var slot = new StencilSlot { index = Slots.Count, sector = _tokens[c, r] };
+                if (_slotAt[c, r] >= 0 || !IsQuadrant(_tokens[c, r])) continue;
+                var slot = new StencilSlot { index = Slots.Count, quadrant = _tokens[c, r] };
                 var open = new Stack<(int, int)>();
                 open.Push((c, r));
                 _slotAt[c, r] = slot.index;
@@ -104,7 +104,7 @@ public class WorldStencil
                     slot.cells.Add((x, y));
                     foreach (var (nx, ny) in new[] { (x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1) })
                     {
-                        if (nx < 0 || ny < 0 || nx >= Width || ny >= Height || _slotAt[nx, ny] >= 0 || _tokens[nx, ny] != slot.sector) continue;
+                        if (nx < 0 || ny < 0 || nx >= Width || ny >= Height || _slotAt[nx, ny] >= 0 || _tokens[nx, ny] != slot.quadrant) continue;
                         _slotAt[nx, ny] = slot.index;
                         open.Push((nx, ny));
                     }
@@ -116,7 +116,7 @@ public class WorldStencil
             }
         }
 
-        // Neighbours: only P between them (Chebyshev gap of one cell).
+        // Neighbours: only an intersection between them (Chebyshev gap of one cell).
         foreach (var a in Slots)
         {
             foreach (var b in Slots)
@@ -140,19 +140,19 @@ public class WorldStencil
 
     private void NameInstances()
     {
-        // Union same-sector neighbours into instances.
+        // Union same-quadrant neighbours into instances.
         var root = Enumerable.Range(0, Slots.Count).ToArray();
         int Find(int i) => root[i] == i ? i : root[i] = Find(root[i]);
         foreach (var slot in Slots)
             foreach (int n in slot.neighbours)
-                if (string.Equals(Slots[n].sector, slot.sector, StringComparison.OrdinalIgnoreCase)) root[Find(n)] = Find(slot.index);
+                if (string.Equals(Slots[n].quadrant, slot.quadrant, StringComparison.OrdinalIgnoreCase)) root[Find(n)] = Find(slot.index);
 
         foreach (var group in Slots.GroupBy(s => Find(s.index)))
         {
             var members = group.OrderBy(s => s.index).ToList();
             float col = members.Average(s => s.centerCol), row = members.Average(s => s.centerRow);
-            string instance = $"{members[0].sector} {Compass(col, row)}";
-            // Two instances of one sector in the same direction keep distinct ids.
+            string instance = $"{members[0].quadrant} {Compass(col, row)}";
+            // Two instances of one quadrant in the same direction keep distinct ids.
             string unique = instance;
             for (int n = 2; Slots.Any(s => s.instance == unique); n++) unique = $"{instance} {n}";
             for (int i = 0; i < members.Count; i++)
@@ -190,8 +190,8 @@ public class WorldStencil
         });
         slot.tags.Add(coast ? "coast" : "inland");
 
-        bool core = string.Equals(slot.sector, "S1", StringComparison.OrdinalIgnoreCase)
-            || slot.neighbours.Any(n => string.Equals(Slots[n].sector, "S1", StringComparison.OrdinalIgnoreCase));
+        bool core = string.Equals(slot.quadrant, "Q1", StringComparison.OrdinalIgnoreCase)
+            || slot.neighbours.Any(n => string.Equals(Slots[n].quadrant, "Q1", StringComparison.OrdinalIgnoreCase));
         if (core) slot.tags.Add("core");
     }
 }

@@ -2,16 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>What part of the composition a cell grew from.</summary>
-public enum WorldRegion
+/// <summary>
+/// What part of the composition a cell grew from. The world's scales, largest first (AECOR's names; ARCHITECTURE.md,
+/// "World scales"): the Overall Map, its Quadrants (Q1-Q7), the Macro Biomes drawn into each Quadrant's slots, the
+/// Inter-Biome Definitions inside them (covers, landmarks, grandfields, resource sites), and each Macro Biome's nine
+/// compass Sectors (<see cref="CompassSector"/>). Intersections are the procedural ground between Macro Biomes.
+/// </summary>
+public enum WorldComposition
 {
     /// <summary>The ocean (stencil W and the apron around the stencil).</summary>
     Ocean,
-    /// <summary>Procedural connective terrain (stencil P): seams, passes, coasts.</summary>
-    Connective,
-    /// <summary>A sector's biome slot.</summary>
-    Slot,
+    /// <summary>An intersection (stencil I): procedural ground joining Macro Biomes (seams, passes, coasts).</summary>
+    Intersection,
+    /// <summary>A Macro Biome in one of its Quadrant's slots.</summary>
+    MacroBiome,
 }
+
+/// <summary>
+/// One of the nine Sectors of a Macro Biome: its centre and the eight compass directions around it, measured from
+/// the Macro Biome's own centre (north is up). <see cref="None"/> in the intersections and the ocean.
+/// </summary>
+public enum CompassSector { None, Central, North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest }
 
 /// <summary>
 /// One meso cell of the world, the playable strategy hex (it owns seven micro hexes; 49 of it make a macro
@@ -28,19 +39,25 @@ public class WorldTile
     public float x, y;
 
     // Composition
-    public WorldRegion region;
-    public string sector;
-    /// <summary>Stencil slot index, or -1 in P and the ocean.</summary>
+    public WorldComposition composition;
+    /// <summary>Its Quadrant (Q1-Q7; the nearest slot's in an intersection), or null at sea.</summary>
+    public string quadrant;
+    /// <summary>Stencil slot index, or -1 in the intersections and the ocean.</summary>
     public int slot = -1;
-    /// <summary>The biome whose ground it carries (the nearest slot's in P), or null at sea.</summary>
-    public string biome;
-    /// <summary>In P or a slot's blended buffer band (not a protected interior).</summary>
+    /// <summary>The slot whose Macro Biome's living range it belongs to (<see cref="WorldEcology"/>): its own slot, or in an
+    /// intersection the nearest one's; -1 off the stencil.</summary>
+    public int habitatSlot = -1;
+    /// <summary>The Macro Biome whose ground it carries (the nearest slot's in an intersection), or null at sea.</summary>
+    public string macroBiome;
+    /// <summary>Which of its Macro Biome's nine Sectors it lies in (None in the intersections and the ocean).</summary>
+    public CompassSector sector;
+    /// <summary>In an intersection or a slot's blended buffer band (not a protected interior).</summary>
     public bool seam;
     /// <summary>Stamped from a handmade tile (its id), or null.</summary>
     public string handmadeTile;
     public string terrain;
     /// <summary>Quarter of the world around the capital (0 north-east, 1 north-west, 2 south-west, 3 south-east).</summary>
-    public int quadrant;
+    public int quarter;
 
     // Physical fields (0-1)
     public float elevation, moisture, temperature, landFertility;
@@ -62,6 +79,9 @@ public class WorldTile
     public int microSurveyMask;
     /// <summary>Micro hexes a unit walked on or beside (saved). Any of them known makes the cell known.</summary>
     public int microKnownMask;
+    /// <summary>Micro hexes your people have settled while the cell is still wilderness (saved; <see cref="WorldTerritory"/>).
+    /// All of them settled (crags aside), the cell is adopted or its claim completes.</summary>
+    [SaveOptionalField] public int microHeldMask;
 
     // Magic (recomputed each Age by WorldMagic)
     public float coherence, dissonance, magicFertility, lunehymn;
@@ -89,8 +109,17 @@ public class WorldTile
         0.45f * landFertility + 0.35f * coherence + 0.2f * magicFertility;
 
     // Sites and civilization (WorldSites, WorldCivilization; derived from their lists, rebuilt on change)
-    /// <summary>Spawn potential of threats here, 0-1 (none on Sacred ground).</summary>
+    /// <summary>Standing hazards here, 0-1 (predatory blooms; none on Sacred ground). Threats cast no aura: what hunts is
+    /// known only by its <see cref="signs"/>.</summary>
     public float danger;
+    /// <summary>The land's lasting emotional imprint here (battles, hunts, loss, a people's suffering: <see cref="WorldSuffering"/>;
+    /// derived from the saved imprints, never saved), and its total.</summary>
+    public EmotionalRegister imprint = new EmotionalRegister();
+    public float suffering;
+    /// <summary>The feelings living here now (settlements' people, ruins: <see cref="WorldResources.Residue"/>; derived, never saved).</summary>
+    public EmotionalRegister living = new EmotionalRegister();
+    /// <summary>Fresh signs of something hunting here (tracks, kills, static), 0-1, fading (derived, never saved): the only warning an explorer gets.</summary>
+    public float signs;
     /// <summary>Index into <see cref="WorldMap.Grandfields"/>, or -1.</summary>
     public int grandfield = -1;
     /// <summary>How rich the grandfield is here: 1 at its heart, less toward its edge.</summary>
@@ -98,6 +127,10 @@ public class WorldTile
     /// <summary>The gifted geography that can hold a Trade Nexus (harbor, estuary, pass, confluence), or null.</summary>
     public string nexus;
     public bool road;
+    /// <summary>An Old World road runs here, broken (placed with the world, <see cref="WorldRuins.PlaceOldWorld"/>; never saved).</summary>
+    public bool oldRoad;
+    /// <summary>A road here is only a restored Old World stretch, not rebuilt yet (derived at each rebuild).</summary>
+    public bool restoredRoad;
     /// <summary>A Trade Node stands here (a checkpoint of a road).</summary>
     public bool tradeNode;
     /// <summary>Index into <see cref="WorldMap.Settlements"/> of the settlement on this cell, or -1.</summary>
@@ -106,6 +139,39 @@ public class WorldTile
     public int enclave = -1;
     /// <summary>A builder's improvement level on this resource hotspot (0 none).</summary>
     public int improvement;
+    /// <summary>Index into <see cref="WorldMap.ResourceSites"/> of the resource site on this cell, or -1.</summary>
+    public int resourceSite = -1;
+    /// <summary>The Age (number + 1) in which its resource site was last harvested; 0 never (saved).</summary>
+    public int harvestedAge;
+    /// <summary>What nearby resource sites do here (derived by <see cref="WorldResources.Refresh"/>, never saved): beauty
+    /// lent or taken, Coherence lent or taken (handed to the magic), land fertility added to <see cref="landFertility"/>.</summary>
+    public float siteBeauty, siteCoherence, siteFertility;
+    /// <summary>Eleos Blooms here (derived by <see cref="WorldResources.Refresh"/>, never saved): the Emotional Residue in the
+    /// cell (0-1, what blooms feed on), Dissonance drunk or lent (handed to the magic), a predator's danger (folded into
+    /// <see cref="danger"/>) and lure, and the strain a healer eases per Seventh.</summary>
+    public float residue, siteDissonance, siteDanger, lure, sanctuary;
+    /// <summary>The hurtful part of the residue (ruins' grief, strain, Dissonance) and the history the land holds, 0-1
+    /// (derived with the residue, never saved): where Fated and Forsaken Flowers and Glimmerfern grow by themselves.</summary>
+    public float hurt, history;
+    /// <summary>Cell steps to the nearest silver river (a leyline on a real river) and to the nearest lake a silver river
+    /// runs into (derived with the residue, never saved; <see cref="WorldResources.FarFromSilver"/> when far).</summary>
+    public int silverRiverSteps = WorldResources.FarFromSilver, silverLakeSteps = WorldResources.FarFromSilver;
+    /// <summary>The cover over this cell (<see cref="CoverSpec"/> id, placed with the world, never saved), or null; its patch in <see cref="WorldMap.Covers"/>.</summary>
+    public string cover;
+    public int coverPatch = -1;
+    /// <summary>What the cover does here (copied from its spec by <see cref="WorldCover"/>): it hides what stands inside and blocks
+    /// the view beyond, caps sight from inside (-1 no cap), multiplies travel and survey time and survey finds, wears parties down.</summary>
+    public bool concealed;
+    public int coverSight = -1;
+    public float coverTravel = 1f, coverSurvey = 1f, coverFinds = 1f, coverHardship;
+    /// <summary>Vibrational Density, 0-1: how tightly reality's threads hold here (recomputed with the magic by
+    /// <see cref="WorldVibration"/>, never saved). Vibrational Fallout, 0-1: where the Dissonance broke the Loom (permanent);
+    /// a Chaotic Resonant Cascade, 0-1, along its edge; and what the fallout does to each step into the cell.</summary>
+    public float vibrationalDensity, fallout, cascade, falloutTravel = 1f;
+    /// <summary>Composure strain eased per Seventh by what grows and lies here (a moonlit grove's ground, Glimmerfern's light;
+    /// derived by <see cref="WorldResources.Refresh"/>, never saved), and how richly living resource sites around feed a
+    /// forager (0-1).</summary>
+    public float solace, siteBounty;
 
     // Places and knowledge
     /// <summary>Feature id, or null.</summary>
@@ -192,18 +258,50 @@ public class WorldMap
     /// <summary>Generated each world (and each Age for threats): multi-cell grandfields, Trade Nexus sites, threats.</summary>
     public List<Grandfield> Grandfields { get; } = new List<Grandfield>();
     public List<int> NexusSites { get; } = new List<int>();
+    /// <summary>Resource sites (saved): generated each Age (<see cref="WorldResources.PlaceAge"/>), then the planted ones (re-derived from <see cref="Plantings"/>).</summary>
+    public List<ResourceSite> ResourceSites { get; set; } = new List<ResourceSite>();
+    /// <summary>Cover patches (<see cref="WorldCover.Place"/>, once with the world; the same seed gives the same patches).</summary>
+    public List<CoverPatch> Covers { get; } = new List<CoverPatch>();
+    /// <summary>Seeds planted on your land (saved): each becomes a planted resource site.</summary>
+    public List<Planting> Plantings { get; set; } = new List<Planting>();
+    /// <summary>The creatures of each Macro Biome (saved; <see cref="WorldEcology"/>).</summary>
+    public List<Population> Populations { get; set; } = new List<Population>();
+    /// <summary>What each species has learned from the authorities (saved; <see cref="WorldBehavior"/>).</summary>
+    public List<SpeciesBehavior> Behaviors { get; set; } = new List<SpeciesBehavior>();
+    /// <summary>Resonance plagues running through (or lately past) the Macro Biomes' creatures (saved; <see cref="WorldPlagues"/>).</summary>
+    public List<Outbreak> Outbreaks { get; set; } = new List<Outbreak>();
+    /// <summary>Each species' habitat cells by slot for <see cref="habitatAge"/> (derived, never saved; <see cref="WorldEcology.Habitat"/>).</summary>
+    public Dictionary<string, Dictionary<int, List<int>>> habitat;
+    public int habitatAge = -1;
+    /// <summary>
+    /// The calendar as the world's rules read it (derived, never saved; <c>WorldSystem</c> sets it from the time system):
+    /// the Echo (1-4, 0 with no calendar), the Phase within it (1-3), Phases since the game began, and whether this is
+    /// a Ritual Seventh (<see cref="WorldRhythm"/>).
+    /// </summary>
+    public int echo, echoPhase, phaseCount;
+    public bool ritualSeventh;
     public List<ThreatSite> Threats { get; } = new List<ThreatSite>();
     /// <summary>What play builds and changes (saved): settlements, roads and the enclaves the Ages bring.</summary>
     public List<Settlement> Settlements { get; set; } = new List<Settlement>();
     public List<TradeRoute> Routes { get; set; } = new List<TradeRoute>();
     public List<Enclave> Enclaves { get; set; } = new List<Enclave>();
     public List<WorldUnit> Units { get; set; } = new List<WorldUnit>();
+    /// <summary>The ruins of fallen settlements (<see cref="WorldRuins"/>), saved by <see cref="WorldSystem"/>.</summary>
+    public List<Ruin> Ruins { get; set; } = new List<Ruin>();
+    /// <summary>The Old World's broken roads, cell by cell (placed with the world; never saved: the same seed lays them again).</summary>
+    public List<List<int>> OldRoads { get; set; } = new List<List<int>>();
     /// <summary>Wilderness cells the player claimed (cell indices, in the order claimed): held like the Capital's own ground.</summary>
     public List<int> Claims { get; set; } = new List<int>();
     /// <summary>Wilderness cells your society adopted by territorial pull (cell indices, in order; <see cref="WorldTerritory"/>).</summary>
     public List<int> Adopted { get; set; } = new List<int>();
+    /// <summary>Claims an older save left half settled (cell indices, in order): a claim takes its land at once now (<see cref="WorldTerritory.ClaimNow"/>), and these are finished on the next Seventh.</summary>
+    public List<int> Claiming { get; set; } = new List<int>();
     /// <summary>The territory rules the civilization layer reads when it rebuilds (set by <see cref="WorldSystem"/>; defaults otherwise).</summary>
     [NonSerialized] public TerritoryRules territoryRules;
+    /// <summary>The settlement rules (desirability, tributaries and their districts) the civilization layer reads when it rebuilds (set by <see cref="WorldSystem"/>; defaults otherwise).</summary>
+    [NonSerialized] public SettlementRules settlementRules;
+    /// <summary>Tributaries that rejoined another hub at a rebuild, as (tributary id, hub id), until <see cref="WorldSystem"/> announces them; never saved.</summary>
+    [NonSerialized] public List<(int tributary, int hub)> rehomed = new List<(int, int)>();
     /// <summary>The seats and their pull, derived at each rebuild (<see cref="WorldTerritory.Compute"/>); never saved.</summary>
     [NonSerialized] public TerritoryState territory;
     /// <summary>Bumped whenever settlements, roads, enclaves or authority change (views redraw).</summary>
@@ -342,6 +440,25 @@ public class WorldMap
         for (; left != 0; left &= left - 1) n++;
         return n;
     }
+
+    /// <summary>Micro hexes of a cell a unit can stand on (crags aside).</summary>
+    public static int OpenHexes(WorldTile tile) => tile == null ? 0 : MicroNavigation.PerCell - MicroNavigation.Crags(tile.microBlockedMask);
+
+    /// <summary>Every hex of the cell a unit can stand on has been seen up close (walked on or beside, or surveyed): passing expeditions explore it.</summary>
+    public static bool FullySeen(WorldTile tile) =>
+        tile != null && ((tile.microKnownMask | tile.microSurveyMask | tile.microBlockedMask) & 127) == 127;
+
+    /// <summary>Hexes of the cell seen up close (crags aside), out of <see cref="OpenHexes"/>.</summary>
+    public static int SeenHexes(WorldTile tile) =>
+        tile == null ? 0 : MicroNavigation.Crags((tile.microKnownMask | tile.microSurveyMask) & ~tile.microBlockedMask);
+
+    /// <summary>Hexes of the cell surveyed one by one (crags aside), out of <see cref="OpenHexes"/>.</summary>
+    public static int SurveyedHexes(WorldTile tile) =>
+        tile == null ? 0 : MicroNavigation.Crags(tile.microSurveyMask & ~tile.microBlockedMask);
+
+    /// <summary>Hexes of a wilderness cell your people have settled (crags aside), out of <see cref="OpenHexes"/>.</summary>
+    public static int SettledHexes(WorldTile tile) =>
+        tile == null ? 0 : MicroNavigation.Crags(tile.microHeldMask & ~tile.microBlockedMask);
 
     /// <summary>Mark a cell explored (surveyed; also known) and reveal its neighbours. False when it was already explored or is off the map.</summary>
     public bool Explore(HexCoord coord)
@@ -490,6 +607,7 @@ public static class WorldAuthority
         if (t.impassable) return "No one can hold this ground.";
         if (t.authorityId == Player) return "It is already yours.";
         if (t.authorityId != Wilderness) return "Another authority holds this ground.";
+        if (map.Claiming.Contains(t.index)) return "Your people are already settling it, hex by hex.";
         if (!t.known) return "A scout must pass over it first.";
         if (!map.NeighboursOf(t).Any(n => n.authorityId == Player)) return "It must border your authority.";
         return null;

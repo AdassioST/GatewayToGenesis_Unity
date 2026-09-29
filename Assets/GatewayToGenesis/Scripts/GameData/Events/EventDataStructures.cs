@@ -216,7 +216,13 @@ public class EventConsequence
         WeatherChange, // Change weather profile (targetName = weather profile name or "clear", value = 0 for procedural, 1 for permanent)
         RenownChange, // The older form of FragmentChange: Fragments of Meaning for targetName (a legend, a ballad actor role or "council")
         FragmentChange, // Lyrical Fragments: targetName = "Who Kind"
-        LesserOpus // targetName = "Who catalog-id"; +1; only a completed Ballad finale can award it
+        LesserOpus, // targetName = "Who catalog-id"; +1; only a completed Ballad finale can award it
+        SettlementDamage, // targetName = "capital", "exposed" (the most endangered settlement) or a settlement's name; value < 0 pillages (damage), > 0 repairs (WorldSystem.ApplySettlementDamage)
+        AffectionTest, // targetName = "from > to | Thread"; +1 Relation Growth, -1 Relation Fracture
+        CultureChange, // targetName = "myth <id>", "embrace", "decline", "leaning <Family>" (value: %), "presence" (value: %) (CultureSystem.ApplyConsequence)
+        PopulationPercentChange, // Negative percentage of all residents; positive values never create migrants.
+        HousingPercentChange, // Signed percentage of current housing.
+        EraScoreChange // targetName = the reason shown in the Chronicle; value = points (AgeProgression.Award)
     }
     
     public ConsequenceType type;

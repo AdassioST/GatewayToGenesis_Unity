@@ -60,7 +60,7 @@ The beautiful facade shatters like broken glass. Seraphina's skin ripples and te
 
 The attack is swift and brutal. When it's over, the square is littered with bodies, and the wagons are gone, leaving only the stench of blood and the sound of distant laughter. The price of hope was higher than anyone imagined.
 
-* Survey the damage&C consequences: population:population -75; score:skinwalker_attack +1; stat:morale -15
+* Survey the damage&C consequences: population_percent:population -15; score:skinwalker_attack +1; stat:morale -15
 -> hollow_caravan_verse_11
 
 === hollow_caravan_verse_11 ===
@@ -86,7 +86,7 @@ The ambush was a disaster. The caravan's true nature revealed itself at the wors
 
 The skinwalkers didn't just kill—they destroyed. Homes were reduced to kindling, fields were salted, and the survivors were left with nothing but the knowledge that some enemies are better left alone.
 
-* Assess the losses&C consequences: population:population -65; housing:housing -40; score:caravan_retaliation +1
+* Assess the losses&C consequences: population_percent:population -13; housing_percent:housing -8; score:caravan_retaliation +1
 -> hollow_caravan_chorus_2
 
 === hollow_caravan_chorus_2 ===
@@ -105,7 +105,7 @@ The rescue is daring and costly, but you bring back a handful of shaken survivor
 === hollow_caravan_verse_9 ===
 Your pursuers do not return. The night swallows their footsteps and the trail ends in silence.
 
-* Mourn the lost&C consequences: population:population -40; score:overreach +1; stat:morale -10
+* Mourn the lost&C consequences: population_percent:population -8; score:overreach +1; stat:morale -10
 -> hollow_caravan_outro
 
 === hollow_caravan_verse_10 ===
@@ -143,7 +143,7 @@ The winds shift in your favor. What should have been a risk turns into a triumph
 === hollow_caravan_verse_13 ===
 Disaster compounds swiftly. A single misstep unravels plans and costs dearly; the lesson etches itself in grief.
 
-* Count the losses&C consequences: population:population -150; score:hubris +1
+* Count the losses&C consequences: population_percent:population -30; score:hubris +1
 -> hollow_caravan_outro
 
 === hollow_caravan_verse_14 ===
@@ -161,7 +161,7 @@ CRITICAL SUCCESS! Coordination and resolve elevate mere competency to mastery; t
 === hollow_caravan_verse_16 ===
 CRITICAL FAILURE! Overconfidence cracks foundations; the cost will take seasons to mend.
 
-* Shoulder the burden&C consequences: housing:housing -25; population:population -20; score:shoddy_work +1; stat:morale -8
+* Shoulder the burden&C consequences: housing_percent:housing -5; population_percent:population -4; score:shoddy_work +1; stat:morale -8
 -> hollow_caravan_outro
 
 === hollow_caravan_verse_17 ===
@@ -244,7 +244,7 @@ Your courage and hope have opened new possibilities that you never imagined. The
 === weeping_princess_verse_3 ===
 The path was difficult, and your principles were tested. Yet through the struggle, you have grown stronger and more resolute. The shadows that challenged your ideals have taught you valuable lessons about the true nature of courage - it's not the absence of fear, but the willingness to face it.
 
-* Learn from the experience&C consequences: population:population -25; score:idealism_lesson +1; stat:morale -3
+* Learn from the experience&C consequences: population_percent:population -5; score:idealism_lesson +1; stat:morale -3
 -> weeping_princess_outro
 
 === weeping_princess_verse_4 ===
@@ -274,7 +274,7 @@ CRITICAL SUCCESS! The power of your ideals resonates with ancient forces, creati
 === weeping_princess_verse_13 ===
 CRITICAL FAILURE! The weight of your ideals proves too heavy to bear. The shadows consume your light, and the Weeping Princess's sorrow deepens into despair.
 
-* Face the consequences&C consequences: population:population -50; score:idealism_collapse +1; stat:morale -10; production_percent:Food -20; duration:sevenths:5
+* Face the consequences&C consequences: population_percent:population -10; score:idealism_collapse +1; stat:morale -10; production_percent:Food -20; duration:sevenths:5
 -> weeping_princess_outro
 
 === weeping_princess_verse_14 ===
@@ -292,7 +292,7 @@ CRITICAL SUCCESS! Your balanced approach has unlocked the secrets of the forest 
 === weeping_princess_verse_16 ===
 CRITICAL FAILURE! Your attempt at balance has disrupted the natural order. The forest's harmony is shattered, and the consequences ripple through your village.
 
-* Accept responsibility&C consequences: housing:housing -30; score:balance_disrupted +1; stat:morale -8; production_percent:Food -15; duration:sevenths:4
+* Accept responsibility&C consequences: housing_percent:housing -6; score:balance_disrupted +1; stat:morale -8; production_percent:Food -15; duration:sevenths:4
 -> weeping_princess_outro
 
 === weeping_princess_verse_17 ===
@@ -307,4 +307,44 @@ The mystical forest begins to brighten as the Weeping Princess's sorrow transfor
 The encounter has left its mark upon your village, for better or worse. Some speak of the mystical energies gained, others of the price paid. But all agree that nothing will ever be quite the same again.
 
 * Continue your journey
+-> DONE
+
+=== first_birth ===
+# title: The First Cry
+# cast: area:culture
+# theme: Emotional Core
+# description: A child is born among the survivors, the first since the settlement was founded.
+# conditions: births: >= 1; event_completed:first_birth < 1
+# event_type: Social
+# priority: 90
+
+It happens before dawn, in the warmest shelter the survivors have. The watch hears it first: a thin, furious cry over the hiss of the wind in the golden dust.
+
+By morning the whole settlement has found a reason to walk past that door. People who have not spoken of the world before the Great Fracture stand together and listen to someone who will never remember it.
+
+* Gather at the door
+-> first_birth_chorus
+
+=== first_birth_chorus ===
+How should the settlement mark the day?
+
+* Idealism. Share one meal around the fire&D Everyone eats together tonight, and the child is named where all can hear.&C requirements:cost:resource:Food 6 -> first_birth_verse_a
+* Realism. Keep the day as any other&D The fields still need every hand. The joy is quiet, carried back to work. -> first_birth_verse_b
+
+=== first_birth_verse_a ===
+The fire is built higher than the stores can really afford. No one complains. When the name is spoken, it is repeated around the circle until even the watch on the wall has said it once.
+
+* Continue&C consequences: era_score:The first child born +1; stat:morale +12; score:first_birth_celebrated +1
+-> first_birth_outro
+
+=== first_birth_verse_b ===
+The fields are worked, the walls are mended, the rations counted. But all day people stop by the shelter on their way somewhere else, and leave small things at the door: a carved spoon, a strip of cloth, a handful of dried peaches.
+
+* Continue&C consequences: era_score:The first child born +1; stat:morale +8
+-> first_birth_outro
+
+=== first_birth_outro ===
+The count of the settlement changes by one, and for the first time the change is not an arrival or a loss.
+
+* Return
 -> DONE

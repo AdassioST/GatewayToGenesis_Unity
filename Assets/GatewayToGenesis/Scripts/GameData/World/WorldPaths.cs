@@ -11,6 +11,8 @@ using System.Collections.Generic;
 public static class WorldPaths
 {
     public const float LeylineFactor = 0.6f, RoadFactor = 0.5f;
+    /// <summary>An Old World road, broken, still speeds a walker (<see cref="WorldRuins.PlaceOldWorld"/>): between open ground (1) and a road.</summary>
+    public const float OldRoadFactor = 0.75f;
 
     /// <summary>Cost of entering a cell on foot, or +infinity for water and impassable ground.</summary>
     public static float StepCost(WorldTile t, WorldGenSettings settings)
@@ -20,15 +22,17 @@ public static class WorldPaths
         if (terrain != null && (!terrain.passable || terrain.water)) return float.PositiveInfinity;
         float cost = Math.Max(0.2f, terrain?.moveCost ?? 1f);
         if (t.road) cost *= RoadFactor;
+        else if (t.oldRoad) cost *= OldRoadFactor;
         return cost * MicroGrid.CellFactor(t);
     }
 
-    /// <summary>Cost of laying road through a cell: existing road is nearly free; high Coherence is preferred.</summary>
+    /// <summary>Cost of laying road through a cell: existing road is nearly free, an Old World road cheap to restore; high Coherence is preferred.</summary>
     public static float RoadCost(WorldTile t, WorldGenSettings settings)
     {
         float step = StepCost(t, settings);
         if (float.IsPositiveInfinity(step)) return step;
         if (t.road) return 0.05f;
+        if (t.oldRoad) return step * 0.4f;
         return step * (1.6f - 0.9f * t.coherence);
     }
 

@@ -18,12 +18,12 @@ The owner asked for one thin, playable slice through the whole loop: **resources
 resources → legends and ballads → growing them → Acts of Fate → halfway through the Age the crisis begins → the crisis
 resolves → the next Age, with new things on the map.** It cuts across S02, S04, S07, S11, S13 and S15 at prototype
 depth; every number is a proposal (D01–D03, D07, D08) kept in assets. Its world map is the simple quadrant version;
-section 3.1's sector-based generator is meant to replace `WorldGenerator`'s fill behind the same `WorldMap` interface.
+section 3.1's quadrant-based generator is meant to replace `WorldGenerator`'s fill behind the same `WorldMap` interface.
 
 | Loop step | What exists | Where |
 |---|---|---|
 | Technology → world map | Researching Reconstruction opens expeditions (M, or the Age banner); each Hollow Watchpost sends one more at a time | `WorldSystem`, `Resources/World/World.asset` |
-| World map → more resources | The sector-built world of section 3.1 (about 34,000 cells, three zoom readings, entered by scrolling out of the capital); expeditions explore the ground around their target; explored ground and its features yield resources every second (flat production through `EffectRouter`, one source per kind of land) and pay one-time rewards | `WorldGenerator`, `WorldMap`, `WorldMagic`, `WorldSystem`, `WorldView` |
+| World map → more resources | The quadrant-built world of section 3.1 (about 34,000 cells, three zoom readings, entered by scrolling out of the capital); expeditions explore the ground around their target; explored ground and its features yield resources every second (flat production through `EffectRouter`, one source per kind of land) and pay one-time rewards | `WorldGenerator`, `WorldMap`, `WorldMagic`, `WorldSystem`, `WorldView` |
 | Getting legends | Two legends known at the start; Survivor Hamlets (Age 0) and the Memory Field (Age I) bring the others; the council offers only met legends | `LegendProgress`, `LegendLeaderLogic` |
 | Ballads | *The Ruin-Song*: three verses (two Silent Spires, then the Age of Renewal) | `Resources/Events/Ballads.ink` |
 | Growing legends | Lyrical Fragments from expeditions, Ballad roles, council Acts/crises and soul events now drive rank and binding growth; legacy renown consequences pay Meaning fragments | `LyricalFragments`, `LegendProgress`, `BalladActors` |
@@ -104,7 +104,7 @@ zoomed-in view of"), where the economy, population, council and events play out.
 - **Grid.** Pointy-top hexes in axial coordinates (q, r); Unity's Grid with the Hexagon cell layout and a Tilemap for
   terrain, so painting and hit-testing come from the engine. Distances and neighbours are pure math (`HexCoord`),
   tested like the other rules.
-- **Quadrants and sectors.** Directional quadrant families contain sector instances (S1–S7). Each sector has a constrained biome catalog and placement slots. Shuffle and rotate eligible biome recipes within those slots, then generate P seams from shared terrain, climate, river and coast constraints. S2 contains Violet Grove/Great Expanse; S5 contains Taiga/Magical Rift/Wind Plains/Auric Grasslands. See section 3.1 for the current design.
+- **Quadrants and Macro Biomes.** The stencil's quadrant instances (Q1–Q7) each have a constrained biome catalog and placement slots. Shuffle and rotate eligible biome recipes within those slots, then generate the intersections from shared terrain, climate, river and coast constraints. Q2 contains Violet Grove/Great Expanse; Q5 contains Taiga/Magical Rift/Wind Plains/Auric Grasslands. See section 3.1 for the current design.
 - **Premade pieces.** Hand-authored `MapChunk` assets (a small hex pattern plus features: a Landmark, a Memory
   Field, an Enclave, a ruin, a Leyline crossing) are stamped into quadrants that allow them. They carry the vault's
   named places, so lore locations exist in every run without the whole map being fixed.
@@ -119,41 +119,41 @@ Milestones: (1) `HexCoord`, `WorldMap`, `WorldGenerator` with tests; (2) Tilemap
 between views; (3) settlements and Administrative Authority on the map (S08); (4) fog of war and expeditions (S11);
 (5) Leylines and trade (S09); (6) Enclaves and other civilizations (S10, S25).
 
-### 3.1. Current priority: sector-based world generation
+### 3.1. Current priority: quadrant-based world generation
 
-**User direction: begin with the world prototype before the Age slice.** S1–S7 are sectors containing shuffled macrobiome slots; W is water; P is generated connective terrain. This replaces section 3's earlier idea of independently filling quadrants from a single environment profile. The existing S01–S25 system IDs remain; WG tasks below refine S07/S09 and their interfaces.
+**User direction: begin with the world prototype before the Age slice.** Q1–Q7 are quadrants containing shuffled Macro Biome slots; W is water; I is the generated intersections between them. This replaces section 3's earlier idea of independently filling four quarters from a single environment profile. The existing S01–S25 system IDs remain; WG tasks below refine S07/S09 and their interfaces.
 
 [Full world generation design: slots, seams, magic, features and zoom](../../../Docs/Planning/WORLD_GENERATION.md)
 
 ```mermaid
 flowchart TD
-    WORLD["World composition<br/>Connected central S2–S1–S2 · outer ocean belt"] --> SECTOR["Quadrant families → sector instances"]
-    SECTOR --> SLOTS["Assign biome catalog to slots<br/>S2: 2 biomes · S5: 4 biomes"]
+    WORLD["World composition<br/>Connected central Q2–Q1–Q2 · outer ocean belt"] --> QUADRANT["Quadrant instances (Q1–Q7)"]
+    QUADRANT --> SLOTS["Assign biome catalog to slots<br/>Q2: 2 biomes · Q5: 4 biomes"]
     SLOTS --> TURN["Choose allowed rotations<br/>Validate elevation, coast and river ports"]
-    TURN --> P["P: procedural connective terrain<br/>Shared mountains, ecotones, passes, coast"]
-    P --> WATER["Global drainage and ordinary rivers"]
+    TURN --> I["I: procedural intersections<br/>Shared mountains, ecotones, passes, coast"]
+    I --> WATER["Global drainage and ordinary rivers"]
     WATER --> MAGIC["Seeds + Grand Thread Rings<br/>Coherence, moving leylines, silver reaches"]
     MAGIC --> PLACES["Grandfields · enclave sites · trade hubs<br/>Sacred Sites · discoveries · hazards"]
     PLACES --> ZOOM["One world, three views<br/>Micro → meso → macro"]
 ```
 
-**Composition:** S2 shuffles Violet Grove and Great Expanse. S5 shuffles Taiga, Magical Rift, Wind Plains and Auric Grasslands while retaining a mountainous sector identity. Rotations respect shared geographic constraints. P is not a randomly chosen filler biome; it solves the connections. Preserve the image's sector arrangement as a composition template; do not display its rectangular construction seams in final terrain. Keep a connected ocean belt around the assembled mainland, rather than cutting every adjacent sector off with a compulsory central moat.
+**Composition:** Q2 shuffles Violet Grove and Great Expanse. Q5 shuffles Taiga, Magical Rift, Wind Plains and Auric Grasslands while retaining a mountainous quadrant identity. Rotations respect shared geographic constraints. The intersections are not a randomly chosen filler biome; they solve the connections. Preserve the image's quadrant arrangement as a composition template; do not display its rectangular construction seams in final terrain. Keep a connected ocean belt around the assembled mainland, rather than cutting every adjacent quadrant off with a compulsory central moat.
 
-**Three scales:** proposed interior ratio is 7 micro hexes per meso strategy cell and 49 meso cells per macro aggregate. Each reference sector spans multiple aggregates. Parent borders are exact unions of child cells; they are not falsely presented as perfectly nested regular hexagons. Rivers, coastlines and ownership use the same world coordinates at every zoom. Final ratios remain a prototype choice.
+**Three scales:** proposed interior ratio is 7 micro hexes per meso strategy cell and 49 meso cells per macro aggregate. Each reference quadrant spans multiple aggregates. Parent borders are exact unions of child cells; they are not falsely presented as perfectly nested regular hexagons. Rivers, coastlines and ownership use the same world coordinates at every zoom. Final ratios remain a prototype choice.
 
 **Two fertility fields:** soil/water/climate determine land fertility; Coherence, usable flow and affinity determine magical fertility. Seed-derived leylines move by Age, Sacred Sites remain fixed, and physical rivers acquire silver Lunehymn reaches where infused. Two distinct lineages meet as a Convergence; three or more in one local hotspot form a Basin. River/leyline crossings and magic-only intersections are different feature types.
 
 #### World implementation queue
 
-**Status, September 27, 2026 (uncommitted):** WG01–WG11 are built at prototype depth and replace the quadrant generator; WG12 has its engine (Age commit and forecast) but only a forecast layer, not the debug Age selector; WG13 has its seed suite and timings, not device profiling. Checked by `WorldGenerationTests` (29 pure test runs), `ContentTests` (the real stencil, tiles and catalogs through the solver) and `WorldViewPlayTests` (scroll out of the capital, through the readings, and back), plus screenshots of every reading and overlay. Owner decisions taken: each same-sector stencil block is one slot; **S5 has three slots, so each world draws three of its four biomes** (with its mountain range along its own P); S1, S3, S4, S6 and S7 use placeholder catalogs (the four Age 0 environments and "Sector 7 (placeholder)", repeats allowed) until their biomes are named. Numbers (8 cells per stencil cell, about 34,000 cells; river and lake thresholds; seed strengths) are proposals in `World.asset`.
+**Status, September 27, 2026 (uncommitted):** WG01–WG11 are built at prototype depth and replace the old four-quarter generator; WG12 has its engine (Age commit and forecast) but only a forecast layer, not the debug Age selector; WG13 has its seed suite and timings, not device profiling. Checked by `WorldGenerationTests` (29 pure test runs), `ContentTests` (the real stencil, tiles and catalogs through the solver) and `WorldViewPlayTests` (scroll out of the capital, through the readings, and back), plus screenshots of every reading and overlay. Owner decisions taken: each same-quadrant stencil block is one slot; **Q5 has three slots, so each world draws three of its four biomes** (with its mountain range along its own intersections); Q1, Q3, Q4, Q6 and Q7 use placeholder catalogs (the four Age 0 environments and "Quadrant 7 (placeholder)", repeats allowed) until their biomes are named. Numbers (8 cells per stencil cell, about 34,000 cells; river and lake thresholds; seed strengths) are proposals in `World.asset`.
 
 | Task | State | Where |
 |---|---|---|
-| WG01 recipes | Built: `SectorSpec`, `BiomeSpec`, `TerrainRule`, stencil slots with tags, handmade tiles; missing or short catalogs are reported | `WorldSettings`, `WorldStencil`, `TileTemplate`, `ContentValidator` |
+| WG01 recipes | Built: `QuadrantSpec`, `MacroBiomeSpec`, `TerrainRule`, stencil slots with tags, handmade tiles; missing or short catalogs are reported | `WorldSettings`, `WorldStencil`, `TileTemplate`, `ContentValidator` |
 | WG02 coordinates | Built: index-7 lattice, micro/meso/macro, exact ownership at negative coordinates, true union outlines | `HexHierarchy` |
 | WG03 topology | Built: warped stencil, reserved ocean apron (ring width checked), mainland connectivity with carved bridges, lakes never cut a slot off | `WorldGenerator` |
 | WG04 slots | Built: seeded most-constrained backtracking, allowed orientations, tag requirements, seam heights, logged relaxations | `SlotSolver` |
-| WG05 seams | Built: every slot within reach blends its recipe (continuous), P's own connective ground, S5's range, one smoothing pass, coherent patch noise | `WorldGenerator` |
+| WG05 seams | Built: every slot within reach blends its recipe (continuous), the intersections' own ground, Q5's range, one smoothing pass, coherent patch noise | `WorldGenerator` |
 | WG06 water | Built: continental dome, priority-flood drainage with hashed ties, lakes (4–80 cells), rivers, land fertility; capital on freshwater | `WorldGenerator` |
 | WG07 seeds | Built: Coherence Seeds per slot, Dissonance Seeds, Sacred Sites (protected radius 2) | `WorldMagic` |
 | WG08 leylines | Built: curves through the Grand Thread Rings' field, one family per seed, Convergence (2) / Basin (3+) by family | `WorldMagic` |
@@ -165,11 +165,11 @@ flowchart TD
 
 Original plan: each task closes with pure-rule checks plus the visual inspection relevant to its output. X02/X03 remain the baseline/contracts prerequisite; save/load implementation is now authorized (2026-09-26).
 
-- **WG01 — Sector and biome recipes** (S07; design + engineering). Define instance IDs, catalogs, slot counts, allowed rotations, interior/buffer masks and boundary ports. Depends: current user-approved model. Accept: S2 has exactly its two biomes; S5 exactly its four; missing catalogs produce explicit authoring errors.
+- **WG01 — Quadrant and biome recipes** (S07; design + engineering). Define instance IDs, catalogs, slot counts, allowed rotations, interior/buffer masks and boundary ports. Depends: current user-approved model. Accept: Q2 has exactly its two biomes; Q5 exactly its four; missing catalogs produce explicit authoring errors.
 - **WG02 — Hierarchical coordinates** (S07; engineering). Implement and verify the proposed axial parent mapping. Depends: WG01. Accept: unique ownership, negative coordinates, exact interior child counts, boundary handling, aggregate conservation and stable world selection.
 - **WG03 — Continental topology and ocean** (S07; engineering + design). Convert the reference composition into constraints; reserve mainland links, ocean circuit and spawn opportunities. Depends: WG01. Accept: core connected; navigable ocean route encloses mainland; mandatory connections survive coastline variation.
 - **WG04 — Slot shuffle and rotation solver** (S07; engineering). Seeded constraint assignment with bounded backtracking and logged fallback. Depends: WG01, WG03. Accept: valid permutations vary by seed; all required biomes appear once; impossible rotations/ports are rejected; random streams are independent.
-- **WG05 — Procedural P seams** (S07; engineering + terrain design). Solve the shared mountain/climate fields, port joins and buffer blending. Depends: WG04. Accept: no gaps, duplicate ownership or cliff walls at ordinary seams; four-way junctions work; S5 reads as one mountainous sector.
+- **WG05 — Procedural intersections** (S07; engineering + terrain design). Solve the shared mountain/climate fields, port joins and buffer blending. Depends: WG04. Accept: no gaps, duplicate ownership or cliff walls at ordinary seams; four-way junctions work; Q5 reads as one mountainous quadrant.
 - **WG06 — Water and physical fertility** (S07; engineering). Drainage basins, lakes/outlets, river refinement, soils and land fertility. Depends: WG05. Accept: valid flow directions, continuous cross-region rivers, reproducible wet/dry fields and reachable starting freshwater.
 - **WG07 — Seeds and Coherence fields** (S09; engineering + design). Positive/negative sources, fixed Sacred Site protection, affinity and magical fertility. Depends: WG05. Accept: isolated-source falloff works, core/source identities remain distinct and the two fertility fields can diverge.
 - **WG08 — Ring-driven leylines and junctions** (S09; engineering). Route distinct seed-sourced lineages and classify local intersections. Depends: WG07. Accept: two lineages yield Convergence, three-plus yield Basin; forks/segments cannot inflate counts; paths cross region seams continuously.
@@ -179,7 +179,7 @@ Original plan: each task closes with pure-rule checks plus the visual inspection
 - **WG12 — Age migration preview and commit** (S02/S09; engineering). Debug Age selector first, then real Age events; forecast old/new leylines, silver reaches and route efficiency. Depends: WG08, WG09, WG11, X03. Accept: geography and Sacred Sites remain fixed; mutation commits once; buildings/trade links are not silently deleted.
 - **WG13 — Generator acceptance and profiling** (S07/S09; QA + engineering). Seed suite, unsatisfiable-catalog cases, feature budgets, determinism/versioning and target-device measurements. Depends: WG10, WG11, WG12. Accept: all invariants in the design document pass; report generation/memory/chunk/zoom/Age-update costs before choosing production world size.
 
-**First concrete milestone:** WG01–WG06 plus WG11: a navigable three-scale continent with reproducible S2/S5 placement/rotation, seamless P, the enclosing ocean and continuous ordinary rivers. **Second:** WG07–WG10 and WG12: moving magical geography, silver water, fertility and meaningful features. **Third:** WG13 and integration with civilization/Age systems. These are generation deliverables, not claims that full diplomacy, combat or settlement simulation ship with the first viewer.
+**First concrete milestone:** WG01–WG06 plus WG11: a navigable three-scale continent with reproducible Q2/Q5 placement/rotation, seamless intersections, the enclosing ocean and continuous ordinary rivers. **Second:** WG07–WG10 and WG12: moving magical geography, silver water, fertility and meaningful features. **Third:** WG13 and integration with civilization/Age systems. These are generation deliverables, not claims that full diplomacy, combat or settlement simulation ship with the first viewer.
 
 
 ## 4. Delivery phases — reviewed September 27, 2026
@@ -516,8 +516,8 @@ Reconciled 2026-09-27. Task acceptance criteria remain contracts; foundation/pro
 - Sources: Gateway To Genesis; Achievement.
 
 ### S07-A — Generate a reproducible hex world
-- Phase: P2. Owner: Engineering. Depends: X03. Status: Sector generator implemented (version 8); WG12/WG13 acceptance remains.
-- Deliver: pure axial HexCoord, WorldMap and seeded WorldGenerator; sector stencil/slot generation, authored tiles, generator version and changed-tile state (the quadrant proposal is superseded).
+- Phase: P2. Owner: Engineering. Depends: X03. Status: Quadrant generator implemented (version 8); WG12/WG13 acceptance remains.
+- Deliver: pure axial HexCoord, WorldMap and seeded WorldGenerator; quadrant stencil/slot generation, authored tiles, generator version and changed-tile state (the four-quarter proposal is superseded).
 - Accept: neighbor/distance tests pass; fixed seed/settings/version reproduce tiles; named required features are placed with validated terrain constraints and reachable starting routes.
 - Sources: ROADMAP section 3; Arcanoria.
 
@@ -571,6 +571,7 @@ Reconciled 2026-09-27. Task acceptance criteria remain contracts; foundation/pro
 - Accept: impossible destinations are rejected, discovered tiles persist in run state, arrival is idempotent, and interruption has explicit return/loss behavior; encounters initially resolve through existing events.
 - Sources: Memory Field; ROADMAP S11; Arcanoria.
 - Built (historical snapshot; subsequent fragment/Pantry integration is summarized in the U-wave overlay): the owner replaced generic Wasteland Scouts and Settlers with expeditions of legends (`Expeditions`, `WorldSystem`, `World.asset` `expeditions`). A party of up to four legends is led by its Director, whose Soul Leitmotif gives it one strength; each legend in the field takes one of the civilization's expedition slots (one, two per point of Government Capacity, one per Hollow Watchpost). Parties form, take on companions and settlers, and disband in your settlements; a council legend leaves its seat to join, and legends on the road are not offered for the council. The road ties into S13: hardship when things go bad strains every member's Composure (`LegendProgress` reads `WorldSystem.HardshipOf`), mishaps rolled each Seventh (seeded by the world) strike its legends (injury, fever, spoiled rations, lost bearings, quarrel, whispers of Dissonance, ambush, desertion of a Spiraling companion), attrition 100 breaks the party (its legends limp home strained, settlers lost), and a legend lost to Dissonance on the road leaves its companions grieving. The first expedition sets out free at Pathfinder Training. Checked by `ExpeditionTests` (27 pure) and `ExpeditionPlayTests`; `WorldViewPlayTests` checks the first expedition.
+- Discovery loop (September 28, 2026, uncommitted; proposals): landmarks, ruins, dens and other finds no longer show through the fog; rumours point at an area instead (`WorldRumours`, `RumourKeeper`, Rumours window), and the same guess-then-test rule now runs kitchen trials and whispered recipes, Bestiary hypotheses and Enlightenment riddles. Design, verification and open items: [Docs/Planning/DISCOVERY_LOOP.md](../../../Docs/Planning/DISCOVERY_LOOP.md).
 - Left open: the Memory Field/Landmark encounter; reconcile historical generic-worker prose with current legend expedition improvement abilities; the vault's Spiraling Conscription civic and the Legend Opus "An Expedition Through the Impossible" are unused hooks; verify expedition provisions against the now-implemented Pantry food-value spending.
 
 ### S11-B — Connect exploration to danger and knowledge

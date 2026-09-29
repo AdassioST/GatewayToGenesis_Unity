@@ -129,13 +129,13 @@ public static class InkFunctions
         // Weather
         story.BindExternalFunction("GetTileWeather", (int q, int r) =>
             CelestialWeatherSystemLogic.Instance?.WeatherAt(new HexCoord(q, r))?.name ?? "");
-        story.BindExternalFunction("SetRegionalWeather", (string profileName, string sectors, int duration) =>
+        story.BindExternalFunction("SetRegionalWeather", (string profileName, string quadrants, int duration) =>
         {
             if (preview) return 0;
             var weather = CelestialWeatherSystemLogic.Instance;
             var profile = CelestialWeatherSystemLogic.FindWeatherProfile(profileName);
-            return weather == null ? -1 : weather.AddWeatherFront(profile, WeatherExtent.Sectors, HexCoord.Zero,
-                durationSevenths: duration, sectors: (sectors ?? "").Split(',').Select(s => s.Trim()));
+            return weather == null ? -1 : weather.AddWeatherFront(profile, WeatherExtent.Quadrants, HexCoord.Zero,
+                durationSevenths: duration, quadrants: (quadrants ?? "").Split(',').Select(s => s.Trim()));
         });
         story.BindExternalFunction("SetWorldWeather", (string profileName, int duration) =>
         {

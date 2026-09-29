@@ -157,7 +157,7 @@ public class ChorusScreenManager : MonoBehaviour
         if (descriptionText != null)
         {
             string question = knot.LastLine;
-            descriptionText.text = string.IsNullOrEmpty(question) ? EventScript.DefaultChoiceDescription : question;
+            descriptionText.text = string.IsNullOrEmpty(question) ? EventScript.DefaultChoiceDescription : CultureSystem.ExpandText(question);
         }
         GameLog.Event($"Chorus '{knot.name}': {availableChoices.Count} choices ({(isPragmatismAvailable ? "three" : "two")}-choice layout)", Log);
     }
@@ -347,6 +347,7 @@ public class ChorusScreenManager : MonoBehaviour
         float bonus = statManager != null ? statManager.GetSavingRollChancePercentCapped() : 0f;
         int pillar = data.hasChallenge && statManager != null ? statManager.GetPillarValue(data.challengePillar) : 0;
         var result = ChorusRules.Resolve(data, Random.Range(1, 101), bonus, pillar);
+        EventSystemLogic.Instance?.RememberStoryChoice(data.title + (data.hasChallenge ? " — " + result.outcome : ""));
         string story = EventSystemLogic.Instance?.GetCurrentStoryNode()?.nodeName;
         Achievements.Report(AchievementEvent.Chorus(result).From($"chorus:{story}:{data.choiceId}", story));
 

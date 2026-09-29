@@ -42,6 +42,7 @@ public static class StatDefinitions
         { "moraleRecoveryMod", "euphony" },
         { "clickPowerBonus", "arcane" },
         { "magicEffectiveness", "arcane" },
+        { "communionEffectiveness", "secrecy" },
     };
 
     public const string CommunionStage = "communionStage";

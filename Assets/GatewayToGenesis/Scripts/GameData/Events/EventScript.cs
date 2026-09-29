@@ -24,7 +24,8 @@ using System.Text.RegularExpressions;
 ///
 /// Conditions:   domain:target op value | domain:target value (means >=) | domain:target (means == 1)
 ///   Any <see cref="GameValues"/> domain works (resource, stat, score, technology, building, civic, weather, ...).
-/// Consequences: type:target +value | technology:Name enlightened | weather:Profile[, permanent] | weather:clear
+/// Consequences (also culture:myth song|hearth|ruins +1, culture:embrace|decline +1, culture:leaning Family +N, culture:presence +N):
+///   type:target +value | technology:Name enlightened | weather:Profile[, permanent] | weather:clear
 ///   | unlock_event:knot | fragment:Who Kind +N (who: protagonist, co, cast, council or a legend; kind: Meaning, Lucidity,
 ///   Catharsis, Acceptance, Defiance, Vision, Rebirth). "duration:sevenths:N" (or "duration:N") times the consequence before it.
 /// </summary>
@@ -90,6 +91,8 @@ public static class EventScript
         { "technology", EventConsequence.ConsequenceType.TechnologyEnlightened },
         { "unlock_event", EventConsequence.ConsequenceType.UnlockEvent },
         { "population", EventConsequence.ConsequenceType.PopulationChange },
+        { "population_percent", EventConsequence.ConsequenceType.PopulationPercentChange },
+        { "housing_percent", EventConsequence.ConsequenceType.HousingPercentChange },
         { "housing", EventConsequence.ConsequenceType.HousingChange },
         { "vagrants", EventConsequence.ConsequenceType.VagrantsChange },
         { "deaths", EventConsequence.ConsequenceType.DeathsChange },
@@ -105,12 +108,18 @@ public static class EventScript
         { "fragment", EventConsequence.ConsequenceType.FragmentChange },
         { "fragments", EventConsequence.ConsequenceType.FragmentChange },
         { "lesser_opus", EventConsequence.ConsequenceType.LesserOpus },
+        { "affection", EventConsequence.ConsequenceType.AffectionTest },
+        { "settlement", EventConsequence.ConsequenceType.SettlementDamage },
+        { "culture", EventConsequence.ConsequenceType.CultureChange },
+        { "era_score", EventConsequence.ConsequenceType.EraScoreChange },
     };
 
     // Consequences whose target is implied by the type ("population:-10" needs no target name).
     private static readonly Dictionary<EventConsequence.ConsequenceType, string> ImpliedTargets = new Dictionary<EventConsequence.ConsequenceType, string>
     {
         { EventConsequence.ConsequenceType.PopulationChange, "population" },
+        { EventConsequence.ConsequenceType.PopulationPercentChange, "population" },
+        { EventConsequence.ConsequenceType.HousingPercentChange, "housing" },
         { EventConsequence.ConsequenceType.HousingChange, "housing" },
         { EventConsequence.ConsequenceType.VagrantsChange, "vagrants" },
         { EventConsequence.ConsequenceType.DeathsChange, "deaths" },
@@ -332,6 +341,18 @@ public static class EventScript
         if (type == EventConsequence.ConsequenceType.FragmentChange && !BalladActors.SplitTarget(target, out _, out _))
         {
             problems?.Add($"Consequence '{t}' needs who and a kind of fragment, e.g. 'fragment:protagonist Lucidity +3' (kinds: {string.Join(", ", LyricalFragments.All)}).");
+            return null;
+        }
+        if (type == EventConsequence.ConsequenceType.AffectionTest &&
+            (!LegendRelationshipRules.SplitTarget(target, out _, out _, out _) ||
+             !int.TryParse(match.Groups["value"].Value, out int affection) || (affection != 1 && affection != -1)))
+        {
+            problems?.Add($"Consequence '{t}' needs 'affection:from > to | Thread +1' (or -1), naming a canonical binding and a tested bond.");
+            return null;
+        }
+        if (type == EventConsequence.ConsequenceType.CultureChange && !CultureRules.ParseConsequence(target, out _, out _))
+        {
+            problems?.Add($"Consequence '{t}' needs 'culture:myth <{string.Join("|", FoundingMyths.All.Select(m => m.id))}> +1', 'culture:embrace +1', 'culture:decline +1', 'culture:leaning <Family> +N' or 'culture:presence +N'.");
             return null;
         }
         return new EventConsequence

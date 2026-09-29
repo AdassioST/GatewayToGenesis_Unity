@@ -29,3 +29,4 @@ MonoBehaviour:
     description: Gain a Keynote Relic
   techUnlockables:
   - {fileID: 11400000, guid: 8e1c92df49ff9dd80252d00ae1987fe7, type: 2}
+  - {fileID: 11400000, guid: f4d7535e091cafde64db2fe3bfb6e99d, type: 2}

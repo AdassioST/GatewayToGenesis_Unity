@@ -200,6 +200,8 @@ public class CivicCouncilPosition
     public bool allowAnyLegendClass = false;
     [Tooltip("Specific legend classes that can fill this council position (ignored if allowAnyLegendClass is true)")]
     public LegendClass[] allowedClasses;
+    [Tooltip("Stars a legend needs in one of the allowed Greats (0: any legend, an Unattuned Legend too; 3 the most). LegendGreats.")]
+    [Range(0, 3)] public int requiredStars;
 
     [Tooltip("Areas the position answers for, its main charge first (see Resources/Council/Council Areas).")]
     public string[] areas;

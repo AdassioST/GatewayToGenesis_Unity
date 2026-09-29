@@ -100,6 +100,12 @@ public class FragmentTuning
     public int themedEventFragments = 1;
     [Tooltip("Co-protagonist roles a ballad offers besides its protagonist (a verse's cast tag may ask for others).")]
     public int balladCoProtagonists = 2;
+
+    [Header("The Greats (LegendGreats)")]
+    [Tooltip("Fragments of a Great's kind a legend needs for 1, 2 and 3 stars in it (Defiance for the Great Vanguard, Meaning for the Great Sovereign...). Below the first it is an Unattuned Legend in that Great.")]
+    public int[] greatStars = { 15, 40, 90 };
+    [Tooltip("Fragments of its seat's main Great each seated legend earns at every Act of Fate: serving as Supreme Commander makes a Vanguard.")]
+    public int seatService = 2;
 }
 
 /// <summary>

@@ -14,6 +14,14 @@ public class FoodKind
     [Range(0f, 1f)] public float spoilPerSeventh = 0.02f;
     [Tooltip("An Auric peach food: stores made mostly of these count as monocrop drift for the famine.")]
     public bool peach;
+    [Tooltip("What it is to the kitchen: Edible (actual food), Ingredient (oils, seeds, pits: eaten raw only once the edibles run out), Spice (some Eleos Blooms and other savours: never eaten to fill a belly) Tea (Eleos brews and everyday infusions: drunk like food, their own category) or Beverage (ales, meads, wines and spirits from the cellar, never from an Eleos Bloom: drunk for joy, opened for hunger last of all). The culture's foodways read it.")]
+    public FoodClass cuisine = FoodClass.Edible;
+    [Tooltip("A resource kept outside the Stored Food section (a spice gathered in the Great Fields): the pantry leaves its room alone.")]
+    public bool keepsOwnRoom;
+    [Tooltip("What eating it leaves behind for the kitchen (Dried Auric Peaches leave Peach Pits), or empty.")]
+    public string leaves;
+    [Tooltip("How much of that is left per unit eaten.")]
+    public float leavesPerUnit;
 }
 
 /// <summary>A technology that keeps food longer or stores more of it.</summary>
@@ -45,6 +53,14 @@ public class PantrySettings : ScriptableObject
     public float maxCoverPerSecond = 5f;
     [Tooltip("A kind counts toward the variety of the stores from this much food value.")]
     public float varietyMinimumValue = 5f;
+
+    [Header("Surplus into the stores")]
+    [Tooltip("Once the founders are all in and this technology is known, Food gathered beyond keepInHand goes into the stores.")]
+    public string bankTechnology = "Resource Storage";
+    [Tooltip("The kind of stored food the surplus Food becomes (at its food value: one Food makes 1 / foodValue of it).")]
+    public string bankedKind = "Dried Auric Peaches";
+    [Tooltip("Food kept in hand (the rest is stored): enough to let one survivor in at the gates.")]
+    public float keepInHand = 12f;
 
     public FoodKind Kind(string resource) => kinds.Find(k => k != null && string.Equals(k.resource, resource, StringComparison.OrdinalIgnoreCase));
 }

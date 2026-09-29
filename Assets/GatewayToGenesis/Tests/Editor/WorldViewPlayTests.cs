@@ -20,6 +20,81 @@ public class WorldViewPlayTests
 
     private static Mouse _mouse;
 
+    [TestCase(500f)]
+    [TestCase(340f)]
+    public void WorldActionListWrapsLongOrdersAndKeepsEveryAction(float width)
+    {
+        var root = new GameObject("HUD layout test", typeof(RectTransform), typeof(Canvas));
+        var theme = ScriptableObject.CreateInstance<TooltipTheme>();
+        theme.font = Resources.Load<TMPro.TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+        theme.bodySize = 20f;
+        try
+        {
+            var panel = (RectTransform)root.transform;
+            panel.sizeDelta = new Vector2(width, 260f);
+            var listType = typeof(WorldView).GetNestedType("HudList", BindingFlags.NonPublic);
+            var iconType = typeof(WorldView).GetNestedType("HudIcon", BindingFlags.NonPublic);
+            var list = System.Activator.CreateInstance(listType, panel, theme);
+            var icon = System.Enum.Parse(iconType, "Crown");
+            listType.GetMethod("Begin").Invoke(list, new object[] { width - 50f });
+            listType.GetMethod("Grid").Invoke(list, new object[] { true });
+            int invoked = 0;
+            for (int i = 0; i < 24; i++)
+                listType.GetMethod("Action").Invoke(list, new object[]
+                {
+                    "Appoint a captain with a very long multiword name",
+                    "Requires provisions and a free expedition slot. All requirements must remain readable.",
+                    icon, (System.Action)(() => invoked++), i != 0
+                });
+            listType.GetMethod("End").Invoke(list, null);
+            Canvas.ForceUpdateCanvases();
+            var labels = root.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+            Assert.AreEqual(24, labels.Length, "orders past the former ten-button limit must remain reachable");
+            foreach (var label in labels)
+            {
+                Assert.AreEqual(TMPro.TextWrappingModes.Normal, label.textWrappingMode);
+                Assert.AreNotEqual(TMPro.TextOverflowModes.Ellipsis, label.overflowMode);
+                Assert.LessOrEqual(label.GetPreferredValues(label.text, label.rectTransform.rect.width, 0).y,
+                    label.rectTransform.rect.height + .5f, "the full label and requirements fit their row");
+            }
+            var buttons = root.GetComponentsInChildren<UnityEngine.UI.Button>();
+            var inactive = buttons[1].colors.normalColor;
+            Assert.IsFalse(buttons[0].interactable, "unavailable orders stay disabled");
+            buttons[23].onClick.Invoke();
+            Assert.AreEqual(1, invoked, "the final order is wired to its own button");
+            var scroll = root.GetComponentInChildren<UnityEngine.UI.ScrollRect>();
+            Assert.Greater(scroll.content.rect.height, scroll.viewport.rect.height, "long lists are scrollable");
+
+            listType.GetMethod("Begin").Invoke(list, new object[] { width - 50f });
+            listType.GetMethod("Choice").Invoke(list, new object[] { "Landscape", true, (System.Action)(() => invoked += 100) });
+            listType.GetMethod("End").Invoke(list, null);
+            Assert.AreNotEqual(inactive, buttons[0].colors.normalColor, "the active map choice stays visibly selected");
+
+            // Refresh must reuse rows, remove old callbacks, and hide surplus controls.
+            listType.GetMethod("Begin").Invoke(list, new object[] { width - 50f });
+            listType.GetMethod("Action").Invoke(list, new object[] { "New order", null, icon, (System.Action)(() => invoked += 10), true });
+            listType.GetMethod("End").Invoke(list, null);
+            buttons = root.GetComponentsInChildren<UnityEngine.UI.Button>();
+            Assert.AreEqual(1, buttons.Length);
+            Assert.AreEqual(inactive, buttons[0].colors.normalColor, "pooled rows clear their earlier selected appearance");
+            buttons[0].onClick.Invoke();
+            Assert.AreEqual(11, invoked, "pooled buttons must not retain an earlier order");
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(theme);
+        }
+    }
+
+    [Test]
+    public void WorldReportsUseWrappingRowsInsteadOfOverlappingColumns()
+    {
+        var flow = typeof(WorldView).GetMethod("FlowText", BindingFlags.NonPublic | BindingFlags.Static);
+        string result = (string)flow.Invoke(null, new object[] { TooltipText.Row("Captain", "A long legend name") });
+        Assert.AreEqual("Captain: A long legend name", result);
+    }
+
     private static void Scroll(float notches)
     {
         InputSystem.QueueStateEvent(_mouse, new MouseState { position = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f), scroll = new Vector2(0f, notches * 120f) }); // a raw wheel notch (the Input System may normalise it)
@@ -98,6 +173,10 @@ public class WorldViewPlayTests
             Assert.AreEqual(WorldView.Mode.World, WorldView.Current);
             var renderer = Field<WorldRenderer>(view, "_renderer");
             Assert.IsTrue(renderer.Camera.enabled, "the world camera draws the world");
+            var ground = renderer.Root.GetComponentsInChildren<MeshFilter>().Single(f => f.sharedMesh.name == "World Ground").sharedMesh;
+            var corners = ground.vertices;
+            Assert.LessOrEqual(corners.Min(v => v.x), renderer.View.xMin + 0.01f);
+            Assert.GreaterOrEqual(corners.Max(v => v.x), renderer.View.xMax - 0.01f);
             Assert.AreEqual(WorldScale.Micro, WorldZoom.ScaleOf(renderer.Camera.orthographicSize), "the world opens on the micro reading");
             var group = capitalCanvas.GetComponent<CanvasGroup>();
             Assert.IsNotNull(group);

@@ -57,7 +57,7 @@ public class AchievementRegisterTests
     {
         var rows = Register();
         var note = Note();
-        Assert.AreEqual(97, note.Count, "the imported note's achievements (Critically Thinking Hater has no requirement and is excluded)");
+        Assert.AreEqual(98, note.Count, "the imported note's achievements (Critically Thinking Hater has no requirement and is excluded)");
         CollectionAssert.AllItemsAreUnique(rows.Select(r => r["id"]));
         CollectionAssert.AreEqual(note.Select(a => a.id), rows.Select(r => r["id"]));
         CollectionAssert.AreEqual(Enumerable.Range(1, rows.Count).Select(n => n.ToString()), rows.Select(r => r["number"]));

@@ -110,6 +110,63 @@ public class WorldUnitTests
         Assert.IsFalse(unit.Moving);
     }
 
+    // A unit caught part-way into its next hex (a share t of the step walked) and asked to go to one of three hexes
+    // around: its position never jumps; straight on keeps the step walked; an about-face first walks back as far as it
+    // came; a turn to one side walks on when it is nearly there and turns back when it has barely left.
+    [TestCase(0.9f)]
+    [TestCase(0.1f)]
+    public void AReorderMidStepNeverTeleportsAndAnAboutFaceCostsTheGroundCovered(float t)
+    {
+        var settings = Settings();
+        var map = Disk(3);
+        var start = MicroNavigation.Center(HexCoord.Zero);
+        var ahead = start + HexCoord.Directions[0];
+        var aside = start + HexCoord.Directions[1];   // beside both the hex it left and the one it steps into
+        var behind = start - HexCoord.Directions[0];
+        Assert.AreEqual(1, HexCoord.Distance(aside, ahead));
+
+        WorldUnit Walking()
+        {
+            var unit = At(HexCoord.Zero);
+            WorldUnits.Initialize(unit, Scout);
+            WorldUnits.Order(map, unit, new List<int> { MicroNavigation.Index(map, ahead) });
+            WorldUnits.Move(map, settings, unit, Scout, t / Scout.stamina);
+            Assert.AreEqual(t, unit.progress, 1e-4f, "part-way into the step (plain costs 1)");
+            return unit;
+        }
+        WorldUnits.Planner To(HexCoord target) => (HexCoord from, out List<int> p, out float f, out HexCoord r) => MicroNavigation.ToNearest(map, settings, from, target, out p, out f, out r);
+        void Reorder(WorldUnit unit, HexCoord target, out float fatigue)
+        {
+            var was = WorldUnits.Position(map, settings, unit);
+            Assert.IsTrue(WorldUnits.PlanFromStep(map, settings, unit, To(target), out var path, out fatigue, out _));
+            WorldUnits.Order(map, unit, path);
+            var now = WorldUnits.Position(map, settings, unit);
+            Assert.AreEqual(was.x, now.x, 1e-4f, "no jump");
+            Assert.AreEqual(was.y, now.y, 1e-4f, "no jump");
+            Assert.AreEqual(fatigue, WorldUnits.FatigueLeft(map, settings, unit), 1e-4f, "the plan's fatigue is what is left to walk");
+        }
+
+        var on = Walking();
+        Reorder(on, ahead + HexCoord.Directions[0], out float straight);
+        Assert.AreEqual(2f - t, straight, 1e-4f, "straight on, the step walked counts");
+        Assert.AreEqual(ahead, on.path[0]);
+
+        var back = Walking();
+        Reorder(back, behind, out float aboutFace);
+        Assert.AreEqual(t + 1f, aboutFace, 1e-4f, "an about-face walks back first");
+        Assert.AreEqual(start, back.path[0], "it returns to the hex it left");
+        WorldUnits.Move(map, settings, back, Scout, 10f);
+        Assert.AreEqual(behind, back.microCoord);
+
+        var side = Walking();
+        Reorder(side, aside, out float turn);
+        Assert.AreEqual(1f + Nearer(t), turn, 1e-4f, "a turn aside costs the shorter of walking on and turning back");
+        Assert.AreEqual(t > 0.5f ? ahead : start, side.path[0]);
+        Assert.Less(turn, aboutFace + 1e-4f, "a turn aside is never dearer than an about-face");
+    }
+
+    private static float Nearer(float t) => System.Math.Min(t, 1f - t);
+
     [Test]
     public void MicroOrdersGoToTheExactHexAndBlockedTargetsToTheNearestThatCanBeReached()
     {
@@ -402,7 +459,7 @@ public class WorldUnitTests
 
         Assert.AreEqual(AbilityReach.Meso, UnitAbilities.For(UnitTask.SurveyMeso).reach);
         Assert.AreSame(UnitAbilities.Survey, UnitAbilities.For(UnitAbility.Survey));
-        Assert.AreEqual("It cannot survey meso hex.", WorldUnits.WhyNotSurvey(map, settings, unit, new UnitSpec(), UnitAbilities.SurveyMeso));
+        Assert.AreEqual("It cannot survey.", WorldUnits.WhyNotSurvey(map, settings, unit, new UnitSpec(), UnitAbilities.SurveyMeso));
     }
 
     [Test]
@@ -501,5 +558,132 @@ public class WorldUnitTests
             at = id;
         }
         Assert.AreEqual(fatigue, cost, fatigue * 1e-4f, "the fatigue told is the sum of its steps");
+    }
+    [Test]
+    public void Surveys_ACellIsSeenHexByHexAndASurveyVisitsEachHex()
+    {
+        var settings = Settings();
+        var map = Disk(2);
+        foreach (var t in map.Tiles) t.explored = t.known = false;
+        var cell = map.Get(new HexCoord(1, 0));
+        Assert.AreEqual(7, WorldMap.OpenHexes(cell));
+        Assert.IsFalse(WorldMap.FullySeen(cell));
+
+        // Walking through the heart with a sight of one hex sees all seven.
+        foreach (var c in MicroNavigation.Area(map, MicroNavigation.Center(cell.coord), AbilityReach.Around, 1)) map.KnowMicro(c);
+        Assert.IsTrue(WorldMap.FullySeen(cell), "the heart and the six around it are the whole cell");
+        Assert.AreEqual(7, WorldMap.SeenHexes(cell));
+        Assert.AreEqual(0, WorldMap.SurveyedHexes(cell), "seen is not surveyed");
+
+        // A survey still has every hex to visit, even once the cell is explored in passing; crags need no visit.
+        map.Explore(cell.coord);
+        Assert.AreEqual(7, UnitAbilities.CellTargets(map, settings, cell).Count, "explored in passing, not surveyed");
+        cell.microBlockedMask = 1 << 2;
+        MicroNavigation.Invalidate(map);
+        var left = UnitAbilities.CellTargets(map, settings, cell);
+        Assert.AreEqual(6, left.Count);
+        Assert.IsTrue(left.All(id => id / MicroNavigation.PerCell == cell.index), "a survey keeps to its cell");
+        map.SurveyMicro(MicroNavigation.Coord(map, left[0]));
+        Assert.AreEqual(5, UnitAbilities.CellTargets(map, settings, cell).Count);
+        Assert.AreEqual(Scout.mesoSurveySevenths / 7f, UnitAbilities.HexSevenths(Scout), 1e-5f, "each hex its share of the whole survey");
+    }
+
+    // ===== ROUTES: TOURS, OTHERS IN THE WAY, MANY TARGETS AT ONCE =====
+
+    [Test]
+    public void ASurveyTourWalksTheCellsHexesInTheOrderThatWalksLeast()
+    {
+        var settings = Settings();
+        // Uneven ground around the cell surveyed, so the order matters, and a crag inside it.
+        var map = Disk(3, new Dictionary<HexCoord, string> { { new HexCoord(2, -1), "bog" }, { new HexCoord(1, 1), "bog" }, { new HexCoord(0, 1), "bog" } });
+        var cell = map.Get(new HexCoord(1, 0));
+        cell.terrain = "bog";
+        cell.microBlockedMask = 1 << 4;
+        MicroNavigation.Invalidate(map);
+        var grid = MicroNavigation.Grid(map, settings);
+        var targets = UnitAbilities.CellTargets(map, settings, cell);
+        Assert.AreEqual(6, targets.Count, "the crag is not surveyed");
+        var from = MicroNavigation.Center(new HexCoord(-2, 1));
+        Assert.IsTrue(MicroNavigation.NextOnTour(map, settings, from, targets, cell.coord, out var path, out float first, out float tour));
+        Assert.IsTrue(targets.Contains(path.Last()), "the way ends on a hex to survey");
+
+        // Every order of the six, weighed by the true walking costs: none walks less than the tour chosen.
+        float Walk(HexCoord a, int b) => MicroNavigation.Find(map, settings, a, MicroNavigation.Coord(map, b), out _, out float c) ? c : float.PositiveInfinity;
+        var toward = targets.ToDictionary(t => t, t => Walk(from, t));
+        var between = targets.ToDictionary(t => t, t => targets.ToDictionary(u => u, u => t == u ? 0f : Walk(MicroNavigation.Coord(map, t), u)));
+        float bestTour = float.PositiveInfinity, bestFirst = 0f;
+        foreach (var order in Permutations(targets))
+        {
+            float c = toward[order[0]];
+            for (int i = 1; i < order.Count; i++) c += between[order[i - 1]][order[i]];
+            if (c < bestTour - 1e-4f) { bestTour = c; bestFirst = toward[order[0]]; }
+        }
+        Assert.AreEqual(bestTour, tour, 1e-3f, "the tour is the cheapest of all orders");
+        Assert.AreEqual(toward[path.Last()], first, 1e-3f, "and the way to its first hex is the cheapest way there");
+        Assert.AreEqual(first, path.Aggregate((at: MicroNavigation.Index(map, from), sum: 0f), (s, id) => (id, s.sum + grid.Step(s.at, id))).sum, 1e-3f);
+
+        // The whole tour, hex by hex (the plan the map numbers): every target once, from the first hex walked to, and
+        // its walk is the tour's cost.
+        var plan = new List<int>();
+        Assert.IsTrue(MicroNavigation.NextOnTour(map, settings, from, targets, cell.coord, out _, out _, out _, order: plan));
+        CollectionAssert.AreEquivalent(targets, plan);
+        Assert.AreEqual(path.Last(), plan[0], "it starts where the way leads");
+        float planned = toward[plan[0]];
+        for (int i = 1; i < plan.Count; i++) planned += between[plan[i - 1]][plan[i]];
+        Assert.AreEqual(tour, planned, 1e-3f, "the order walked is the cheapest tour");
+
+        // Standing on a hex still to survey, that hex comes first (no walk).
+        Assert.IsTrue(MicroNavigation.NextOnTour(map, settings, MicroNavigation.Coord(map, targets[2]), targets, cell.coord, out var none, out float zero, out _, order: plan));
+        Assert.AreEqual(0, none.Count);
+        Assert.AreEqual(0f, zero, 1e-6f);
+        Assert.AreEqual(targets[2], plan[0], "the plan begins on the hex it stands on");
+    }
+
+    private static IEnumerable<List<int>> Permutations(List<int> items)
+    {
+        if (items.Count <= 1) { yield return new List<int>(items); yield break; }
+        for (int i = 0; i < items.Count; i++)
+        {
+            var rest = items.Where((_, k) => k != i).ToList();
+            foreach (var tail in Permutations(rest))
+            {
+                tail.Insert(0, items[i]);
+                yield return tail;
+            }
+        }
+    }
+
+    [Test]
+    public void WaysGoAroundHexesOthersHoldAndOneSearchPricesManyTargets()
+    {
+        var settings = Settings();
+        var map = Disk(4);
+        var grid = MicroNavigation.Grid(map, settings);
+        var from = MicroNavigation.Center(new HexCoord(-2, 0));
+        var to = MicroNavigation.Center(new HexCoord(2, 0));
+        Assert.IsTrue(MicroNavigation.Find(map, settings, from, to, out var straight, out float open));
+        // Others stand on the middle of the straight way: the way goes round them, a little longer.
+        var held = new HashSet<int>(straight.Take(straight.Count - 1).Skip(straight.Count / 2 - 1).Take(2));
+        int start = MicroNavigation.Index(map, from), goal = MicroNavigation.Index(map, to);
+        Assert.IsTrue(grid.Search(start, id => id == goal, to, 0, MicroNavigation.MaxPlan, int.MaxValue, out var around, out float detour, held.Contains));
+        Assert.IsFalse(around.Any(held.Contains), "never through a hex others hold");
+        Assert.Greater(detour, open - 1e-4f);
+        Assert.Less(detour, open * 1.5f, "a short way round");
+
+        // A target others stand on: the nearest hex beside it that is free.
+        var guarded = new HashSet<int> { goal };
+        Assert.IsTrue(MicroNavigation.ToNearest(map, settings, from, to, out var beside, out _, out var reached, avoid: guarded.Contains));
+        Assert.AreEqual(1, HexCoord.Distance(reached, to));
+        Assert.IsFalse(beside.Contains(goal));
+
+        // Many targets priced in one search: each the same as its own search.
+        var targets = new List<int> { goal, MicroNavigation.Index(map, MicroNavigation.Center(new HexCoord(0, 2))), MicroNavigation.Index(map, MicroNavigation.Center(new HexCoord(-1, -2))) };
+        var costs = new float[targets.Count];
+        Assert.AreEqual(3, grid.CostsTo(start, targets, HexCoord.Zero, 20, MicroNavigation.MaxPlan, int.MaxValue, costs));
+        for (int i = 0; i < targets.Count; i++)
+        {
+            Assert.IsTrue(MicroNavigation.Find(map, settings, from, MicroNavigation.Coord(map, targets[i]), out _, out float single));
+            Assert.AreEqual(single, costs[i], 1e-3f);
+        }
     }
 }

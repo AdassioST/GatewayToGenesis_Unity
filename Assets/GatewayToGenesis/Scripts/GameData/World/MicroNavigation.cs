@@ -172,7 +172,7 @@ public static class MicroNavigation
     /// nothing near it can be reached. <paramref name="reached"/> is where the way ends.
     /// </summary>
     public static bool ToNearest(WorldMap map, WorldGenSettings settings, HexCoord from, HexCoord target, out List<int> path, out float cost, out HexCoord reached,
-        float maxCost = MaxPlan, int maxVisits = int.MaxValue)
+        float maxCost = MaxPlan, int maxVisits = int.MaxValue, Func<int, bool> avoid = null)
     {
         path = new List<int>();
         cost = 0f;
@@ -186,15 +186,132 @@ public static class MicroNavigation
             foreach (var hex in HexCoord.Ring(target, ring))
             {
                 int id = Index(map, hex);
-                if (id >= 0 && grid.SameGround(start, id)) goals.Add(id);
+                if (id >= 0 && grid.SameGround(start, id) && (avoid == null || id == start || !avoid(id))) goals.Add(id);
             }
             if (goals.Count == 0) continue;
-            if (!grid.Search(start, goals.Contains, target, ring, maxCost, maxVisits, out path, out cost)) return false;
+            if (!grid.Search(start, goals.Contains, target, ring, maxCost, maxVisits, out path, out cost, avoid))
+            {
+                // Others standing in the way may close this ring off: try the next one out.
+                if (avoid != null) continue;
+                return false;
+            }
             reached = path.Count > 0 ? Coord(map, path[path.Count - 1]) : from;
             return true;
         }
         return false;
     }
+
+    /// <summary>
+    /// The best order to visit <paramref name="targets"/> (micro ids, at most <see cref="TourLimit"/>, all within one
+    /// hex of <paramref name="center"/>'s heart) from <paramref name="from"/>: the open tour of least travel fatigue,
+    /// found exactly (every order is weighed through the true walking costs between the hexes, not their distance on
+    /// the map). Gives the way to the first hex of that tour (<paramref name="path"/>, micro ids after the start), its
+    /// travel fatigue and the whole tour's (<paramref name="tour"/>). Targets that cannot be reached are skipped; false
+    /// when none can be. <paramref name="avoid"/> marks hexes not to walk through (others standing there). Given
+    /// <paramref name="order"/>, it is filled with the whole tour, hex by hex (what the map shows as the survey plan).
+    /// </summary>
+    public static bool NextOnTour(WorldMap map, WorldGenSettings settings, HexCoord from, IReadOnlyList<int> targets, HexCoord center, out List<int> path, out float cost,
+        out float tour, float maxCost = MaxPlan, int maxVisits = int.MaxValue, Func<int, bool> avoid = null, List<int> order = null)
+    {
+        order?.Clear();
+        path = new List<int>();
+        cost = tour = 0f;
+        var grid = Grid(map, settings);
+        int start = Index(map, from);
+        if (start < 0 || targets == null || targets.Count == 0) return false;
+        var list = targets.Where(t => t >= 0 && (t == start || grid.SameGround(start, t))).Distinct().Take(TourLimit).ToList();
+        if (list.Contains(start))
+        {
+            // Standing on one: that hex first (no walk), the rest after it.
+            list.Remove(start);
+            list.Insert(0, start);
+        }
+        int n = list.Count;
+        if (n == 0) return false;
+        var heart = Center(center);
+        // Walking costs between the targets (each search stays near the cell), then from the start (last, so its way can be traced).
+        var between = new float[n, n];
+        var row = new float[n];
+        for (int i = 0; i < n; i++)
+        {
+            grid.CostsTo(list[i], list, heart, 1, maxCost, maxVisits, row, avoid);
+            for (int j = 0; j < n; j++) between[i, j] = row[j];
+        }
+        var first = new float[n];
+        if (grid.CostsTo(start, list, heart, 1, maxCost, maxVisits, first, avoid) == 0) return false;
+        // Held-Karp over subsets: best[mask, j] is the least fatigue to visit mask's hexes, ending on j.
+        int full = 1 << n;
+        var best = new float[full, n];
+        var parent = new int[full, n];
+        for (int m = 0; m < full; m++) for (int j = 0; j < n; j++) { best[m, j] = float.PositiveInfinity; parent[m, j] = -1; }
+        for (int j = 0; j < n; j++) best[1 << j, j] = first[j];
+        for (int m = 1; m < full; m++)
+            for (int j = 0; j < n; j++)
+            {
+                float here = best[m, j];
+                if ((m & (1 << j)) == 0 || float.IsPositiveInfinity(here)) continue;
+                for (int k = 0; k < n; k++)
+                {
+                    if ((m & (1 << k)) != 0 || float.IsPositiveInfinity(between[j, k])) continue;
+                    int next = m | (1 << k);
+                    float c = here + between[j, k];
+                    if (c < best[next, k])
+                    {
+                        best[next, k] = c;
+                        parent[next, k] = j;
+                    }
+                }
+            }
+        // The tour covering the most targets that can be reached, then the cheapest; followed back to its first hex.
+        int bestMask = 0, bestEnd = -1, bestCount = 0;
+        float bestCost = float.PositiveInfinity;
+        for (int m = 1; m < full; m++)
+        {
+            int count = Bits(m);
+            for (int j = 0; j < n; j++)
+            {
+                float c = best[m, j];
+                if (float.IsPositiveInfinity(c)) continue;
+                if (count > bestCount || (count == bestCount && c < bestCost - 1e-5f))
+                {
+                    bestCount = count;
+                    bestCost = c;
+                    bestMask = m;
+                    bestEnd = j;
+                }
+            }
+        }
+        if (bestEnd < 0) return false;
+        int mask = bestMask, end = bestEnd;
+        order?.Add(list[end]);
+        while (parent[mask, end] >= 0)
+        {
+            int prev = parent[mask, end];
+            mask &= ~(1 << end);
+            end = prev;
+            order?.Add(list[end]);
+        }
+        order?.Reverse();
+        tour = bestCost;
+        cost = first[end];
+        // The way to the tour's first hex: the start's search was the last one run, so it can be traced.
+        if (list[end] != start)
+        {
+            path = grid.Trace(start, list[end]);
+            if (path.Count == 0) return false;
+        }
+        return true;
+    }
+
+    private static int Bits(int mask)
+    {
+        int n = 0;
+        for (; mask != 0; mask &= mask - 1) n++;
+        return n;
+    }
+
+    /// <summary>Most targets <see cref="NextOnTour"/> orders exactly (a meso cell's seven hexes).</summary>
+    public const int TourLimit = PerCell;
 
     /// <summary>
     /// Whether ground joins <paramref name="from"/> to <paramref name="target"/> or to some hex near it (what
@@ -228,12 +345,12 @@ public static class MicroNavigation
     /// nearest settlement...), within <paramref name="maxCost"/>.
     /// </summary>
     public static bool FindNearest(WorldMap map, WorldGenSettings settings, HexCoord from, Func<int, bool> isGoal, out List<int> path, out float cost,
-        float maxCost = MaxPlan, int maxVisits = int.MaxValue)
+        float maxCost = MaxPlan, int maxVisits = int.MaxValue, Func<int, bool> avoid = null)
     {
         path = new List<int>();
         cost = 0f;
         int start = Index(map, from);
-        return start >= 0 && isGoal != null && Grid(map, settings).Search(start, isGoal, from, -1, maxCost, maxVisits, out path, out cost);
+        return start >= 0 && isGoal != null && Grid(map, settings).Search(start, isGoal, from, -1, maxCost, maxVisits, out path, out cost, avoid);
     }
 
     // ===== ABILITIES AND KNOWLEDGE =====
@@ -261,14 +378,14 @@ public static class MicroNavigation
         return id >= 0 && (map[id / PerCell].microBlockedMask & (1 << (id % PerCell))) != 0;
     }
 
-    /// <summary>A unit surveyed it (or its whole cell is explored).</summary>
+    /// <summary>A unit surveyed it, standing on it (a cell explored by expeditions passing by still has its hexes to survey).</summary>
     public static bool Surveyed(WorldMap map, HexCoord micro) => Surveyed(map, Index(map, micro));
 
     public static bool Surveyed(WorldMap map, int id)
     {
         if (id < 0) return true;
         var t = map[id / PerCell];
-        return t.explored || (t.microSurveyMask & (1 << (id % PerCell))) != 0;
+        return (t.microSurveyMask & (1 << (id % PerCell))) != 0;
     }
 
     /// <summary>A unit walked on or beside it (or surveyed it).</summary>
@@ -309,6 +426,8 @@ public sealed class MicroGrid
         Road = 8,
         /// <summary>It carries a neighbouring cell's ground (a ragged seam).</summary>
         Borrowed = 16,
+        /// <summary>A broken Old World road runs through it (walked faster, but it bridges no ford and cuts no crag).</summary>
+        OldRoad = 32,
     }
 
     /// <summary>Extra fatigue of a step up per unit of height climbed, and of a step down (proposals).</summary>
@@ -329,11 +448,13 @@ public sealed class MicroGrid
     private readonly int[] _component;
     private readonly List<TerrainSpec> _terrains = new List<TerrainSpec>();
     private float _minGround = float.PositiveInfinity;
-    private int _roadVersion = int.MinValue, _roads;
+    private int _roadVersion = int.MinValue, _roads, _oldRoads;
 
     // Search state, reused (a stamp marks what the current search has touched).
     private readonly float[] _g;
     private readonly int[] _prev, _open, _closed;
+    // Each micro hex's coordinates, for the search's estimate.
+    private readonly int[] _q, _r;
     private int _stamp;
     private readonly Heap _heap = new Heap();
 
@@ -351,6 +472,14 @@ public sealed class MicroGrid
         _prev = new int[Count];
         _open = new int[Count];
         _closed = new int[Count];
+        _q = new int[Count];
+        _r = new int[Count];
+        for (int id = 0; id < Count; id++)
+        {
+            var c = MicroNavigation.Coord(map, id);
+            _q[id] = c.q;
+            _r[id] = c.r;
+        }
         BuildGround();
         BuildRivers();
         BuildComponents();
@@ -447,7 +576,17 @@ public sealed class MicroGrid
         if (_roadVersion == Map.CivilizationVersion) return;
         _roadVersion = Map.CivilizationVersion;
         _roads = 0;
-        for (int i = 0; i < Count; i++) _marks[i] &= unchecked((byte)~Mark.Road);
+        _oldRoads = 0;
+        for (int i = 0; i < Count; i++) _marks[i] &= unchecked((byte)~(Mark.Road | Mark.OldRoad));
+        // The Old World's broken roads, where no road of yours runs.
+        foreach (var old in Map.OldRoads)
+            foreach (var (hex, _) in WorldGeometry.Hexes(WorldGeometry.Smooth(WorldGeometry.OldRoadPoints(Map, old))))
+            {
+                int id = MicroNavigation.Index(Map, hex);
+                if (id < 0 || float.IsPositiveInfinity(_ground[id])) continue;
+                _marks[id] |= (byte)Mark.OldRoad;
+                _oldRoads++;
+            }
         foreach (var route in Map.Routes)
         {
             foreach (var (hex, _) in WorldGeometry.Hexes(WorldGeometry.Smooth(WorldGeometry.RoadPoints(Map, route))))
@@ -469,9 +608,11 @@ public sealed class MicroGrid
 
     // ===== COSTS =====
 
-    /// <summary>A cell's own share of every step into it: leylines speed, dissonance and danger slow, weather multiplies.</summary>
+    /// <summary>A cell's own share of every step into it: leylines speed, dissonance and danger slow, weather multiplies,
+    /// Vibrational Fallout drags (<see cref="WorldVibration.TravelFactor"/>).</summary>
     public static float CellFactor(WorldTile t) =>
-        (t.leylines != 0 ? WorldPaths.LeylineFactor : 1f) * (1f + 0.8f * t.dissonance + t.danger) * Math.Max(0.25f, Math.Min(4f, t.weatherTravelMultiplier));
+        (t.leylines != 0 ? WorldPaths.LeylineFactor : 1f) * (1f + 0.8f * t.dissonance + t.danger) * Math.Max(0.25f, Math.Min(4f, t.weatherTravelMultiplier))
+        * Math.Max(1f, t.coverTravel) * Math.Max(1f, t.falloutTravel);
 
     public Mark Marks(int id)
     {
@@ -494,6 +635,7 @@ public sealed class MicroGrid
         if (!road && (marks & (byte)Mark.Crag) != 0) return float.PositiveInfinity;
         float way = road ? WorldPaths.RoadFactor
             : _rough[id] * ((marks & (byte)Mark.GreatFord) != 0 ? GreatFordFactor : (marks & (byte)Mark.Ford) != 0 ? FordFactor : 1f);
+        if (!road && (marks & (byte)Mark.OldRoad) != 0) way *= WorldPaths.OldRoadFactor;
         return ground * way * CellFactor(Map[id / MicroNavigation.PerCell]);
     }
 
@@ -517,7 +659,7 @@ public sealed class MicroGrid
             if (t.weatherTravelMultiplier < weather) weather = t.weatherTravelMultiplier;
             if (t.leylines != 0) leylines = true;
         }
-        return _minGround * (_roads > 0 ? WorldPaths.RoadFactor : 1f) * (leylines ? WorldPaths.LeylineFactor : 1f) * Math.Max(0.25f, Math.Min(4f, weather));
+        return _minGround * (_roads > 0 ? WorldPaths.RoadFactor : _oldRoads > 0 ? WorldPaths.OldRoadFactor : 1f) * (leylines ? WorldPaths.LeylineFactor : 1f) * Math.Max(0.25f, Math.Min(4f, weather));
     }
 
     /// <summary>Two micro hexes a unit could walk between (both can be entered and ground joins them).</summary>
@@ -543,19 +685,79 @@ public sealed class MicroGrid
     /// A* from <paramref name="start"/> to the first micro hex satisfying <paramref name="isGoal"/>. Every goal lies
     /// within <paramref name="goalRadius"/> of <paramref name="goalCenter"/> (a negative radius: goals anywhere, a
     /// plain Dijkstra). The path lists the micro ids after the start; empty when the start is itself a goal.
-    /// Gives up past <paramref name="maxCost"/> or <paramref name="maxVisits"/> hexes expanded.
+    /// Gives up past <paramref name="maxCost"/> or <paramref name="maxVisits"/> hexes expanded. Hexes
+    /// <paramref name="avoid"/> marks are never entered (others standing in the way); the start is exempt.
     /// </summary>
-    public bool Search(int start, Func<int, bool> isGoal, HexCoord goalCenter, int goalRadius, float maxCost, int maxVisits, out List<int> path, out float cost)
+    public bool Search(int start, Func<int, bool> isGoal, HexCoord goalCenter, int goalRadius, float maxCost, int maxVisits, out List<int> path, out float cost,
+        Func<int, bool> avoid = null)
     {
         path = new List<int>();
         cost = 0f;
         if (start < 0 || start >= Count || isGoal == null) return false;
+        int goal = -1;
+        float found = 0f;
+        Run(start, goalCenter, goalRadius, maxCost, maxVisits, avoid, (id, g) =>
+        {
+            if (!isGoal(id)) return false;
+            goal = id;
+            found = g;
+            return true;
+        });
+        if (goal < 0) return false;
+        cost = found;
+        path = Trace(start, goal);
+        return true;
+    }
+
+    /// <summary>
+    /// The travel fatigue from <paramref name="start"/> to each of <paramref name="targets"/> (+infinity for those out of
+    /// reach), in one search: an A* toward the targets, all of which lie within <paramref name="goalRadius"/> of
+    /// <paramref name="goalCenter"/>, run on until every target is settled. Returns how many were reached; the way to
+    /// any of them can be read with <see cref="Trace"/> until the next search.
+    /// </summary>
+    public int CostsTo(int start, IReadOnlyList<int> targets, HexCoord goalCenter, int goalRadius, float maxCost, int maxVisits, float[] costs, Func<int, bool> avoid = null)
+    {
+        for (int i = 0; i < targets.Count; i++) costs[i] = float.PositiveInfinity;
+        if (start < 0 || start >= Count || targets.Count == 0) return 0;
+        int left = targets.Count, reached = 0;
+        Run(start, goalCenter, goalRadius, maxCost, maxVisits, avoid, (id, g) =>
+        {
+            for (int i = 0; i < targets.Count; i++)
+                if (targets[i] == id && float.IsPositiveInfinity(costs[i]))
+                {
+                    costs[i] = g;
+                    reached++;
+                    left--;
+                }
+            return left <= 0;
+        });
+        return reached;
+    }
+
+    /// <summary>The way (micro ids after the start) the last search found to <paramref name="goal"/>, which it must have settled.</summary>
+    public List<int> Trace(int start, int goal)
+    {
+        var path = new List<int>();
+        if (goal < 0 || goal >= Count || _closed[goal] != _stamp) return path;
+        for (int at = goal; at != start && at >= 0; at = _prev[at]) path.Add(at);
+        path.Reverse();
+        return path;
+    }
+
+    // The search itself: an exact A* (every step costs at least MinStep, and the estimate never counts more than the
+    // cheapest step per hex left to the goal area, so it is admissible and consistent: each hex settled has its true
+    // cost). Among equal estimates the hex nearer the goal goes first (fewer hexes expanded on open ground), then the
+    // lower id, so every search is deterministic. onSettled gets each hex as its cost becomes final; true stops.
+    private void Run(int start, HexCoord goalCenter, int goalRadius, float maxCost, int maxVisits, Func<int, bool> avoid, Func<int, float, bool> onSettled)
+    {
         RefreshRoads();
         float hMin = goalRadius >= 0 ? MinStep() : 0f;
+        int gq = goalCenter.q, gr = goalCenter.r;
         float Estimate(int id)
         {
             if (hMin <= 0f) return 0f;
-            int d = HexCoord.Distance(MicroNavigation.Coord(Map, id), goalCenter) - goalRadius;
+            int dq = _q[id] - gq, dr = _r[id] - gr;
+            int d = (Math.Abs(dq) + Math.Abs(dr) + Math.Abs(dq + dr)) / 2 - goalRadius;
             return d > 0 ? d * hMin : 0f;
         }
         if (++_stamp == int.MaxValue)
@@ -568,25 +770,22 @@ public sealed class MicroGrid
         _g[start] = 0f;
         _prev[start] = -1;
         _open[start] = _stamp;
-        _heap.Push(Estimate(start), start);
-        int goal = -1, visits = 0;
+        float h0 = Estimate(start);
+        _heap.Push(h0, h0, start);
+        int visits = 0;
         while (_heap.Count > 0)
         {
             int at = _heap.Pop();
             if (_closed[at] == _stamp) continue;
             _closed[at] = _stamp;
             float g = _g[at];
-            if (isGoal(at))
-            {
-                goal = at;
-                cost = g;
-                break;
-            }
-            if (++visits > maxVisits) break;
+            if (onSettled(at, g)) return;
+            if (++visits > maxVisits) return;
             for (int d = 0; d < 6; d++)
             {
                 int next = MicroNavigation.Neighbour(Map, at, d);
                 if (next < 0 || _closed[next] == _stamp) continue;
+                if (avoid != null && avoid(next)) continue;
                 float step = Step(at, next);
                 if (float.IsPositiveInfinity(step) || float.IsNaN(step)) continue;
                 float ng = g + step;
@@ -594,41 +793,43 @@ public sealed class MicroGrid
                 _g[next] = ng;
                 _prev[next] = at;
                 _open[next] = _stamp;
-                _heap.Push(ng + Estimate(next), next);
+                float h = Estimate(next);
+                _heap.Push(ng + h, h, next);
             }
         }
-        if (goal < 0) return false;
-        for (int at = goal; at != start; at = _prev[at]) path.Add(at);
-        path.Reverse();
-        return true;
     }
 
-    // A binary min-heap of (key, id); ties go to the lower id, so searches are deterministic.
+    // A binary min-heap of (f, h, id): the lowest estimate of the whole way first; among equals the one with less left
+    // to walk, then the lower id, so searches are deterministic.
     private sealed class Heap
     {
         private float[] _keys = new float[256];
+        private float[] _ties = new float[256];
         private int[] _ids = new int[256];
         public int Count { get; private set; }
 
         public void Clear() => Count = 0;
 
-        public void Push(float key, int id)
+        public void Push(float key, float tie, int id)
         {
             if (Count == _keys.Length)
             {
                 Array.Resize(ref _keys, Count * 2);
+                Array.Resize(ref _ties, Count * 2);
                 Array.Resize(ref _ids, Count * 2);
             }
             int c = Count++;
             while (c > 0)
             {
                 int p = (c - 1) >> 1;
-                if (!Less(key, id, _keys[p], _ids[p])) break;
+                if (!Less(key, tie, id, _keys[p], _ties[p], _ids[p])) break;
                 _keys[c] = _keys[p];
+                _ties[c] = _ties[p];
                 _ids[c] = _ids[p];
                 c = p;
             }
             _keys[c] = key;
+            _ties[c] = tie;
             _ids[c] = id;
         }
 
@@ -637,24 +838,26 @@ public sealed class MicroGrid
             int top = _ids[0];
             Count--;
             if (Count == 0) return top;
-            float key = _keys[Count];
+            float key = _keys[Count], tie = _ties[Count];
             int id = _ids[Count];
             int c = 0;
             while (true)
             {
                 int l = 2 * c + 1;
                 if (l >= Count) break;
-                int r = l + 1, m = r < Count && Less(_keys[r], _ids[r], _keys[l], _ids[l]) ? r : l;
-                if (!Less(_keys[m], _ids[m], key, id)) break;
+                int r = l + 1, m = r < Count && Less(_keys[r], _ties[r], _ids[r], _keys[l], _ties[l], _ids[l]) ? r : l;
+                if (!Less(_keys[m], _ties[m], _ids[m], key, tie, id)) break;
                 _keys[c] = _keys[m];
+                _ties[c] = _ties[m];
                 _ids[c] = _ids[m];
                 c = m;
             }
             _keys[c] = key;
+            _ties[c] = tie;
             _ids[c] = id;
             return top;
         }
 
-        private static bool Less(float ka, int ia, float kb, int ib) => ka < kb || (ka == kb && ia < ib);
+        private static bool Less(float ka, float ta, int ia, float kb, float tb, int ib) => ka < kb || (ka == kb && (ta < tb || (ta == tb && ia < ib)));
     }
 }

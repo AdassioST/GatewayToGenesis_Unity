@@ -1,6 +1,6 @@
 # A torn leyline channel through moonlit groves and marsh.
 tile: broken-leylines/torn-channel
-biome: broken-leylines
+macrobiome: broken-leylines
 weight: 1
 rotations: any
 legend: M=moonlit-grove X=leyline-ravine S=marsh

@@ -13,30 +13,30 @@ public class WorldGenerationTests
 {
     // The owner's stencil (Resources/World/Composition.txt, Sept 26, 2026).
     private const string Stencil = @"
-W  W  W  W  W  W  W  W  P  P  P  P  W  W  W  W  W  W  W  W
-W  W  W  W  W  W  W  W  P  S7 S7 P  W  W  W  W  W  W  W  W
-W  W  W  W  W  P  P  P  P  S7 S7 P  P  P  P  W  W  W  W  W
-W  W  W  W  W  P  S4 S4 P  S7 S7 P  S4 S4 P  W  W  W  W  W
-W  W  W  W  W  P  S4 S4 P  S7 S7 P  S4 S4 P  W  W  W  W  W
-W  W  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  W  W
-W  W  P  S4 S4 P  S3 S3 P  S3 S3 P  S3 S3 P  S4 S4 P  W  W
-W  W  P  S4 S4 P  S3 S3 P  S3 S3 P  S3 S3 P  S4 S4 P  W  W
-P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P
-P  S7 S7 S7 S7 P  S2 S2 P  S1 S1 P  S2 S2 P  S7 S7 S7 S7 P
-P  S7 S7 S7 S7 P  S2 S2 P  S1 S1 P  S2 S2 P  S7 S7 S7 S7 P
-P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P
-W  W  P  S6 S6 P  S6 S6 P  S3 S3 P  S5 S5 P  S5 S5 P  W  W
-W  W  P  S6 S6 P  S6 S6 P  S3 S3 P  S5 S5 P  S5 S5 P  W  W
-W  W  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  P  W  W
-W  W  W  W  W  P  S6 S6 P  S7 S7 P  S5 S5 P  W  W  W  W  W
-W  W  W  W  W  P  S6 S6 P  S7 S7 P  S5 S5 P  W  W  W  W  W
-W  W  W  W  W  P  P  P  P  S7 S7 P  P  P  P  W  W  W  W  W
-W  W  W  W  W  W  W  W  P  S7 S7 P  W  W  W  W  W  W  W  W
-W  W  W  W  W  W  W  W  P  P  P  P  W  W  W  W  W  W  W  W";
+W  W  W  W  W  W  W  W  I  I  I  I  W  W  W  W  W  W  W  W
+W  W  W  W  W  W  W  W  I  Q7 Q7 I  W  W  W  W  W  W  W  W
+W  W  W  W  W  I  I  I  I  Q7 Q7 I  I  I  I  W  W  W  W  W
+W  W  W  W  W  I  Q4 Q4 I  Q7 Q7 I  Q4 Q4 I  W  W  W  W  W
+W  W  W  W  W  I  Q4 Q4 I  Q7 Q7 I  Q4 Q4 I  W  W  W  W  W
+W  W  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  W  W
+W  W  I  Q4 Q4 I  Q3 Q3 I  Q3 Q3 I  Q3 Q3 I  Q4 Q4 I  W  W
+W  W  I  Q4 Q4 I  Q3 Q3 I  Q3 Q3 I  Q3 Q3 I  Q4 Q4 I  W  W
+I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I
+I  Q7 Q7 Q7 Q7 I  Q2 Q2 I  Q1 Q1 I  Q2 Q2 I  Q7 Q7 Q7 Q7 I
+I  Q7 Q7 Q7 Q7 I  Q2 Q2 I  Q1 Q1 I  Q2 Q2 I  Q7 Q7 Q7 Q7 I
+I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I
+W  W  I  Q6 Q6 I  Q6 Q6 I  Q3 Q3 I  Q5 Q5 I  Q5 Q5 I  W  W
+W  W  I  Q6 Q6 I  Q6 Q6 I  Q3 Q3 I  Q5 Q5 I  Q5 Q5 I  W  W
+W  W  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  I  W  W
+W  W  W  W  W  I  Q6 Q6 I  Q7 Q7 I  Q5 Q5 I  W  W  W  W  W
+W  W  W  W  W  I  Q6 Q6 I  Q7 Q7 I  Q5 Q5 I  W  W  W  W  W
+W  W  W  W  W  I  I  I  I  Q7 Q7 I  I  I  I  W  W  W  W  W
+W  W  W  W  W  W  W  W  I  Q7 Q7 I  W  W  W  W  W  W  W  W
+W  W  W  W  W  W  W  W  I  I  I  I  W  W  W  W  W  W  W  W";
 
     private const string RingGlade = @"
 tile: grove/ring-glade
-biome: grove
+macrobiome: grove
 weight: 2
 rotations: any
 legend: V=wood G=glade L=lake
@@ -50,20 +50,20 @@ V G L G V
 
     private const string Ridge = @"
 tile: taiga/ridge
-biome: taiga
+macrobiome: taiga
 rotations: 0 3
 legend: T=wood P=peaks
 ---
 T T P P P T T";
 
-    private static readonly string[] S5Catalog = { "taiga", "rift", "wind", "auric" };
+    private static readonly string[] Q5Catalog = { "taiga", "rift", "wind", "auric" };
 
     private static TerrainRule Rule(string terrain, float weight = 1f, float minE = 0f, float maxE = 1f) =>
         new TerrainRule { terrain = terrain, weight = weight, minElevation = minE, maxElevation = maxE };
 
-    private static BiomeSpec Biome(string id, string ground, float elevation = 0.45f, params int[] orientations)
+    private static MacroBiomeSpec Biome(string id, string ground, float elevation = 0.45f, params int[] orientations)
     {
-        var biome = new BiomeSpec { id = id, name = id, elevation = elevation, tileCoverage = 0.4f };
+        var biome = new MacroBiomeSpec { id = id, name = id, elevation = elevation, tileCoverage = 0.4f };
         biome.terrains.Add(Rule(ground, 3f, 0f, 0.8f));
         biome.terrains.Add(Rule("peaks", 2f, 0.8f, 1f));
         biome.orientations.AddRange(orientations);
@@ -76,25 +76,25 @@ T T P P P T T";
         foreach (var water in new[] { "deep-ocean", "shallows", "lake" }) s.terrains.Add(new TerrainSpec { id = water, name = water, water = true, passable = false, fertility = 0f });
         s.terrains.Add(new TerrainSpec { id = "peaks", name = "Peaks", passable = false, fertility = 0f });
         foreach (var ground in new[] { "plain", "wood", "glade", "ash", "ruin", "steppe", "scar" }) s.terrains.Add(new TerrainSpec { id = ground, name = ground, fertility = 0.5f });
-        s.connective.Add(Rule("peaks", 3f, 0.8f, 1f));
-        s.connective.Add(Rule("plain", 2f, 0f, 0.82f));
-        s.biomes.Add(Biome("start", "plain", 0.4f));
-        s.biomes.Add(Biome("grove", "wood"));
-        s.biomes.Add(Biome("expanse", "steppe", 0.42f));
-        s.biomes.Add(Biome("ruins", "ruin"));
-        s.biomes.Add(Biome("ashes", "ash"));
-        s.biomes.Add(Biome("taiga", "wood", 0.55f, 1, 2));
-        s.biomes.Add(Biome("rift", "scar", 0.5f));
-        s.biomes.Add(Biome("wind", "plain", 0.58f));
-        s.biomes.Add(Biome("auric", "glade", 0.4f));
-        s.biomes.Add(Biome("outer", "plain", 0.5f));
-        s.sectors.Add(new SectorSpec { id = "S1", biomes = { "start" } });
-        s.sectors.Add(new SectorSpec { id = "S2", biomes = { "grove", "expanse" } });
-        s.sectors.Add(new SectorSpec { id = "S3", biomes = { "ruins" }, allowRepeats = true });
-        s.sectors.Add(new SectorSpec { id = "S4", biomes = { "ashes" }, allowRepeats = true });
-        s.sectors.Add(new SectorSpec { id = "S5", biomes = S5Catalog.ToList(), backbone = 0.35f });
-        s.sectors.Add(new SectorSpec { id = "S6", biomes = { "ruins" }, allowRepeats = true });
-        s.sectors.Add(new SectorSpec { id = "S7", biomes = { "outer" }, allowRepeats = true });
+        s.intersectionTerrains.Add(Rule("peaks", 3f, 0.8f, 1f));
+        s.intersectionTerrains.Add(Rule("plain", 2f, 0f, 0.82f));
+        s.macroBiomes.Add(Biome("start", "plain", 0.4f));
+        s.macroBiomes.Add(Biome("grove", "wood"));
+        s.macroBiomes.Add(Biome("expanse", "steppe", 0.42f));
+        s.macroBiomes.Add(Biome("ruins", "ruin"));
+        s.macroBiomes.Add(Biome("ashes", "ash"));
+        s.macroBiomes.Add(Biome("taiga", "wood", 0.55f, 1, 2));
+        s.macroBiomes.Add(Biome("rift", "scar", 0.5f));
+        s.macroBiomes.Add(Biome("wind", "plain", 0.58f));
+        s.macroBiomes.Add(Biome("auric", "glade", 0.4f));
+        s.macroBiomes.Add(Biome("outer", "plain", 0.5f));
+        s.quadrants.Add(new QuadrantSpec { id = "Q1", macroBiomes = { "start" } });
+        s.quadrants.Add(new QuadrantSpec { id = "Q2", macroBiomes = { "grove", "expanse" } });
+        s.quadrants.Add(new QuadrantSpec { id = "Q3", macroBiomes = { "ruins" }, allowRepeats = true });
+        s.quadrants.Add(new QuadrantSpec { id = "Q4", macroBiomes = { "ashes" }, allowRepeats = true });
+        s.quadrants.Add(new QuadrantSpec { id = "Q5", macroBiomes = Q5Catalog.ToList(), backbone = 0.35f });
+        s.quadrants.Add(new QuadrantSpec { id = "Q6", macroBiomes = { "ruins" }, allowRepeats = true });
+        s.quadrants.Add(new QuadrantSpec { id = "Q7", macroBiomes = { "outer" }, allowRepeats = true });
         s.features.Add(new FeatureSpec { id = "capital" });
         s.features.Add(new FeatureSpec { id = "orchard", tag = "fertile", count = 4, minDistance = 3, maxDistance = 40, spacing = 3, prefers = FeatureSpec.Preference.LandFertility });
         s.features.Add(new FeatureSpec { id = "tower", count = 2, minDistance = 5, spacing = 8, visibleFromAfar = true });
@@ -185,17 +185,17 @@ T T P P P T T";
         var stencil = ParsedStencil();
         Assert.AreEqual(20, stencil.Width);
         Assert.AreEqual(20, stencil.Height);
-        Assert.AreEqual(1, stencil.SlotsOf("S1").Count());
-        Assert.AreEqual(2, stencil.SlotsOf("S2").Count());
-        Assert.AreEqual(3, stencil.SlotsOf("S5").Count());
-        Assert.AreEqual(1, stencil.SlotsOf("S5").Select(s => s.instance).Distinct().Count(), "S5's blocks, only P apart, are one instance");
-        Assert.AreEqual(2, stencil.SlotsOf("S2").Select(s => s.instance).Distinct().Count(), "S2's blocks lie either side of S1");
-        Assert.AreEqual(4, stencil.SlotsOf("S7").Select(s => s.instance).Distinct().Count());
+        Assert.AreEqual(1, stencil.SlotsOf("Q1").Count());
+        Assert.AreEqual(2, stencil.SlotsOf("Q2").Count());
+        Assert.AreEqual(3, stencil.SlotsOf("Q5").Count());
+        Assert.AreEqual(1, stencil.SlotsOf("Q5").Select(s => s.instance).Distinct().Count(), "Q5's blocks, only an intersection apart, are one instance");
+        Assert.AreEqual(2, stencil.SlotsOf("Q2").Select(s => s.instance).Distinct().Count(), "Q2's blocks lie either side of Q1");
+        Assert.AreEqual(4, stencil.SlotsOf("Q7").Select(s => s.instance).Distinct().Count());
         Assert.AreEqual(stencil.Slots.Count, stencil.Slots.Select(s => s.id).Distinct().Count(), "slot ids are unique");
-        var start = stencil.SlotsOf("S1").Single();
+        var start = stencil.SlotsOf("Q1").Single();
         Assert.IsTrue(start.tags.Contains("core") && start.tags.Contains("inland"));
-        Assert.IsTrue(stencil.SlotsOf("S7").Any(s => s.tags.Contains("north")) && stencil.SlotsOf("S7").Any(s => s.tags.Contains("south")));
-        Assert.IsTrue(start.neighbours.Select(n => stencil.Slots[n].sector).Contains("S2"));
+        Assert.IsTrue(stencil.SlotsOf("Q7").Any(s => s.tags.Contains("north")) && stencil.SlotsOf("Q7").Any(s => s.tags.Contains("south")));
+        Assert.IsTrue(start.neighbours.Select(n => stencil.Slots[n].quadrant).Contains("Q2"));
     }
 
     [Test]
@@ -241,7 +241,7 @@ T T P P P T T";
     // ===== SLOTS (WG04) =====
 
     [Test]
-    public void Solver_S2GetsBothItsBiomesInEitherOrder()
+    public void Solver_Q2GetsBothItsMacroBiomesInEitherOrder()
     {
         var stencil = ParsedStencil();
         var orders = new HashSet<string>();
@@ -249,7 +249,7 @@ T T P P P T T";
         {
             var solution = SlotSolver.Solve(stencil, Settings(), seed);
             CollectionAssert.IsEmpty(solution.errors, $"seed {seed}");
-            var s2 = solution.placements.Where(p => p.slot.sector == "S2").OrderBy(p => p.slot.centerCol).Select(p => p.biome.id).ToList();
+            var s2 = solution.placements.Where(p => p.slot.quadrant == "Q2").OrderBy(p => p.slot.centerCol).Select(p => p.macroBiome.id).ToList();
             CollectionAssert.AreEquivalent(new[] { "grove", "expanse" }, s2, $"seed {seed}");
             orders.Add(string.Join(",", s2));
         }
@@ -257,7 +257,7 @@ T T P P P T T";
     }
 
     [Test]
-    public void Solver_S5DrawsThreeDistinctBiomesOfItsFour()
+    public void Solver_Q5DrawsThreeDistinctMacroBiomesOfItsFour()
     {
         var stencil = ParsedStencil();
         var trios = new HashSet<string>();
@@ -265,12 +265,12 @@ T T P P P T T";
         for (int seed = 1; seed <= 60; seed++)
         {
             var solution = SlotSolver.Solve(stencil, Settings(), seed);
-            var s5 = solution.placements.Where(p => p.slot.sector == "S5").OrderBy(p => p.slot.index).ToList();
+            var s5 = solution.placements.Where(p => p.slot.quadrant == "Q5").OrderBy(p => p.slot.index).ToList();
             Assert.AreEqual(3, s5.Count);
-            Assert.AreEqual(3, s5.Select(p => p.biome.id).Distinct().Count(), $"seed {seed}: no biome twice");
-            Assert.IsTrue(s5.All(p => S5Catalog.Contains(p.biome.id)));
-            trios.Add(string.Join(",", s5.Select(p => p.biome.id).OrderBy(id => id)));
-            layouts.Add(string.Join(",", s5.Select(p => p.biome.id)));
+            Assert.AreEqual(3, s5.Select(p => p.macroBiome.id).Distinct().Count(), $"seed {seed}: no biome twice");
+            Assert.IsTrue(s5.All(p => Q5Catalog.Contains(p.macroBiome.id)));
+            trios.Add(string.Join(",", s5.Select(p => p.macroBiome.id).OrderBy(id => id)));
+            layouts.Add(string.Join(",", s5.Select(p => p.macroBiome.id)));
         }
         Assert.Greater(trios.Count, 1, "the seed chooses which three appear");
         Assert.Greater(layouts.Count, 4, "and where they go");
@@ -283,10 +283,10 @@ T T P P P T T";
         var seen = new HashSet<int>();
         for (int seed = 1; seed <= 60; seed++)
         {
-            foreach (var p in SlotSolver.Solve(stencil, Settings(), seed).placements.Where(p => p.biome != null))
+            foreach (var p in SlotSolver.Solve(stencil, Settings(), seed).placements.Where(p => p.macroBiome != null))
             {
                 Assert.That(p.orientation, Is.InRange(0, 5));
-                if (p.biome.id == "taiga")
+                if (p.macroBiome.id == "taiga")
                 {
                     CollectionAssert.Contains(new[] { 1, 2 }, p.orientation, $"seed {seed}: taiga's uphill faces north");
                     seen.Add(p.orientation);
@@ -300,21 +300,21 @@ T T P P P T T";
     public void Solver_ReportsCatalogsThatCannotFillTheirSlots()
     {
         var settings = Settings();
-        settings.sectors.RemoveAll(s => s.id == "S6");
-        settings.Sector("S3").biomes.Add("no-such-biome");
-        settings.Sector("S4").allowRepeats = false;
+        settings.quadrants.RemoveAll(s => s.id == "Q6");
+        settings.Quadrant("Q3").macroBiomes.Add("no-such-biome");
+        settings.Quadrant("Q4").allowRepeats = false;
         var solution = SlotSolver.Solve(ParsedStencil(), settings, 3);
-        Assert.IsTrue(solution.errors.Any(e => e.Contains("S6") && e.Contains("no SectorSpec")));
+        Assert.IsTrue(solution.errors.Any(e => e.Contains("Q6") && e.Contains("no QuadrantSpec")));
         Assert.IsTrue(solution.errors.Any(e => e.Contains("no-such-biome")));
-        Assert.IsTrue(solution.errors.Any(e => e.Contains("S4") && e.Contains("repeats")));
-        Assert.IsTrue(solution.placements.Where(p => p.slot.sector == "S6").All(p => p.biome == null), "an unfilled slot is left to P, not given a guess");
+        Assert.IsTrue(solution.errors.Any(e => e.Contains("Q4") && e.Contains("repeats")));
+        Assert.IsTrue(solution.placements.Where(p => p.slot.quadrant == "Q6").All(p => p.macroBiome == null), "an unfilled slot is left to the intersections, not given a guess");
     }
 
     [Test]
     public void Solver_RelaxesAnImpossibleRequirementAndSaysSo()
     {
         var settings = Settings();
-        settings.Biome("start").requires.Add("coast"); // S1 is inland
+        settings.MacroBiome("start").requires.Add("coast"); // Q1 is inland
         var solution = SlotSolver.Solve(ParsedStencil(), settings, 5);
         Assert.IsTrue(solution.repairs.Any(r => r.Contains("tag requirements")));
         Assert.IsTrue(solution.errors.Any(e => e.Contains("requires coast")));
@@ -323,7 +323,7 @@ T T P P P T T";
     // ===== THE CONTINENT (WG03, WG05, WG06) =====
 
     private static string Fingerprint(WorldMap map) =>
-        string.Join(";", map.Tiles.Select(t => $"{t.coord}{t.terrain}{t.biome}{t.feature}{t.river}{t.explored}{t.elevation:0.0000}"));
+        string.Join(";", map.Tiles.Select(t => $"{t.coord}{t.terrain}{t.macroBiome}{t.sector}{t.feature}{t.river}{t.explored}{t.elevation:0.0000}"));
 
     [Test]
     public void World_TheSameSeedVersionAndCatalogMakeTheSameWorld()
@@ -341,8 +341,8 @@ T T P P P T T";
         Assert.AreEqual(map.Count, map.Tiles.Select(t => t.coord).Distinct().Count());
         Assert.IsTrue(map.Tiles.All(t => !string.IsNullOrEmpty(t.terrain)), "no gaps");
         Assert.IsTrue(map.Tiles.All(t => t.water == (Settings().Terrain(t.terrain)?.water == true)), "water cells carry water ground and only they do");
-        Assert.Greater(map.Tiles.Count(t => t.region == WorldRegion.Connective && !t.water), 0, "P is land in places");
-        Assert.Greater(map.Tiles.Count(t => t.region == WorldRegion.Slot), map.Count / 10);
+        Assert.Greater(map.Tiles.Count(t => t.composition == WorldComposition.Intersection && !t.water), 0, "the intersections are land in places");
+        Assert.Greater(map.Tiles.Count(t => t.composition == WorldComposition.MacroBiome), map.Count / 10);
         CollectionAssert.IsEmpty(map.Report.errors, map.Report.ToString());
     }
 
@@ -393,10 +393,10 @@ T T P P P T T";
             CollectionAssert.IsEmpty(map.Report.errors, $"seed {seed}:\n{map.Report}");
             var mainland = Mainland(map);
             Assert.IsTrue(map.Stencil.Slots.All(slot => map.Tiles.Any(t => t.slot == slot.index && mainland[t.index])), $"seed {seed}: every slot joins the mainland");
-            Assert.AreEqual("S1", map.Get(map.Capital).sector, $"seed {seed}");
-            var s2 = map.Placements.Where(p => p.slot.sector == "S2").Select(p => p.biome.id).ToList();
+            Assert.AreEqual("Q1", map.Get(map.Capital).quadrant, $"seed {seed}");
+            var s2 = map.Placements.Where(p => p.slot.quadrant == "Q2").Select(p => p.macroBiome.id).ToList();
             CollectionAssert.AreEquivalent(new[] { "grove", "expanse" }, s2, $"seed {seed}");
-            Assert.AreEqual(3, map.Placements.Where(p => p.slot.sector == "S5").Select(p => p.biome.id).Distinct().Count(), $"seed {seed}");
+            Assert.AreEqual(3, map.Placements.Where(p => p.slot.quadrant == "Q5").Select(p => p.macroBiome.id).Distinct().Count(), $"seed {seed}");
         }
     }
 
@@ -430,14 +430,48 @@ T T P P P T T";
         }
     }
 
+    [Test]
+    public void Sectors_PointsFallInTheirCompassWedgeOrTheCentre()
+    {
+        Assert.AreEqual(CompassSector.Central, WorldSectors.Of(0.1f, -0.2f, 3f));
+        Assert.AreEqual(CompassSector.North, WorldSectors.Of(0f, 2f, 3f), "y grows north");
+        Assert.AreEqual(CompassSector.South, WorldSectors.Of(0.2f, -2f, 3f));
+        Assert.AreEqual(CompassSector.East, WorldSectors.Of(2f, 0.3f, 3f));
+        Assert.AreEqual(CompassSector.West, WorldSectors.Of(-2f, -0.3f, 3f));
+        Assert.AreEqual(CompassSector.NorthEast, WorldSectors.Of(2f, 2f, 3f));
+        Assert.AreEqual(CompassSector.SouthWest, WorldSectors.Of(-2f, -2f, 3f));
+        Assert.AreEqual(CompassSector.NorthWest, WorldSectors.Of(-2f, 2f, 3f));
+        Assert.AreEqual(CompassSector.SouthEast, WorldSectors.Of(2f, -2f, 3f));
+        Assert.AreEqual("North-East Sector", WorldSectors.Name(CompassSector.NorthEast));
+        Assert.IsNull(WorldSectors.Name(CompassSector.None));
+    }
+
+    [Test]
+    public void Sectors_DivideEveryMacroBiomeIntoNine()
+    {
+        var map = World(42);
+        Assert.IsTrue(map.Tiles.All(t => (t.sector != CompassSector.None) == (t.composition == WorldComposition.MacroBiome && t.slot >= 0)),
+            "every Macro Biome cell has a Sector; intersections and the ocean have none");
+        foreach (var slot in map.Tiles.Where(t => t.sector != CompassSector.None).GroupBy(t => t.slot))
+        {
+            var cells = slot.ToList();
+            var bySector = cells.GroupBy(t => t.sector).ToDictionary(g => g.Key, g => g.ToList());
+            Assert.AreEqual(9, bySector.Count, $"slot {slot.Key} has all nine Sectors");
+            float central = bySector[CompassSector.Central].Count / (float)cells.Count;
+            Assert.That(central, Is.InRange(0.05f, 0.2f), $"slot {slot.Key}: the Central Sector is about a ninth");
+            Assert.Greater(bySector[CompassSector.North].Average(t => t.y), bySector[CompassSector.South].Average(t => t.y), $"slot {slot.Key}: north lies north");
+            Assert.Greater(bySector[CompassSector.East].Average(t => t.x), bySector[CompassSector.West].Average(t => t.x), $"slot {slot.Key}: east lies east");
+        }
+    }
+
     [TestCase(42)]
     [TestCase(11)]
-    public void World_TheCapitalStandsInS1OnFreshwater(int seed)
+    public void World_TheCapitalStandsInQ1OnFreshwater(int seed)
     {
         var map = World(seed);
         var capital = map.Get(map.Capital);
-        Assert.AreEqual("S1", capital.sector);
-        Assert.AreEqual(WorldRegion.Slot, capital.region);
+        Assert.AreEqual("Q1", capital.quadrant);
+        Assert.AreEqual(WorldComposition.MacroBiome, capital.composition);
         Assert.IsFalse(capital.water);
         Assert.AreEqual("capital", capital.feature);
         Assert.IsTrue(capital.explored);
@@ -469,9 +503,9 @@ T T P P P T T";
         var map = World(42);
         var stamped = map.Tiles.Where(t => t.handmadeTile != null).ToList();
         Assert.Greater(stamped.Count, 0);
-        Assert.IsTrue(stamped.All(t => t.region == WorldRegion.Slot && !t.seam), "only in protected interiors");
-        Assert.IsTrue(stamped.Where(t => t.handmadeTile == "grove/ring-glade").All(t => t.biome == "grove"));
-        Assert.IsTrue(stamped.Where(t => t.handmadeTile == "taiga/ridge").All(t => t.biome == "taiga"));
+        Assert.IsTrue(stamped.All(t => t.composition == WorldComposition.MacroBiome && !t.seam), "only in protected interiors");
+        Assert.IsTrue(stamped.Where(t => t.handmadeTile == "grove/ring-glade").All(t => t.macroBiome == "grove"));
+        Assert.IsTrue(stamped.Where(t => t.handmadeTile == "taiga/ridge").All(t => t.macroBiome == "taiga"));
         // The glade's pool is a lake; each stamp keeps the drawing's 19 cells.
         var glades = map.Report.tiles.Count(t => t.Contains("grove/ring-glade"));
         Assert.AreEqual(glades * 19, stamped.Count(t => t.handmadeTile == "grove/ring-glade"));
@@ -479,19 +513,19 @@ T T P P P T T";
     }
 
     [Test]
-    public void World_SeamsBlendTheNeighboursAndS5ReadsAsOneRange()
+    public void World_SeamsBlendTheNeighboursAndQ5ReadsAsOneRange()
     {
         var map = World(42);
         var settings = Settings();
-        // P carries the neighbouring biomes' ground, not only its own.
-        var landP = map.Tiles.Where(t => t.region == WorldRegion.Connective && !t.water).ToList();
+        // The intersections carry the neighbouring Macro Biomes' ground, not only its own.
+        var landP = map.Tiles.Where(t => t.composition == WorldComposition.Intersection && !t.water).ToList();
         Assert.Greater(landP.Count(t => t.terrain != "plain" && t.terrain != "peaks"), 0);
-        // The P inside S5 stands higher than S5's slots on average: a range, not a flat seam.
-        var s5Slots = map.Tiles.Where(t => t.sector == "S5" && t.region == WorldRegion.Slot && !t.water).ToList();
-        var s5Seams = map.Tiles.Where(t => t.sector == "S5" && t.region == WorldRegion.Connective && !t.water).ToList();
+        // The intersections inside Q5 stand higher than Q5's slots on average: a range, not a flat seam.
+        var s5Slots = map.Tiles.Where(t => t.quadrant == "Q5" && t.composition == WorldComposition.MacroBiome && !t.water).ToList();
+        var s5Seams = map.Tiles.Where(t => t.quadrant == "Q5" && t.composition == WorldComposition.Intersection && !t.water).ToList();
         Assert.Greater(s5Seams.Count, 0);
-        Assert.Greater(s5Seams.Max(t => t.elevation), settings.seaLevel + 0.4f, "S5's range has peaks");
-        // No cliff walls: neighbouring land cells in P never differ by more than the steepest relief allows.
+        Assert.Greater(s5Seams.Max(t => t.elevation), settings.seaLevel + 0.4f, "Q5's range has peaks");
+        // No cliff walls: neighbouring land cells in the intersections never differ by more than the steepest relief allows.
         float step = map.Tiles.Where(t => t.seam && !t.water).SelectMany(t => map.NeighboursOf(t).Where(n => !n.water).Select(n => Math.Abs(n.elevation - t.elevation))).DefaultIfEmpty(0f).Max();
         Assert.Less(step, 0.35f);
     }

@@ -191,12 +191,12 @@ public class GenesisLoopTests
     }
 
     [Test]
-    public void Hex_QuadrantsSplitTheWorldIntoFourQuarters()
+    public void Hex_QuartersSplitTheWorldAroundTheCapital()
     {
-        var counts = HexCoord.Spiral(HexCoord.Zero, 6).Where(h => h != HexCoord.Zero).GroupBy(h => h.Quadrant()).ToDictionary(g => g.Key, g => g.Count());
+        var counts = HexCoord.Spiral(HexCoord.Zero, 6).Where(h => h != HexCoord.Zero).GroupBy(h => h.Quarter()).ToDictionary(g => g.Key, g => g.Count());
         CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, counts.Keys);
         Assert.IsTrue(counts.Values.All(c => c >= 25), "roughly a quarter each");
-        Assert.AreEqual(3, new HexCoord(1, 1).Quadrant(), "south-east (y grows up, r grows down)");
+        Assert.AreEqual(3, new HexCoord(1, 1).Quarter(), "south-east (y grows up, r grows down)");
     }
 
     // ===== LEGENDS =====

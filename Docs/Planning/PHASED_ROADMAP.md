@@ -12,7 +12,7 @@ Story endpoint, 2026-09-27: [Settlement stories and Lesser Opus](SETTLEMENT_STOR
 
 Accept the modernized world → story → legend → Age → save → achievement loop before expanding the campaign. World acceptance remains an immediate dependency, but its implemented foundations must not be scheduled as absent.
 
-- Unity 6000.5.8f1; generator version 8; save schema 3. Sector world generation, relief, regional weather, map lenses, claims, micro travel, settlements, roads and enclave influence exist at implementation/prototype depth.
+- Unity 6000.5.8f1; generator version 9; save schema 3. Quadrant and Macro Biome world generation, relief, regional weather, map lenses, claims, micro travel, settlements, roads and enclave influence exist at implementation/prototype depth.
 - AgeProgression advances Desolation → Renewal → placeholder Age II. Pantry now supplies stored-food value, variety, spoilage and provisions. Hunger/Plague are prototypes requiring current acceptance, not unbuilt systems.
 - Legends have souls, Composure, Ornaments, seven fragment kinds and fragment-based growth. Legend-led expeditions and Ballad casts/verse records exist. Durable deed identity, relationships, full legacy and Fate Stage integration remain open.
 - Persistence is authorized and implemented: world saves, lifetime profile, per-world achievement/Anchor rewards, recovery and sacrifice API. Prestige upgrades, Ironman, migration policy and playable final-choice content remain open. See [SAVE_SYSTEM.md](SAVE_SYSTEM.md) for platform and compatibility limits.

@@ -113,7 +113,8 @@ public static class GameCatalog
         }
     }
 
-    public static bool IsResource(string name) => Resources.Contains(name);
+    /// <summary>An authored resource, or one made during play (an invented dish: <see cref="RuntimeUnits"/>).</summary>
+    public static bool IsResource(string name) => Resources.Contains(name) || RuntimeUnits.Contains(name);
 
     /// <summary>The resource whose <see cref="GameUnit.role"/> is <paramref name="role"/>, or null (the first one if several claim it).</summary>
     public static GameUnit ResourceFor(ResourceRole role)

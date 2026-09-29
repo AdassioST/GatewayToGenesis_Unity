@@ -1,6 +1,6 @@
 # A lone butte rising from the scrub.
 tile: great-expanse/lone-butte
-biome: great-expanse
+macrobiome: great-expanse
 weight: 1
 rotations: none
 legend: C=expanse-scrub H=highlands P=peaks

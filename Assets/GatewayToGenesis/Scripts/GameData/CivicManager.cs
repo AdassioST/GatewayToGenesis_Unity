@@ -88,10 +88,14 @@ public class CivicManager : SingletonBehaviour<CivicManager>
 
     // ===== UNLOCK / REMOVE =====
 
-    /// <summary>Unlock and activate a civic if its requirements, conflicts and slots allow it.</summary>
-    public bool UnlockCivic(string civicName, string source = "Manual")
+    /// <summary>
+    /// Unlock and activate a civic if its requirements, conflicts and slots allow it. <paramref name="inherited"/>: it is
+    /// adopted from the ruins of a fallen settlement (WorldSystem.AdoptRuinCivic), whose people already lived by it, so
+    /// its requirements are waived (conflicts and slots still hold).
+    /// </summary>
+    public bool UnlockCivic(string civicName, string source = "Manual", bool inherited = false)
     {
-        var (canUnlock, reasons) = CanUnlockCivic(civicName);
+        var (canUnlock, reasons) = CanUnlockCivic(civicName, inherited);
         if (!canUnlock)
         {
             GameLog.Warning($"Cannot unlock '{civicName}': {string.Join("; ", reasons)}", Log);
@@ -139,9 +143,14 @@ public class CivicManager : SingletonBehaviour<CivicManager>
         OnCivicPoolChanged?.Invoke();
     }
 
-    /// <summary>Why a civic can or cannot be unlocked right now (empty list means it can).</summary>
-    public (bool canUnlock, List<string> reasons) CanUnlockCivic(string civicName)
+    /// <summary>
+    /// Why a civic can or cannot be unlocked right now (empty list means it can); <paramref name="inherited"/> waives its
+    /// requirements. <paramref name="replacing"/>: an active civic that would be removed first (its slot and conflicts
+    /// no longer count; a civic adopted from ruins in place of one of yours).
+    /// </summary>
+    public (bool canUnlock, List<string> reasons) CanUnlockCivic(string civicName, bool inherited = false, string replacing = null)
     {
+        var gone = string.IsNullOrEmpty(replacing) ? null : GetActiveCivic(replacing);
         var reasons = new List<string>();
         if (!GameCatalog.Civics.TryGet(civicName, out var civic))
         {
@@ -153,19 +162,21 @@ public class CivicManager : SingletonBehaviour<CivicManager>
             reasons.Add("Civic already active");
             return (false, reasons);
         }
-        foreach (var requirement in civic.requirements ?? new List<CivicRequirement>())
+        foreach (var requirement in inherited ? new List<CivicRequirement>() : civic.requirements ?? new List<CivicRequirement>())
         {
             if (!IsRequirementMet(requirement)) reasons.Add($"Requirement not met: {requirement.GetAutoDescription()}");
         }
+        bool Active(string name) => IsCivicActive(name) && (gone == null || !string.Equals(gone.civicName, name, StringComparison.OrdinalIgnoreCase));
         foreach (string conflict in civic.conflictingCivics ?? new List<string>())
         {
-            if (IsCivicActive(conflict)) reasons.Add($"Conflicts with active civic '{conflict}'");
+            if (Active(conflict)) reasons.Add($"Conflicts with active civic '{conflict}'");
         }
         foreach (string required in civic.requiredCivics ?? new List<string>())
         {
-            if (!IsCivicActive(required)) reasons.Add($"Requires civic '{required}'");
+            if (!Active(required)) reasons.Add($"Requires civic '{required}'");
         }
-        if (GetActiveCivicCount(civic.tier) >= GetMaxSlots(civic.tier)) reasons.Add($"No available {civic.tier} tier slots");
+        int used = GetActiveCivicCount(civic.tier) - (gone != null && gone.tier == civic.tier ? 1 : 0);
+        if (used >= GetMaxSlots(civic.tier)) reasons.Add($"No available {civic.tier} tier slots");
         return (reasons.Count == 0, reasons);
     }
 

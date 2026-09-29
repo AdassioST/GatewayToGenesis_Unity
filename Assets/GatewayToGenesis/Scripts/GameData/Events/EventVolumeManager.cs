@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Ink.Runtime;
 
@@ -169,6 +170,33 @@ public class EventVolumeManager : SingletonBehaviour<EventVolumeManager>
             if (!condition.Evaluate()) return false;
         }
         return true;
+    }
+
+    /// <summary>Player-facing reasons from the same locks, conditions and cooldowns as the scheduler.</summary>
+    public List<string> StoryBarriers(StoryNode node)
+    {
+        var result = new List<string>();
+        if (node == null || !volumeOfNode.TryGetValue(node, out var volume)) { result.Add("Story unavailable"); return result; }
+        if (!volume.isUnlocked) result.Add("Its volume has not opened");
+        if (!node.isUnlocked) result.Add("Awaiting a story discovery or an earlier choice");
+        foreach (var condition in volume.volumeConditions.Concat(node.storyConditions))
+            if (!condition.Evaluate())
+            {
+                string now = condition.TryGetCurrentValue(out float value) ? $" (now {value:0.##})" : " (not yet known)";
+                result.Add(EventText.DescribeRequirement(condition) + now);
+            }
+        if (node.cooldownSevenths > 0 && EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventOnCooldown(node.nodeName, node.cooldownSevenths)) result.Add("Waiting for its story cooldown");
+        return result;
+    }
+
+    public bool ContinueBallad(StoryNode node)
+    {
+        var events = EventSystemLogic.Instance;
+        if (events == null || events.isEventActive || string.IsNullOrEmpty(node?.ballad) || StoryBarriers(node).Count != 0) return false;
+        var record = events.Ballads.FirstOrDefault(b => string.Equals(b.id, node.ballad, System.StringComparison.OrdinalIgnoreCase));
+        if (record == null || !BalladJournal.NextVerses(record, eventVolumes.SelectMany(v => v.storyNodes)).Contains(node)) return false;
+        events.TriggerStory(node);
+        return events.isEventActive && events.GetCurrentStoryNode() == node;
     }
 
     /// <summary>Unlock a story authored with "# locked: true" (the unlock_event consequence). False when not found.</summary>

@@ -25,7 +25,7 @@ MonoBehaviour:
     oceanTerrain: deep-ocean
     shallowsTerrain: shallows
     lakeTerrain: lake
-    connective:
+    intersectionTerrains:
     - terrain: peaks
       weight: 3
       minElevation: 0.8
@@ -322,6 +322,7 @@ MonoBehaviour:
       moveCost: 1.3
       governance: 1.3
       beauty: 0.45
+      solace: 0.6
       yields:
       - resource: Glimmerfern
         amount: 0.008
@@ -504,7 +505,7 @@ MonoBehaviour:
         amount: 6
       - resource: Bitter Roots
         amount: 3
-    biomes:
+    macroBiomes:
     - id: violet-grove
       name: Violet Grove
       description:
@@ -940,8 +941,8 @@ MonoBehaviour:
       prefers: []
       tileCoverage: 0.3
       coherence: 0.55
-    - id: sector-7-placeholder
-      name: Sector 7 (placeholder)
+    - id: quadrant-7-placeholder
+      name: Quadrant 7 (placeholder)
       description:
       color: {r: 0.45, g: 0.11, b: 0.3, a: 1}
       terrains:
@@ -984,48 +985,48 @@ MonoBehaviour:
       prefers: []
       tileCoverage: 0
       coherence: 0.45
-    sectors:
-    - id: S1
-      name: Starting sector
+    quadrants:
+    - id: Q1
+      name: Starting quadrant
       description:
-      biomes:
+      macroBiomes:
       - auric-grasslands
       allowRepeats: 0
       backbone: 0
       coherenceSeeds: 1
       island: 0
-    - id: S2
-      name: Sector 2
+    - id: Q2
+      name: Quadrant 2
       description:
-      biomes:
+      macroBiomes:
       - violet-grove
       - great-expanse
       allowRepeats: 0
       backbone: 0
       coherenceSeeds: 1
       island: 0
-    - id: S3
-      name: Sector 3 (placeholder catalog)
+    - id: Q3
+      name: Quadrant 3 (placeholder catalog)
       description:
-      biomes:
+      macroBiomes:
       - crumbling-infrastructure
       allowRepeats: 1
       backbone: 0
       coherenceSeeds: 1
       island: 0
-    - id: S4
-      name: Sector 4 (placeholder catalog)
+    - id: Q4
+      name: Quadrant 4 (placeholder catalog)
       description:
-      biomes:
+      macroBiomes:
       - the-golden-ash
       allowRepeats: 1
       backbone: 0.1
       coherenceSeeds: 1
       island: 0
-    - id: S5
-      name: Sector 5
+    - id: Q5
+      name: Quadrant 5
       description:
-      biomes:
+      macroBiomes:
       - taiga
       - magical-rift
       - wind-plains
@@ -1034,20 +1035,20 @@ MonoBehaviour:
       backbone: 0.35
       coherenceSeeds: 1
       island: 0
-    - id: S6
-      name: Sector 6 (placeholder catalog)
+    - id: Q6
+      name: Quadrant 6 (placeholder catalog)
       description:
-      biomes:
+      macroBiomes:
       - broken-leylines
       allowRepeats: 1
       backbone: 0
       coherenceSeeds: 1
       island: 0
-    - id: S7
-      name: Sector 7 (placeholder catalog)
+    - id: Q7
+      name: Quadrant 7 (placeholder catalog)
       description:
-      biomes:
-      - sector-7-placeholder
+      macroBiomes:
+      - quadrant-7-placeholder
       allowRepeats: 1
       backbone: 0.15
       coherenceSeeds: 1
@@ -1064,7 +1065,7 @@ MonoBehaviour:
       minDistance: 0
       maxDistance: 0
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 0
       spacing: 3
       visibleFromAfar: 1
@@ -1085,7 +1086,7 @@ MonoBehaviour:
       minDistance: 3
       maxDistance: 30
       terrains: []
-      biomes:
+      macroBiomes:
       - auric-grasslands
       prefers: 4
       spacing: 6
@@ -1105,7 +1106,7 @@ MonoBehaviour:
       minDistance: 3
       maxDistance: 12
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 1
       spacing: 3
       visibleFromAfar: 0
@@ -1132,7 +1133,7 @@ MonoBehaviour:
       minDistance: 4
       maxDistance: 20
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 1
       spacing: 4
       visibleFromAfar: 0
@@ -1157,7 +1158,7 @@ MonoBehaviour:
       minDistance: 5
       maxDistance: 32
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 3
       spacing: 6
       visibleFromAfar: 1
@@ -1186,7 +1187,7 @@ MonoBehaviour:
       minDistance: 7
       maxDistance: 40
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 0
       spacing: 10
       visibleFromAfar: 1
@@ -1209,7 +1210,7 @@ MonoBehaviour:
       minDistance: 3
       maxDistance: 14
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 4
       spacing: 4
       visibleFromAfar: 0
@@ -1232,7 +1233,7 @@ MonoBehaviour:
       minDistance: 1
       maxDistance: 8
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 1
       spacing: 3
       visibleFromAfar: 1
@@ -1255,7 +1256,7 @@ MonoBehaviour:
       minDistance: 6
       maxDistance: 40
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 2
       spacing: 3
       visibleFromAfar: 1
@@ -1278,7 +1279,7 @@ MonoBehaviour:
       minDistance: 6
       maxDistance: 40
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 0
       spacing: 6
       visibleFromAfar: 0
@@ -1303,7 +1304,7 @@ MonoBehaviour:
       minDistance: 8
       maxDistance: 999
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 4
       spacing: 9
       visibleFromAfar: 0
@@ -1325,7 +1326,7 @@ MonoBehaviour:
       minDistance: 8
       maxDistance: 999
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 3
       spacing: 9
       visibleFromAfar: 0
@@ -1347,7 +1348,7 @@ MonoBehaviour:
       minDistance: 8
       maxDistance: 999
       terrains: []
-      biomes: []
+      macroBiomes: []
       prefers: 1
       spacing: 9
       visibleFromAfar: 0
@@ -1369,7 +1370,7 @@ MonoBehaviour:
       count: 5
       size: 9
       terrains: []
-      biomes: [violet-grove, taiga]
+      macroBiomes: [violet-grove, taiga]
       minimumCoherence: 0
       minimumMagicalFertility: 0
       requiresFreshwater: 0
@@ -1385,7 +1386,7 @@ MonoBehaviour:
       count: 5
       size: 8
       terrains: [highlands, foothills]
-      biomes: []
+      macroBiomes: []
       minimumCoherence: 0
       minimumMagicalFertility: 0
       requiresFreshwater: 0
@@ -1401,7 +1402,7 @@ MonoBehaviour:
       count: 3
       size: 7
       terrains: [moonlit-grove, violet-glade, violet-wood]
-      biomes: []
+      macroBiomes: []
       minimumCoherence: 0.5
       minimumMagicalFertility: 0
       requiresFreshwater: 0
@@ -1417,12 +1418,4770 @@ MonoBehaviour:
       count: 3
       size: 6
       terrains: [highlands, wind-mesa, rift-scar, foothills]
-      biomes: []
+      macroBiomes: []
       minimumCoherence: 0.55
       minimumMagicalFertility: 0
       requiresFreshwater: 0
       minDistance: 10
       baseYield: 0.1
+    resourceSites:
+    - id: highland-rice
+      name: Highland Rice Terraces
+      kind: 0
+      description: Terraces of rice cut into the slopes below the peaks, fed by snowmelt. No one remembers planting them.
+      color: {r: 0.86, g: 0.9, b: 0.62, a: 1}
+      resource: Highland Rice
+      minAge: 0
+      count: 5
+      size: 3
+      spacing: 6
+      minDistance: 4
+      terrains: [highlands, foothills, wind-mesa]
+      macroBiomes: []
+      nearTerrains: [peaks]
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0.25
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Highland Rice
+        amount: 0.03
+      beauty: 0.2
+      beautyAura: 0.1
+      coherenceAura: 0
+      fertilityAura: 0.02
+      auraRadius: 1
+      harvest:
+      - resource: Highland Rice
+        amount: 20
+      seeds: 1
+      grievance: 10
+      untouchable:
+      plantFertility: 0.35
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories:
+      - expedition_terraces
+    - id: earth-beans
+      name: Wild Earth-Bean Tangle
+      kind: 0
+      description: Leguminous earth-beans run wild over abandoned fields. Where they grow, the soil remembers how to feed.
+      color: {r: 0.62, g: 0.5, b: 0.3, a: 1}
+      resource: Earth-Beans
+      minAge: 0
+      count: 6
+      size: 2
+      spacing: 5
+      minDistance: 3
+      terrains: [plains, fallow-steppe, expanse-steppe, scrub, wind-plain]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0.25
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Earth-Beans
+        amount: 0.04
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0.05
+      auraRadius: 1
+      harvest:
+      - resource: Earth-Beans
+        amount: 24
+      seeds: 1
+      grievance: 6
+      untouchable:
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.8
+      plantedFertility: 0.08
+      expeditionStories: []
+    - id: feral-peaches
+      name: Feral Auric Peach Trees
+      kind: 0
+      description: Gold-skinned peach trees gone wild. Sweet and beautiful, and hungry for the soil beneath them.
+      color: {r: 1, g: 0.72, b: 0.35, a: 1}
+      resource: Dried Auric Peaches
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 7
+      minDistance: 4
+      terrains: [auric-meadow, auric-copse, skeletal-orchard, plains, woodland]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0.3
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Dried Auric Peaches
+        amount: 0.03
+      beauty: 0.35
+      beautyAura: 0.15
+      coherenceAura: 0
+      fertilityAura: -0.03
+      auraRadius: 1
+      harvest:
+      - resource: Dried Auric Peaches
+        amount: 18
+      seeds: 1
+      grievance: 10
+      untouchable:
+      plantFertility: 0.45
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: -0.06
+      expeditionStories: []
+    - id: bitter-roots
+      name: Bitter Root Hollow
+      kind: 0
+      description: Tangled roots in wet, shaded ground. Bitter to eat, slow to rot, and hard to kill.
+      color: {r: 0.55, g: 0.42, b: 0.5, a: 1}
+      resource: Bitter Roots
+      minAge: 0
+      count: 5
+      size: 2
+      spacing: 6
+      minDistance: 3
+      terrains: [marsh, taiga-bog, woodland, taiga-forest]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1.5
+      yields:
+      - resource: Bitter Roots
+        amount: 0.03
+      beauty: -0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Bitter Roots
+        amount: 22
+      seeds: 1
+      grievance: 5
+      untouchable:
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.8
+      plantedFertility: 0
+      expeditionStories: []
+    - id: deep-grain
+      name: Deep-Rooted Grain Stand
+      kind: 0
+      description: An old grain that sends its roots down to the water table. It outlasts droughts that kill every other crop.
+      color: {r: 0.92, g: 0.8, b: 0.45, a: 1}
+      resource: Deep-Rooted Grain
+      minAge: 1
+      count: 4
+      size: 3
+      spacing: 7
+      minDistance: 5
+      terrains: [wind-plain, fallow-steppe, plains, expanse-steppe]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0.35
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 1
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Deep-Rooted Grain
+        amount: 0.03
+      beauty: 0.1
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Deep-Rooted Grain
+        amount: 16
+      seeds: 1
+      grievance: 10
+      untouchable:
+      plantFertility: 0.5
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0.02
+      expeditionStories: []
+    - id: fated-flowers
+      name: Fated Flowers
+      kind: 6
+      description: A field of golden Fated Flowers, grown from the Rose Seeds an Atonalis leaves when it is slain. They take only where the land remembers something, and they neither hybridize nor reproduce.
+      color: {r: 1, g: 0.84, b: 0.3, a: 1}
+      resource: 
+      minAge: 0
+      count: 5
+      size: 3
+      spacing: 8
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields: []
+      beauty: 0.6
+      beautyAura: 0.2
+      coherenceAura: 0.06
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: Fated Flowers are not picked. They come only from Rose Seeds.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      residueNeed: 0
+      dissonanceAura: -0.05
+      dangerAura: 0
+      soothe: 0
+      sprouts: 1
+      sproutPerEcho: 1
+      minimumHistory: 0.3
+      maximumHurt: 0.25
+      minimumHurt: 0
+      nearSites: []
+      silverRiverReach: 0
+      silverLakeReach: 0
+      fadePerEcho: 0.25
+      turnsInto: forsaken-flowers
+      turnHurt: 0.3
+      turnCoherence: 0
+      holdCoherence: 0.7
+      turnPerEcho: 0.35
+      turnPerDissonance: 2.5
+      driftPerEcho: 0.5
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: forsaken-flowers
+      name: Forsaken Flowers
+      kind: 6
+      description: A fated flower forsaken by god. These could not endure the sorrow around them, and their gold bled into a deep, wounded crimson. Glimmerfern grows from their decay.
+      color: {r: 0.64, g: 0.1, b: 0.16, a: 1}
+      resource: 
+      minAge: 0
+      count: 3
+      size: 3
+      spacing: 9
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields: []
+      beauty: 0.3
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: Forsaken Flowers are not picked. They hold what was grieved here.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      residueNeed: 0
+      dissonanceAura: -0.08
+      dangerAura: 0
+      soothe: 0
+      sprouts: 1
+      sproutPerEcho: 1
+      minimumHistory: 0.3
+      maximumHurt: 1
+      minimumHurt: 0.3
+      nearSites: []
+      silverRiverReach: 0
+      silverLakeReach: 0
+      fadePerEcho: 0.25
+      turnsInto: fated-flowers
+      turnHurt: 0
+      turnCoherence: 0.7
+      holdCoherence: 0
+      turnPerEcho: 0.35
+      turnPerDissonance: -1.5
+      driftPerEcho: 0.5
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: lesser-glimmerfern
+      name: Lesser Glimmerfern Grove
+      kind: 6
+      description: Pale glimmerfern, each frond a branching fractal of light. It grows by itself from sorrow, around fields of Forsaken Flowers and over ruins and dissonant ground, and it cannot be sown.
+      color: {r: 0.55, g: 0.95, b: 0.85, a: 1}
+      resource: Glimmerfern
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 8
+      minDistance: 4
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 4
+      yields:
+      - resource: Glimmerfern
+        amount: 0.02
+      beauty: 0.5
+      solace: 1.2
+      beautyAura: 0.25
+      coherenceAura: 0.05
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Glimmerfern
+        amount: 12
+      seeds: 0
+      grievance: 12
+      untouchable: 
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 3
+        weight: 40
+      - feeling: 1
+        weight: 30
+      - feeling: 11
+        weight: 30
+      specificity: 0.2
+      residueNeed: 0.25
+      dissonanceAura: -0.05
+      dangerAura: 0
+      soothe: 1.5
+      sprouts: 1
+      sproutPerEcho: 1
+      minimumHistory: 0
+      maximumHurt: 1
+      minimumHurt: 0.3
+      nearSites: [forsaken-flowers]
+      silverRiverReach: 0
+      silverLakeReach: 0
+      fadePerEcho: 0.34
+      turnsInto: 
+      turnHurt: 0
+      turnCoherence: 0
+      holdCoherence: 0
+      turnPerEcho: 0.35
+      turnPerDissonance: 0
+      driftPerEcho: 0.5
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories:
+      - expedition_glimmerfern
+    - id: moonlit-glimmerfern
+      name: Moonlit Glimmerfern
+      kind: 6
+      description: Glimmerfern thriving in a moonlit grove along a silver river, where a leyline runs down real water and the Lunehymn it carries lights the banks. When the leylines leave the river, it fades.
+      color: {r: 0.7, g: 0.92, b: 1, a: 1}
+      resource: Glimmerfern
+      minAge: 0
+      count: 6
+      size: 2
+      spacing: 5
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 4
+      yields:
+      - resource: Glimmerfern
+        amount: 0.015
+      beauty: 0.5
+      solace: 1.6
+      beautyAura: 0.25
+      coherenceAura: 0.05
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Glimmerfern
+        amount: 10
+      seeds: 0
+      grievance: 10
+      untouchable: 
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 11
+        weight: 45
+      - feeling: 3
+        weight: 30
+      - feeling: 1
+        weight: 25
+      specificity: 0.3
+      residueNeed: 0.1
+      dissonanceAura: 0
+      dangerAura: 0
+      soothe: 1.5
+      sprouts: 1
+      sproutPerEcho: 1
+      minimumHistory: 0
+      maximumHurt: 1
+      minimumHurt: 0
+      nearSites: []
+      silverRiverReach: 1
+      silverLakeReach: 0
+      fadePerEcho: 0.34
+      turnsInto: 
+      turnHurt: 0
+      turnCoherence: 0
+      holdCoherence: 0
+      turnPerEcho: 0.35
+      turnPerDissonance: 0
+      driftPerEcho: 0.5
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: glimmerfern-lakeshore
+      name: Glimmerfern Lakeshore
+      kind: 6
+      description: Where a silver river runs all the way into a lake, glimmerfern lights its shores for hexes around, a moonlit grove as wide as the water. It fades if the river loses its silver.
+      color: {r: 0.62, g: 0.9, b: 1, a: 1}
+      resource: Glimmerfern
+      minAge: 0
+      count: 3
+      size: 30
+      spacing: 12
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 1
+      landValue: 5
+      yields:
+      - resource: Glimmerfern
+        amount: 0.03
+      beauty: 0.6
+      solace: 2.4
+      beautyAura: 0.3
+      coherenceAura: 0.06
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Glimmerfern
+        amount: 20
+      seeds: 0
+      grievance: 12
+      untouchable: 
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 11
+        weight: 40
+      - feeling: 3
+        weight: 30
+      - feeling: 13
+        weight: 30
+      specificity: 0.2
+      residueNeed: 0.1
+      dissonanceAura: -0.03
+      dangerAura: 0
+      soothe: 2
+      sprouts: 1
+      sproutPerEcho: 1
+      minimumHistory: 0
+      maximumHurt: 1
+      minimumHurt: 0
+      nearSites: []
+      silverRiverReach: 0
+      silverLakeReach: 3
+      fadePerEcho: 0.25
+      turnsInto: 
+      turnHurt: 0
+      turnCoherence: 0
+      holdCoherence: 0
+      turnPerEcho: 0.35
+      turnPerDissonance: 0
+      driftPerEcho: 0.5
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: elderwood-sentinel
+      name: Elderwood Sentinel
+      kind: 1
+      description: One ancient tree taller than the forest around it. Felling it would build a hall; leaving it keeps the wood whole.
+      color: {r: 0.4, g: 0.62, b: 0.32, a: 1}
+      resource: Elderwood
+      minAge: 0
+      count: 5
+      size: 1
+      spacing: 7
+      minDistance: 3
+      terrains: [taiga-forest, woodland, violet-wood, auric-copse]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Elderwood
+        amount: 0.02
+      beauty: 0.3
+      beautyAura: 0.15
+      coherenceAura: 0.03
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Elderwood
+        amount: 25
+      seeds: 0
+      grievance: 12
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: silverreed-beds
+      name: Silverreed Beds
+      kind: 1
+      description: Reeds that drink from silver-bright water and grow a fibre that holds a tone when plucked.
+      color: {r: 0.78, g: 0.84, b: 0.92, a: 1}
+      resource: Silverreed
+      minAge: 1
+      count: 4
+      size: 2
+      spacing: 6
+      minDistance: 4
+      terrains: [marsh, taiga-bog, plains, woodland, moonlit-grove]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 1
+      requiresSilverOrLeyline: 1
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Silverreed
+        amount: 0.02
+      beauty: 0.3
+      beautyAura: 0.1
+      coherenceAura: 0.04
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Silverreed
+        amount: 14
+      seeds: 1
+      grievance: 8
+      untouchable:
+      plantFertility: 0.3
+      plantCoherence: 0.4
+      plantedShare: 0.5
+      plantedFertility: 0
+      expeditionStories: []
+    - id: hollow-thornbriar
+      name: Hollow Thornbriar
+      kind: 1
+      description: A briar that grows over wounded ground. Its thorns ring hollow in the wind, and nothing near it grows well.
+      color: {r: 0.5, g: 0.12, b: 0.16, a: 1}
+      resource:
+      minAge: 1
+      count: 5
+      size: 3
+      spacing: 6
+      minDistance: 4
+      terrains: [rift-scar, ruin-field, skeletal-orchard, ash-plains, scrub]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 0.6
+      minimumDissonance: 0.1
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -3
+      yields: []
+      beauty: -0.5
+      beautyAura: -0.25
+      coherenceAura: -0.04
+      fertilityAura: -0.05
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: Its thorns ring hollow. Nothing in it can be used, and cutting it only spreads it.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: lanternback-grazers
+      name: Lanternback Grazers
+      kind: 2
+      description: A herd of Pure Light grazers whose backs glow like lanterns at dusk. Their shed wool keeps the light.
+      color: {r: 0.98, g: 0.92, b: 0.6, a: 1}
+      resource: Lumenwool
+      species: lanternback-grazer
+      minAge: 0
+      count: 4
+      size: 3
+      spacing: 8
+      minDistance: 5
+      terrains: [plains, expanse-steppe, wind-plain, auric-meadow, fallow-steppe]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.3
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Lumenwool
+        amount: 0.015
+      - resource: Aetherlight
+        amount: 0.01
+      beauty: 0.3
+      beautyAura: 0.15
+      coherenceAura: 0.02
+      fertilityAura: 0.02
+      auraRadius: 1
+      harvest:
+      - resource: Lumenwool
+        amount: 10
+      seeds: 0
+      grievance: 15
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories:
+      - expedition_lanternbacks
+    - id: ember-salamanders
+      name: Ember Salamander Den
+      kind: 2
+      description: Pure Light lizards that bask on warm stone and shed scales of red crystal. Their heat makes the air shimmer.
+      color: {r: 0.95, g: 0.45, b: 0.25, a: 1}
+      resource: Emberwhisper
+      species: ember-salamander
+      minAge: 1
+      count: 3
+      size: 1
+      spacing: 8
+      minDistance: 5
+      terrains: [highlands, wind-mesa, rift-scar, foothills, ash-plains]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0.2
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Emberwhisper
+        amount: 0.01
+      beauty: 0.2
+      beautyAura: 0.05
+      coherenceAura: -0.03
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Emberwhisper
+        amount: 6
+      seeds: 0
+      grievance: 12
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: moonveil-moths
+      name: Moonveil Moths
+      kind: 2
+      description: Pale Pure Light moths that rise in veils on moonlit nights. Where they settle, the dew tastes of Lunehymn.
+      color: {r: 0.72, g: 0.7, b: 0.98, a: 1}
+      resource: Lunehymn
+      species: moonveil-moth
+      minAge: 2
+      count: 3
+      size: 2
+      spacing: 8
+      minDistance: 4
+      terrains: [moonlit-grove, violet-glade, violet-wood, marsh]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.35
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Lunehymn
+        amount: 0.015
+      beauty: 0.35
+      beautyAura: 0.2
+      coherenceAura: 0.03
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Lunehymn
+        amount: 6
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: choir-cicadas
+      name: Choir Cicada Swarm
+      kind: 2
+      description: Pure Light critters that sing in a vast chorus. Their concert is lovely, and it strips every tree and field around it.
+      color: {r: 0.7, g: 0.3, b: 0.2, a: 1}
+      resource:
+      species: choir-cicada
+      minAge: 1
+      count: 3
+      size: 2
+      spacing: 10
+      minDistance: 5
+      terrains: [auric-meadow, auric-copse, skeletal-orchard, plains, woodland]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0.2
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -2
+      yields: []
+      beauty: 0.15
+      beautyAura: 0
+      coherenceAura: -0.02
+      fertilityAura: -0.08
+      auraRadius: 2
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: The swarm cannot be gathered. It moves on only when the fields around it are bare.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: aetherlight-rays
+      name: Rays of Aetherlight
+      kind: 4
+      description: Shafts of Aetherlight fall through a break in the shattered sky. They are seen from far away, and the ground beneath them is warm.
+      color: {r: 1, g: 0.95, b: 0.7, a: 1}
+      resource: Aetherlight
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 10
+      minDistance: 5
+      terrains: []
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.45
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 1
+      landValue: 5
+      yields:
+      - resource: Aetherlight
+        amount: 0.04
+      beauty: 0.5
+      beautyAura: 0.2
+      coherenceAura: 0.06
+      fertilityAura: 0.03
+      auraRadius: 2
+      harvest:
+      - resource: Aetherlight
+        amount: 8
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: lunehymn-well
+      name: Lunehymn Well
+      kind: 5
+      description: A spring whose water glows faintly and hums in a dreamlike key. Minds near it grow calm, and a little strange.
+      color: {r: 0.6, g: 0.55, b: 0.95, a: 1}
+      resource: Lunehymn
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 10
+      minDistance: 4
+      terrains: [moonlit-grove, violet-glade, violet-wood, woodland, marsh, taiga-forest]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0.2
+      minimumFertility: 0
+      minimumCoherence: 0.3
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 5
+      yields:
+      - resource: Lunehymn
+        amount: 0.04
+      beauty: 0.4
+      beautyAura: 0.15
+      coherenceAura: 0.08
+      fertilityAura: 0.02
+      auraRadius: 2
+      harvest:
+      - resource: Lunehymn
+        amount: 10
+      seeds: 0
+      grievance: 12
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: emberwhisper-spire
+      name: Emberwhisper Spire
+      kind: 3
+      description: A spire of velvet-red crystal that whispers when the wind turns. It is beautiful to look at, and the land around it loses its tune.
+      color: {r: 0.88, g: 0.22, b: 0.32, a: 1}
+      resource: Emberwhisper
+      minAge: 1
+      count: 4
+      size: 1
+      spacing: 10
+      minDistance: 5
+      terrains: [highlands, foothills, wind-mesa, rift-scar]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 1
+      landValue: 4
+      yields:
+      - resource: Emberwhisper
+        amount: 0.03
+      beauty: 0.55
+      beautyAura: 0.3
+      coherenceAura: -0.08
+      fertilityAura: 0
+      auraRadius: 2
+      harvest:
+      - resource: Emberwhisper
+        amount: 10
+      seeds: 0
+      grievance: 12
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories:
+      - expedition_spire
+    - id: duskstone-outcrop
+      name: Duskstone Outcrop
+      kind: 3
+      description: Dark stone breaks through the grass here, cut once by old-world hands and left half-quarried.
+      color: {r: 0.58, g: 0.52, b: 0.68, a: 1}
+      resource: Duskstone
+      minAge: 0
+      count: 5
+      size: 1
+      spacing: 7
+      minDistance: 3
+      terrains: [highlands, foothills, ruin-field, scrub, wind-mesa]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Duskstone
+        amount: 0.02
+      beauty: -0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Duskstone
+        amount: 25
+      seeds: 0
+      grievance: 8
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: skyglass-shards
+      name: Skyglass Shards
+      kind: 3
+      description: Cyan-green sheets of recursive Crystal left by the Auric Aria. Gathered on coherent high ground, they hold emotion and sound; ornaments and sacred materials of the Auric Order.
+      color: {r: 0.62, g: 0.88, b: 0.95, a: 1}
+      resource: Sky Glass
+      minAge: 1
+      count: 4
+      size: 2
+      spacing: 8
+      minDistance: 5
+      terrains: [highlands, foothills, wind-mesa, leyline-ravine]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0.35
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.65
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Sky Glass
+        amount: 0.01
+      beauty: 0.15
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Sky Glass
+        amount: 8
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: tar-seep
+      name: Sour Tar Seep
+      kind: 5
+      description: Black tar wells up through cracked ground and smells of rot. The land around it sours and falls out of tune.
+      color: {r: 0.22, g: 0.18, b: 0.16, a: 1}
+      resource:
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 8
+      minDistance: 5
+      terrains: [ash-plains, rift-scar, ruin-field, marsh, taiga-bog, scrub]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 0.7
+      minimumDissonance: 0.05
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -4
+      yields: []
+      beauty: -0.6
+      beautyAura: -0.3
+      coherenceAura: -0.06
+      fertilityAura: -0.06
+      auraRadius: 2
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: The tar poisons whatever carries it. Leave it be.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: resonant-hot-spring
+      name: Resonant Hot Spring
+      kind: 5
+      description: Warm water rises through a ring of stone with a low, steady tone. Travellers rest well here, and the ground around it stays green.
+      color: {r: 0.5, g: 0.8, b: 0.78, a: 1}
+      resource: Faith
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 10
+      minDistance: 5
+      terrains: [highlands, foothills, taiga-forest, wind-mesa, woodland]
+      macroBiomes: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 4
+      yields:
+      - resource: Faith
+        amount: 0.01
+      beauty: 0.35
+      beautyAura: 0.15
+      coherenceAura: 0.04
+      fertilityAura: 0.04
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: A spring cannot be carried off. Hold the land and its people will come to it.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: aurochs-herd
+      name: Steppe Aurochs Herd
+      kind: 2
+      description: Great horned cattle that roam the open grass in slow herds. Where they graze, the soil is richer for it.
+      color: {r: 0.62, g: 0.42, b: 0.28, a: 1}
+      resource: Game Meat
+      species: steppe-aurochs
+      minAge: 0
+      count: 5
+      size: 3
+      spacing: 7
+      minDistance: 4
+      terrains: [plains, expanse-steppe, wind-plain, fallow-steppe]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Game Meat
+        amount: 0.03
+      - resource: Hides
+        amount: 0.01
+      beauty: 0.1
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0.02
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 20
+      - resource: Hides
+        amount: 6
+      seeds: 0
+      grievance: 8
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: highland-ibex
+      name: Highland Ibex
+      kind: 2
+      description: Sure-footed goats with swept-back horns, at home on ledges no hunter wants to follow them onto.
+      color: {r: 0.75, g: 0.68, b: 0.55, a: 1}
+      resource: Game Meat
+      species: highland-ibex
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 7
+      minDistance: 4
+      terrains: [highlands, foothills, wind-mesa]
+      macroBiomes: []
+      covers: []
+      nearTerrains: [peaks]
+      nearReach: 3
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Game Meat
+        amount: 0.015
+      - resource: Hides
+        amount: 0.008
+      beauty: 0.2
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 10
+      - resource: Hides
+        amount: 5
+      seeds: 0
+      grievance: 6
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: taiga-elk
+      name: Taiga Elk
+      kind: 2
+      description: Tall, quiet deer of the northern woods. A good hunt feeds a village for a week and clothes it for a winter.
+      color: {r: 0.55, g: 0.4, b: 0.3, a: 1}
+      resource: Game Meat
+      species: taiga-elk
+      minAge: 0
+      count: 5
+      size: 2
+      spacing: 7
+      minDistance: 4
+      terrains: [taiga-forest, woodland, violet-wood]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2.5
+      yields:
+      - resource: Game Meat
+        amount: 0.02
+      - resource: Hides
+        amount: 0.01
+      beauty: 0.15
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 16
+      - resource: Hides
+        amount: 5
+      seeds: 0
+      grievance: 8
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: trout-run
+      name: River Trout Run
+      kind: 2
+      description: A stretch of cold, fast water where trout run thick every season. Easy fishing for anyone with a net.
+      color: {r: 0.45, g: 0.65, b: 0.8, a: 1}
+      resource: River Fish
+      species: river-trout
+      minAge: 0
+      count: 6
+      size: 1
+      spacing: 6
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 1
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: River Fish
+        amount: 0.04
+      beauty: 0.15
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: River Fish
+        amount: 18
+      seeds: 0
+      grievance: 8
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: wild-bees
+      name: Wild Bee Hollow
+      kind: 2
+      description: A hollow tree humming with wild bees. The fields around it bloom and bear better for their work.
+      color: {r: 0.95, g: 0.78, b: 0.25, a: 1}
+      resource: Wild Honey
+      species: wild-bee
+      minAge: 0
+      count: 5
+      size: 1
+      spacing: 7
+      minDistance: 3
+      terrains: [auric-meadow, auric-copse, woodland, plains, moonlit-grove, violet-glade]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0.3
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2.5
+      yields:
+      - resource: Wild Honey
+        amount: 0.015
+      beauty: 0.1
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0.04
+      auraRadius: 2
+      harvest:
+      - resource: Wild Honey
+        amount: 10
+      seeds: 0
+      grievance: 6
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: bog-eels
+      name: Bog Eel Pools
+      kind: 2
+      description: Dark pools where eels wind through the roots. Unpleasant work, but they smoke well and keep for a season.
+      color: {r: 0.35, g: 0.42, b: 0.35, a: 1}
+      resource: River Fish
+      species: bog-eel
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 7
+      minDistance: 3
+      terrains: [marsh, taiga-bog]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1.5
+      yields:
+      - resource: River Fish
+        amount: 0.02
+      beauty: -0.1
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: River Fish
+        amount: 12
+      seeds: 0
+      grievance: 5
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: boar-sounder
+      name: Wild Boar Sounder
+      kind: 2
+      description: A sounder of wild boar that roots through woods and old orchards. Good eating, and ruin to any field nearby.
+      color: {r: 0.45, g: 0.35, b: 0.3, a: 1}
+      resource: Game Meat
+      species: wild-boar
+      minAge: 0
+      count: 5
+      size: 2
+      spacing: 7
+      minDistance: 3
+      terrains: [woodland, scrub, taiga-forest, skeletal-orchard, auric-copse]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1.5
+      yields:
+      - resource: Game Meat
+        amount: 0.015
+      - resource: Hides
+        amount: 0.004
+      beauty: -0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: -0.03
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 14
+      - resource: Hides
+        amount: 3
+      seeds: 0
+      grievance: 6
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: wolf-pack
+      name: Grey Wolf Pack
+      kind: 2
+      description: A pack that follows the herds. Hunters bring back pelts; herders lose calves.
+      color: {r: 0.5, g: 0.52, b: 0.55, a: 1}
+      resource: Hides
+      species: grey-wolf
+      minAge: 1
+      count: 4
+      size: 1
+      spacing: 10
+      minDistance: 5
+      terrains: [taiga-forest, highlands, woodland, expanse-steppe, foothills]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -1.5
+      yields: []
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Hides
+        amount: 8
+      seeds: 0
+      grievance: 5
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: heartwood-hollow
+      name: Heartwood Hollow
+      kind: 1
+      description: Deep in the forest, a tree so old its heart has hollowed into a room. The air inside is still, and hums faintly.
+      color: {r: 0.35, g: 0.6, b: 0.35, a: 1}
+      resource: Elderwood
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 8
+      minDistance: 4
+      terrains: []
+      macroBiomes: []
+      covers: [deep-forest]
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 4
+      yields:
+      - resource: Elderwood
+        amount: 0.02
+      beauty: 0.4
+      beautyAura: 0.15
+      coherenceAura: 0.06
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Elderwood
+        amount: 20
+      - resource: Glimmerfern
+        amount: 4
+      seeds: 0
+      grievance: 12
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: drowned-cache
+      name: Drowned Cache
+      kind: 3
+      description: Old-world stonework half sunk in the fen, with cellars the water never reached.
+      color: {r: 0.5, g: 0.55, b: 0.6, a: 1}
+      resource: Duskstone
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 8
+      minDistance: 4
+      terrains: []
+      macroBiomes: []
+      covers: [mistfen]
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields: []
+      beauty: -0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Duskstone
+        amount: 15
+      - resource: Sky Glass
+        amount: 4
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: echo-vault
+      name: Echo Vault
+      kind: 3
+      description: A hollow in the canyon wall where every sound comes back changed, a chord from a single note.
+      color: {r: 0.8, g: 0.6, b: 0.45, a: 1}
+      resource: Research
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 8
+      minDistance: 4
+      terrains: []
+      macroBiomes: []
+      covers: [canyon-maze]
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 4
+      yields:
+      - resource: Research
+        amount: 0.015
+      beauty: 0.3
+      beautyAura: 0.1
+      coherenceAura: 0.05
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: An echo cannot be carried off. Hold the canyon and scholars will come to listen.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: ash-relics
+      name: Ash-Buried Relics
+      kind: 3
+      description: Old-world machinery under a crust of golden ash, still faintly warm.
+      color: {r: 0.85, g: 0.72, b: 0.4, a: 1}
+      resource: Sky Glass
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 8
+      minDistance: 4
+      terrains: []
+      macroBiomes: []
+      covers: [ashen-haze]
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields: []
+      beauty: -0.1
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Sky Glass
+        amount: 6
+      - resource: Duskstone
+        amount: 8
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: shame-moss
+      name: Shame Moss
+      kind: 6
+      description: Dark velvet moss that drinks ambient humiliation, turning silver when someone receives genuine forgiveness.
+      color: {r: 0.32, g: 0.27, b: 0.42, a: 1}
+      resource: Eleos Tea
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 7
+      minDistance: 4
+      terrains: [marsh, taiga-bog, ruin-field, woodland]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0.03
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1.5
+      yields:
+      - resource: Eleos Tea
+        amount: 0.01
+      beauty: 0.1
+      beautyAura: 0
+      coherenceAura: 0.02
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Eleos Tea
+        amount: 6
+      seeds: 1
+      grievance: 6
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      flavors:
+      - feeling: 6
+        weight: 70
+      - feeling: 14
+        weight: 30
+      specificity: 0.5
+      residueNeed: 0.25
+      dissonanceAura: -0.06
+      dangerAura: 0
+      soothe: 0
+      driftPerEcho: 0.15
+      drawnBy: 2
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: lust-berries
+      name: Lust Berries
+      kind: 6
+      description: Dark, glossy berries on crawling vines that take in no natural earth. They ripen only where revelry soaks the ground night after night, and their sweetness wears restraint away.
+      color: {r: 0.62, g: 0.08, b: 0.32, a: 1}
+      resource: 
+      minAge: 0
+      count: 0
+      size: 1
+      spacing: 4
+      minDistance: 0
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1
+      yields: []
+      beauty: 0.2
+      beautyAura: 0.05
+      coherenceAura: -0.02
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: Its berries ripen only in the soil of the revels that feed them. No expedition gathers them in the open.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 2
+      flavors:
+      - feeling: 7
+        weight: 35
+      - feeling: 12
+        weight: 35
+      - feeling: 9
+        weight: 30
+      specificity: 0.6
+      residueNeed: 0.35
+      dissonanceAura: 0.04
+      dangerAura: 0.1
+      soothe: 0
+      driftPerEcho: 0
+      drawnBy: 0
+      districts: [indulgent]
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: sorrowbells
+      name: Sorrowbells
+      kind: 6
+      description: Pale hanging flowers that ring softly when someone suppresses grief.
+      color: {r: 0.86, g: 0.89, b: 0.96, a: 1}
+      resource: Eleos Tea
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 8
+      minDistance: 4
+      terrains: [ruin-field, ash-plains, skeletal-orchard, woodland, foothills]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0.03
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Eleos Tea
+        amount: 0.015
+      beauty: 0.3
+      beautyAura: 0.1
+      coherenceAura: 0.03
+      fertilityAura: 0
+      auraRadius: 2
+      harvest:
+      - resource: Eleos Tea
+        amount: 8
+      seeds: 1
+      grievance: 8
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      flavors:
+      - feeling: 1
+        weight: 50
+      - feeling: 15
+        weight: 25
+      - feeling: 5
+        weight: 25
+      specificity: 0.6
+      residueNeed: 0.3
+      dissonanceAura: -0.1
+      dangerAura: 0
+      soothe: 0
+      driftPerEcho: 0.15
+      drawnBy: 2
+      districts: [militant]
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: memory-marigolds
+      name: Memory Marigolds
+      kind: 6
+      description: Golden flowers that sprout in the footprints of a returning exile.
+      color: {r: 1, g: 0.78, b: 0.22, a: 1}
+      resource: Eleos Tea
+      minAge: 0
+      count: 5
+      size: 2
+      spacing: 7
+      minDistance: 3
+      terrains: [plains, fallow-steppe, wind-plain, auric-meadow, expanse-steppe]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Eleos Tea
+        amount: 0.01
+      beauty: 0.35
+      beautyAura: 0.15
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Eleos Tea
+        amount: 6
+      seeds: 1
+      grievance: 8
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      flavors:
+      - feeling: 13
+        weight: 40
+      - feeling: 7
+        weight: 35
+      - feeling: 9
+        weight: 25
+      specificity: 0.5
+      residueNeed: 0.25
+      dissonanceAura: -0.04
+      dangerAura: 0
+      soothe: 0
+      driftPerEcho: 0.15
+      drawnBy: 1
+      districts: [trading]
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: vow-orchids
+      name: Vow Orchids
+      kind: 6
+      description: Plants that bloom only when two people make a sincere promise in their presence. Their petals blacken if the vow is knowingly betrayed.
+      color: {r: 0.72, g: 0.46, b: 0.95, a: 1}
+      resource: 
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 10
+      minDistance: 4
+      terrains: [moonlit-grove, violet-glade, violet-wood]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.35
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields: []
+      beauty: 0.5
+      beautyAura: 0.2
+      coherenceAura: 0.05
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: A Vow Orchid is not picked. It is witnessed.
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      flavors:
+      - feeling: 10
+        weight: 45
+      - feeling: 15
+        weight: 35
+      - feeling: 14
+        weight: 20
+      specificity: 0.8
+      residueNeed: 0.35
+      dissonanceAura: -0.05
+      dangerAura: 0
+      soothe: 0
+      driftPerEcho: 0.1
+      drawnBy: 1
+      districts: [regal]
+      volunteerWeight: 0.6
+      expeditionStories: []
+    - id: lullroots
+      name: Lullroots
+      kind: 6
+      description: Blinking roots that fold their fronds around exhausted sleepers and give off a low yellow light that eases nightmares.
+      color: {r: 0.95, g: 0.84, b: 0.36, a: 1}
+      resource: Lullroot Tea
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 8
+      minDistance: 4
+      terrains: [woodland, taiga-forest, violet-wood]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0.35
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Lullroot Tea
+        amount: 0.01
+      beauty: 0.25
+      beautyAura: 0.1
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Lullroot Tea
+        amount: 6
+      seeds: 1
+      grievance: 8
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 0
+      flavors:
+      - feeling: 0
+        weight: 50
+      - feeling: 12
+        weight: 30
+      - feeling: 8
+        weight: 20
+      specificity: 0.4
+      residueNeed: 0.25
+      dissonanceAura: -0.04
+      dangerAura: 0
+      soothe: 1.5
+      driftPerEcho: 0.1
+      drawnBy: 1
+      districts: [hamlet, agromagical]
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: candlevein-bloom
+      name: Candlevein Bloom
+      kind: 6
+      description: A healing bloom with a great ball at its heart that swells on Emotional Residue. It grows around vigils and graves, its veins light in the colour of what the people nearby feel, and its flowers open only after someone names the one they have lost.
+      color: {r: 1, g: 0.6, b: 0.35, a: 1}
+      resource: Candlevein Grief Tea
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 9
+      minDistance: 4
+      terrains: [ruin-field, ash-plains, skeletal-orchard, plains, woodland]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Candlevein Grief Tea
+        amount: 0.01
+      beauty: 0.35
+      beautyAura: 0.1
+      coherenceAura: 0.03
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Candlevein Grief Tea
+        amount: 8
+      seeds: 1
+      grievance: 10
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0.2
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 4
+        weight: 30
+      - feeling: 1
+        weight: 25
+      - feeling: 15
+        weight: 25
+      - feeling: 10
+        weight: 20
+      specificity: 0.3
+      residueNeed: 0.4
+      dissonanceAura: -0.05
+      dangerAura: 0
+      soothe: 3
+      driftPerEcho: 0.05
+      drawnBy: 2
+      districts: [agromagical]
+      volunteerWeight: 0.8
+      expeditionStories: []
+    - id: xochi-singers
+      name: Xochi-Singers
+      kind: 6
+      description: Benevolent blooms whose petals vibrate like strings. They learn fragments of local lullabies and mirror them back to those who cannot speak about their pain.
+      color: {r: 0.96, g: 0.5, b: 0.72, a: 1}
+      resource: Eleos Tea
+      minAge: 0
+      count: 3
+      size: 2
+      spacing: 9
+      minDistance: 4
+      terrains: [auric-meadow, auric-copse, violet-glade, woodland, plains]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields: []
+      beauty: 0.5
+      beautyAura: 0.2
+      coherenceAura: 0.04
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Eleos Tea
+        amount: 4
+      seeds: 1
+      grievance: 10
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0.2
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 1
+        weight: 35
+      - feeling: 15
+        weight: 25
+      - feeling: 13
+        weight: 25
+      - feeling: 9
+        weight: 15
+      specificity: 0.4
+      residueNeed: 0.35
+      dissonanceAura: -0.03
+      dangerAura: 0
+      soothe: 2.5
+      driftPerEcho: 0.05
+      drawnBy: 1
+      districts: [weaver]
+      volunteerWeight: 0.8
+      expeditionStories: []
+    - id: skyroot-matriarch
+      name: Skyroot Matriarch
+      kind: 6
+      description: The rooted heart of a forest sanctuary. Its crown reaches into auroral currents while its roots keep the memories of the people who lived beneath it. Majestic, slow, and difficult to understand.
+      color: {r: 0.45, g: 0.95, b: 0.8, a: 1}
+      resource: 
+      minAge: 0
+      count: 2
+      size: 1
+      spacing: 14
+      minDistance: 6
+      terrains: [taiga-forest, violet-wood, woodland]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.4
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 1
+      landValue: 5
+      yields: []
+      beauty: 0.6
+      beautyAura: 0.25
+      coherenceAura: 0.1
+      fertilityAura: 0
+      auraRadius: 2
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: A Skyroot Matriarch cannot leave its grove without bringing the forest down with it. Nothing is taken.
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 13
+        weight: 40
+      - feeling: 11
+        weight: 30
+      - feeling: 5
+        weight: 30
+      specificity: 0.5
+      residueNeed: 0.2
+      dissonanceAura: -0.08
+      dangerAura: 0
+      soothe: 2
+      driftPerEcho: 0
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: threshold-cushion
+      name: Threshold Cushion
+      kind: 6
+      description: A squat, ribbed cushion of moss that looks like a safe place to rest. Its heavy mist brings sudden, overwhelming fatigue, and whoever stops beside it without sitting is dragged down by the tendrils coiled in its grooves.
+      color: {r: 0.55, g: 0.62, b: 0.4, a: 1}
+      resource: 
+      species: threshold-cushion
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 9
+      minDistance: 4
+      terrains: [scrub, expanse-scrub, wind-mesa, ruin-field, ash-plains]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -1.5
+      yields: []
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: No one stays beside a Threshold Cushion long enough to take anything from it.
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 2
+      flavors:
+      - feeling: 4
+        weight: 50
+      - feeling: 0
+        weight: 25
+      - feeling: 12
+        weight: 25
+      specificity: 0.4
+      residueNeed: 0.15
+      dissonanceAura: 0
+      dangerAura: 0.35
+      soothe: 0
+      driftPerEcho: 0.35
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: glottis-mouth-trap
+      name: Glottis-Mouth Trap
+      kind: 6
+      description: Glowing petal-jaws that lie flush with the forest floor or old stonework like cavernous maws. They cast low tones that mimic muffled crying or a lost companion calling for help, and wait for someone to reach in.
+      color: {r: 0.4, g: 0.85, b: 0.75, a: 1}
+      resource: 
+      species: glottis-mouth-trap
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 9
+      minDistance: 5
+      terrains: [ruin-field, leyline-ravine, rift-scar, taiga-forest]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -2
+      yields: []
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: What falls into a Glottis-Mouth Trap does not come back out with anything to carry.
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 2
+      flavors:
+      - feeling: 2
+        weight: 40
+      - feeling: 0
+        weight: 35
+      - feeling: 15
+        weight: 25
+      specificity: 0.6
+      residueNeed: 0.15
+      dissonanceAura: 0
+      dangerAura: 0.45
+      soothe: 0
+      driftPerEcho: 0.35
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: hearth-eater
+      name: Hearth-Eater
+      kind: 6
+      description: Tall stalks at human height beneath heavy petal mantles, the very silhouette of someone in mourning. They wait by forest paths, abandoned camps and old battlefields, breathing out nostalgia and sorrow until someone comes near to offer comfort.
+      color: {r: 0.35, g: 0.3, b: 0.36, a: 1}
+      resource: 
+      species: hearth-eater
+      minAge: 0
+      count: 2
+      size: 1
+      spacing: 12
+      minDistance: 5
+      terrains: [woodland, taiga-forest, ash-plains, ruin-field, foothills]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -2.5
+      yields: []
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: A Hearth-Eater leaves nothing behind but polished bones.
+      plantFertility: 0.2
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      niche: 2
+      flavors:
+      - feeling: 7
+        weight: 40
+      - feeling: 1
+        weight: 30
+      - feeling: 4
+        weight: 30
+      specificity: 0.5
+      residueNeed: 0.2
+      dissonanceAura: 0
+      dangerAura: 0.5
+      soothe: 0
+      driftPerEcho: 0.3
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 1
+      expeditionStories: []
+    - id: meadow-hares
+      name: Meadow Hare Warren
+      kind: 2
+      description: Warrens of hares under the open grass. Every spring the meadow fills with their young.
+      color: {r: 0.78, g: 0.7, b: 0.52, a: 1}
+      resource: Game Meat
+      species: meadow-hare
+      minAge: 0
+      count: 5
+      size: 2
+      spacing: 7
+      minDistance: 3
+      terrains: [plains, auric-meadow, wind-plain, fallow-steppe, scrub]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Game Meat
+        amount: 0.015
+      - resource: Hides
+        amount: 0.005
+      beauty: 0.1
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 6
+      - resource: Hides
+        amount: 2
+      seeds: 0
+      grievance: 5
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: mire-ox-herd
+      name: Mire Ox Herd
+      kind: 2
+      description: A herd of broad-horned oxen standing chest-deep in the reeds, with the marsh's small creatures sheltering behind them.
+      color: {r: 0.4, g: 0.36, b: 0.3, a: 1}
+      resource: Game Meat
+      species: mire-ox
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 8
+      minDistance: 4
+      terrains: [marsh, taiga-bog]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Game Meat
+        amount: 0.025
+      - resource: Hides
+        amount: 0.01
+      beauty: 0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0.01
+      auraRadius: 1
+      harvest:
+      - resource: Game Meat
+        amount: 16
+      - resource: Hides
+        amount: 6
+      seeds: 0
+      grievance: 8
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: dawnhorn-behemoth
+      name: Dawnhorn Behemoth
+      kind: 2
+      description: A gentle giant grazing alone on the skyline. The ground hums with its song, and the land around it is calmer for it.
+      color: {r: 0.86, g: 0.8, b: 0.62, a: 1}
+      resource: Behemoth Meat
+      species: dawnhorn-behemoth
+      minAge: 2
+      count: 2
+      size: 1
+      spacing: 12
+      minDistance: 6
+      terrains: [plains, expanse-steppe, auric-meadow, wind-plain, woodland]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.3
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 1
+      landValue: 4
+      yields:
+      - resource: Aetherlight
+        amount: 0.01
+      beauty: 0.5
+      beautyAura: 0.2
+      coherenceAura: 0.03
+      fertilityAura: 0.02
+      auraRadius: 2
+      harvest:
+      - resource: Behemoth Meat
+        amount: 4
+      seeds: 0
+      grievance: 20
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: cave-bear-den
+      name: Cave Bear Den
+      kind: 2
+      description: A bear's den dug under the roots of an old slope, with fish bones scattered at its mouth.
+      color: {r: 0.42, g: 0.3, b: 0.22, a: 1}
+      resource: Hides
+      species: cave-bear
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 9
+      minDistance: 5
+      terrains: [highlands, foothills, taiga-forest, woodland]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 2
+      yields:
+      - resource: Hides
+        amount: 0.01
+      beauty: 0
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Hides
+        amount: 5
+      - resource: Game Meat
+        amount: 8
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: rat-nest
+      name: Granary Rat Nest
+      kind: 2
+      description: A warren of rats in the rubbish and the stores, where people keep food. The sick follow them from midden to hearth.
+      color: {r: 0.45, g: 0.4, b: 0.38, a: 1}
+      resource: Hides
+      species: granary-rat
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 6
+      minDistance: 2
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -1
+      yields: []
+      beauty: -0.2
+      beautyAura: -0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Hides
+        amount: 1
+      seeds: 0
+      grievance: 0
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: sabrecat-ledge
+      name: Sabrecat Ledge
+      kind: 2
+      description: A high ledge littered with horns and bones. The screeching carries down from it long before anything is seen.
+      color: {r: 0.7, g: 0.58, b: 0.36, a: 1}
+      resource: Hides
+      species: screech-sabrecat
+      minAge: 1
+      count: 3
+      size: 1
+      spacing: 10
+      minDistance: 6
+      terrains: [highlands, foothills, wind-mesa]
+      macroBiomes: []
+      covers: []
+      nearTerrains: [peaks]
+      nearReach: 3
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1
+      yields:
+      - resource: Hides
+        amount: 0.008
+      beauty: 0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Hides
+        amount: 8
+      seeds: 0
+      grievance: 10
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: roach-midden
+      name: Roach Midden
+      kind: 2
+      description: A midden alive with roaches. They scatter into the cracks at a footstep and come back when it has passed.
+      color: {r: 0.36, g: 0.28, b: 0.2, a: 1}
+      resource:
+      species: hearth-roach
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 6
+      minDistance: 2
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: -1
+      yields: []
+      beauty: -0.3
+      beautyAura: -0.1
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest: []
+      seeds: 0
+      grievance: 0
+      untouchable: Nothing worth carrying off; a hunt only scatters them into the cracks, and they come back.
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: ashfall-beetles
+      name: Ashfall Beetle Colony
+      kind: 2
+      description: A colony of heavy grey beetles working through the ash and rot of broken ground, and leaving it a little richer.
+      color: {r: 0.5, g: 0.5, b: 0.46, a: 1}
+      resource: Hides
+      species: ashfall-beetle
+      minAge: 0
+      count: 4
+      size: 2
+      spacing: 7
+      minDistance: 4
+      terrains: [ash-plains, ruin-field, rift-scar, skeletal-orchard, scrub]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1
+      yields:
+      - resource: Hides
+        amount: 0.005
+      beauty: -0.05
+      beautyAura: 0
+      coherenceAura: 0
+      fertilityAura: 0.02
+      auraRadius: 1
+      harvest:
+      - resource: Hides
+        amount: 3
+      seeds: 0
+      grievance: 5
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: luminant-swarm
+      name: Luminant Swarm
+      kind: 2
+      description: An amber glow over the leylines at night, thousands of small moths drinking Lunehymn and Aetherlight from the air. Lanterns are filled from swarms like this one.
+      color: {r: 0.98, g: 0.78, b: 0.4, a: 1}
+      resource: Lunehymn
+      species: luminant-moth
+      minAge: 0
+      count: 3
+      size: 1
+      spacing: 8
+      minDistance: 3
+      terrains: []
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.2
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 1
+      yields: []
+      beauty: 0.3
+      beautyAura: 0.05
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Lunehymn
+        amount: 1
+      seeds: 0
+      grievance: 0
+      untouchable:
+      plantFertility: 0.4
+      plantCoherence: 0
+      plantedShare: 0.6
+      plantedFertility: 0
+      expeditionStories: []
+    - id: ice-sprite-haven
+      name: Ice Sprite Haven
+      kind: 2
+      description: A sprite merged with its ice habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: ice-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [highlands, foothills]
+      maxTemperature: 0.24
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: ice-slime-haven
+      name: Ice Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Ice Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its ice habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: ice-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [highlands, foothills]
+      maxTemperature: 0.24
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: snow-sprite-haven
+      name: Snow Sprite Haven
+      kind: 2
+      description: A sprite merged with its snow habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: snow-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [taiga-forest, taiga-bog]
+      maxTemperature: 0.55
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: snow-slime-haven
+      name: Snow Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Snow Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its snow habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: snow-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [taiga-forest, taiga-bog]
+      maxTemperature: 0.55
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: lake-sprite-haven
+      name: Water Sprite Haven
+      kind: 2
+      description: A sprite merged with its lake habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: lake-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      nearTerrains: [lake]
+      nearReach: 1
+      requiresFreshwater: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: lake-slime-haven
+      name: Lake Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Water Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its lake habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: lake-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      nearTerrains: [lake]
+      nearReach: 1
+      requiresFreshwater: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: marsh-sprite-haven
+      name: Marsh Sprite Haven
+      kind: 2
+      description: A sprite merged with its marsh habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: marsh-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [marsh, taiga-bog]
+      minMoisture: 0.4
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: marsh-slime-haven
+      name: Marsh Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Marsh Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its marsh habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: marsh-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [marsh, taiga-bog]
+      minMoisture: 0.4
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: saltwater-sprite-haven
+      name: Saltwater Sprite Haven
+      kind: 2
+      description: A sprite merged with its saltwater habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: saltwater-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      coastal: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: saltwater-slime-haven
+      name: Saltwater Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Saltwater Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its saltwater habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: saltwater-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      coastal: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: grassland-sprite-haven
+      name: Grassland Sprite Haven
+      kind: 2
+      description: A sprite merged with its grassland habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: grassland-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [plains, auric-meadow, expanse-steppe, fallow-steppe, wind-plain]
+      minimumFertility: 0.2
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: grassland-slime-haven
+      name: Grassland Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Grassland Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its grassland habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: grassland-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [plains, auric-meadow, expanse-steppe, fallow-steppe, wind-plain]
+      minimumFertility: 0.2
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: mineral-sprite-haven
+      name: Mineral Sprite Haven
+      kind: 2
+      description: A sprite merged with its mineral habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: mineral-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [highlands, foothills, leyline-ravine, wind-mesa]
+      minElevation: 0.35
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: mineral-slime-haven
+      name: Mineral Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Mineral Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its mineral habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: mineral-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [highlands, foothills, leyline-ravine, wind-mesa]
+      minElevation: 0.35
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: forest-sprite-haven
+      name: Forest Sprite Haven
+      kind: 2
+      description: A sprite merged with its forest habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: forest-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [woodland, taiga-forest, violet-wood, moonlit-grove, auric-copse]
+      minMoisture: 0.2
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: forest-slime-haven
+      name: Forest Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Forest Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its forest habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: forest-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [woodland, taiga-forest, violet-wood, moonlit-grove, auric-copse]
+      minMoisture: 0.2
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: leyline-sprite-haven
+      name: Leyline Sprite Haven
+      kind: 2
+      description: A sprite merged with its leyline habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: leyline-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      requiresSilverOrLeyline: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: leyline-slime-haven
+      name: Leyline Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Leyline Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its leyline habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: leyline-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: []
+      requiresSilverOrLeyline: 1
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: dead-zone-sprite-haven
+      name: Dead-zone Sprite Haven
+      kind: 2
+      description: A sprite merged with its dead-zone habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: dead-zone-sprite
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [rift-scar, ash-plains, ruin-field, leyline-ravine]
+      minimumDissonance: 0.2
+      maximumCoherence: 0.6
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: dead-zone-slime-haven
+      name: Dead-zone Slime Haven
+      kind: 2
+      description: From the Age of Renewal, offspring of Dead-zone Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its dead-zone habitat.
+      color: {r: 0.4, g: 0.85, b: 0.95, a: 1}
+      species: dead-zone-slime
+      minAge: 1
+      count: 0
+      size: 1
+      spacing: 5
+      minDistance: 2
+      terrains: [rift-scar, ash-plains, ruin-field, leyline-ravine]
+      minimumDissonance: 0.2
+      maximumCoherence: 0.6
+      landValue: 2
+      beauty: 0.4
+      yields: []
+      harvest: []
+      untouchable: Observe their changing light; there is nothing here to take.
+    - id: elemental-sprite-refuge
+      name: Unmerged Light
+      kind: 2
+      description: Light gathers without borrowing a body from the land. At this sacred site or leyline convergence, exceptional Coherence shelters the rarest sprites. Survey the lights to discover what has never merged.
+      color: {r: 1, g: 0.9, b: 0.55, a: 1}
+      species: elemental-sprite
+      minAge: 0
+      count: 1
+      size: 1
+      spacing: 12
+      minDistance: 3
+      minimumCoherence: 0.8
+      requiresCoherentRefuge: 1
+      visibleFromAfar: 1
+      landValue: 5
+      beauty: 1
+      yields: []
+      harvest: []
+      untouchable: These unmerged beings can be studied, but offer nothing to harvest.
+    - id: auric-saffron
+      name: Auric Saffron Beds
+      kind: 1
+      description: Golden spice flowers grow only where the land itself thrives. These fragrant threads make a feast worth remembering.
+      color: {r: 0.65, g: 0.85, b: 0.55, a: 1}
+      resource: Auric Saffron
+      minAge: 1
+      count: 4
+      size: 1
+      spacing: 8
+      minDistance: 3
+      terrains: [auric-meadow, auric-copse, plains, violet-glade, violet-wood, moonlit-grove, woodland, foothills]
+      minimumDesirability: 0.55
+      minimumCoherence: 0.6
+      minimumFertility: 0.2
+      seeds: 1
+      plantFertility: 0.3
+      plantCoherence: 0.6
+      landValue: 4
+      beauty: 0.3
+      yields:
+      - resource: Auric Saffron
+        amount: 0.006
+      harvest:
+      - resource: Auric Saffron
+        amount: 5
+      grievance: 10
+    - id: silver-salt
+      name: Silver Salt Shore
+      kind: 3
+      description: Fine salt crystals gather on sea shores where a coherent leyline reaches the water. Prized in the kitchen, never a substitute for food.
+      color: {r: 0.65, g: 0.85, b: 0.55, a: 1}
+      resource: Silver Salt
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 9
+      minDistance: 3
+      terrains: []
+      coastal: 1
+      minimumCoherence: 0.65
+      requiresSilverOrLeyline: 1
+      landValue: 4
+      beauty: 0.3
+      yields:
+      - resource: Silver Salt
+        amount: 0.006
+      harvest:
+      - resource: Silver Salt
+        amount: 6
+      grievance: 10
+    - id: hearthleaf-grove
+      name: Hearthleaf Grove
+      kind: 1
+      description: Fragrant understory leaves flourish in desirable woodland. Shared as an everyday tea, they bring comfort without a religious rite.
+      color: {r: 0.65, g: 0.85, b: 0.55, a: 1}
+      resource: Hearthleaf Tea
+      minAge: 0
+      count: 4
+      size: 1
+      spacing: 7
+      minDistance: 3
+      terrains: [woodland, auric-copse, violet-wood, moonlit-grove]
+      minimumDesirability: 0.55
+      seeds: 1
+      plantFertility: 0.55
+      landValue: 4
+      beauty: 0.3
+      yields:
+      - resource: Hearthleaf Tea
+        amount: 0.012
+      harvest:
+      - resource: Hearthleaf Tea
+        amount: 8
+      grievance: 10
+    - id: sacred-skyglass
+      name: Sacred Sky Glass Sheets
+      kind: 3
+      description: Thin sheets of cyan-green Crystal hold recursive Auric Geometry at the edge of sacred ground. They are kept as ornaments, set into cathedrals and used to preserve sound.
+      color: {r: 0.65, g: 0.85, b: 0.55, a: 1}
+      resource: Sky Glass
+      minAge: 0
+      count: 2
+      size: 1
+      spacing: 20
+      minDistance: 3
+      terrains: []
+      requiresSacred: 1
+      minimumCoherence: 0.8
+      visibleFromAfar: 1
+      landValue: 4
+      beauty: 0.3
+      yields:
+      - resource: Sky Glass
+        amount: 0.008
+      harvest:
+      - resource: Sky Glass
+        amount: 6
+      grievance: 10
+    species:
+    - id: lanternback-grazer
+      name: Lanternback Grazer
+      description: A Pure Light grazer whose back glows like a lantern at dusk. Herds drift across the open grass and scatter only when pressed.
+      diet: 0
+      subgroup: 1
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.45
+      prey: []
+      blooms: [lesser-glimmerfern, moonlit-glimmerfern, glimmerfern-lakeshore]
+      binding: 1
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: ember-salamander
+      name: Ember Salamander
+      description: A Pure Light lizard that basks on warm stone. Left alone it only shimmers; cornered, its heat burns.
+      diet: 0
+      subgroup: 4
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.5
+      prey: []
+      binding: 1
+      primaryBinding: 5
+      secondaryBindings: []
+      niche: 1
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: moonveil-moth
+      name: Moonveil Moth
+      description: Pale Pure Light moths whose larvae feed on fallen leaves and old wood. The adults rise in veils at the first footstep.
+      diet: 3
+      subgroup: 0
+      size: 0
+      groupMin: 20
+      groupMax: 200
+      reproduction: 0
+      structure: 0.3
+      prey: []
+      blooms: [lesser-glimmerfern, moonlit-glimmerfern, glimmerfern-lakeshore, vow-orchids]
+      binding: 2
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 2
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: choir-cicada
+      name: Choir Cicada
+      description: Pure Light critters that sing in a vast chorus and strip every tree and field in their path, moving on when nothing is left.
+      diet: 0
+      subgroup: 5
+      size: 0
+      groupMin: 200
+      groupMax: 2000
+      reproduction: 0
+      structure: 0.4
+      prey: []
+      blooms: [xochi-singers, sorrowbells]
+      binding: 3
+      primaryBinding: 1
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 2
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: steppe-aurochs
+      name: Steppe Aurochs
+      description: Great horned cattle that roam the open grass in slow herds, and charge whatever stands in their way.
+      diet: 0
+      subgroup: 5
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 3
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: highland-ibex
+      name: Highland Ibex
+      description: Sure-footed goats with swept-back horns that bolt up the ledges at the first sight of a hunter.
+      diet: 0
+      subgroup: 0
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: taiga-elk
+      name: Taiga Elk
+      description: Tall, quiet deer of the northern woods that go about their grazing until someone comes too close.
+      diet: 0
+      subgroup: 1
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: river-trout
+      name: River Trout
+      description: Trout that run thick in cold, fast water every season, heedless of the nets.
+      diet: 2
+      subgroup: 4
+      size: 0
+      groupMin: 20
+      groupMax: 100
+      reproduction: 0
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 3
+      commensal: 0
+      vector: 0
+      discovery: []
+      habitat: 1
+    - id: wild-bee
+      name: Wild Bee
+      description: Bees that build their hives in hollow trees and guard them fiercely. The fields around them bloom and bear better for their work.
+      diet: 0
+      subgroup: 3
+      size: 0
+      groupMin: 500
+      groupMax: 5000
+      reproduction: 4
+      structure: 0.95
+      prey: []
+      blooms: [listener, healer]
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 1
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: bog-eel
+      name: Bog Eel
+      description: Eels that wind unseen through the roots of dark pools and bite at anything that reaches in.
+      diet: 1
+      subgroup: 8
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey:
+      - river-trout
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+      habitat: 2
+    - id: wild-boar
+      name: Wild Boar
+      description: Sounders of boar that root through woods and old orchards, and turn on anyone who threatens their young.
+      diet: 2
+      subgroup: 3
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: grey-wolf
+      name: Grey Wolf
+      description: Wolves that follow the herds in packs, led by one of their own.
+      diet: 1
+      subgroup: 11
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey:
+      - steppe-aurochs
+      - taiga-elk
+      - highland-ibex
+      - wild-boar
+      - lanternback-grazer
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: threshold-cushion
+      name: Threshold Cushion
+      description: A predatory Eleos Bloom that looks like a safe place to rest.
+      diet: 1
+      subgroup: 14
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.3
+      prey: []
+      binding: 6
+      primaryBinding: 4
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: glottis-mouth-trap
+      name: Glottis-Mouth Trap
+      description: A predatory Eleos Bloom that calls with a lost companion's voice.
+      diet: 1
+      subgroup: 14
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.3
+      prey: []
+      binding: 6
+      primaryBinding: 1
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: hearth-eater
+      name: Hearth-Eater
+      description: A predatory Eleos Bloom in the shape of someone in mourning.
+      diet: 1
+      subgroup: 14
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.3
+      prey: []
+      binding: 6
+      primaryBinding: 7
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: meadow-hare
+      name: Meadow Hare
+      description: Long-eared hares that graze the open grass at dawn and bolt at the first shadow. Every spring the meadows fill with their young.
+      diet: 0
+      subgroup: 0
+      size: 0
+      groupMin: 2
+      groupMax: 8
+      reproduction: 4
+      structure: 0.9
+      prey: []
+      blooms: [memory-marigolds, lullroots]
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 1
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: mire-ox
+      name: Mire Ox
+      description: Heavy, broad-horned cattle of the fens. The herd stands its ground in the reeds, and the smaller creatures of the marsh shelter behind it.
+      diet: 0
+      subgroup: 3
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: dawnhorn-behemoth
+      name: Dawnhorn Behemoth
+      description: A gentle giant born of the swelling Dual Confluence Stream. It walks alone, slow as a season, singing a note too low to hear that the ground carries for leagues.
+      diet: 0
+      subgroup: 2
+      size: 3
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.55
+      prey: []
+      binding: 3
+      primaryBinding: 1
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery:
+      - level: 2
+        eraScore: 2
+        resource:
+        amount: 0
+      - level: 4
+        eraScore: 0
+        resource: Research
+        amount: 40
+    - id: cave-bear
+      name: Cave Bear
+      description: A solitary bear of the uplands and deep woods that fishes the cold rivers and sleeps through the Echo of Silence. It walks away from a fight it can avoid.
+      diet: 2
+      subgroup: 6
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey:
+      - river-trout
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: granary-rat
+      name: Granary Rat
+      description: Rats that follow people wherever they store food. Hardy and quick to breed, they carry sickness from midden to hearth.
+      diet: 2
+      subgroup: 4
+      size: 0
+      groupMin: 10
+      groupMax: 40
+      reproduction: 4
+      structure: 0.9
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0.9
+      vector: 0.7
+      discovery: []
+    - id: screech-sabrecat
+      name: Screech Sabrecat
+      description: A great fanged cat of the high ledges that hunts anything it notices and plays with its catch. Its screeching carries ahead of it, and that is the only warning anyone gets.
+      diet: 1
+      subgroup: 13
+      size: 2
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.9
+      prey:
+      - highland-ibex
+      - taiga-elk
+      - meadow-hare
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource:
+        amount: 0
+    - id: hearth-roach
+      name: Hearth Roach
+      description: Flat brown roaches that live in the cracks of every hearth and midden. They scatter into the walls at a footstep, come back when it passes, and outlast everything.
+      diet: 3
+      subgroup: 15
+      size: 0
+      groupMin: 20
+      groupMax: 200
+      reproduction: 4
+      structure: 0.95
+      prey: []
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0.9
+      vector: 0.4
+      discovery: []
+    - id: ashfall-beetle
+      name: Ashfall Beetle
+      description: Heavy grey beetles that live in colonies on burned and broken ground, eating the ash and rot that nothing else will. They defend their ground, and their shed plates are as tough as hide.
+      diet: 3
+      subgroup: 3
+      size: 1
+      groupMin: 0
+      groupMax: 0
+      reproduction: 0
+      structure: 0.95
+      prey: []
+      blooms: [forsaken-flowers, sorrowbells, shame-moss, candlevein-bloom]
+      binding: 0
+      primaryBinding: 0
+      secondaryBindings: []
+      niche: 0
+      breedingEcho: 0
+      commensal: 0
+      vector: 0
+      discovery: []
+    - id: luminant-moth
+      name: Luminant Moth
+      description: Small Pure Light moths with translucent amber wings that drink Lunehymn and Aetherlight and glow with what they cannot hold. Beloved as lantern-light; their bites are small and painless, and no one thinks of them.
+      diet: 0
+      subgroup: 0
+      size: 0
+      groupMin: 0
+      groupMax: 0
+      reproduction: 4
+      structure: 0.3
+      prey: []
+      blooms: [listener, healer]
+      binding: 2
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 2
+      breedingEcho: 0
+      commensal: 0.5
+      vector: 0.6
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource:
+        amount: 0
+    - id: ice-sprite
+      name: Ice Sprite
+      description: A sprite merged with its ice habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: ice-slime
+      name: Ice Slime
+      description: From the Age of Renewal, offspring of Ice Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its ice habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: ice-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: snow-sprite
+      name: Snow Sprite
+      description: A sprite merged with its snow habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: snow-slime
+      name: Snow Slime
+      description: From the Age of Renewal, offspring of Snow Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its snow habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: snow-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: lake-sprite
+      name: Water Sprite
+      description: A sprite merged with its lake habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: lake-slime
+      name: Lake Slime
+      description: From the Age of Renewal, offspring of Water Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its lake habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: lake-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: marsh-sprite
+      name: Marsh Sprite
+      description: A sprite merged with its marsh habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: marsh-slime
+      name: Marsh Slime
+      description: From the Age of Renewal, offspring of Marsh Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its marsh habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: marsh-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: saltwater-sprite
+      name: Saltwater Sprite
+      description: A sprite merged with its saltwater habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: saltwater-slime
+      name: Saltwater Slime
+      description: From the Age of Renewal, offspring of Saltwater Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its saltwater habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 3
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: saltwater-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: grassland-sprite
+      name: Grassland Sprite
+      description: A sprite merged with its grassland habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 1
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      blooms: [listener, healer]
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: grassland-slime
+      name: Grassland Slime
+      description: From the Age of Renewal, offspring of Grassland Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its grassland habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 1
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: grassland-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: mineral-sprite
+      name: Mineral Sprite
+      description: A sprite merged with its mineral habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: mineral-slime
+      name: Mineral Slime
+      description: From the Age of Renewal, offspring of Mineral Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its mineral habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 6
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: mineral-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: forest-sprite
+      name: Forest Sprite
+      description: A sprite merged with its forest habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 7
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      blooms: [listener, healer]
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: forest-slime
+      name: Forest Slime
+      description: From the Age of Renewal, offspring of Forest Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its forest habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 7
+      secondaryBindings: []
+      niche: 0
+      ecotypeFamily: sprite
+      entrainedFrom: forest-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: leyline-sprite
+      name: Leyline Sprite
+      description: A sprite merged with its leyline habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 2
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: leyline-slime
+      name: Leyline Slime
+      description: From the Age of Renewal, offspring of Leyline Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its leyline habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 2
+      ecotypeFamily: sprite
+      entrainedFrom: leyline-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: dead-zone-sprite
+      name: Dead-zone Sprite
+      description: A sprite merged with its dead-zone habitat, its light already learning the land. It grazes the tiny growth along that habitat. This is an early ecotype, not an unmerged Elemental Sprite.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.15
+      binding: 6
+      primaryBinding: 4
+      secondaryBindings: []
+      niche: 1
+      ecotypeFamily: sprite
+      entrainedFrom:
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: dead-zone-slime
+      name: Dead-zone Slime
+      description: From the Age of Renewal, offspring of Dead-zone Sprites raised near Agromagical Enclaves acquire persistent gel bodies. Parents keep their original form; this lineage remains tuned to its dead-zone habitat.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 3
+      groupMax: 9
+      reproduction: 3
+      structure: 0.25
+      binding: 6
+      primaryBinding: 4
+      secondaryBindings: []
+      niche: 1
+      ecotypeFamily: sprite
+      entrainedFrom: dead-zone-sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 1
+        resource: Research
+        amount: 3
+    - id: elemental-sprite
+      name: Elemental Sprite
+      description: The rarest sprite variant has never merged with the land. Its near-formless light persists only where exceptional Coherence holds at sacred sites or converging leylines. Finding one reveals what the familiar water, forest and other sprite ecotypes once were.
+      diet: 0
+      subgroup: 1
+      size: 0
+      groupMin: 1
+      groupMax: 2
+      reproduction: 2
+      structure: 0.1
+      binding: 0
+      primaryBinding: 2
+      secondaryBindings: []
+      niche: 0
+      unmerged: 1
+      ecotypeFamily: sprite
+      prey: []
+      discovery:
+      - level: 2
+        eraScore: 5
+        resource: Research
+        amount: 15
+      - level: 4
+        eraScore: 3
+        resource: Research
+        amount: 10
+    ecology:
+      smallPerCell: 1
+      mediumPerCell: 0.5
+      largePerCell: 0.25
+      gargantuanPerCell: 0.05
+      verySlowGrowth: 0.05
+      slowGrowth: 0.12
+      mediumGrowth: 0.25
+      fastGrowth: 0.45
+      startFill: 0.8
+      settlementPressure: 0.6
+      settlementReach: 3
+      heldPressure: 0.1
+      fleeingPressure: 1.5
+      unmovedPressure: 0.5
+      pureLightCoherence: 0.6
+      coherenceMargin: 0.2
+      falloutHarm: 2
+      offLeyline: 0.3
+      leylineReach: 1
+      commensalCap: 1.5
+      preyFloor: 0.2
+      predation: 0.08
+      huntTake: 0.06
+      huntYield: 0.35
+      depletedBelow: 0.2
+      territorialDispersal: 0.05
+      roamingDispersal: 0.1
+      nomadicDispersal: 0.2
+      expandingDispersal: 0.2
+      denAt: 0.35
+      vanishBelow: 0.05
+      vectorReach: 2
+      vectorFull: 25
+    behavior:
+      stepAt: 0.34
+      huntHarm: 0.06
+      habitatHarm: 0.6
+      coexist: 0.04
+      coexistCap: 0.4
+      spread: 0.35
+      memoryKept: 0.3
+      warySpoils: 0.6
+      hostileDanger: 0.35
+      hostileReach: 1
+    rhythm:
+      echoes:
+      - name: Echo of Resonance
+        summary: the herds give birth and the creatures forgive most readily, attuned to the world opening its song
+        growth: 1.6
+        detritivoreGrowth: 1
+        dispersal: 0.6
+        predation: 0.8
+        yields: 1
+        harm: 1
+        ease: 2
+        hungerDanger: 0
+        plagues: 0.6
+      - name: Echo of Crescendo
+        summary: the creatures range widest and yield the most, and predators hunt hardest
+        growth: 1.2
+        detritivoreGrowth: 1
+        dispersal: 1.4
+        predation: 1.2
+        yields: 1.3
+        harm: 1
+        ease: 1
+        hungerDanger: 0
+        plagues: 0.8
+      - name: Echo of Dissonance
+        summary: herds scatter and migrate, decay feeds the decomposers, and a hunt fractures trust the deepest
+        growth: 0.8
+        detritivoreGrowth: 1.8
+        dispersal: 1.4
+        predation: 1
+        yields: 1
+        harm: 1.5
+        ease: 0.5
+        hungerDanger: 0
+        plagues: 1.8
+      - name: Echo of Silence
+        summary: the creatures lie dormant and few are born, and hungry predators stray toward settlements
+        growth: 0.4
+        detritivoreGrowth: 0.6
+        dispersal: 0.6
+        predation: 1
+        yields: 0.7
+        harm: 1
+        ease: 1
+        hungerDanger: 0.25
+        plagues: 0.8
+      phaseShape:
+      - 0.5
+      - 1
+      - 0.5
+      hungerReach: 3
+      breedingPeak: 2.2
+      surge: 0.08
+      overload: 0.05
+      lunehymnBoost: 0.15
+      attuneEase: 0.03
+      ritualHarm: 2
+    plagues:
+    - id: dragons-bane
+      name: Dragon's Bane
+      description: A sickness that ignores a dragon's armored scales and corrupts the Pure Light pathways beneath them, the channels that feed its enchantments. Tuned to one Fundamental Frequency, it finds a creature near-immune to every other illness and undoes it.
+      folklore: the scale-rot
+      hosts: []
+      dissonanceAt: 0.2
+      chance: 0.3
+      lethality: 0.4
+      duration: 3
+      spread: 0.1
+      immunity: 6
+    - id: slime-blight
+      name: Slime Blight
+      description: An acoustic virus that opens Dissonance Blooms in a slime's Light channels and cancels the standing waves that give it shape. Past a threshold the collapse is sudden and total, and a living slime becomes lifeless protoplasm.
+      folklore: the melting
+      hosts: [ice-slime, snow-slime, lake-slime, marsh-slime, saltwater-slime, grassland-slime, mineral-slime, forest-slime, leyline-slime, dead-zone-slime]
+      dissonanceAt: 0.15
+      chance: 0.5
+      lethality: 0.6
+      duration: 2
+      spread: 0.25
+      immunity: 4
+    - id: lantern-gutter
+      name: Lantern Gutter
+      description: A narrow-band resonance sickness that locks onto the Lanternback's hide-light and drains it. The glow gutters, the herd goes dark and still, and the weakest do not rise again.
+      folklore: the dimming
+      hosts: [lanternback-grazer]
+      dissonanceAt: 0.15
+      chance: 0.5
+      lethality: 0.45
+      duration: 2
+      spread: 0.15
+      immunity: 4
+    - id: veil-blight
+      name: Veil Blight
+      description: It unsettles the Coherence-Binding Tissue in a Moonveil Moth's wings until the beat falls out of phase, and whole veils drop from the air in a single night.
+      folklore: the falling sickness
+      hosts: [moonveil-moth]
+      dissonanceAt: 0.15
+      chance: 0.5
+      lethality: 0.55
+      duration: 2
+      spread: 0.15
+      immunity: 4
+    - id: chorus-fever
+      name: Chorus Fever
+      description: A sickness tuned to the Choir Cicada's song. One singer out of phase pulls the rest after it, and the chorus sings itself to death.
+      folklore: the wrong song
+      hosts: [choir-cicada]
+      dissonanceAt: 0.2
+      chance: 0.5
+      lethality: 0.5
+      duration: 2
+      spread: 0.15
+      immunity: 4
+    eleos:
+      ambientResidue: 0.1
+      capitalResidue: 0.5
+      majorResidue: 0.4
+      settlementResidue: 0.25
+      strainResidue: 0.3
+      settlementReach: 3
+      ruinResidue: 0.45
+      ruinReach: 2
+      dissonanceResidue: 0.6
+      ruinHistory: 0.8
+      ruinHistoryReach: 3
+      atonalisHistory: 0.7
+      atonalisReach: 2
+      atonalisThreats:
+      - atonalis-nest
+      oldRoadHistory: 0.3
+      featureHistory: 0.6
+      sacredHistory: 0.5
+      settlementHistoryPerAge: 0.1
+      settlementHistoryMax: 0.5
+      historicTerrains:
+      - ruin-field
+      - skeletal-orchard
+      - ash-plains
+      - rift-scar
+      historicTerrainHistory: 0.4
+      witherBelow: 0.2
+      witheredHarvest: 0.25
+    vibration:
+      baseDensity: 0.15
+      strata: 0.35
+      leylines: 0.35
+      convergence: 0.1
+      basin: 0.2
+      silver: 0.05
+      waterDensity: 0.2
+      coherence: 0.1
+      neutralDensity: 0.35
+      falloutFrom: 0.2
+      falloutFull: 0.38
+      travel: 2
+      unhealable: 1
+      cascadeReach: 2
+    covers:
+    - id: deep-forest
+      name: Deep Forest
+      description: Old growth so dense the light gives up halfway down. Paths close behind you, and what lives inside has never seen a stranger.
+      color: {r: 0.06, g: 0.2, b: 0.09, a: 0.65}
+      count: 8
+      minSize: 6
+      maxSize: 14
+      spacing: 10
+      minDistance: 4
+      terrains: [woodland, taiga-forest, violet-wood, auric-copse]
+      minMoisture: 0
+      blocksSight: 1
+      sightInside: 1
+      travel: 1.6
+      survey: 1.5
+      hardship: 0
+      finds: 1.6
+      beauty: 0.15
+      governance: 1.3
+      yields:
+      - resource: Elderwood
+        amount: 0.008
+      - resource: Game Meat
+        amount: 0.004
+      forage:
+      - resource: Game Meat
+        amount: 3
+      - resource: Bitter Roots
+        amount: 1
+    - id: mistfen
+      name: Mistfen
+      description: A fen under a fog that never lifts. Voices carry strangely, the ground gives underfoot, and the peat burns long and slow.
+      color: {r: 0.58, g: 0.63, b: 0.6, a: 0.55}
+      count: 6
+      minSize: 5
+      maxSize: 10
+      spacing: 10
+      minDistance: 4
+      terrains: [marsh, taiga-bog]
+      minMoisture: 0
+      blocksSight: 1
+      sightInside: 1
+      travel: 1.8
+      survey: 1.6
+      hardship: 3
+      finds: 1.4
+      beauty: -0.15
+      governance: 1.4
+      yields:
+      - resource: Peat
+        amount: 0.01
+      forage:
+      - resource: River Fish
+        amount: 2
+    - id: reed-sea
+      name: Reed Sea
+      description: Grass taller than a rider, rolling like water in the wind. Herds move through it unseen, and so does everything that hunts them.
+      color: {r: 0.78, g: 0.72, b: 0.42, a: 0.45}
+      count: 6
+      minSize: 6
+      maxSize: 14
+      spacing: 10
+      minDistance: 4
+      terrains: [plains, expanse-steppe, wind-plain, fallow-steppe]
+      minMoisture: 0
+      blocksSight: 1
+      sightInside: 2
+      travel: 1.3
+      survey: 1.3
+      hardship: 0
+      finds: 1.3
+      beauty: 0.1
+      governance: 1.1
+      yields:
+      - resource: Game Meat
+        amount: 0.003
+      - resource: Hides
+        amount: 0.002
+      forage:
+      - resource: Game Meat
+        amount: 2
+      - resource: Earth-Beans
+        amount: 2
+    - id: canyon-maze
+      name: Canyon Maze
+      description: A maze of narrow gorges cut into the stone. Every turn looks like the last, and the walls throw back every sound.
+      color: {r: 0.56, g: 0.34, b: 0.24, a: 0.5}
+      count: 5
+      minSize: 4
+      maxSize: 9
+      spacing: 10
+      minDistance: 4
+      terrains: [highlands, foothills, wind-mesa, rift-scar]
+      minMoisture: 0
+      blocksSight: 1
+      sightInside: 2
+      travel: 2
+      survey: 1.4
+      hardship: 1
+      finds: 1.6
+      beauty: 0.25
+      governance: 1.6
+      yields:
+      - resource: Duskstone
+        amount: 0.01
+      forage: []
+    - id: bramble-thicket
+      name: Bramble Thicket
+      description: Thorn and bramble grown over old ruins and dead orchards. Slow, bloody going, but the roots and wild honey are worth it.
+      color: {r: 0.3, g: 0.24, b: 0.14, a: 0.5}
+      count: 6
+      minSize: 3
+      maxSize: 7
+      spacing: 8
+      minDistance: 4
+      terrains: [scrub, ruin-field, skeletal-orchard, expanse-scrub]
+      minMoisture: 0
+      blocksSight: 0
+      sightInside: 3
+      travel: 1.8
+      survey: 1.2
+      hardship: 1.5
+      finds: 1.2
+      beauty: -0.1
+      governance: 1.2
+      yields:
+      - resource: Bitter Roots
+        amount: 0.004
+      forage:
+      - resource: Bitter Roots
+        amount: 3
+      - resource: Wild Honey
+        amount: 1
+    - id: ashen-haze
+      name: Ashen Haze
+      description: Fine golden ash hangs in the air here and never settles. It stings the eyes and the lungs, and it buries old-world things.
+      color: {r: 0.82, g: 0.72, b: 0.46, a: 0.5}
+      count: 4
+      minSize: 5
+      maxSize: 10
+      spacing: 10
+      minDistance: 4
+      terrains: [ash-plains, rift-scar]
+      minMoisture: 0
+      blocksSight: 1
+      sightInside: 1
+      travel: 1.3
+      survey: 1.5
+      hardship: 4
+      finds: 2
+      beauty: -0.3
+      governance: 1.5
+      yields:
+      - resource: Sky Glass
+        amount: 0.002
+      forage: []
     enclaves:
     - id: independent-watch
       name: Independent Watch Community
@@ -1482,6 +6241,63 @@ MonoBehaviour:
         amount: 0.4
       - resource: Lunehymn
         amount: 0.05
+    - id: sprite-light-conclave
+      name: The Sprite-Light Conclave
+      family: 4
+      description: A Domestication Enclave of Pure Light Elemental Sprites who learned to live beside the strange creatures that came before the slimes. Playful, and older than it looks.
+      originWound:
+      color: {r: 0.75, g: 0.95, b: 0.85, a: 1}
+      minAge: 0
+      count: 1
+      site: 8
+      bindings: []
+      authorityRadius: 3
+      woundMin: 40
+      woundMax: 65
+      minDistance: 8
+      spacing: 14
+      suzeraintyYields:
+      - resource: Research
+        amount: 0.05
+      keepsPureLight: 0.5
+    - id: aureate-cloister
+      name: The Aureate Cloister
+      family: 2
+      description: An Auric Enclave of scholars and the faithful who read the Aureus Pillar in every living thing, and write down what they find.
+      originWound:
+      color: {r: 0.98, g: 0.85, b: 0.45, a: 1}
+      minAge: 1
+      count: 1
+      site: 0
+      bindings: []
+      authorityRadius: 3
+      woundMin: 50
+      woundMax: 75
+      minDistance: 8
+      spacing: 14
+      suzeraintyYields:
+      - resource: Research
+        amount: 0.3
+    - id: amberwing-lanternry
+      name: The Amberwing Lanternry
+      family: 4
+      description: A Domestication Enclave that farms Luminant Moths for the lanterns of every town. Its moth gardens glow on the outskirts, tapped into the leylines.
+      originWound:
+      color: {r: 0.95, g: 0.68, b: 0.3, a: 1}
+      minAge: 1
+      count: 1
+      site: 4
+      bindings: []
+      authorityRadius: 3
+      woundMin: 35
+      woundMax: 60
+      minDistance: 8
+      spacing: 14
+      suzeraintyYields:
+      - resource: Research
+        amount: 0.1
+      keepsPureLight: 0.5
+      trades: luminant-moth
     threats:
     - id: fallout-scar
       name: Vibrational Fallout Scar
@@ -1493,6 +6309,19 @@ MonoBehaviour:
       strength: 0.55
       radius: 7
       minDistance: 12
+      stance: 1
+      species: dead-zone-sprite
+      beingName: 
+      beingSize: 0
+      beingStructure: 0.15
+      beingDiet: 0
+      beingSubgroup: 1
+      beingBindings: []
+      bandMin: 6
+      bandMax: 14
+      bands: 1
+      respawnSevenths: 21
+      roam: 2
     - id: atonalis-nest
       name: Atonalis Nest
       description: Atonalis gather where Coherence fails. They avoid Sacred Sites entirely.
@@ -1503,6 +6332,64 @@ MonoBehaviour:
       strength: 0.75
       radius: 6
       minDistance: 16
+      stance: 0
+      species: 
+      beingName: Nascent Atonalis
+      beingSize: 1
+      beingStructure: 0.4
+      beingDiet: 1
+      beingSubgroup: 13
+      beingBindings: []
+      bandMin: 2
+      bandMax: 4
+      bands: 1
+      respawnSevenths: 14
+      roam: 3
+    enclaveEcology:
+      keepReach: 6
+      keeperBefriend: 0.08
+      sharedBefriend: 0.04
+      keptHuntHarm: 0.25
+      herdYields:
+      - resource: Food
+        amount: 0.1
+      restoreReach: 6
+      restorePerEcho: 0.15
+      commissionStanding: 50
+      standingCost: 10
+      commissionCost:
+      - resource: Food
+        amount: 20
+      serviceReach: 12
+      cullTake: 0.3
+      cullHarm: 3
+      tameAmount: 0.25
+      restoreShare: 0.5
+    aftermath:
+      baseLoss: 0.2
+      pureLightLoss: 1.2
+      vanishBelow: 0.1
+      scarLoss: 0.5
+      scarKept: 0.6
+      emptiedBelow: 0.3
+      resettleShare: 0.15
+      lineagesPerBiome: 1
+      falloutAt: 0.2
+      lineages: []
+    greatPlague:
+      vector: luminant-moth
+      age: age-of-renewal
+      revealStage: 1
+      routeCarry: 0.1
+      tradeGroups: 0.5
+      tradeReach: 16
+      plagueBreeding: 0.5
+      restrictEchoes: 4
+      restrictStanding: 40
+      restrictStandingCost: 15
+      restrictCost:
+      - resource: Food
+        amount: 10
     nexus:
       count: 14
       spacing: 14
@@ -1627,8 +6514,6 @@ MonoBehaviour:
       amount: 25
     envoyInfluence: 25
     claimCost:
-    - resource: Food
-      amount: 15
     - resource: Elderwood
       amount: 10
     claimCostGrowth: 0.1
@@ -1752,11 +6637,11 @@ MonoBehaviour:
     starvationAttritionPerSeventh: 8
     recoveryPerSeventh: 3
     forageRationsPerSeventh: 1.2
-    mesoSurveySevenths: 2.5
+    mesoSurveySevenths: 1.25
     cost: []
     populationCost: 0
     unlockTechnology: Pathfinder Training
-    abilities: 51
+    abilities: 243
     knowRadius: 1
     surveySevenths: 1
     surveyRadius: 1
@@ -1778,6 +6663,12 @@ MonoBehaviour:
     exposureAttrition: 12
     dangerAttrition: 10
     dissonanceAttrition: 5
+    falloutAttrition: 12
+    fertileFrom: 0.4
+    fertilityForage: 0.8
+    siteForage: 0.6
+    grandfieldForage: 0.5
+    maxForageBonus: 1.5
     lostAtFullAttrition: 1
   expeditions:
     unit: expedition
@@ -1800,11 +6691,69 @@ MonoBehaviour:
     - resource: Elderwood
       amount: 10
     improveHands: 0.8
+    cargoPerLegend: 40
+    loadPerLegend: 30
+    rationWeight: 1
+    cargoWeights:
+    - resource: Duskstone
+      amount: 2.5
+    - resource: Sky Glass
+      amount: 2
+    - resource: Elderwood
+      amount: 2
+    - resource: Peat
+      amount: 1.5
+    - resource: Game Meat
+      amount: 1.5
+    - resource: Hides
+      amount: 1
+    - resource: River Fish
+      amount: 1
+    - resource: Deep-Rooted Grain
+      amount: 1
+    - resource: Highland Rice
+      amount: 1
+    - resource: Earth-Beans
+      amount: 1
+    - resource: Bitter Roots
+      amount: 1
+    - resource: Wild Honey
+      amount: 0.8
+    - resource: Dried Auric Peaches
+      amount: 0.6
+    - resource: Silverreed
+      amount: 0.5
+    - resource: Lumenwool
+      amount: 0.4
+    - resource: Glimmerfern
+      amount: 0.4
+    - resource: Emberwhisper
+      amount: 0.4
+    - resource: Lunehymn
+      amount: 0.4
+    - resource: Aetherlight
+      amount: 0.3
+    - resource: Eleos Tea
+      amount: 0.3
+    lightBelow: 0.15
+    lightPace: 1.1
+    overloadSlowdown: 0.6
+    minLoadPace: 0.35
+    overloadFatigue: 0.5
+    silverRiverSolace: 0.6
+    silverRiverReach: 2
+    silverLakeSolace: 0.8
+    silverLakeReach: 1
+    beautySolace: 1
+    maxSolace: 4
     attritionFrom: 20
     attritionStrain: 3
     hungerStrain: 2
     exhaustionStrain: 1
     dissonanceStrain: 2
+    falloutStrain: 8
+    thinDensityBelow: 0.15
+    thinStrain: 1
     exposureStrain: 1
     directorShare: 1.25
     lossStrain: 8
@@ -1814,6 +6763,8 @@ MonoBehaviour:
     exhaustionRisk: 0.05
     dangerRisk: 0.2
     dissonanceRisk: 0.15
+    falloutRisk: 0.25
+    cascadeRisk: 0.15
     exposureRisk: 0.1
     fracturedRisk: 0.05
     spiralingRisk: 0.1
@@ -1882,6 +6833,14 @@ MonoBehaviour:
       partyStrain: 4
       attrition: 0
       fatigue: 0
+      rationsLost: 0
+    - kind: 8
+      name: Lured by a bloom
+      weight: 3
+      strain: 10
+      partyStrain: 2
+      attrition: 10
+      fatigue: 15
       rationsLost: 0
     luminanceSight: 2
     cindergalePace: 1.15

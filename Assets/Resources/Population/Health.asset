@@ -1,0 +1,257 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8392052eb6f7e14b8b42bde5d9028d3, type: 3}
+  m_Name: Health
+  m_EditorClassIdentifier:
+  tuning:
+    activateAt: 0.15
+    dormantAt: 0.08
+    risePerSeventh: 0.08
+    fallPerSeventh: 0.05
+    maxTreatment: 0.85
+    scarFrom: 0.45
+    scarPerSeventh: 0.02
+    scarHealPerSeventh: 0.005
+    scarCap: 0.5
+    scarSensitivity: 1
+    maxGrowthFactor: 2.5
+    survivorFloor: 0
+    checkpointResetShare: 0.8
+    monotonyWeight: 0.12
+    varietyTarget: 3
+    peachWeight: 0.1
+    peachThreshold: 0.6
+    starvingWeight: 0.35
+    crowdingDisease: 0.3
+    vectorWeight: 0.6
+    strainWeight: 0.3
+    perRuinNear: 0.05
+    ruinCap: 0.15
+    ruinReach: 2
+    crowdingSanitation: 0.25
+    silenceWeight: 0.12
+    weatherWeight: 0.25
+    unshelteredWeight: 0.35
+    dissonanceWeight: 0.35
+    falloutWeight: 0.5
+    criticalityWeight: 0.6
+  pressures:
+  - pressure: 0
+    title: Nutrition
+    description: 'Full bellies, hollow bodies: a people living on one food lacks what
+      varied crops and stores once gave. The Peach Sickness of The Inescapable Hunger
+      begins here.'
+    emergesAtPeople: 0
+    fullAtPeople: 0
+    emergenceTitle: Hunger of one crop
+    emergenceNotice: 'The people number {people}: settled on what they store, they
+      can now sicken from eating one food. Nutrition can wake; varied stores keep it
+      away.'
+    growthWeight: 0.6
+    deathsPerSeventh: 0.0000396825
+    morale: 15
+    vagrantsFirst: 0
+    treatments:
+    - kind: 4
+      name:
+      ease: 0.45
+      capacity: 0
+      fullAt: 2
+    - kind: 0
+      name: Agricultural Renewal
+      ease: 0.25
+      capacity: 0
+      fullAt: 1
+    - kind: 0
+      name: Rites of Harvest
+      ease: 0.15
+      capacity: 0
+      fullAt: 1
+    - kind: 0
+      name: Efficient Rations
+      ease: 0.1
+      capacity: 0
+      fullAt: 1
+    - kind: 8
+      name: Agromagical
+      ease: 0.15
+      capacity: 0
+      fullAt: 1
+    cascades:
+    - from: 1
+      weight: 0.3
+  - pressure: 1
+    title: Disease Burden
+    description: 'Sickness spreading among the people: crowded homes, the vectors
+      that carry it and the waves of the Great Plague. In Arcanoria a disease exploits
+      Resonance as much as flesh.'
+    emergesAtPeople: 0
+    fullAtPeople: 0
+    emergenceTitle: Sickness takes root
+    emergenceNotice: 'The people number {people}: their homes stand close and never
+      move, and sickness can now linger among them. Disease Burden can wake.'
+    growthWeight: 0.4
+    deathsPerSeventh: 0.0001190476
+    morale: 25
+    vagrantsFirst: 0
+    treatments:
+    - kind: 3
+      name: plague_preparation
+      ease: 0.4
+      capacity: 0
+      fullAt: 5
+    - kind: 8
+      name: Agromagical
+      ease: 0.3
+      capacity: 0
+      fullAt: 1
+    - kind: 8
+      name: Domestication
+      ease: 0.15
+      capacity: 0
+      fullAt: 1
+    cascades:
+    - from: 0
+      weight: 0.6
+    - from: 2
+      weight: 0.5
+    - from: 3
+      weight: 0.3
+    - from: 4
+      weight: 0.4
+  - pressure: 2
+    title: Sanitation
+    description: 'Filth, rubble and strain where the people live: strained settlements,
+      ruins at their edges and too many people under too few roofs.'
+    emergesAtPeople: 0
+    fullAtPeople: 0
+    emergenceTitle: The town's filth
+    emergenceNotice: 'The people number {people}: they now make more waste than the
+      land around them can carry off. Sanitation can wake.'
+    growthWeight: 0.25
+    deathsPerSeventh: 0.0000198413
+    morale: 10
+    vagrantsFirst: 0
+    treatments:
+    - kind: 0
+      name: Reconstruction
+      ease: 0.25
+      capacity: 0
+      fullAt: 1
+    - kind: 0
+      name: Fortified Living
+      ease: 0.15
+      capacity: 0
+      fullAt: 1
+    - kind: 8
+      name: Agromagical
+      ease: 0.2
+      capacity: 0
+      fullAt: 1
+    cascades:
+    - from: 1
+      weight: 0.3
+  - pressure: 3
+    title: Exposure
+    description: 'Cold, storms and nights without a roof: the Echo of Silence, harsh
+      weather over the Capital and vagrants sleeping in the open.'
+    emergesAtPeople: 0
+    fullAtPeople: 0
+    emergenceTitle: Too many for the roofs
+    emergenceNotice: 'The people number {people}: the settlement grows faster than
+      it builds, and those without a roof now suffer the cold and the storms. Exposure
+      can wake.'
+    growthWeight: 0.3
+    deathsPerSeventh: 0.0000595238
+    morale: 12
+    vagrantsFirst: 1
+    treatments:
+    - kind: 5
+      name:
+      ease: 0.3
+      capacity: 0
+      fullAt: 5
+    - kind: 0
+      name: Fortified Living
+      ease: 0.25
+      capacity: 0
+      fullAt: 1
+    - kind: 0
+      name: Woodcraft Mastery
+      ease: 0.15
+      capacity: 0
+      fullAt: 1
+    cascades:
+    - from: 0
+      weight: 0.3
+  - pressure: 4
+    title: Harmonic Stability
+    description: 'The Loom frays around the Capital: Dissonance, Vibrational Fallout
+      and Static Criticality unsettle body and soul.'
+    emergesAtPeople: 2500
+    fullAtPeople: 10000
+    emergenceTitle: Many hearts, one Loom
+    emergenceNotice: 'The people number {people}: so many feelings in one place now
+      stir the Loom around the Capital. Harmonic Stability can wake.'
+    growthWeight: 0.3
+    deathsPerSeventh: 0.0000396825
+    morale: 20
+    vagrantsFirst: 0
+    treatments:
+    - kind: 6
+      name:
+      ease: 0.4
+      capacity: 0
+      fullAt: 0.8
+    - kind: 7
+      name:
+      ease: 0.35
+      capacity: 0
+      fullAt: 2
+    - kind: 0
+      name: Songs of the Moon
+      ease: 0
+      capacity: 0.5
+      fullAt: 1
+    cascades: []
+  crises:
+  - crisis: The Inescapable Hunger
+    pressure: 0
+    stageLoads:
+    - 0.1
+    - 0.2
+    - 0.3
+    - 0.4
+  - crisis: The Inescapable Hunger
+    pressure: 3
+    stageLoads:
+    - 0
+    - 0
+    - 0.15
+    - 0.1
+  - crisis: The Great Plague
+    pressure: 1
+    stageLoads:
+    - 0.15
+    - 0.35
+    - 0.5
+  - crisis: The Great Plague
+    pressure: 4
+    stageLoads:
+    - 0
+    - 0.1
+    - 0.2
+  weathers:
+  - weather: Boiling Rain
+    harshness: 0.6
+  - weather: Weeping Sky
+    harshness: 0.3

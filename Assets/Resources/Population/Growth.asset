@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5b1ba7b80a4827831feb4d21f723317, type: 3}
+  m_Name: Growth
+  m_EditorClassIdentifier:
+  tuning:
+    daysPerYear: 365.2425
+    kcalPerFood: 2100
+    kcalPerPersonDay: 2100
+    distributionLoss: 0.2
+    birthsPerThousand: 35
+    deathsPerThousand: 30
+    famineDeathsPerTenThousandDay: 2
+    famineGraceDays: 7
+    foundingMigrants: 21
+    arrivalRations: 12
+    arrivalIntervalSeconds: 1.5
+    provisionedPeople: 21
+    frontierFullBelow: 21
+    realismFrom: 150
+    frontierBirthPace: 100
+    caravansPerCycle: 36
+    caravanMin: 3
+    caravanMax: 8
+    caravanReserveDays: 30

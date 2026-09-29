@@ -85,7 +85,7 @@ public class WorldCivilizationTests
         foreach (int s in map.Magic.SacredSites)
             foreach (var coord in HexCoord.Spiral(map[s].coord, WorldSites.SacredCalm))
                 Assert.AreEqual(0f, map.Get(coord)?.danger ?? 0f, "Sacred ground stays calm");
-        if (map.Threats.Count > 0) Assert.IsTrue(map.Tiles.Any(t => t.danger > 0.3f), "threats cast danger around them");
+        Assert.IsTrue(map.Tiles.All(t => t.danger <= t.siteDanger + 1e-5f), "threats cast no aura: only standing hazards (predatory blooms) are danger; what hunts shows by its signs");
 
         Assert.IsNotEmpty(map.Enclaves, "the first enclaves stand among the survivors");
         Assert.IsTrue(map.Enclaves.All(e => e.family == EnclaveFamily.Militant || e.family == EnclaveFamily.Trading), "Age 0 knows only Militant and Trading enclaves");
@@ -196,7 +196,8 @@ public class WorldCivilizationTests
         float potential = WorldCivilization.Breakdown(map, rules, town).Potential;
         Assert.Greater(potential, 0f);
         WorldCivilization.Tick(map, rules, 10);
-        Assert.AreEqual(Math.Min(potential, rules.growthPerSeventh * 10), town.development, 1e-3f, "growth follows the rate");
+        float pace = rules.desirability.GrowthFactor(WorldDesirability.Of(map, map.Get(site.coord)));
+        Assert.AreEqual(Math.Min(potential, rules.growthPerSeventh * pace * 10), town.development, 1e-3f, "growth follows the rate, faster on desirable ground");
         WorldCivilization.Tick(map, rules, 100000);
         Assert.AreEqual(WorldCivilization.Breakdown(map, rules, town).Potential, town.development, 1e-3f, "it settles at its potential");
 
@@ -381,13 +382,38 @@ public class WorldCivilizationTests
             {
                 float v = WorldLenses.Value(lens, map, t, potential);
                 Assert.IsTrue(v >= 0f && v <= 1f, $"{lens} reads {v} at {t.coord}");
-                if (WorldLenses.Term(lens).HasValue || lens == WorldLens.Settle) Assert.IsNotNull(WorldLenses.Hover(lens, map, t, rules, potential), $"{lens} explains {t.coord}");
+                // Every lens explains every cell on hover (the Landscape is no lens).
+                if (lens != WorldLens.Normal) Assert.IsFalse(string.IsNullOrEmpty(WorldLenses.Hover(lens, map, t, rules, potential)), $"{lens} explains {t.coord}");
             }
         }
         var land = map.Tiles.First(t => !t.water && !t.impassable);
         Assert.AreEqual(potential[land.index] / 100f, WorldLenses.Value(WorldLens.Settle, map, land, potential), 1e-5f);
         Assert.IsTrue(WorldLenses.ShowsLeylines(WorldLens.Coherence));
         Assert.AreEqual(DevelopmentTerm.LandFertility, WorldLenses.Term(WorldLens.LandFertility));
+    }
+
+    [Test]
+    public void LensScale_RunsBlackRedOrangeYellowGreenBlueWithGoldOnlyAtTheTop()
+    {
+        var black = WorldLenses.ScaleColor(0f);
+        Assert.IsTrue(black.r < 0.1f && black.g < 0.1f && black.b < 0.1f, "0% is black");
+        var orange = WorldLenses.ScaleColor(0.25f);
+        Assert.IsTrue(orange.r > 0.9f && orange.g > 0.35f && orange.g < 0.6f && orange.b < 0.2f, "25% is orange");
+        var yellow = WorldLenses.ScaleColor(0.5f);
+        Assert.IsTrue(yellow.r > 0.9f && yellow.g > 0.85f, "50% is yellow");
+        var green = WorldLenses.ScaleColor(0.75f);
+        Assert.IsTrue(green.g > green.r && green.g > green.b, "75% is green");
+        var blue = WorldLenses.ScaleColor(0.98f);
+        Assert.IsTrue(blue.b > blue.r && blue.b > blue.g, "just short of the top is blue");
+        Assert.AreEqual(WorldLenses.ScaleGold, WorldLenses.ScaleColor(1f), "100% is gold");
+        Assert.AreNotEqual(WorldLenses.ScaleGold, WorldLenses.ScaleColor(0.99f), "gold is kept for the top alone");
+        Assert.AreEqual("peak", WorldLenses.ScaleWord(1f));
+        Assert.AreEqual("fair", WorldLenses.ScaleWord(0.6f));
+        Assert.AreEqual("very low", WorldLenses.ScaleWord(0.1f));
+        // The key's bands name the same words as the hover, low to high, ending on the gold peak.
+        foreach (var (from, to, label) in WorldLenses.ScaleBands)
+            StringAssert.StartsWith(WorldLenses.ScaleWord((from + to) / 2f), label.ToLowerInvariant(), label);
+        Assert.AreEqual(WorldLenses.ScalePeak, WorldLenses.ScaleBands.Last().from);
     }
 
     // ===== CLAIMING LAND =====

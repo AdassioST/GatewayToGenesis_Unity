@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: f30d966a0dbaa694290c16259617335e, type: 3}
   order: 2
   allowedClasses: 060000000200000000000000
+  requiredStars: 0
   areas:
   - lore
   - innovation

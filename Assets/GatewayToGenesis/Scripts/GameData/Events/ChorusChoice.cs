@@ -47,8 +47,8 @@ public class ChorusChoice : MonoBehaviour, ITooltipSource
     public void Bind(ChorusChoiceData data, Sprite pillarIcon)
     {
         Data = data;
-        if (titleText != null) titleText.text = data != null ? data.title : string.Empty;
-        if (descriptionText != null) descriptionText.text = data != null ? data.description : string.Empty;
+        if (titleText != null) titleText.text = data != null ? CultureSystem.ExpandText(data.title) : string.Empty;
+        if (descriptionText != null) descriptionText.text = data != null ? CultureSystem.ExpandText(data.description) : string.Empty;
         BuildRequirementSlots();
         BuildChallenge(pillarIcon);
         EnsureTooltip();

@@ -197,7 +197,7 @@ public class GameTechnologySlot : MonoBehaviour, IGameUnitSlot, ITooltipSource
             _barTextColorKnown = true;
         }
         bool waiting = !isUnlocked && !enlightenedCompleted;
-        string text = technologyData != null && !isUnlocked ? technologyData.DescribeEnlightenment(waiting) : string.Empty;
+        string text = technologyData != null && !isUnlocked ? technologyData.DescribeEnlightenment(waiting, shortRiddles: true) : string.Empty;
         if (enlightenedCompleted && !isUnlocked) text = string.IsNullOrEmpty(text) ? "Enlightened" : "Enlightened: " + text;
         text = KeywordMarkup.SafeGlyphs(text);
         if (enlightenedText.text != text) enlightenedText.text = text;

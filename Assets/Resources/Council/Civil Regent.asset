@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b73286252efd8464bafc3478f61e406d, type: 3}
   order: 6
   allowedClasses: 00000000010000000200000003000000
+  requiredStars: 2
   areas:
   - governance
   - welfare

@@ -46,6 +46,9 @@ public class BalladRecord
     public List<int> versesTold = new List<int>();
     public BalladCast cast;
     public bool complete;
+    [SaveOptionalField] public string lastDevelopment;
+    [SaveOptionalField] public string lastChoice;
+    [SaveOptionalField] public string lastDate;
 }
 
 /// <summary>What a story's <c># cast:</c> tag asks for.</summary>

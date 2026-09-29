@@ -129,4 +129,6 @@ using System.Linq;
     // The research plan (GameUnitsLogic.ResearchPlan), technology names in order. Kept out of the system snapshot so
     // saves written before it load with an empty plan.
     public List<string> researchPlan = new List<string>();
+    // Resources made during play (the people's invented dishes and drinks, RuntimeUnits), made again before the slots load.
+    public List<RuntimeUnitRecord> runtimeUnits = new List<RuntimeUnitRecord>();
 }

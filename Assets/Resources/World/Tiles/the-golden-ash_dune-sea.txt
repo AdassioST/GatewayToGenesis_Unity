@@ -1,6 +1,6 @@
 # Ash drifts with a few dead orchards.
 tile: the-golden-ash/dune-sea
-biome: the-golden-ash
+macrobiome: the-golden-ash
 weight: 1
 rotations: any
 legend: A=ash-plains O=skeletal-orchard

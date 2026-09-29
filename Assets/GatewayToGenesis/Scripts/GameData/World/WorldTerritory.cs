@@ -74,6 +74,8 @@ public class RealmContext
     public int governmentCapacity = 1;
     /// <summary>How far society may adopt land by itself.</summary>
     public BorderPolicy policy = BorderPolicy.Measured;
+    /// <summary>Citizens of the Capital: the people who go out to settle the land (-1: not counted, full pace).</summary>
+    public int population = -1;
     public readonly List<(string source, float capacity)> extra = new List<(string, float)>();
 }
 
@@ -95,8 +97,13 @@ public class RealmReport
     public float averageCoherence, averageDevelopment, averageBeauty;
     /// <summary>Capacity every settlement would add if each gained 10 City Development (the vertical lever).</summary>
     public float developmentLever;
-    /// <summary>Cells per Seventh society adopts now.</summary>
+    /// <summary>Micro hexes per Seventh society settles now (on average: below 1 it is a chance each Seventh).</summary>
     public float adoptionRate;
+    /// <summary>The Capital's citizens (-1 not counted) and the share of the seats' pace they allow (0 below the minimum).</summary>
+    public int population = -1;
+    public float populationShare = 1f;
+    /// <summary>Wilderness cells partly settled by society, and claims still being settled.</summary>
+    public int settling, claiming;
     public readonly List<(string source, float amount)> capacitySources = new List<(string, float)>();
     public readonly List<(string source, float amount)> loadSources = new List<(string, float)>();
 
@@ -143,16 +150,22 @@ public class RealmReport
 ///
 /// Seats (<see cref="SeatKind"/>): every settlement of yours, a settled and connected Trade Nexus, the Trade Nodes of
 /// connected roads and the grandfields being extracted exert a territorial pull; the Capital pulls strongest, then
-/// Major Settlements, trade, Developing Towns, havens, grandfields and Outposts (Arcanoria.md: the Capital "anchors all
+/// Major Settlements, trade, Developing Towns, outskirt tributaries (their districts may pull harder or add capacity:
+/// <see cref="WorldTributaries"/>), havens, grandfields and Outposts (Arcanoria.md: the Capital "anchors all
 /// Administrative Authority", Major Settlements are "major anchors"). Pull fades with governance travel: each cell's
 /// governance difficulty (<see cref="TerrainSpec.governance"/>: plains easy, highlands and bogs hard, peaks and water
 /// never), cheaper along roads and river valleys, dearer over cliffs, dissonance and danger. Enclaves pull for
 /// themselves, a rival pull your society will not adopt against. Pull only crosses wilderness and its own authority.
 ///
 /// Passive adoption (<see cref="Tick"/>): while the administration has capacity to spare, society brings in the
-/// wilderness bordering what it holds, one cell at a time, choosing by pull x priority (<see cref="Priority"/>): fertile,
-/// watered, coherent, beautiful land, grandfields and sites first; dangerous, dissonant and hard ground last. Each seat
-/// holds at most <see cref="SeatSpec.maxCells"/> cells by its own pull: to hold more you need more seats.
+/// wilderness bordering what it holds, one micro hex at a time (<see cref="WorldTile.microHeldMask"/>), from the side
+/// touching held land inward; a cell is adopted once all seven of its hexes are settled, and a seat finishes the cell
+/// it began before starting another. It chooses cells by pull x priority (<see cref="Priority"/>): fertile, watered,
+/// coherent, beautiful land, grandfields and sites first; dangerous, dissonant and hard ground last. People do the
+/// settling: nothing moves until the Capital has <see cref="TerritoryRules.adoptionMinPopulation"/> citizens, and each
+/// seat's chance of settling a hex in a Seventh rises with them (<see cref="PopulationShare"/>). Each seat holds at
+/// most <see cref="SeatSpec.maxCells"/> cells by its own pull: to hold more you need more seats. A paid claim
+/// takes its whole cell into your sphere at once (<see cref="ClaimNow"/>).
 ///
 /// Administrative Capacity against load (<see cref="Realm"/>): every held cell weighs on the Capital's bureaucracy by
 /// its difficulty and its distance from the nearest seat, eased by Coherence and beauty; capacity comes from the
@@ -176,7 +189,10 @@ public static class WorldTerritory
         var terrain = settings?.Terrain(t.terrain);
         if (terrain == null) return 1f;
         if (!terrain.passable || terrain.water) return float.PositiveInfinity;
-        return terrain.governance > 0f ? terrain.governance : (float)Math.Pow(Math.Max(0.5f, terrain.moveCost), 1.3);
+        float ground = terrain.governance > 0f ? terrain.governance : (float)Math.Pow(Math.Max(0.5f, terrain.moveCost), 1.3);
+        // Dense cover is harder to reach and to rule (WorldCover).
+        var cover = WorldCover.SpecAt(settings, t);
+        return cover != null && cover.governance > 0f ? ground * cover.governance : ground;
     }
 
     /// <summary>Governance travel to enter a cell (what pull fades over), or +infinity where it cannot pass.</summary>
@@ -185,7 +201,8 @@ public static class WorldTerritory
         float cost = Difficulty(settings, t);
         if (float.IsPositiveInfinity(cost)) return cost;
         cost += rules.escarpmentCost * t.escarpment + rules.dissonanceCost * t.dissonance + rules.dangerCost * t.danger;
-        if (t.road) cost *= rules.roadFactor;
+        // A restored Old World stretch carries the administration only halfway as well as a rebuilt road.
+        if (t.road) cost *= t.restoredRoad ? (1f + rules.roadFactor) * 0.5f : rules.roadFactor;
         else if (t.river) cost *= rules.riverFactor;
         return Math.Max(0.1f, cost);
     }
@@ -204,6 +221,7 @@ public static class WorldTerritory
         p += rules.beautyPriority * t.beauty;
         if (t.grandfield >= 0) p += rules.grandfieldPriority * (0.5f + 0.5f * t.grandfieldDensity) * (seat != null && seat.grandfield == t.grandfield ? 2f : 1f);
         if (t.HasFeature) p += rules.featurePriority;
+        p += rules.resourcePriority * WorldResources.LandValue(map, t);
         if (t.explored) p += rules.exploredPriority;
         p -= rules.dangerPriority * t.danger + rules.dissonancePriority * t.dissonance;
         float difficulty = Difficulty(settings, t);
@@ -314,14 +332,19 @@ public static class WorldTerritory
             var t = map.Get(s.coord);
             if (t == null) continue;
             var kind = s.kind == SettlementKind.Capital ? SeatKind.Capital : s.detached || s.kind == SettlementKind.Outpost ? SeatKind.Outpost
-                : s.kind == SettlementKind.Major ? SeatKind.Major : s.kind == SettlementKind.Haven ? SeatKind.Haven : SeatKind.Town;
+                : s.kind == SettlementKind.Major ? SeatKind.Major : s.kind == SettlementKind.Haven ? SeatKind.Haven
+                : s.kind == SettlementKind.Tributary ? SeatKind.Tributary : SeatKind.Town;
             string authority = s.detached ? WorldAuthority.Outpost : WorldAuthority.Player;
-            var seat = Add("settlement:" + s.id, kind, s.name, t.index, authority, s.anchor ? 1f + rules.anchorPullBonus : 1f);
+            // A tributary's district may pull harder (a Militant District's walls) and add capacity of its own.
+            float districtPull = kind == SeatKind.Tributary ? WorldTributaries.PullScale(map, WorldTributaries.RulesOf(map), s) : 1f;
+            var seat = Add("settlement:" + s.id, kind, s.name, t.index, authority, (s.anchor ? 1f + rules.anchorPullBonus : 1f) * districtPull);
             if (seat == null) continue;
             seat.settlement = s.id;
             if (s.anchor) seat.reach += 1f;
+            if (districtPull >= 1.5f) seat.reach += 1f;
             var spec = rules.Seat(kind);
             if (spec.scalesWithDevelopment) seat.capacity = spec.capacity * (0.5f + Math.Max(0f, Math.Min(100f, s.development)) / 100f);
+            if (kind == SeatKind.Tributary) seat.capacity += WorldTributaries.Capacity(map, WorldTributaries.RulesOf(map), s);
             // A Trade Nexus settled: one connected is worth three isolated cities (half its pull while cut off).
             if (t.nexus != null && !s.detached)
             {
@@ -386,6 +409,7 @@ public static class WorldTerritory
         if (t == null) return "Beyond the edge of the world.";
         if (t.water || t.impassable) return "No one can live here.";
         if (t.authorityId != WorldAuthority.Wilderness) return WorldAuthority.IsPlayers(t.authorityId) ? "Already yours." : "Another authority holds it.";
+        if (map.Claiming.Contains(t.index)) return "It is being claimed.";
         if (seat == null || !seat.IsPlayers) return "None of your seats pulls it.";
         if (!seat.HasRoom) return $"{seat.name} holds all it can ({seat.maxCells} cells): found or grow another seat nearby.";
         if (!t.known && !map.Settlements.Any(s => HexCoord.Distance(s.coord, t.coord) <= rules.localKnowledge)) return "No one knows this land yet: an expedition must pass over it.";
@@ -397,8 +421,9 @@ public static class WorldTerritory
     }
 
     /// <summary>
-    /// The cells society could adopt now, best first (<paramref name="limit"/> at most); only <paramref name="only"/>'s
-    /// when given (each seat adopts at its own pace).
+    /// The cells society could adopt now, next first (<paramref name="limit"/> at most): cells it has begun settling
+    /// (the most settled first), then the best by score; only <paramref name="only"/>'s when given (each seat adopts at
+    /// its own pace).
     /// </summary>
     public static List<Candidate> Candidates(WorldMap map, WorldGenSettings settings, int limit = int.MaxValue, TerritorySeat only = null)
     {
@@ -420,7 +445,95 @@ public static class WorldTerritory
                     best[c] = new Candidate { cell = c, seat = seat, pull = pull, priority = priority, score = score };
             }
         }
-        return best.Values.OrderByDescending(x => x.score).ThenBy(x => x.cell).Take(limit).ToList();
+        return best.Values.OrderByDescending(x => WorldMap.SettledHexes(map[x.cell])).ThenByDescending(x => x.score).ThenBy(x => x.cell).Take(limit).ToList();
+    }
+
+    // ===== SETTLING HEX BY HEX =====
+
+    /// <summary>
+    /// Share of the seats' pace the Capital's citizens allow: none below <see cref="TerritoryRules.adoptionMinPopulation"/>,
+    /// <see cref="TerritoryRules.adoptionLeastShare"/> at it, rising to all of it at <see cref="TerritoryRules.adoptionFullPopulation"/>.
+    /// A population of -1 is not counted (full pace).
+    /// </summary>
+    public static float PopulationShare(TerritoryRules rules, int population)
+    {
+        if (population < 0) return 1f;
+        if (population < rules.adoptionMinPopulation) return 0f;
+        float span = Math.Max(1f, rules.adoptionFullPopulation - rules.adoptionMinPopulation);
+        float t = Math.Min(1f, (population - rules.adoptionMinPopulation) / span);
+        float least = Math.Max(0f, Math.Min(1f, rules.adoptionLeastShare));
+        return least + (1f - least) * t;
+    }
+
+    /// <summary>Every hex of the cell a unit can stand on is settled (crags come with them).</summary>
+    public static bool FullySettled(WorldTile t) => t != null && ((t.microHeldMask | t.microBlockedMask) & 127) == 127;
+
+    /// <summary>
+    /// The micro hex of <paramref name="t"/> to settle next for <paramref name="authority"/>, or -1 when none is left:
+    /// the unsettled hex touching the most held ground (the authority's cells and the cell's settled hexes), so land
+    /// fills in from the border inward; crags are never settled by hand.
+    /// </summary>
+    public static int NextHex(WorldMap map, WorldTile t, string authority)
+    {
+        if (map == null || t == null) return -1;
+        int open = 127 & ~t.microBlockedMask & ~t.microHeldMask;
+        int best = -1, bestTouch = -1;
+        for (int k = 0; k < MicroNavigation.PerCell; k++)
+        {
+            if ((open & (1 << k)) == 0) continue;
+            int id = t.index * MicroNavigation.PerCell + k, touch = 0;
+            for (int d = 0; d < 6; d++)
+            {
+                int nb = MicroNavigation.Neighbour(map, id, d);
+                if (nb < 0) continue;
+                var cell = map[nb / MicroNavigation.PerCell];
+                if (cell == t) { if ((t.microHeldMask & (1 << (nb % MicroNavigation.PerCell))) != 0) touch++; }
+                else if (cell.authorityId == authority || (WorldAuthority.IsPlayers(authority) && WorldAuthority.IsPlayers(cell.authorityId))) touch++;
+            }
+            if (touch > bestTouch) { best = id; bestTouch = touch; }
+        }
+        return best;
+    }
+
+    /// <summary>Settle the next hex of <paramref name="t"/> (<see cref="NextHex"/>). Returns its micro id, or -1 when none was left.</summary>
+    public static int SettleHex(WorldMap map, WorldTile t, string authority)
+    {
+        int id = NextHex(map, t, authority);
+        if (id >= 0) t.microHeldMask |= 1 << (id % MicroNavigation.PerCell);
+        return id;
+    }
+
+    /// <summary>
+    /// A paid claim takes its cell into your sphere at once: every hex of it is settled (those society had already
+    /// settled included), it joins <see cref="WorldMap.Claims"/> and the civilization is rebuilt. False (and nothing
+    /// changes) when the cell is no longer wilderness land. The micro hexes it settled are added to
+    /// <paramref name="settled"/> when given.
+    /// </summary>
+    public static bool ClaimNow(WorldMap map, WorldGenSettings settings, int cell, List<int> settled = null)
+    {
+        var t = map != null && cell >= 0 && cell < map.Count ? map[cell] : null;
+        map?.Claiming.Remove(cell);
+        if (t == null || t.water || t.impassable || t.authorityId != WorldAuthority.Wilderness) return false;
+        int open = 127 & ~t.microBlockedMask & ~t.microHeldMask;
+        for (int k = 0; k < MicroNavigation.PerCell; k++)
+            if ((open & (1 << k)) != 0) settled?.Add(cell * MicroNavigation.PerCell + k);
+        t.microHeldMask |= open;
+        if (!map.Claims.Contains(cell)) map.Claims.Add(cell);
+        WorldCivilization.Rebuild(map, settings);
+        return true;
+    }
+
+    /// <summary>
+    /// Claims still being settled hex by hex (made before claims took their land at once, in older saves) are settled
+    /// now (<see cref="ClaimNow"/>); a claimed cell another authority or settlement took first is dropped.
+    /// </summary>
+    public static TickResult AdvanceClaims(WorldMap map, WorldGenSettings settings)
+    {
+        var result = new TickResult();
+        if (map == null || map.Claiming.Count == 0) return result;
+        foreach (int cell in map.Claiming.ToList())
+            if (ClaimNow(map, settings, cell, result.settled)) result.claimed.Add(cell);
+        return result;
     }
 
     /// <summary>The strain at which one more cell adds nothing to the realm's total output (N x efficiency peaks).</summary>
@@ -443,35 +556,125 @@ public static class WorldTerritory
         return 1f;
     }
 
-    /// <summary>Cells per Seventh society adopts at a strain: every seat with room at its own pace (<see cref="Pace"/>).</summary>
-    public static float AdoptionRate(WorldMap map, float strain, BorderPolicy policy = BorderPolicy.Measured)
+    /// <summary>
+    /// Micro hexes per Seventh society settles at a strain: every seat with room at its own pace (<see cref="Pace"/>),
+    /// times the share the Capital's citizens allow (<see cref="PopulationShare"/>).
+    /// </summary>
+    public static float AdoptionRate(WorldMap map, float strain, BorderPolicy policy = BorderPolicy.Measured, float populationShare = 1f)
     {
         if (map.territory == null) return 0f;
         float rate = map.territory.Seats.Where(s => s.IsPlayers && s.HasRoom).Sum(s => Math.Max(0f, s.adoptPerSeventh));
-        return rate * Pace(RulesOf(map), strain, policy);
+        return rate * Pace(RulesOf(map), strain, policy) * Math.Max(0f, populationShare);
+    }
+
+    /// <summary>A cell society is bringing in next (<see cref="Forecast"/>): its hexes in the order they will be settled, and about when.</summary>
+    public class AdoptionPlan
+    {
+        public int cell;
+        /// <summary>The authority it will join (yours, or a detached Outpost pocket).</summary>
+        public string authorityId;
+        /// <summary>The seats settling it (usually one).</summary>
+        public readonly List<string> seats = new List<string>();
+        /// <summary>Hexes per Seventh settled here on average (the seats' pace, the strain and the Capital's citizens).</summary>
+        public float rate;
+        /// <summary>The micro hexes still to settle (ids), next first.</summary>
+        public readonly List<int> hexes = new List<int>();
+        /// <summary>About how many Sevenths from now each of <see cref="hexes"/> is settled (an average: each Seventh is a roll).</summary>
+        public readonly List<float> sevenths = new List<float>();
+        /// <summary>About how many Sevenths until the whole cell is yours.</summary>
+        public float WholeCell => sevenths.Count > 0 ? sevenths[sevenths.Count - 1] : 0f;
+    }
+
+    /// <summary>
+    /// What society will settle next, and about when: for each seat with room, the cell it settles next (the one it
+    /// began first, <see cref="Candidates"/>), its hexes in the order <see cref="NextHex"/> will take them, each timed
+    /// at the seat's average pace (<see cref="SeatSpec.adoptPerSeventh"/> x <see cref="Pace"/> x
+    /// <see cref="PopulationShare"/>); seats settling the same cell add up. <paramref name="progress"/> is the time each
+    /// seat already has toward its next roll (by seat key, as <see cref="Tick"/> keeps it) and <paramref name="elapsed"/>
+    /// the share of the current Seventh gone by. Empty when society settles nothing now (too few citizens, over
+    /// strain, a Hold policy, or past collapse). Nothing on the map changes.
+    /// </summary>
+    public static List<AdoptionPlan> Forecast(WorldMap map, WorldGenSettings settings, RealmContext context, IReadOnlyDictionary<string, float> progress = null, float elapsed = 0f)
+    {
+        var plans = new List<AdoptionPlan>();
+        if (map == null) return plans;
+        var rules = RulesOf(map);
+        if (map.territory == null) Compute(map, settings);
+        var realm = Realm(map, settings, context);
+        if (realm.strain > rules.collapseStrain) return plans;
+        float pace = Pace(rules, realm.strain, context?.policy ?? BorderPolicy.Measured) * PopulationShare(rules, context?.population ?? -1);
+        if (pace <= 0f) return plans;
+        var byCell = new Dictionary<int, AdoptionPlan>();
+        var waited = new Dictionary<int, float>();
+        foreach (var seat in map.territory.Seats)
+        {
+            if (!seat.IsPlayers || !seat.HasRoom || seat.adoptPerSeventh <= 0f) continue;
+            var next = Candidates(map, settings, 1, seat);
+            if (next.Count == 0) continue;
+            int cell = next[0].cell;
+            if (!byCell.TryGetValue(cell, out var plan))
+            {
+                plan = new AdoptionPlan { cell = cell, authorityId = seat.authorityId };
+                byCell[cell] = plan;
+                plans.Add(plan);
+            }
+            plan.rate += seat.adoptPerSeventh * pace;
+            plan.seats.Add(seat.name);
+            float have = progress != null && progress.TryGetValue(seat.key, out float p) ? p : 0f;
+            waited[cell] = Math.Max(waited.TryGetValue(cell, out float w) ? w : 0f, Math.Min(1f, have + Math.Max(0f, elapsed)));
+        }
+        foreach (var plan in plans)
+        {
+            // Settle the cell in thought, hex by hex, then put it back as it was.
+            var t = map[plan.cell];
+            int keep = t.microHeldMask;
+            for (int k = 1; ; k++)
+            {
+                int id = NextHex(map, t, plan.authorityId);
+                if (id < 0) break;
+                t.microHeldMask |= 1 << (id % MicroNavigation.PerCell);
+                plan.hexes.Add(id);
+                // Each Seventh is one roll: the k-th hex comes after about k / rate rolls, the first of them at the next Seventh.
+                plan.sevenths.Add(Math.Max(0f, Math.Max(1f, k / Math.Max(1e-4f, plan.rate)) - waited[plan.cell]));
+            }
+            t.microHeldMask = keep;
+        }
+        return plans;
     }
 
     /// <summary>What one Seventh (or several) of territorial life did.</summary>
     public class TickResult
     {
+        /// <summary>Cells adopted (every hex settled).</summary>
         public readonly List<int> adopted = new List<int>();
+        /// <summary>Claimed cells whose every hex is now settled (<see cref="AdvanceClaims"/>).</summary>
+        public readonly List<int> claimed = new List<int>();
+        /// <summary>Micro hexes settled (ids), whether or not they completed a cell.</summary>
+        public readonly List<int> settled = new List<int>();
         public readonly List<int> lost = new List<int>();
-        public bool Changed => adopted.Count > 0 || lost.Count > 0;
+        /// <summary>Authority changed (a cell adopted, claimed or lost).</summary>
+        public bool Changed => adopted.Count > 0 || claimed.Count > 0 || lost.Count > 0;
+        /// <summary>Anything changed on the map, a single hex included.</summary>
+        public bool Any => Changed || settled.Count > 0;
     }
 
     /// <summary>
-    /// Advance the territory by <paramref name="sevenths"/>. Each seat with room brings in its own best candidate at
-    /// its own pace (<see cref="SeatSpec.adoptPerSeventh"/> x <see cref="Pace"/>; <paramref name="progress"/> keeps each
-    /// seat's fraction of its next cell, by seat key), so an Outpost or a town grows beside the Capital rather than
-    /// behind it. Past collapse strain the weakest-held adopted land drifts away instead (<paramref name="drift"/>).
-    /// Rebuilds the civilization after each change. <paramref name="context"/> sets capacity and the border policy.
+    /// Advance the territory by <paramref name="sevenths"/>. Each seat with room settles hexes of its own next
+    /// candidate (the cell it began first) at its own pace: <see cref="SeatSpec.adoptPerSeventh"/> x <see cref="Pace"/>
+    /// x <see cref="PopulationShare"/> hexes per Seventh. With <paramref name="roll"/> (draws in [0, 1)) that pace is a
+    /// chance rolled once per whole Seventh (<paramref name="progress"/> keeps each seat's time toward its next roll,
+    /// by seat key); without it the expected hexes accumulate (<paramref name="progress"/> keeps the fraction). So an
+    /// Outpost or a town grows beside the Capital rather than behind it. Past collapse strain the weakest-held adopted
+    /// land drifts away instead (<paramref name="drift"/>). Rebuilds the civilization after each cell adopted or lost.
+    /// <paramref name="context"/> sets capacity, the border policy and the Capital's citizens.
     /// </summary>
-    public static TickResult Tick(WorldMap map, WorldGenSettings settings, RealmContext context, float sevenths, Dictionary<string, float> progress, ref float drift)
+    public static TickResult Tick(WorldMap map, WorldGenSettings settings, RealmContext context, float sevenths, Dictionary<string, float> progress, ref float drift, Func<double> roll = null)
     {
         var result = new TickResult();
         if (map == null || sevenths <= 0f || progress == null) return result;
         var rules = RulesOf(map);
         var policy = context?.policy ?? BorderPolicy.Measured;
+        float people = PopulationShare(rules, context?.population ?? -1);
         if (map.territory == null) Compute(map, settings);
         var realm = Realm(map, settings, context);
 
@@ -485,6 +688,7 @@ public static class WorldTerritory
                 int lose = Weakest(map, settings);
                 if (lose < 0) { drift = 0f; break; }
                 map.Adopted.Remove(lose);
+                map[lose].microHeldMask = 0;
                 result.lost.Add(lose);
                 WorldCivilization.Rebuild(map, settings);
                 realm = Realm(map, settings, context);
@@ -493,7 +697,7 @@ public static class WorldTerritory
             return result;
         }
         drift = 0f;
-        float pace = Pace(rules, realm.strain, policy);
+        float pace = Pace(rules, realm.strain, policy) * people;
         if (pace <= 0f) { progress.Clear(); return result; }
         // Seats gone since the last Seventh lose their progress.
         foreach (var key in progress.Keys.Where(k => map.territory.Seats.All(s => s.key != k)).ToList()) progress.Remove(key);
@@ -502,17 +706,38 @@ public static class WorldTerritory
             var seat = map.territory.Seats.FirstOrDefault(s => s.key == key);
             if (seat == null || !seat.HasRoom) { progress.Remove(key); continue; }
             progress.TryGetValue(key, out float have);
-            have += seat.adoptPerSeventh * pace * sevenths;
-            while (have >= 1f)
+            float rate = seat.adoptPerSeventh * pace;
+            int hexes = 0;
+            if (roll == null)
+            {
+                have += rate * sevenths;
+                hexes = (int)have;
+                have -= hexes;
+            }
+            else
+            {
+                // One roll per whole Seventh: a pace of 0.3 is a 30% chance of settling a hex, 1.4 one hex and a 40% chance of another.
+                have += sevenths;
+                while (have >= 1f)
+                {
+                    have -= 1f;
+                    hexes += (int)rate;
+                    if (roll() < rate - Math.Floor(rate)) hexes++;
+                }
+            }
+            for (int i = 0; i < hexes; i++)
             {
                 var next = Candidates(map, settings, 1, seat);
-                if (next.Count == 0) { have = Math.Min(have, 1f); break; }
-                have -= 1f;
-                map.Adopted.Add(next[0].cell);
-                result.adopted.Add(next[0].cell);
+                if (next.Count == 0) break;
+                var t = map[next[0].cell];
+                int id = SettleHex(map, t, seat.authorityId);
+                if (id >= 0) result.settled.Add(id);
+                if (!FullySettled(t)) continue;
+                map.Adopted.Add(t.index);
+                result.adopted.Add(t.index);
                 WorldCivilization.Rebuild(map, settings);
                 realm = Realm(map, settings, context);
-                pace = Pace(rules, realm.strain, policy);
+                pace = Pace(rules, realm.strain, policy) * people;
                 if (pace <= 0f) { progress.Clear(); return result; }
                 // The rebuild made new seat objects: follow this one by its key.
                 seat = map.territory.Seats.FirstOrDefault(s => s.key == key);
@@ -524,15 +749,17 @@ public static class WorldTerritory
         return result;
     }
 
-    // The adopted cell held most weakly: least pull x priority, farthest from any seat first on a tie.
+    // The adopted cell held most weakly: least pull x priority, farthest from any seat first on a tie. Land a district
+    // keeps watch over (a Militant District) never slips away.
     private static int Weakest(WorldMap map, WorldGenSettings settings)
     {
         var rules = RulesOf(map);
+        var heldFast = WorldTributaries.HeldFast(map);
         int worst = -1;
         float score = float.MaxValue, far = -1f;
         foreach (int c in map.Adopted)
         {
-            if (c < 0 || c >= map.Count) continue;
+            if (c < 0 || c >= map.Count || heldFast.Contains(c)) continue;
             var t = map[c];
             float s = t.pull * Priority(map, settings, rules, t);
             float d = map.territory != null ? map.territory.nearest[c] : 0f;
@@ -589,9 +816,10 @@ public static class WorldTerritory
             if (spec != null && spec.scalesWithDevelopment) lever += spec.capacity * 0.1f;
         }
         var network = WorldCivilization.Networked(map);
-        int joined = map.Settlements.Count(s => s.kind != SettlementKind.Capital && network.Contains(s.id));
+        // Tributaries are joined by their own road and counted by their seats: only independent settlements count here.
+        int joined = map.Settlements.Count(s => s.kind != SettlementKind.Capital && s.kind != SettlementKind.Tributary && network.Contains(s.id));
         Capacity($"Roads to the Capital ({joined})", rules.networkCapacity * joined);
-        foreach (var s in map.Settlements.Where(s => s.kind != SettlementKind.Outpost))
+        foreach (var s in map.Settlements.Where(s => s.kind != SettlementKind.Outpost && s.kind != SettlementKind.Tributary))
         {
             developed += s.development;
             settlements++;
@@ -638,7 +866,11 @@ public static class WorldTerritory
         report.favoured = report.strain >= rules.overStrain ? Expansion.Overextended
             : report.cells < report.comfortCells ? Expansion.Horizontal
             : report.cells < report.breakEvenCells ? Expansion.Balanced : Expansion.Vertical;
-        report.adoptionRate = AdoptionRate(map, report.strain, context.policy);
+        report.population = context.population;
+        report.populationShare = PopulationShare(rules, context.population);
+        report.adoptionRate = AdoptionRate(map, report.strain, context.policy, report.populationShare);
+        report.settling = map.Tiles.Count(t => t.microHeldMask != 0 && t.authorityId == WorldAuthority.Wilderness && !map.Claiming.Contains(t.index));
+        report.claiming = map.Claiming.Count;
         return report;
     }
 }

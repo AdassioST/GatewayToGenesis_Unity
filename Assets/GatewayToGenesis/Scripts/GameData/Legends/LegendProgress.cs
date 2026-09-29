@@ -56,7 +56,7 @@ public static class LegendGrowthRules
 /// leaves the council and the roster, and keeps its record for history. Created by <see cref="GenesisLoop"/>; saved
 /// through <c>_recruited</c> (the records, souls included).
 /// </summary>
-public class LegendProgress : SingletonBehaviour<LegendProgress>
+public partial class LegendProgress : SingletonBehaviour<LegendProgress>
 {
     private const LogChannel Log = LogChannel.Legends;
 
@@ -71,12 +71,30 @@ public class LegendProgress : SingletonBehaviour<LegendProgress>
         public readonly List<string> deeds = new List<string>();
         [SaveOptionalField]
         public LegendBalladHistory balladHistory = new LegendBalladHistory();
+        [SaveOptionalField]
+        public List<LegendRelationship> relationships = new List<LegendRelationship>();
         /// <summary>Who the legend is (created when it is met).</summary>
         public LegendSoul soul;
         /// <summary>Lost to Dissonance: no longer on the roster, never met again.</summary>
         public bool lost;
         /// <summary>The count of the dead this legend has already mourned (true deaths and the homeless).</summary>
         public int deathsSeen;
+        /// <summary>Lasting conditions (Traumatized, Haunted...: <see cref="LegendConditions"/>).</summary>
+        [SaveOptionalField]
+        public List<LegendCondition> lastingConditions = new List<LegendCondition>();
+        /// <summary>Sevenths until a legend missing in action turns up in a settlement (0: not missing).</summary>
+        [SaveOptionalField]
+        public int missingSevenths;
+        /// <summary>Strain it brings home when it turns up, and where it went missing.</summary>
+        [SaveOptionalField]
+        public float missingStrain;
+        [SaveOptionalField]
+        public string missingFrom;
+        /// <summary>Held captive by an Atonalis band (its key, <see cref="LegendProgress.TakeCaptive"/>; null: free), and the strain it takes each Seventh while held.</summary>
+        [SaveOptionalField]
+        public string heldBy;
+        [SaveOptionalField]
+        public float heldFeed;
     }
 
     // Every legend met, the lost included (so a lost legend is never met again).
@@ -328,6 +346,7 @@ public class LegendProgress : SingletonBehaviour<LegendProgress>
         int dead = Dead(pop);
         int people = pop != null ? pop.population + pop.vagrants : 0;
         bool dirty = false;
+        dirty |= TickService();
 
         foreach (var entry in _recruited.Where(r => !r.Value.lost).ToList())
         {
@@ -344,6 +363,7 @@ public class LegendProgress : SingletonBehaviour<LegendProgress>
                 onExpedition = expedition != null,
                 restingAtSettlement = resting,
                 hardship = hardship,
+                solace = expedition != null ? Expeditions.Solace(UnitSurroundings.Of(world.Map, expedition), world.ExpeditionRules) : 0f,
                 crisisBegun = ages != null && ages.CrisisBegun,
                 crisisDeclared = ages != null && ages.CrisisDeclared,
                 griefShare = ComposureRules.GriefShare(record.deathsSeen, dead, people),

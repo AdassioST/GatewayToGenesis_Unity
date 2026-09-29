@@ -1105,9 +1105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foodThreshold: 12
+  starvationRecoveryRate: 0.05
   vagrantToPopulationRate: 4
   researchPerPopulation: 100
-  starvationRecoveryRate: 0.05
   foodDemandBuffer: -2.5
   demandRateConstant: 0.03
   sustainabilityTier: 1
@@ -1126,8 +1126,6 @@ MonoBehaviour:
   foodStateText: {fileID: 67200317}
   allowVagrants: 0
   isFoodScarce: 0
-  minMoraleThresholdFactor: 0.25
-  maxMoraleThresholdFactor: 2
 --- !u!114 &118059068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1145,6 +1143,27 @@ MonoBehaviour:
   characterUnits:
   - {fileID: 11400000, guid: 100c1a38401cb4249ad55ed74d9caf05, type: 2}
   characterPrefab: {fileID: 4604525010201366343, guid: 08b9144f035cea8439cebe1f2814168b, type: 3}
+  crowd:
+    nearCap: 40
+    farCap: 160
+    farFullAt: 300000
+    farUnit: 20
+    changesPerSecond: 6
+    walkSpeed: 0.32
+    idleSeconds: {x: 1.5, y: 7}
+    wanderRadius: 2.2
+    fadeSeconds: 0.9
+    bobHeight: 0.018
+    stepsPerSecond: 7
+    farBand: 0.4
+    depthScale: 0.8
+    farScale: 0.58
+    farSpeed: 0.35
+    haze: {r: 0.42, g: 0.29, b: 0.24, a: 1}
+    farHaze: 0.55
+    farAlpha: 0.9
+    vagrantTint: {r: 0.72, g: 0.68, b: 0.64, a: 1}
+    vagrantPace: 0.6
 --- !u!114 &118059069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1183,9 +1202,12 @@ MonoBehaviour:
   moraleRecoveryMod: 0
   clickPowerBonus: 0
   magicEffectiveness: 0
+  communionEffectiveness: 0
   communionStage: 0
   discoveryEfficiencyCap: 0.45
   savingRollChanceCap: 0.25
+  expeditionCostReductionCap: 0.25
+  expeditionTimeReductionCap: 0.25
   tier1Boundary: 42
   tier2Boundary: 86
   tier3Boundary: 150
@@ -1909,7 +1931,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f99bdfb59eb4c8c42a0023dae040d7b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerSeventh: 5
+  secondsPerSeventh: 180
   slowMotionFactor: 3
   cycleText: {fileID: 655627174}
   echoText: {fileID: 1564349250}
@@ -1956,7 +1978,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   globalLight: {fileID: 619394801}
   autoFindGlobalLight: 0
-  showDebugInfo: 1
+  showDebugInfo: 0
 --- !u!114 &175149201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1981,7 +2003,7 @@ MonoBehaviour:
   variationSeventhsThreshold: 15
   variationWeightIncreasePerSeventh: 1.2
   variationMaxWeightMultiplier: 2
-  showDebugInfo: 1
+  showDebugInfo: 0
   visualLogic: {fileID: 175149200}
 --- !u!1 &182629041
 GameObject:
@@ -5363,6 +5385,7 @@ MonoBehaviour:
   cooldownIndicator: {fileID: 1162456038}
   defaultIcon: {fileID: 21300000, guid: da4dc7bbd7b14b742ac750d7190e505b, type: 3}
   activeColor: {r: 0, g: 1, b: 0, a: 1}
+  activatingColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   inactiveColor: {r: 1, g: 0, b: 0, a: 1}
   readyColor: {r: 0, g: 1, b: 1, a: 1}
   cooldownColor: {r: 0, g: 0, b: 0.5, a: 1}
@@ -6612,13 +6635,13 @@ Camera:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 0
-    height: 0
+    width: 1
+    height: 1
   near clip plane: 0.1
   far clip plane: 5000
   field of view: 40
   orthographic: 1
-  orthographic size: 2.8125
+  orthographic size: 5.625
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -8383,7 +8406,11 @@ MonoBehaviour:
         m_SelectedSource:
           rid: -2
         m_Provider2DCache:
-          rid: -2
+          rid: 6200863610876723277
+    - rid: 6200863610876723277
+      type: {class: 'Provider2DCache`1[[UnityEngine.Rendering.Universal.Light2DProvider, Unity.RenderPipelines.Universal.2D.Runtime]]', ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data:
+        m_Cache: []
 --- !u!4 &619394802
 Transform:
   m_ObjectHideFlags: 0
@@ -8497,6 +8524,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca4bde78d1db20740b770262fee37219, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  theme: {fileID: 0}
   refreshInterval: 0.25
 --- !u!114 &622732911
 MonoBehaviour:
@@ -12938,9 +12966,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b343822b4b110c14db9e05e442ae5fed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnClick:
-    m_PersistentCalls:
-      m_Calls: []
   OnStorageTab:
     m_PersistentCalls:
       m_Calls:
@@ -13001,14 +13026,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  OnPointerInput:
-    m_PersistentCalls:
-      m_Calls: []
-  storage: {fileID: -5634717956363857179, guid: b4ee6268ce98cc848b117250262e3164, type: 3}
-  production: {fileID: -802041098163979814, guid: b4ee6268ce98cc848b117250262e3164, type: 3}
-  government: {fileID: 5387332341924834324, guid: b4ee6268ce98cc848b117250262e3164, type: 3}
-  research: {fileID: 6088766759284955167, guid: b4ee6268ce98cc848b117250262e3164, type: 3}
-  pointerPosition: {fileID: 4908241147589683593, guid: b4ee6268ce98cc848b117250262e3164, type: 3}
 --- !u!114 &948520448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13058,6 +13075,18 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: a2918384-08e2-4a43-afce-ccad4b890ac7
     m_ActionName: 'DefaultControls/PointerPosition[/Mouse/position]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 5b0f3c52-7e1a-4c8e-9d41-2f6a8b3c9e01
+    m_ActionName: 'DefaultControls/Library[/Keyboard/l]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 7a1c9e53-4b2d-4f60-8e17-3c5d7f9a0b11
+    m_ActionName: 'DefaultControls/Map[/Keyboard/m]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 8c2d4e61-3a9b-4f7c-b152-6e0a9d7f4c02
+    m_ActionName: 'DefaultControls/Cancel[/Keyboard/escape]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: DefaultControls
@@ -21714,10 +21743,10 @@ MonoBehaviour:
   displayCanvasGroup: {fileID: 920296005}
   civicPoolCanvasGroup: {fileID: 1645890144}
   leaderPoolCanvasGroup: {fileID: 1787110095}
+  headOfStateSeat: {fileID: 415438307}
+  councilSeatsContainer: {fileID: 1924707919}
   leaderPoolContent: {fileID: 883730348}
   civicPoolContent: {fileID: 352757826}
-  councilSeatsContainer: {fileID: 1924707919}
-  headOfStateSeat: {fileID: 415438307}
   aeonicCivicsContainer: {fileID: 1384147234}
   majorCivicsContainer: {fileID: 1382939480}
   minorCivicsContainer: {fileID: 469680045}
@@ -23405,7 +23434,7 @@ MonoBehaviour:
   headOfStateMultiplier: 2
   councilSeatCooldownSevenths: 1
   headOfStateCooldownSevenths: 3
-  unlockedSeatCount: 3
+  openSeatsAtStart: 0
 --- !u!1 &1886179174
 GameObject:
   m_ObjectHideFlags: 0
@@ -24815,10 +24844,16 @@ MonoBehaviour:
     storyDescription: 
     isUnlocked: 1
     priority: 0
+    isIssue: 0
     storyConditions: []
     storyConsequences: []
     cooldownSevenths: 0
     screenFlow: []
+    ballad: 
+    verse: 0
+    balladTitle: 
+    theme: 
+    cast: 
   currentScreenIndex: 0
 --- !u!114 &2013945154
 MonoBehaviour:

@@ -10,26 +10,27 @@ using System.Linq;
 ///
 /// 1. Domain: meso cells filling the stencil plus an ocean apron (<see cref="HexHierarchy"/> positions).
 /// 2. Composition: each cell reads the stencil through a low-frequency warp, so the stencil's straight construction
-///    lines never show; sectors become slots, P connective ground, W ocean (WG03).
-/// 3. Slots: <see cref="SlotSolver"/> shuffles each sector's biomes into its slots and turns them (WG01, WG04).
-/// 4. Land and sea: slots are always land; the coastline wanders through P and W; the apron is a reserved ocean
+///    lines never show; quadrants become slots, I intersections, W ocean (WG03).
+/// 3. Slots: <see cref="SlotSolver"/> shuffles each quadrant's biomes into its slots and turns them (WG01, WG04).
+/// 4. Land and sea: slots are always land; the coastline wanders through the intersections and W; the apron is a reserved ocean
 ///    ring around the whole mainland (WG03).
 /// 5. Fields: height, moisture and temperature are blended across seams from both neighbouring slots over shared
-///    world-coordinate noise, so a seam has one height and no cliff wall; a mountainous sector raises a range along
-///    its own P (WG05).
+///    world-coordinate noise, so a seam has one height and no cliff wall; a mountainous quadrant raises a range along
+///    its own intersections (WG05).
 /// 6. Handmade tiles are stamped into slot interiors at seeded places and rotations (the hybrid).
 /// 7. Topology: the mainland stays connected (bridges are carved and reported) and the ocean ring keeps its width.
 /// 8. Water: priority-flood drainage to the sea, lakes in deep hollows, flow accumulation and rivers (WG06).
-/// 9. Ground: each cell takes its biome's terrain for its climate; P and slot buffer bands mix the neighbouring
-///    biomes with P's own connective ground, then one smoothing pass softens the seams.
-/// 10. Land fertility, the capital (S1, on freshwater), magic (<see cref="WorldMagic"/>, WG07-WG09) and the Age 0
+/// 9. Ground: each cell takes its biome's terrain for its climate; intersections and slot buffer bands mix the neighbouring
+///    macro biomes with the intersections' own ground, then one smoothing pass softens the seams.
+/// 10. Land fertility, the capital (Q1, on freshwater), magic (<see cref="WorldMagic"/>, WG07-WG09) and the Age 0
 ///     features (<see cref="PlaceFeatures"/>, WG10).
 /// 11. Crags: steep escarpments break into micro hexes no one climbs, for the micro travel grid (<see cref="MicroGrid"/>);
 ///     every two walkable neighbouring cells keep a crossing.
+/// 12. Sectors: each Macro Biome is divided into its nine compass Sectors (<see cref="WorldSectors"/>).
 /// </summary>
 public static class WorldGenerator
 {
-    public const int Version = 8;
+    public const int Version = 9;
 
     private static readonly string[] DirectionNames = { "east", "north-east", "north-west", "west", "south-west", "south-east" };
 
@@ -42,6 +43,7 @@ public static class WorldGenerator
         var build = new Build(seed, settings ?? new WorldGenSettings(), stencil, tiles ?? new List<TileTemplate>());
         build.Run();
         var map = build.map;
+        WorldSectors.Assign(map);
         map.Magic = WorldMagic.Build(map, build.settings, seed);
         map.Magic.Apply(map, 0);
         WorldCivilization.EnsureCapital(map, build.settings);
@@ -70,7 +72,7 @@ public static class WorldGenerator
             Add(settings.stencil);
             Add($"{settings.naturalBasins}|{settings.capitalAuthorityRadius}|{settings.leylineDriftRadius}|{settings.leylineDriftStrength}|{settings.seedStrength}|{settings.seedRadius}|{settings.dissonanceSeeds}|{settings.sacredSites}|{settings.silverRetention}|{settings.silverThreshold}");
             foreach (var feature in settings.features.Where(f => f != null))
-                Add($"{feature.id}|{feature.count}|{feature.minAge}|{feature.authorityId}|{feature.authorityRadius}|{feature.minimumCoherence}|{feature.requiresCoast}|{feature.requiresFreshwater}|{string.Join(",", feature.terrains)}|{string.Join(",", feature.biomes)}");
+                Add($"{feature.id}|{feature.count}|{feature.minAge}|{feature.authorityId}|{feature.authorityRadius}|{feature.minimumCoherence}|{feature.requiresCoast}|{feature.requiresFreshwater}|{string.Join(",", feature.terrains)}|{string.Join(",", feature.macroBiomes)}");
             foreach (var tile in tiles ?? new List<TileTemplate>())
                 foreach (var cell in tile.cells.OrderBy(c => c.Key.q).ThenBy(c => c.Key.r))
                 {
@@ -80,19 +82,25 @@ public static class WorldGenerator
             Add($"{settings.cellsPerStencilCell}|{settings.apron}|{settings.warp}|{settings.seaLevel}|{settings.coastBand}|{settings.seamReach}|{settings.riverThreshold}|{settings.lakeDepth}|{settings.minLakeCells}|{settings.maxLakeCells}");
             foreach (var t in settings.terrains.Where(t => t != null)) Add($"{t.id}|{t.passable}|{t.water}|{t.fertility}|{t.moveCost}");
             foreach (var g in settings.grandfields.Where(g => g != null))
-                Add($"{g.id}|{g.resource}|{g.minAge}|{g.count}|{g.size}|{g.minDistance}|{g.minimumCoherence}|{g.minimumMagicalFertility}|{g.requiresFreshwater}|{string.Join(",", g.terrains)}|{string.Join(",", g.biomes)}");
+                Add($"{g.id}|{g.resource}|{g.minAge}|{g.count}|{g.size}|{g.minDistance}|{g.minimumCoherence}|{g.minimumMagicalFertility}|{g.requiresFreshwater}|{string.Join(",", g.terrains)}|{string.Join(",", g.macroBiomes)}");
+            foreach (var r in (settings.resourceSites ?? new List<ResourceSiteSpec>()).Where(r => r != null))
+                Add($"{r.id}|{r.minAge}|{r.count}|{r.size}|{r.spacing}|{r.minDistance}|{r.minElevation}|{r.maxElevation}|{r.minMoisture}|{r.minimumFertility}|{r.minimumCoherence}|{r.maximumCoherence}|{r.minimumDissonance}|{r.requiresFreshwater}|{r.requiresSilverOrLeyline}|{r.maxTemperature}|{r.coastal}|{r.requiresCoherentRefuge}|{r.minimumDesirability}|{r.requiresSacred}|{r.nearReach}|{string.Join(",", r.nearTerrains)}|{string.Join(",", r.terrains)}|{string.Join(",", r.macroBiomes)}|{r.coherenceAura}|{r.fertilityAura}|{r.auraRadius}");
+            foreach (var c in (settings.covers ?? new List<CoverSpec>()).Where(c => c != null))
+                Add($"{c.id}|{c.count}|{c.minSize}|{c.maxSize}|{c.spacing}|{c.minDistance}|{c.minMoisture}|{c.blocksSight}|{string.Join(",", c.terrains)}");
+            foreach (var r in (settings.resourceSites ?? new List<ResourceSiteSpec>()).Where(r => r != null && r.covers != null && r.covers.Count > 0))
+                Add($"{r.id}|covers:{string.Join(",", r.covers)}");
             foreach (var e in settings.enclaves.Where(e => e != null))
                 Add($"{e.id}|{e.family}|{e.minAge}|{e.count}|{e.site}|{e.authorityRadius}|{e.woundMin}|{e.woundMax}|{e.minDistance}|{e.spacing}|{string.Join(",", e.bindings)}");
             foreach (var th in settings.threats.Where(th => th != null))
                 Add($"{th.id}|{th.minAge}|{th.onDissonanceSeeds}|{th.count}|{th.strength}|{th.radius}|{th.minDistance}");
             if (settings.nexus != null) Add($"{settings.nexus.count}|{settings.nexus.spacing}|{settings.nexus.minDistance}|{settings.nexus.harbors}|{settings.nexus.estuaries}|{settings.nexus.passes}|{settings.nexus.confluences}");
-            foreach (var b in settings.biomes.Where(b => b != null))
+            foreach (var b in settings.macroBiomes.Where(b => b != null))
                 Add(b.terraces.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
-            foreach (var b in settings.biomes.Where(b => b != null))
+            foreach (var b in settings.macroBiomes.Where(b => b != null))
                 Add($"{b.id}|{b.elevation}|{b.relief}|{b.tilt}|{b.moisture}|{string.Join(",", b.orientations)}|{string.Join(",", b.requires)}|{string.Join(",", b.terrains.Where(r => r != null).Select(r => r.terrain + r.weight))}");
-            foreach (var s in settings.sectors.Where(s => s != null)) Add($"{s.id}|{string.Join(",", s.biomes)}|{s.allowRepeats}|{s.backbone}|{s.island}");
-            foreach (var r in settings.connective.Where(r => r != null)) Add(r.terrain + r.weight);
-            foreach (var t in tiles ?? new List<TileTemplate>()) Add($"{t.id}|{t.biome}|{t.cells.Count}|{string.Join(",", t.rotations)}");
+            foreach (var s in settings.quadrants.Where(s => s != null)) Add($"{s.id}|{string.Join(",", s.macroBiomes)}|{s.allowRepeats}|{s.backbone}|{s.island}");
+            foreach (var r in settings.intersectionTerrains.Where(r => r != null)) Add(r.terrain + r.weight);
+            foreach (var t in tiles ?? new List<TileTemplate>()) Add($"{t.id}|{t.macroBiome}|{t.cells.Count}|{string.Join(",", t.rotations)}");
             return hash.ToString("x8");
         }
     }
@@ -140,7 +148,7 @@ public static class WorldGenerator
 
         private WorldTile T(int i) => map[i];
 
-        private BiomeSpec BiomeOf(int slot) => slot >= 0 ? _solution.For(slot)?.biome : null;
+        private MacroBiomeSpec MacroBiomeOf(int slot) => slot >= 0 ? _solution.For(slot)?.macroBiome : null;
 
         public void Run()
         {
@@ -215,20 +223,20 @@ public static class WorldGenerator
                 _reserved[i] = col0 < 0f || row0 < 0f || col0 >= stencil.Width || row0 >= stencil.Height;
                 if (_reserved[i])
                 {
-                    t.region = WorldRegion.Ocean;
+                    t.composition = WorldComposition.Ocean;
                     continue;
                 }
                 double wx = t.x + amplitude * _warp.Fbm(t.x * scale, t.y * scale, 4);
                 double wy = t.y + amplitude * _warp.Fbm(t.x * scale + 31.7, t.y * scale - 12.9, 4);
                 int col = (int)Math.Floor((wx + _halfSW) / _side), row = (int)Math.Floor((_halfSH - wy) / _side);
                 string token = stencil.At(col, row);
-                if (token == WorldStencil.Ocean) t.region = WorldRegion.Ocean;
-                else if (token == WorldStencil.Connective) t.region = WorldRegion.Connective;
+                if (token == WorldStencil.Ocean) t.composition = WorldComposition.Ocean;
+                else if (token == WorldStencil.Intersection) t.composition = WorldComposition.Intersection;
                 else
                 {
-                    t.region = WorldRegion.Slot;
+                    t.composition = WorldComposition.MacroBiome;
                     t.slot = stencil.SlotAt(col, row);
-                    t.sector = token;
+                    t.quadrant = token;
                 }
             }
         }
@@ -265,7 +273,7 @@ public static class WorldGenerator
 
         private void MeasureSlots()
         {
-            _depth = Steps(i => T(i).region != WorldRegion.Slot);
+            _depth = Steps(i => T(i).composition != WorldComposition.MacroBiome);
             int slots = stencil.Slots.Count;
             _slotDist = new float[slots][];
             _s1 = new int[_n];
@@ -317,18 +325,19 @@ public static class WorldGenerator
                 _mixWeight[i] = weightsHere.Select(w => w / total).ToArray();
                 _blend[i] = _mixWeight[i].Length == 0 ? 0f : 1f - _mixWeight[i].Max();
                 var t = T(i);
-                t.seam = t.region != WorldRegion.Slot || _blend[i] > 0.01f;
-                if (t.region != WorldRegion.Slot && _s1[i] >= 0) t.sector = stencil.Slots[_s1[i]].sector;
+                t.seam = t.composition != WorldComposition.MacroBiome || _blend[i] > 0.01f;
+                if (t.composition != WorldComposition.MacroBiome && _s1[i] >= 0) t.quadrant = stencil.Slots[_s1[i]].quadrant;
+                t.habitatSlot = _s1[i];
             }
 
-            _backboneSlots = settings.sectors.Where(s => s != null && s.backbone > 0f)
+            _backboneSlots = settings.quadrants.Where(s => s != null && s.backbone > 0f)
                 .Select(s => (s.backbone, stencil.SlotsOf(s.id).Select(slot => slot.index).ToArray()))
                 .Where(p => p.Item2.Length >= 2).ToList();
         }
 
         /// <summary>
-        /// A mountainous sector's range: highest along the P midway between two of its own slots, fading into the
-        /// slots and away from the sector (continuous, since it reads only that sector's slot distances).
+        /// A mountainous quadrant's range: highest along the intersection midway between two of its own slots, fading into the
+        /// slots and away from the quadrant (continuous, since it reads only that quadrant's slot distances).
         /// </summary>
         private float Backbone(int i)
         {
@@ -362,9 +371,9 @@ public static class WorldGenerator
             for (int i = 0; i < _n; i++)
             {
                 var t = T(i);
-                oceanish[i] = t.region == WorldRegion.Ocean;
-                // An island sector's P becomes strait and sea.
-                if (t.region == WorldRegion.Connective && _s1[i] >= 0 && _d1[i] >= 2 && settings.Sector(stencil.Slots[_s1[i]].sector)?.island == true) oceanish[i] = true;
+                oceanish[i] = t.composition == WorldComposition.Ocean;
+                // An island quadrant's intersections become strait and sea.
+                if (t.composition == WorldComposition.Intersection && _s1[i] >= 0 && _d1[i] >= 2 && settings.Quadrant(stencil.Slots[_s1[i]].quadrant)?.island == true) oceanish[i] = true;
             }
             var toOcean = Steps(i => oceanish[i]);
             var toLand = Steps(i => !oceanish[i]);
@@ -378,7 +387,7 @@ public static class WorldGenerator
                     t.water = true;
                     continue;
                 }
-                if (t.region == WorldRegion.Slot)
+                if (t.composition == WorldComposition.MacroBiome)
                 {
                     t.water = false;
                     continue;
@@ -387,8 +396,8 @@ public static class WorldGenerator
                 double value = signed - 0.5 + amplitude * _coast.Fbm(t.x * scale, t.y * scale, 4);
                 bool nearSlot = _s1[i] >= 0 && _d1[i] <= 2;
                 t.water = value <= 0 && !nearSlot;
-                // The coast wandered out to sea: that ground is connective, not ocean.
-                if (!t.water && t.region == WorldRegion.Ocean) t.region = WorldRegion.Connective;
+                // The coast wandered out to sea: that ground is an intersection, not ocean.
+                if (!t.water && t.composition == WorldComposition.Ocean) t.composition = WorldComposition.Intersection;
             }
             MeasureCoast();
         }
@@ -403,7 +412,7 @@ public static class WorldGenerator
 
         private void SlotShape(int slot, float x, float y, out float height, out float relief, out float moisture)
         {
-            var biome = BiomeOf(slot);
+            var biome = MacroBiomeOf(slot);
             var placement = slot >= 0 ? _solution.For(slot) : null;
             if (biome == null)
             {
@@ -418,8 +427,8 @@ public static class WorldGenerator
             double uphill = placement.orientation * Math.PI / 3.0;
             float along = (float)(((x - cx) * Math.Cos(uphill) + (y - cy) * Math.Sin(uphill)) / Math.Max(1f, radius));
             height = biome.elevation + biome.tilt * 0.5f * Clamp(along, -1.2f, 1.2f);
-            var sector = settings.Sector(s.sector);
-            if (sector != null) height += sector.backbone * 0.3f;
+            var quadrant = settings.Quadrant(s.quadrant);
+            if (quadrant != null) height += quadrant.backbone * 0.3f;
             relief = biome.relief;
             moisture = biome.moisture;
         }
@@ -449,12 +458,12 @@ public static class WorldGenerator
                     rel += w * rk;
                     m += w * mk;
                 }
-                // Away from every slot (deep in P) the ground drifts to a neutral level with its own relief.
+                // Away from every slot (deep in an intersection) the ground drifts to a neutral level with its own relief.
                 float own = Clamp((_d1[i] - 1f) / reach, 0f, 1f) * 0.5f;
                 h = Lerp(h, 0.42f, own);
                 rel = Lerp(rel, Math.Max(rel, 0.1f), Clamp(_d1[i], 0f, 1f));
                 m = Lerp(m, 0.5f, own);
-                // A mountainous sector's range runs along the P between its own slots.
+                // A mountainous quadrant's range runs along the intersections between its own slots.
                 float range = Backbone(i);
                 h += range;
                 rel += range * 0.25f;
@@ -467,7 +476,7 @@ public static class WorldGenerator
                 h += 0.1f * (float)WorldNoise.Smooth(0, 60, _toSea[i]);
                 float terraces = 0f;
                 for (int k = 0; k < _mixSlot[i].Length; k++)
-                    terraces += (BiomeOf(_mixSlot[i][k])?.terraces ?? 0f) * _mixWeight[i][k];
+                    terraces += (MacroBiomeOf(_mixSlot[i][k])?.terraces ?? 0f) * _mixWeight[i][k];
                 if (terraces > 0f)
                 {
                     // Long quiet treads separated by short steep risers, cut by warped valleys.
@@ -501,9 +510,9 @@ public static class WorldGenerator
             int stampCount = 0;
             foreach (var placement in _solution.placements)
             {
-                var biome = placement.biome;
+                var biome = placement.macroBiome;
                 if (biome == null) continue;
-                var options = tiles.Where(t => t != null && string.Equals(t.biome, biome.id, StringComparison.OrdinalIgnoreCase) && t.weight > 0f).ToList();
+                var options = tiles.Where(t => t != null && string.Equals(t.macroBiome, biome.id, StringComparison.OrdinalIgnoreCase) && t.weight > 0f).ToList();
                 if (options.Count == 0) continue;
                 int slot = placement.slot.index;
                 var interior = Enumerable.Range(0, _n).Where(i => T(i).slot == slot && _depth[i] >= 3).ToList();
@@ -548,7 +557,7 @@ public static class WorldGenerator
                     map.Report.tiles.Add($"{placement.slot.id}: {tile.id} turned {rotation * 60} degrees at {center.coord}");
                 }
             }
-            foreach (var tile in tiles.Where(t => t != null && settings.Biome(t.biome) == null)) map.Report.errors.Add($"Handmade tile '{tile.id}' names unknown biome '{tile.biome}'.");
+            foreach (var tile in tiles.Where(t => t != null && settings.MacroBiome(t.macroBiome) == null)) map.Report.errors.Add($"Handmade tile '{tile.id}' names unknown Macro Biome '{tile.macroBiome}'.");
             foreach (var tile in tiles.Where(t => t != null))
             {
                 foreach (var terrain in tile.cells.Values.Distinct())
@@ -569,11 +578,11 @@ public static class WorldGenerator
 
         // ===== 7. TOPOLOGY =====
 
-        // The mainland's anchor: in the land mass holding the most S1 ground (then the most cells), the S1 cell
+        // The mainland's anchor: in the land mass holding the most Q1 ground (then the most cells), the Q1 cell
         // nearest the centre. A pocket that lakes or coast cut off never anchors it.
         private int CoreCell()
         {
-            var s1 = stencil.Slots.FirstOrDefault(s => string.Equals(s.sector, "S1", StringComparison.OrdinalIgnoreCase));
+            var s1 = stencil.Slots.FirstOrDefault(s => string.Equals(s.quadrant, "Q1", StringComparison.OrdinalIgnoreCase));
             var label = new int[_n];
             for (int i = 0; i < _n; i++) label[i] = -1;
             var starts = new List<int>();
@@ -654,7 +663,7 @@ public static class WorldGenerator
             var mainland = Mainland(core);
             foreach (var slot in stencil.Slots)
             {
-                if (settings.Sector(slot.sector)?.island == true) continue;
+                if (settings.Quadrant(slot.quadrant)?.island == true) continue;
                 int index = slot.index;
                 if (Enumerable.Range(0, _n).Any(i => mainland[i] && T(i).slot == index)) continue;
                 // Carve the shortest bridge from the slot to the mainland.
@@ -693,7 +702,7 @@ public static class WorldGenerator
                     var t = T(c);
                     if (!t.water) continue;
                     t.water = t.lake = false;
-                    t.region = WorldRegion.Connective;
+                    t.composition = WorldComposition.Intersection;
                     t.seam = true;
                     t.elevation = settings.seaLevel + 0.03f;
                     carved++;
@@ -714,7 +723,7 @@ public static class WorldGenerator
             MeasureCoast();
         }
 
-        /// <summary>The first slot (of a sector that is not an island) with no cell on the mainland, or null.</summary>
+        /// <summary>The first slot (of a quadrant that is not an island) with no cell on the mainland, or null.</summary>
         private string CutOffSlot()
         {
             var mainland = Mainland(CoreCell());
@@ -722,7 +731,7 @@ public static class WorldGenerator
             for (int i = 0; i < _n; i++) if (mainland[i] && T(i).slot >= 0) joined[T(i).slot] = true;
             foreach (var slot in stencil.Slots)
             {
-                if (!joined[slot.index] && settings.Sector(slot.sector)?.island != true) return slot.id;
+                if (!joined[slot.index] && settings.Quadrant(slot.quadrant)?.island != true) return slot.id;
             }
             return null;
         }
@@ -986,8 +995,8 @@ public static class WorldGenerator
             for (int i = 0; i < _n; i++)
             {
                 var t = T(i);
-                var b1 = BiomeOf(_s1[i]);
-                t.biome = t.water && !t.lake ? null : b1?.id;
+                var b1 = MacroBiomeOf(_s1[i]);
+                t.macroBiome = t.water && !t.lake ? null : b1?.id;
                 if (t.handmadeTile != null && !(t.water && !t.lake)) continue;
                 if (t.water)
                 {
@@ -1004,20 +1013,20 @@ public static class WorldGenerator
                 {
                     at -= _mixWeight[i][k];
                     if (at >= 0) continue;
-                    biome = BiomeOf(_mixSlot[i][k]) ?? b1;
+                    biome = MacroBiomeOf(_mixSlot[i][k]) ?? b1;
                     break;
                 }
-                bool connective = biome == null;
-                if (t.region == WorldRegion.Connective)
+                bool intersection = biome == null;
+                if (t.composition == WorldComposition.Intersection)
                 {
                     float own = Clamp((_d1[i] - 1f) / (reach * 0.6f), 0f, 0.85f);
-                    if (Patch(t, 6.0, -41.9, _pickSeed + 2) < own) connective = true;
+                    if (Patch(t, 6.0, -41.9, _pickSeed + 2) < own) intersection = true;
                 }
                 string terrain = null;
-                if (connective && settings.connective.Count > 0) terrain = Pick(settings.connective, t.elevation, t.moisture, roll);
+                if (intersection && settings.intersectionTerrains.Count > 0) terrain = Pick(settings.intersectionTerrains, t.elevation, t.moisture, roll);
                 if (terrain == null && biome != null) terrain = Pick(biome.terrains, t.elevation, t.moisture, roll);
                 t.terrain = terrain ?? fallback;
-                if (string.Equals(t.biome, "auric-grasslands", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(t.macroBiome, "auric-grasslands", StringComparison.OrdinalIgnoreCase))
                 {
                     // The starting region reads as landforms, not a random mix of vegetation.
                     string ground = t.escarpment > 0.055f ? "foothills" :
@@ -1072,7 +1081,7 @@ public static class WorldGenerator
 
         private void PlaceCapital()
         {
-            var s1 = stencil.Slots.FirstOrDefault(s => string.Equals(s.sector, "S1", StringComparison.OrdinalIgnoreCase));
+            var s1 = stencil.Slots.FirstOrDefault(s => string.Equals(s.quadrant, "Q1", StringComparison.OrdinalIgnoreCase));
             var toFresh = Steps(i => T(i).river || T(i).lake);
             var mainland = Mainland(CoreCell()); // never a pocket that lakes cut off
             WorldTile best = null;
@@ -1092,7 +1101,7 @@ public static class WorldGenerator
             if (best == null)
             {
                 best = map.Tiles.Where(t => !t.water).OrderBy(t => t.x * t.x + t.y * t.y).FirstOrDefault();
-                map.Report.errors.Add("No S1 cell can hold the capital: it stands on the land nearest the centre.");
+                map.Report.errors.Add("No Q1 cell can hold the capital: it stands on the land nearest the centre.");
             }
             if (best == null) return;
             if (toFresh[best.index] > 3)
@@ -1112,7 +1121,7 @@ public static class WorldGenerator
             foreach (var t in map.Tiles)
             {
                 float dx = t.x - best.x, dy = t.y - best.y;
-                t.quadrant = dy >= 0 ? (dx >= 0 ? 0 : 1) : (dx < 0 ? 2 : 3);
+                t.quarter = dy >= 0 ? (dx >= 0 ? 0 : 1) : (dx < 0 ? 2 : 3);
             }
             best.feature = settings.capitalFeature;
             map.ExploreAround(best.coord, Math.Max(0, settings.startExploreRadius), Math.Max(0, settings.startRevealRadius), id => settings.Terrain(id)?.passable != false);
@@ -1188,12 +1197,12 @@ public static class WorldGenerator
             for (int n = 0; n < feature.count && candidates.Count > 0; n++)
             {
                 // Prefer the quarter holding the fewest of this feature, so each part of the world gets its share.
-                int quadrant = Enumerable.Range(0, 4)
-                    .Where(q => candidates.Any(t => t.quadrant == q))
-                    .OrderBy(q => map.WithFeature(feature.id).Count(t => t.quadrant == q))
+                int quarter = Enumerable.Range(0, 4)
+                    .Where(q => candidates.Any(t => t.quarter == q))
+                    .OrderBy(q => map.WithFeature(feature.id).Count(t => t.quarter == q))
                     .ThenBy(q => q)
                     .First();
-                var pool = candidates.Where(t => t.quadrant == quadrant).ToList();
+                var pool = candidates.Where(t => t.quarter == quarter).ToList();
                 var tile = pool[rng.Next(pool.Count)];
                 tile.feature = feature.id;
                 tile.featureAge = age;
@@ -1231,7 +1240,7 @@ public static class WorldGenerator
         var terrain = settings.Terrain(tile.terrain);
         if (terrain == null || !terrain.passable) return false;
         if (feature.terrains.Count > 0 && !feature.terrains.Any(t => string.Equals(t, tile.terrain, StringComparison.OrdinalIgnoreCase))) return false;
-        if (feature.biomes.Count > 0 && !feature.biomes.Any(b => string.Equals(b, tile.biome, StringComparison.OrdinalIgnoreCase))) return false;
+        if (feature.macroBiomes.Count > 0 && !feature.macroBiomes.Any(b => string.Equals(b, tile.macroBiome, StringComparison.OrdinalIgnoreCase))) return false;
         return true;
     }
 

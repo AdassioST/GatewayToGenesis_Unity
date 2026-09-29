@@ -8,7 +8,8 @@ using System.Collections.Generic;
 /// Development (<see cref="SettlementRules.beautyWeight"/>). A proposal: the vault has no beauty rule (Canon Gaps.md).
 ///
 /// Read from the ground's own beauty (<see cref="TerrainSpec.beauty"/>) and what stands on it
-/// (<see cref="FeatureSpec.beauty"/>), then the place: water in view, Sacred Sites, silver rivers and leyline lights,
+/// (<see cref="FeatureSpec.beauty"/>) and the resource sites on and around it (<see cref="ResourceSiteSpec.beauty"/>,
+/// <see cref="ResourceSiteSpec.beautyAura"/>), then the place: water in view, Sacred Sites, silver rivers and leyline lights,
 /// cliffs and vistas, Coherence (a place in tune) against dissonance and danger (a place that feels wrong).
 /// Recomputed with the civilization, since the magic moves with the Ages.
 /// </summary>
@@ -49,7 +50,14 @@ public static class WorldBeauty
         var terrain = settings.Terrain(t.terrain);
         if (terrain != null) Add(terrain.name, terrain.beauty);
         var feature = t.HasFeature ? settings.Feature(t.feature) : null;
-        if (feature != null) Add(feature.name, feature.beauty);
+        if (feature != null) Add(WorldCover.Hides(t) ? "Something unseen" : feature.name, feature.beauty);
+        var cover = WorldCover.SpecAt(settings, t);
+        if (cover != null) Add(cover.name, cover.beauty);
+        // Resource sites: their own cell, and what the sites around lend or take (WorldResources).
+        var site = WorldResources.SiteAt(map, t);
+        var siteSpec = site != null ? settings.ResourceSite(site.spec) : null;
+        if (siteSpec != null) Add(WorldResources.Label(map, settings, t) ?? "Something unseen", siteSpec.beauty * (site.planted ? Math.Min(1f, siteSpec.plantedShare) : 1f));
+        if (Math.Abs(t.siteBeauty) >= 0.005f) Add(t.siteBeauty > 0f ? "Fair things nearby" : "Blighted things nearby", t.siteBeauty);
 
         bool lakeNear = t.lake, riverNear = t.river, coast = false;
         for (int d = 0; d < 6; d++)
@@ -72,6 +80,8 @@ public static class WorldBeauty
         Add(t.coherence >= 0.4f ? "A place in tune (Coherence)" : "A place out of tune (low Coherence)", CoherenceShare * (t.coherence - 0.4f));
         if (t.dissonance > 0.01f) Add("Dissonance", -DissonanceShare * t.dissonance);
         if (t.danger > 0.01f) Add("Danger", -DangerShare * t.danger);
+        // A battlefield, a slaughter ground: the suffering the land holds is hard to live beside.
+        if (t.suffering > 0.05f) Add("Suffering", -DangerShare * Math.Min(1f, t.suffering));
         return Math.Max(-1f, Math.Min(1f, sum));
     }
 }

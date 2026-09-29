@@ -23,6 +23,7 @@ public partial class WorldSystem
     public string WhyNotRetreat(WorldUnit unit, out List<int> path)
     {
         path = null;
+        if (unit != null && !WorldBattles.IsPlayers(unit)) return NotYours;
         if (!IsExpedition(unit)) return "Only an expedition retreats.";
         string why = PartyShapes.WhyNotRetreat(unit, UnitSurroundings.Of(Map, unit), ExpeditionRules);
         if (why != null) return why;
@@ -39,13 +40,22 @@ public partial class WorldSystem
     public string WhyNotRetreat(WorldUnit unit) => WhyNotRetreat(unit, out _);
 
     /// <summary>Slip away to the nearest safe ground at the retreat pace, dropping any work; it makes camp there.</summary>
-    public bool Retreat(WorldUnit unit)
+    public bool Retreat(WorldUnit unit) => Retreat(unit, false);
+
+    // bySelf: it slipped away from a mishap; its survey goes on once it has caught its breath (an order sets it aside).
+    private bool Retreat(WorldUnit unit, bool bySelf)
     {
         string why = WhyNotRetreat(unit, out var path);
         if (why != null)
         {
             Say(why);
             return false;
+        }
+        if (bySelf) KeepSurveyWork(unit);
+        else
+        {
+            PauseSurvey(unit);
+            unit.autoSurvey = false;
         }
         WorldUnits.Order(Map, unit, path);
         unit.task = UnitTask.None;
@@ -54,6 +64,7 @@ public partial class WorldSystem
         unit.returning = false;
         unit.onArrival = UnitTask.None;
         unit.retreating = true;
+        unit.quarryId = -1;
         var end = Map.Get(HexHierarchy.Parent(unit.path[unit.path.Count - 1]));
         UnitSays(unit, $"{unit.name} retreats", $"{UnitLabel(unit)} slips away from {Place(Map.Get(unit.coord))} toward {Place(end)}.");
         Changed?.Invoke();
@@ -87,6 +98,8 @@ public partial class WorldSystem
     // Capital), after the base Sevenths plus the walk there made slowly and unseen.
     private void GoMissing(WorldUnit unit, bool forced)
     {
+        PauseSurvey(unit);
+        unit.autoSurvey = false;
         var x = ExpeditionRules;
         var spec = SpecOf(unit);
         var from = WorldUnits.MicroPosition(unit);

@@ -115,6 +115,23 @@ public class AchievementTests
         CollectionAssert.IsEmpty(Earned(AchievementEvent.Of(AchievementSignal.DeathLedgerRevised, 0)));
     }
 
+    [Test]
+    public void Rules_FirstBirth()
+    {
+        CollectionAssert.AreEqual(new[] { "there-is-beauty-in-that" }, Earned(AchievementEvent.Of(AchievementSignal.PeopleBorn, 1)), "the first child born");
+        CollectionAssert.AreEqual(new[] { "there-is-beauty-in-that" }, Earned(AchievementEvent.Of(AchievementSignal.PeopleBorn, 40)), "a later report still carries it (the award is idempotent)");
+        CollectionAssert.IsEmpty(Earned(AchievementEvent.Of(AchievementSignal.PeopleBorn, 0)), "no one born yet");
+    }
+
+    [Test]
+    public void Rules_LossAndRuins()
+    {
+        CollectionAssert.AreEqual(new[] { "digestive-rebirth" }, Earned(AchievementEvent.Of(AchievementSignal.RuinCivicAdopted)), "a civic adopted from the ruins of a fallen settlement");
+        CollectionAssert.AreEqual(new[] { "404" }, Earned(AchievementEvent.Of(AchievementSignal.SettlementLost, flag: true)), "a settlement lost beyond your Administrative Authority");
+        CollectionAssert.IsEmpty(Earned(AchievementEvent.Of(AchievementSignal.SettlementLost, flag: false)), "not one lost inside it");
+        CollectionAssert.AreEqual(new[] { "welcome-back-traitors" }, Earned(AchievementEvent.Of(AchievementSignal.SettlementReclaimed)), "a settlement founded on the ruins of one of yours");
+    }
+
     // ===== TRACKER =====
 
     private static AchievementTracker Tracker(params string[] ids) =>

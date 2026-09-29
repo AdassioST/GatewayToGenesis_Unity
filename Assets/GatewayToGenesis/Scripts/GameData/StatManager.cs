@@ -52,12 +52,17 @@ public class StatManager : SingletonBehaviour<StatManager>
     [SerializeField] private float moraleRecoveryMod;
     [SerializeField] private float clickPowerBonus;
     [SerializeField] private float magicEffectiveness;
+    [SerializeField] private float communionEffectiveness;
     [SerializeField] private int communionStage;
 
     [Header("Stat Caps Settings")]
     [Tooltip("Cap for Discovery Efficiency as a 0-1 fraction (0.45 = 45%)")]
     [SerializeField] private float discoveryEfficiencyCap = 0.45f;
     [SerializeField] private float savingRollChanceCap = 0.25f;
+    [Tooltip("Cap for Ambition's Expedition Cost reduction as a 0-1 fraction (0.25 = at most 25% cheaper)")]
+    [SerializeField] private float expeditionCostReductionCap = 0.25f;
+    [Tooltip("Cap for Ambition's Completion Time reduction as a 0-1 fraction (0.25 = at most 25% less time)")]
+    [SerializeField] private float expeditionTimeReductionCap = 0.25f;
 
     [Header("Growth Tier Configuration")]
     [SerializeField] private int tier1Boundary = 42;
@@ -338,6 +343,23 @@ public class StatManager : SingletonBehaviour<StatManager>
     public float GetSavingRollChancePercentCapped() => GetSavingRollChanceCapped() * 100f;
 
     public float GetSatisfactionEffectivenessMultiplier() => 1f + GetDerivedValue("satisfactionEffectiveness") / 100f;
+
+    // Ambition, capped like the Saving Roll: the share an expedition's cost (outfit, attrition, rations) and the time it
+    // takes to advance are reduced, 0 up to the cap, and the multipliers built from it (1 - reduction).
+    public float GetExpeditionCostReductionCapped() => StatRules.CappedReduction(GetDerivedValue("expeditionCostMod"), expeditionCostReductionCap);
+
+    public float GetExpeditionTimeReductionCapped() => StatRules.CappedReduction(GetDerivedValue("expeditionTimeMod"), expeditionTimeReductionCap);
+
+    public float GetExpeditionCostMultiplier() => 1f - GetExpeditionCostReductionCapped();
+
+    public float GetExpeditionTimeMultiplier() => 1f - GetExpeditionTimeReductionCapped();
+
+    // Arcane and Secrecy: open multipliers for the Magic Arts and Communion (read through CivilizationProperties).
+    public float GetMagicEffectivenessMultiplier() => StatRules.EffectivenessMultiplier(GetDerivedValue("magicEffectiveness"));
+
+    public float GetCommunionEffectivenessMultiplier() => StatRules.EffectivenessMultiplier(GetDerivedValue("communionEffectiveness"));
+
+    public int GetCommunionStage() => Mathf.RoundToInt(GetDerivedValue(StatDefinitions.CommunionStage));
 
     // ===== MUTATION =====
 
@@ -621,6 +643,7 @@ public class StatManager : SingletonBehaviour<StatManager>
             case "moralerecoverymod": moraleRecoveryMod = value; break;
             case "clickpowerbonus": clickPowerBonus = value; break;
             case "magiceffectiveness": magicEffectiveness = value; break;
+            case "communioneffectiveness": communionEffectiveness = value; break;
         }
     }
 

@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 21e40cc7750d7df42917ba144ede0773, type: 3}
   order: 3
   allowedClasses: 030000000400000002000000
+  requiredStars: 1
   areas:
   - industry
   - innovation

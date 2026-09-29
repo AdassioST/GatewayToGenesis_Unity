@@ -125,6 +125,9 @@ _"Aw.. Hell Nah: You know what you did..."
 
 ### Culture, [[Civic]]s & [[Civilization]]
 
+Witness the first birth of your [[Civilization]]
+_"There is Beauty in That: No matter the sorrow of this shattered world, no matter how deep the scars etched in golden dust, so long as new life is born, so too are the stars. And one day, their symphony will sing back to us."_
+
 Have a fully [[Ornament]]al [[Major Settlement]]
 _"[[Soul Leitmotif]] of [[Civilization]]: Develop a rich, long-standing history of a [[Major Settlement]]."_
 

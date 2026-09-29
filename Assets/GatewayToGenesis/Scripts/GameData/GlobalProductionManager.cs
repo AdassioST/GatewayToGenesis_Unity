@@ -273,7 +273,7 @@ public class GlobalProductionManager : SingletonBehaviour<GlobalProductionManage
         if (section == null || type == null)
         {
             var unit = GameUnitsLogic.Instance != null ? GameUnitsLogic.Instance.GetResourceSlotFromName(resourceName)?.gameUnit : null;
-            if (unit == null) GameCatalog.Resources.TryGet(resourceName, out unit);
+            if (unit == null && !GameCatalog.Resources.TryGet(resourceName, out unit)) RuntimeUnits.TryGet(resourceName, out unit);
             if (unit != null)
             {
                 section ??= unit.section;

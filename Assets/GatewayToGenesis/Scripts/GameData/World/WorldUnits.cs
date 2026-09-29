@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>What a unit is busy with where it stands.</summary>
-public enum UnitTask { None, Survey, Forage, Improve, Camp, SurveyMeso }
+public enum UnitTask { None, Survey, Forage, Improve, Camp, SurveyMeso, Harvest, Plant, Investigate, Festival }
 
 /// <summary>What a unit is doing this moment, for its needs (<see cref="WorldUnits.Needs"/>).</summary>
 public enum UnitActivity { Idle, Moving, Working, Camping }
@@ -70,6 +70,95 @@ public class WorldUnit
     public float missingSevenths;
     /// <summary>The micro hex of your territory where a missing legend turns up.</summary>
     public HexCoord missingTo;
+    /// <summary>Cargo and valuables it carries home from harvests (delivered in one of your settlements).</summary>
+    [SaveOptionalField] public List<ResourceAmount> cargo = new List<ResourceAmount>();
+    /// <summary>Seeds it carries (resource site ids, one entry per planting), planted on fertile land you hold.</summary>
+    [SaveOptionalField] public List<string> seeds = new List<string>();
+    /// <summary>It was sent to survey <see cref="surveyCell"/>: it walks to each of the cell's hexes in turn and surveys it
+    /// there (WorldSystem.SurveyCell). A move within the cell keeps it going; rest, a retreat or a walk back for rations
+    /// only interrupt it (it picks the survey up by itself); an order elsewhere pauses it (<see cref="surveyPaused"/>).</summary>
+    [SaveOptionalField] public bool surveying;
+    [SaveOptionalField] public HexCoord surveyCell;
+    /// <summary>A survey of <see cref="surveyCell"/> set aside by another order: its progress is kept, and it resumes when
+    /// told to, or by itself once the party is back in that cell.</summary>
+    [SaveOptionalField] public bool surveyPaused;
+    /// <summary>Work already done on a hex whose survey was interrupted (<see cref="surveyWork"/> Sevenths on
+    /// <see cref="surveyWorkHex"/>; 0: none): picked up where it stopped.</summary>
+    [SaveOptionalField] public HexCoord surveyWorkHex;
+    [SaveOptionalField] public float surveyWork;
+    /// <summary>It surveys cell after cell by itself: the nearest known ground still to survey, resting and walking back
+    /// for rations as it needs.</summary>
+    [SaveOptionalField] public bool autoSurvey;
+    /// <summary>Sevenths it waits before trying its survey's next hex again (others stood in the way).</summary>
+    [SaveOptionalField] public float surveyWait;
+    /// <summary>Sevenths the task it is working at takes in all (its progress is 1 - <see cref="workLeft"/> / this).</summary>
+    [SaveOptionalField] public float workTotal;
+    /// <summary>What an expedition set out to do (explore, build, celebrate); chosen when it forms.</summary>
+    [SaveOptionalField] public ExpeditionCharter charter;
+    /// <summary>Whose it is: empty for yours, <see cref="WorldBattles.Wild"/> for wild creatures (other peoples later).</summary>
+    [SaveOptionalField] public string faction;
+    /// <summary>An army on the map: the stack of conscripted companies it carries (<see cref="ArmyRoster"/>).</summary>
+    [SaveOptionalField] public string armyStack;
+    /// <summary>A creature band: its species and how many of them.</summary>
+    [SaveOptionalField] public string species;
+    [SaveOptionalField] public int creatures;
+    /// <summary>Sevenths after a battle before it can clash again (both sides draw breath and part).</summary>
+    [SaveOptionalField] public float truce;
+    /// <summary>An enemy's stance: red (hostile) or orange (wary until provoked).</summary>
+    [SaveOptionalField] public EnemyStance stance;
+    /// <summary>Sevenths a wary enemy stays hostile after one of your units came too close.</summary>
+    [SaveOptionalField] public float provoked;
+    /// <summary>The threat that sent it out (<see cref="ThreatSpec"/> id) and the cell of its site, or empty.</summary>
+    [SaveOptionalField] public string threat;
+    [SaveOptionalField] public int homeCell = -1;
+    /// <summary>A threat's beings' primary binding (every Atonalis carries one).</summary>
+    [SaveOptionalField] public SpellBinding binding;
+    /// <summary>Share of its party's Composure lost in battle and not yet recovered (its Integrity's wounds are its attrition).</summary>
+    [SaveOptionalField] public float nerveLost;
+    // ----- Encounters (WorldPursuit). A save made before these existed loads them as zero: WorldPursuit.Initialize
+    // sets them up once encounterInitialized is false, so no initializer below may be relied on after a load. -----
+    [SaveOptionalField] public bool encounterInitialized;
+    /// <summary>A band: what it is (its mark on the map), how it thinks, what it is doing, and how it meets you.</summary>
+    [SaveOptionalField] public BandIdentity identity;
+    [SaveOptionalField] public BandIntelligence intelligence;
+    [SaveOptionalField] public BandActivity bandActivity;
+    [SaveOptionalField] public ThreatResponse response;
+    /// <summary>The unit it is chasing (a band's quarry, or the band a party of yours hunts), or -1.</summary>
+    [SaveOptionalField] public int quarryId = -1;
+    /// <summary>Where it last saw its quarry, and Sevenths it keeps looking there.</summary>
+    [SaveOptionalField] public HexCoord lastSeen;
+    [SaveOptionalField] public float memoryLeft, decisionLeft, chaseCooldown;
+    /// <summary>Hexes chased so far, and how far it will chase; the territory it defends around home (hexes).</summary>
+    [SaveOptionalField] public int chaseTiles;
+    [SaveOptionalField] public int pursuitLimit = 12, territoryRadius = 4;
+    /// <summary>Running endurance (0-100); winded at 0 until it has caught its breath. Sprinting: a party of yours told to run.</summary>
+    [SaveOptionalField] public float endurance = 100f;
+    [SaveOptionalField] public bool winded, sprinting;
+    /// <summary>Its sprint (x its walk) and how fast running tires it (0: the defaults).</summary>
+    [SaveOptionalField] public float sprintPace, wind;
+    /// <summary>A den's visitor: Sevenths left before it heads home (-1: on its way home, gone on arrival; 0: not a visitor).</summary>
+    [SaveOptionalField] public float denLife;
+    /// <summary>Sevenths a predator rests after a kill before it hunts again.</summary>
+    [SaveOptionalField] public float sated;
+    /// <summary>Where it can go (a band: land, water or both; your parties walk the land).</summary>
+    [SaveOptionalField] public CreatureHabitat habitat;
+    /// <summary>An Atonalis band's Eight-Born Path (how it hunts, <see cref="AtonalPaths"/>); None for everything else.</summary>
+    [SaveOptionalField] public AtonalPath atonalPath;
+    /// <summary>Your legends an Atonalis band has taken captive (freed when the band is destroyed).</summary>
+    [SaveOptionalField] public List<string> captives = new List<string>();
+    /// <summary>Its walking pace (x its kind's; 0: 1). Formless Masses creep.</summary>
+    [SaveOptionalField] public float stride;
+    /// <summary>A unit it will not forget (a Violux's chosen victim), stored as id + 1 (0: none).</summary>
+    [SaveOptionalField] public int grudge;
+    /// <summary>A Formless Mass: the feelings it has drained (its emotional meter: they decide the Path it hatches into); an Atonalis keeps what it was born of.</summary>
+    [SaveOptionalField] public EmotionalRegister fed = new EmotionalRegister();
+    /// <summary>An Atonalis born a hybrid: its second Path (None: pure).</summary>
+    [SaveOptionalField] public AtonalPath hybridPath;
+    /// <summary>A Formless Mass's cocoon: Sevenths until the Atonalis inside hatches (0: not cocooned).</summary>
+    [SaveOptionalField] public float cocoon;
+    /// <summary>A band's home hex (where it rose: beside its den, in its den's water, at its nest); unset: its home cell's centre.</summary>
+    [SaveOptionalField] public HexCoord homeHex;
+    [SaveOptionalField] public bool homeHexSet;
 
     public bool Moving => path != null && path.Count > 0;
     public bool Missing => missingSevenths > 0f;
@@ -84,6 +173,8 @@ public struct UnitStep
     public List<int> entered;
     public bool arrived;
     public bool blocked;
+    /// <summary>It stopped short of a hex another side holds (units of different sides never share a hex).</summary>
+    public bool halted;
     /// <summary>Travel fatigue actually walked.</summary>
     public float effort;
 }
@@ -100,19 +191,50 @@ public struct UnitSurroundings
     public float danger, dissonance;
     /// <summary>Land fertility, 0-1 (what a camp can gather).</summary>
     public float fertility;
+    /// <summary>Attrition per Seventh the cover wears on a party (thorns, bog, choking ash; <see cref="WorldCover"/>).</summary>
+    public float hardship;
+    /// <summary>A predatory Eleos Bloom's lure here (0-1) and the strain a healing one eases per Seventh (<see cref="WorldResources"/>).</summary>
+    public float lure, sanctuary;
+    /// <summary>Vibrational Density, Vibrational Fallout and a Chaotic Resonant Cascade here, 0-1 (<see cref="WorldVibration"/>).
+    /// A cell with no magic laid down reads as neither thin nor dense (<see cref="densityKnown"/> false).</summary>
+    public float density, fallout, cascade;
+    public bool densityKnown;
+    /// <summary>How fair the place is (-1 to 1, <see cref="WorldBeauty"/>) and the solace its ground and sites give
+    /// (<see cref="WorldTile.solace"/>); cell steps to a silver river and to a lake one runs into. The steps count only when
+    /// <see cref="mapped"/> (read from a real cell).</summary>
+    public float beauty, solace;
+    public int silverRiverSteps, silverLakeSteps;
+    public bool mapped;
+    /// <summary>Living resource sites around (0-1) and a Resource Grandfield's density here, for a forager or a camp.</summary>
+    public float bounty, grandfield;
 
     public static UnitSurroundings Of(WorldMap map, WorldUnit unit)
     {
         var t = map?.Get(unit.coord);
-        if (t == null) return new UnitSurroundings { weather = 1f };
+        if (t == null) return new UnitSurroundings { weather = 1f, silverRiverSteps = WorldResources.FarFromSilver, silverLakeSteps = WorldResources.FarFromSilver };
         return new UnitSurroundings
         {
             held = WorldAuthority.IsPlayers(t.authorityId) || t.settlement >= 0,
             settlement = t.settlement >= 0,
             weather = t.weatherTravelMultiplier,
-            danger = t.danger,
+            // Standing hazards, and fresh signs of something hunting here (the risk of an ambush is real).
+            danger = Math.Max(t.danger, t.signs),
             dissonance = t.dissonance,
             fertility = t.landFertility,
+            hardship = t.coverHardship,
+            lure = t.lure,
+            sanctuary = t.sanctuary,
+            density = t.vibrationalDensity,
+            densityKnown = map.Magic != null && map.Magic.Age >= 0,
+            fallout = t.fallout,
+            cascade = t.cascade,
+            beauty = t.beauty,
+            solace = t.solace,
+            silverRiverSteps = t.silverRiverSteps,
+            silverLakeSteps = t.silverLakeSteps,
+            mapped = true,
+            bounty = t.siteBounty,
+            grandfield = t.grandfield >= 0 ? t.grandfieldDensity : 0f,
         };
     }
 
@@ -226,7 +348,9 @@ public static class WorldUnits
         }
         if (camping && spec.forageRationsPerSeventh > 0f)
         {
-            report.gathered = spec.forageRationsPerSeventh * Clamp01(at.fertility) * (1f - Clamp01(at.danger)) / (1f + exposure) * sevenths;
+            // Fertile ground feeds a camp already; living sites and a grandfield around feed it more.
+            float plenty = 1f + Math.Min(Math.Max(0f, rules.maxForageBonus), SitesBonus(rules, at));
+            report.gathered = spec.forageRationsPerSeventh * Clamp01(at.fertility) * plenty * (1f - Clamp01(at.danger)) / (1f + exposure) * sevenths;
             unit.supplies += report.gathered;
         }
         float fed = use > 0f ? Math.Min(sevenths, Math.Max(0f, unit.supplies) / use) : sevenths;
@@ -248,6 +372,8 @@ public static class WorldUnits
             wear += exposure * Math.Max(0f, rules.exposureAttrition) * (camping ? 0.5f : 1f) * sevenths;
             wear += Clamp01(at.danger) * Math.Max(0f, rules.dangerAttrition) * sevenths;
             wear += Clamp01(at.dissonance) * Math.Max(0f, rules.dissonanceAttrition) * sevenths;
+            wear += Clamp01(at.fallout) * Math.Max(0f, rules.falloutAttrition) * sevenths;
+            wear += Math.Max(0f, at.hardship) * sevenths;
         }
         float heal = camping || at.settlement ? Math.Max(0f, spec.recoveryPerSeventh) * (at.settlement ? 3f : 1f) * fed : 0f;
         wear *= Math.Max(0f, spec.wearMultiplier);
@@ -285,12 +411,31 @@ public static class WorldUnits
     public static bool PlanMicro(WorldMap map, WorldGenSettings settings, WorldUnit unit, HexCoord micro, out List<int> path, out float fatigue) =>
         MicroNavigation.ToNearest(map, settings, MicroPosition(unit), micro, out path, out fatigue, out _);
 
-    /// <summary>Set the unit on its way along <paramref name="path"/> (micro ids, from <see cref="Plan"/>); it stops any work and breaks camp.</summary>
+    /// <summary>
+    /// Set the unit on its way along <paramref name="path"/> (micro ids from the hex it stands on, from <see cref="Plan"/>);
+    /// it stops any work and breaks camp. Caught between two hexes, it keeps its place on the ground: if the way goes on
+    /// through the hex it was stepping into, the step already walked counts; otherwise it first walks back to the hex it
+    /// left, as far as it had come (<see cref="PlanFromStep"/> picks the cheaper of the two). No order moves it in a blink.
+    /// </summary>
     public static void Order(WorldMap map, WorldUnit unit, List<int> path)
     {
         Place(unit, MicroPosition(unit));
-        unit.path = path.Select(c => MicroNavigation.Coord(map, c)).ToList();
-        unit.progress = 0f;
+        var way = path.Select(c => MicroNavigation.Coord(map, c)).ToList();
+        float kept = 0f;
+        if (map.microGrid != null && StepCosts(map, map.microGrid, unit, out var next, out float ahead, out float behind))
+        {
+            if (way.Count > 0 && way[0] == next) kept = unit.progress;
+            else if (!float.IsPositiveInfinity(behind))
+            {
+                // Turn about: it stands in the step from the next hex back to the one it left, as far along as it has left to go.
+                var left = unit.microCoord;
+                way.Insert(0, left);
+                Place(unit, next);
+                kept = Math.Max(0f, (1f - Math.Min(1f, unit.progress / ahead)) * behind);
+            }
+        }
+        unit.path = way;
+        unit.progress = kept;
         unit.workLeft = 0f;
         unit.task = UnitTask.None;
         unit.resting = false;
@@ -304,25 +449,93 @@ public static class WorldUnits
         unit.progress = 0f;
     }
 
+    // The step a unit is part-way through: the hex it is stepping into and the travel fatigue of that step forward and
+    // back (+infinity when it cannot be walked back). False when it is not between two hexes.
+    private static bool StepCosts(WorldMap map, MicroGrid grid, WorldUnit unit, out HexCoord next, out float ahead, out float behind)
+    {
+        next = default;
+        ahead = behind = 0f;
+        if (unit == null || !unit.Moving || unit.progress <= 1e-4f) return false;
+        var here = MicroPosition(unit);
+        next = unit.path[0];
+        int a = MicroNavigation.Index(map, here), b = MicroNavigation.Index(map, next);
+        if (a < 0 || b < 0 || HexCoord.Distance(here, next) != 1) return false;
+        ahead = grid.Step(a, b);
+        if (float.IsPositiveInfinity(ahead) || float.IsNaN(ahead) || ahead <= 0f) return false;
+        behind = grid.Step(b, a);
+        if (float.IsNaN(behind)) behind = float.PositiveInfinity;
+        return true;
+    }
+
+    /// <summary>
+    /// A unit caught between two hexes: the hex it was stepping into, and the travel fatigue to turn back to the hex it
+    /// left (<paramref name="back"/>: the ground already covered) or walk on into the next (<paramref name="on"/>: what is
+    /// left of the step). False when it stands on a hex.
+    /// </summary>
+    public static bool MidStep(WorldMap map, WorldGenSettings settings, WorldUnit unit, out HexCoord next, out float back, out float on)
+    {
+        back = on = 0f;
+        if (!StepCosts(map, MicroNavigation.Grid(map, settings), unit, out next, out float ahead, out float behind)) return false;
+        back = float.IsPositiveInfinity(behind) ? float.PositiveInfinity : Math.Min(1f, unit.progress / ahead) * behind;
+        on = Math.Max(0f, ahead - unit.progress);
+        return true;
+    }
+
+    /// <summary>A way-finder from a micro hex: the way (micro ids after the start), its travel fatigue and where it ends.</summary>
+    public delegate bool Planner(HexCoord from, out List<int> path, out float fatigue, out HexCoord reached);
+
+    /// <summary>
+    /// Plan a new order for a unit that may be caught between two hexes: from the hex it left (turning back first costs
+    /// the ground already covered, so an about-face is dear) and from the hex it was stepping into (walking on costs only
+    /// what is left of the step, so a turn to either side is cheap); the cheaper way wins. The way is always given from
+    /// the hex it left (walking on puts the next hex first), as <see cref="Order"/> takes it; the fatigue is what is left
+    /// to walk. Standing on a hex, it is just <paramref name="plan"/> from there.
+    /// </summary>
+    public static bool PlanFromStep(WorldMap map, WorldGenSettings settings, WorldUnit unit, Planner plan, out List<int> path, out float fatigue, out HexCoord reached)
+    {
+        bool ok = plan(MicroPosition(unit), out path, out fatigue, out reached);
+        if (!MidStep(map, settings, unit, out var next, out float back, out float on)) return ok;
+        int nextId = MicroNavigation.Index(map, next);
+        if (ok)
+        {
+            if (path.Count > 0 && path[0] == nextId) fatigue = Math.Max(0f, fatigue - unit.progress);
+            else if (float.IsPositiveInfinity(back)) ok = false;
+            else fatigue += back;
+        }
+        if (plan(next, out var onPath, out float onFatigue, out var onReached) && (!ok || on + onFatigue < fatigue - 1e-4f))
+        {
+            onPath.Insert(0, nextId);
+            path = onPath;
+            fatigue = on + onFatigue;
+            reached = onReached;
+            ok = true;
+        }
+        return ok;
+    }
+
     /// <summary>
     /// Move the unit through <paramref name="sevenths"/> of time: it spends stamina x sevenths (x its efficiency) of
     /// travel fatigue, entering each micro hex once what it spent covers that step, and tires by what it walked. A hex
-    /// that cannot be entered ends the journey.
+    /// that cannot be entered ends the journey, and so does one another side holds (<paramref name="held"/>): the unit
+    /// halts beside it.
     /// </summary>
-    public static UnitStep Move(WorldMap map, WorldGenSettings settings, WorldUnit unit, UnitSpec spec, float sevenths)
+    public static UnitStep Move(WorldMap map, WorldGenSettings settings, WorldUnit unit, UnitSpec spec, float sevenths, Func<HexCoord, bool> held = null, Func<int, int, float> stepCost = null)
     {
         var step = new UnitStep { entered = new List<int>() };
         if (!unit.Moving || spec == null || sevenths <= 0f) return step;
         Initialize(unit, spec);
         var grid = MicroNavigation.Grid(map, settings);
         int at = MicroNavigation.Index(map, unit.microCoord);
-        float effort = Math.Max(0f, spec.stamina) * Efficiency(unit) * sevenths;
+        if (unit.winded) return step;
+        float effort = Math.Max(0f, spec.stamina) * Efficiency(unit) * WorldPursuit.RunPace(unit) * sevenths;
+        // A runner goes no further than its endurance carries it this moment (then it is winded).
+        if (WorldPursuit.Running(unit)) effort = Math.Min(effort, unit.endurance / (WorldPursuit.RunDrain * (unit.wind > 0f ? unit.wind : 1f)) + 1e-4f);
         unit.progress += effort;
         while (unit.path.Count > 0)
         {
             var next = unit.path[0];
             int id = MicroNavigation.Index(map, next);
-            float cost = id < 0 || HexCoord.Distance(unit.microCoord, next) != 1 ? float.PositiveInfinity : grid.Step(at, id);
+            float cost = id < 0 || HexCoord.Distance(unit.microCoord, next) != 1 ? float.PositiveInfinity : stepCost != null ? stepCost(at, id) : grid.Step(at, id);
             if (float.IsPositiveInfinity(cost) || float.IsNaN(cost))
             {
                 step.blocked = true;
@@ -331,6 +544,14 @@ public static class WorldUnits
                 break;
             }
             if (unit.progress < cost) break;
+            if (held != null && held(next))
+            {
+                // Units of different sides never share a hex: it halts beside the other.
+                step.halted = true;
+                effort -= unit.progress;
+                Stop(unit);
+                break;
+            }
             unit.progress -= cost;
             unit.microCoord = next;
             unit.coord = map[id / MicroNavigation.PerCell].coord;
@@ -345,6 +566,7 @@ public static class WorldUnits
             step.arrived = step.entered.Count > 0;
         }
         step.effort = Math.Max(0f, effort);
+        WorldPursuit.Spend(unit, step.effort);
         float exposure = Math.Max(0f, (map.Get(unit.coord)?.weatherTravelMultiplier ?? 1f) - 1f);
         unit.fatigue = Math.Min(100f, unit.fatigue + step.effort * Math.Max(0f, spec.fatiguePerTravelCost) * (1f + exposure));
         return step;
@@ -406,7 +628,12 @@ public static class WorldUnits
     /// A unit standing idle for want of orders: not walking, working, camped (a camp is an order too), exploring by
     /// itself or walking back for rations.
     /// </summary>
-    public static bool AwaitsOrders(WorldUnit unit) => unit != null && !unit.Missing && !unit.Moving && !unit.Working && !unit.Camping && !unit.autoExplore && !unit.returning;
+    public static bool AwaitsOrders(WorldUnit unit) => unit != null && WorldBattles.IsPlayers(unit) && !unit.Missing && !unit.Moving && !unit.Working && !unit.Camping
+        && !unit.autoExplore && !unit.returning && !unit.surveying && !unit.autoSurvey;
+
+    /// <summary>How far along the task it works at is, 0-1 (0 when it is not working).</summary>
+    public static float WorkProgress(WorldUnit unit) =>
+        unit == null || !unit.Working || unit.workTotal <= 1e-4f ? 0f : Clamp01(1f - unit.workLeft / unit.workTotal);
 
     /// <summary>Where the unit is drawn: between its hex and the next, by the share of the next step already walked.</summary>
     public static (float x, float y) Position(WorldMap map, WorldGenSettings settings, WorldUnit unit)
@@ -434,6 +661,8 @@ public static class WorldUnits
         float efficiency = Efficiency(unit);
         if (efficiency < 0.6f) sight--;
         if (efficiency < 0.35f) sight--;
+        // Inside dense cover a party sees only what is near (from a ridge it sees over the canopy).
+        if (!HighGround(here)) sight = WorldCover.SightFrom(here, sight);
         return Math.Max(1, sight);
     }
 
@@ -461,10 +690,38 @@ public static class WorldUnits
     public static List<ResourceAmount> ForageOf(WorldGenSettings settings, WorldTile t, float multiplier)
     {
         var terrain = t != null ? settings.Terrain(t.terrain) : null;
-        if (terrain == null || terrain.forage == null) return new List<ResourceAmount>();
-        return terrain.forage.Where(a => a != null && !string.IsNullOrEmpty(a.resource) && a.amount > 0f)
+        var result = (terrain?.forage ?? new List<ResourceAmount>()).Where(a => a != null && !string.IsNullOrEmpty(a.resource) && a.amount > 0f)
             .Select(a => new ResourceAmount { resource = a.resource, amount = a.amount * Math.Max(0f, multiplier) }).ToList();
+        // Cover adds its own (game in the deep forest, roots in the brambles).
+        foreach (var a in WorldCover.ForageOf(settings, t, multiplier))
+        {
+            var had = result.FirstOrDefault(r => string.Equals(r.resource, a.resource, StringComparison.OrdinalIgnoreCase));
+            if (had != null) had.amount += a.amount;
+            else result.Add(a);
+        }
+        return result;
     }
+
+    /// <summary>
+    /// How much more a forager gathers here, 1 or more: fertile land (past <see cref="ProvisionRules.fertileFrom"/>),
+    /// living resource sites around (<see cref="WorldTile.siteBounty"/>) and a Resource Grandfield's heart, up to
+    /// <see cref="ProvisionRules.maxForageBonus"/> more.
+    /// </summary>
+    public static float ForageRichness(ProvisionRules rules, UnitSurroundings at)
+    {
+        if (rules == null) return 1f;
+        float from = Clamp01(rules.fertileFrom);
+        float fertile = from >= 1f ? 0f : Math.Max(0f, Clamp01(at.fertility) - from) / (1f - from) * Math.Max(0f, rules.fertilityForage);
+        return 1f + Math.Min(Math.Max(0f, rules.maxForageBonus), fertile + SitesBonus(rules, at));
+    }
+
+    /// <summary>What forage richness a cell has, read from its tile (see <see cref="ForageRichness(ProvisionRules, UnitSurroundings)"/>).</summary>
+    public static float ForageRichness(ProvisionRules rules, WorldTile t) =>
+        t == null ? 1f : ForageRichness(rules, new UnitSurroundings { fertility = t.landFertility, bounty = t.siteBounty, grandfield = t.grandfield >= 0 ? t.grandfieldDensity : 0f });
+
+    // The living sites and grandfield around (fertility aside: a camp already gathers by it).
+    private static float SitesBonus(ProvisionRules rules, UnitSurroundings at) =>
+        Clamp01(at.bounty) * Math.Max(0f, rules.siteForage) + Clamp01(at.grandfield) * Math.Max(0f, rules.grandfieldForage);
 
     /// <summary>Why the unit cannot forage where it stands now (<paramref name="age"/> is the current Age's number), or null.</summary>
     public static string WhyNotForage(WorldMap map, WorldGenSettings settings, WorldUnit unit, UnitSpec spec, int age)
@@ -509,6 +766,8 @@ public static class WorldUnits
     {
         if (t == null || t.water || !t.explored) return false;
         if (t.grandfield >= 0) return true;
+        if (WorldResources.YieldsAt(map, settings, t).Any(y => y.amount > 0f)) return true;
+        if (WorldCover.YieldsOf(settings, t).Count > 0) return true;
         if (settings.Terrain(t.terrain)?.yields.Any(y => y != null && y.amount > 0f) == true) return true;
         return t.HasFeature && settings.Feature(t.feature)?.yields.Any(y => y != null && y.amount > 0f) == true;
     }
@@ -553,13 +812,22 @@ public static class WorldUnits
         {
             if (!t.explored || t.water || t.coord == map.Capital) continue;
             float scale = 1f + bonus * t.improvement;
+            // People work fair land more willingly than hideous land (WorldBeauty).
+            float work = Math.Max(0f, 1f + (rules?.territory?.beautyWork ?? 0f) * t.beauty);
             if (t.authorityId == WorldAuthority.Player)
             {
-                // People work fair land more willingly than hideous land (WorldBeauty).
-                float work = Math.Max(0f, 1f + (rules?.territory?.beautyWork ?? 0f) * t.beauty);
                 var terrain = settings.Terrain(t.terrain);
                 if (terrain != null) foreach (var y in terrain.yields) if (y != null) Add($"Land: {terrain.name}", y.resource, y.amount * scale * work);
             }
+            // An identified resource site yields while its cell is yours (or your Outpost's).
+            if (WorldAuthority.IsPlayers(t.authorityId) && t.resourceSite >= 0)
+            {
+                var site = WorldResources.SiteAt(map, t);
+                foreach (var y in WorldResources.YieldsAt(map, settings, t)) Add($"Resource: {settings.ResourceSite(site.spec)?.name ?? site.name}", y.resource, y.amount * scale * work);
+            }
+            // Cover you hold is worked too: timber and game from the forest, peat from the fen.
+            if (WorldAuthority.IsPlayers(t.authorityId) && t.cover != null)
+                foreach (var y in WorldCover.YieldsOf(settings, t)) Add($"Cover: {settings.Cover(t.cover)?.name ?? t.cover}", y.resource, y.amount * scale * work);
             if (t.HasFeature)
             {
                 var feature = settings.Feature(t.feature);

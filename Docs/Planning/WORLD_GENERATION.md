@@ -2,34 +2,34 @@
 
 Design proposal, 2026-09-26. This extends S07/S09 in the established ROADMAP and takes priority as the user's next workstream. It is a generation specification and reviewable schematic, not an implemented Unity generator. The earlier Age-first delivery order is superseded for the immediate queue only; world/Age interfaces remain dependencies for later integration.
 
-## 1. Confirmed composition: sectors, biome slots and P
+## 1. Confirmed composition: Quadrants, Macro Biome slots and intersections
 
-The user's reference is a regional composition stencil, not the final tile grid. **S1–S7 are sectors containing groups of macrobiomes; W is water; P is procedural connective terrain.** Preserve the green S1 start and the connected S2–S1–S2 core of mainland Arcanoria. The exact catalogs of all seven sectors remain to be authored; do not infer biome identities from colors alone.
+The user's reference is a regional composition stencil, not the final tile grid. **Q1–Q7 are quadrants containing groups of Macro Biomes; W is water; I is the procedural intersections between Macro Biomes.** Preserve the green Q1 start and the connected Q2–Q1–Q2 core of mainland Arcanoria. The exact catalogs of all seven quadrants remain to be authored; do not infer biome identities from colors alone.
 
-The hierarchy is **world → quadrant family → sector instance → biome slot → meso cells → micro cells**. Macro rendering aggregates those same cells. A sector ID such as S2 denotes a sector definition; repeated S2 blocks also need distinct instance IDs. A quadrant is a broad directional grouping and can contain more than one sector. A biome slot is a placement opportunity within a sector, not a square border visible in the finished landscape.
+The hierarchy uses AECOR's scale names (owner decision, Sept 28, 2026; ARCHITECTURE.md "World scales"): **Overall Map → Quadrant → Macro Biome → Inter-Biome Definitions → Sector**, with meso cells and micro hexes beneath as the playable detail. Macro rendering aggregates those same cells. A Quadrant ID such as Q2 denotes a Quadrant definition; repeated Q2 blocks also need distinct instance IDs. A slot is a placement opportunity for one Macro Biome within its Quadrant, not a square border visible in the finished landscape. Inter-Biome Definitions are what lies inside a Macro Biome and may cross its Sectors: covers, landmarks (features), grandfields and resource sites. Sectors are the nine compass parts of each Macro Biome (Central, North, North-East and so on round the compass), assigned after generation. Intersections (stencil I) are the procedural ground between Macro Biomes.
 
 The user supplied these working catalogs:
 
-- **S2:** two slots containing Violet Grove and Great Expanse. A world seed can assign Grove left/Expanse right or the reverse; each biome also selects an allowed orientation.
-- **S5:** four slots containing Taiga, Magical Rift, Wind Plains and Auric Grasslands. Their placement and allowed rotations vary while the sector retains its mountainous regional identity.
-- **S1:** starting sector; green central reference. Its detailed biome catalog is still open.
-- **S3/S4/S6/S7:** preserve their reference positions and sector identity; detailed catalogs and directional climate constraints remain open. Northeastern tundra was an example of a sector theme, not a finalized assignment to a specific S number.
+- **Q2:** two slots containing Violet Grove and Great Expanse. A world seed can assign Grove left/Expanse right or the reverse; each biome also selects an allowed orientation.
+- **Q5:** four slots containing Taiga, Magical Rift, Wind Plains and Auric Grasslands. Their placement and allowed rotations vary while the quadrant retains its mountainous regional identity.
+- **Q1:** starting quadrant; green central reference. Its detailed biome catalog is still open.
+- **Q3/Q4/Q6/Q7:** preserve their reference positions and quadrant identity; detailed catalogs and directional climate constraints remain open. Northeastern tundra was an example of a quadrant theme, not a finalized assignment to a specific S number.
 
-**P is generated connective space, not an additional biome in the shuffle bag.** It synthesizes mountain continuations, foothills, forest ecotones, plains, coast, straits and river passages from its neighbors. P may become land or water where the world topology permits. Its geometry should hide the slot stencil without erasing a named biome's identity.
+**The intersections (I) are generated connective space, not an additional Macro Biome in the shuffle bag.** They synthesize mountain continuations, foothills, forest ecotones, plains, coast, straits and river passages from its neighbors. They may become land or water where the world topology permits. Their geometry should hide the slot stencil without erasing a named biome's identity.
 
 ### Ocean and continent topology
 
-Use an **outer ocean belt around the assembled continental silhouette**, not a compulsory circular moat immediately around the three starting blocks. This lets mountain systems and procedural land seams connect peripheral sectors where the composition calls for a contiguous continent. The three central blocks are always connected mainland. Other sector instances carry explicit topology roles: attached land, offshore island, archipelago or remote continent; the detailed assignment remains a content decision.
+Use an **outer ocean belt around the assembled continental silhouette**, not a compulsory circular moat immediately around the three starting blocks. This lets mountain systems and procedural land seams connect peripheral quadrants where the composition calls for a contiguous continent. The three central blocks are always connected mainland. Other quadrant instances carry explicit topology roles: attached land, offshore island, archipelago or remote continent; the detailed assignment remains a content decision.
 
 Reserve a closed navigable water route around the complete primary mainland component and an outer ocean apron at the map boundary. Bays, shelves, straits and islands can make this ring irregular. Proposed initial minimum navigable width: three meso cells along the reserved ocean circuit, subject to ship/pathfinding tuning. The circuit must enclose the mainland, not merely be any cycle inside a bay. Ports and cross-ocean routes must connect to it. No procedural seam may accidentally dam the reserved circuit.
 
-The Capital begins inside S1 on ordinary freshwater and usable soil with stable moderate Coherence. It is not guaranteed a Sacred Site, nexus or grandfield. Guarantee a reachable low-risk discovery and two early expansion directions. Green habitat does not bypass Age 0's famine or restricted magic.
+The Capital begins inside Q1 on ordinary freshwater and usable soil with stable moderate Coherence. It is not guaranteed a Sacred Site, nexus or grandfield. Guarantee a reachable low-risk discovery and two early expansion directions. Green habitat does not bypass Age 0's famine or restricted magic.
 
 ## 2. One connected world, with constrained variation
 
 The geographical identity is fixed; detailed composition varies by world seed. Treat the inspiration as a design goal: strategy-game adjacency/readability plus shuffled authored regional content. Do not assume either reference game's exact implementation.
 
-**Fixed composition contracts:** central connected mainland, sector theme constraints, outer ocean belt, global bounds, guaranteed initial reachability and named unique locations' eligibility rules.
+**Fixed composition contracts:** central connected mainland, quadrant theme constraints, outer ocean belt, global bounds, guaranteed initial reachability and named unique locations' eligibility rules.
 
 **Generated each new world:** coast details, islands, mountain/rain-shadow structure, ordinary rivers and lakes, soil patches, resource grandfields, local habitat, seed placements, and the assignment/rotation of eligible authored landmarks within region slots. Story-critical location identities persist; their positions can vary within approved slots.
 
@@ -75,24 +75,24 @@ Start performance trials around **30,720 meso cells (192 × 160 candidate axial 
 
 ## 4. Slot assignment, rotations and procedural stitching
 
-A biome is a **constrained recipe**, optionally with authored landmark interiors, not a finished independent terrain square. It supplies climate/soil ranges, elevation envelopes, vegetation/resource rules, mandatory motifs, permitted features, and boundary ports. A sector supplies the larger mountain backbone, prevailing moisture/wind and coastline/topology obligations. The recipe deforms within those obligations.
+A biome is a **constrained recipe**, optionally with authored landmark interiors, not a finished independent terrain square. It supplies climate/soil ranges, elevation envelopes, vegetation/resource rules, mandatory motifs, permitted features, and boundary ports. A quadrant supplies the larger mountain backbone, prevailing moisture/wind and coastline/topology obligations. The recipe deforms within those obligations.
 
 ### Assignment algorithm
 
-1. Build a sector-instance adjacency graph from the reference stencil. Reserve mainland connectivity, the ocean circuit, passes and required freshwater opportunities before allocating slots.
-2. Create each sector's slot graph with eligibility tags: coast/interior, highland/lowland, wet/dry tendency, required river/pass contacts and approximate area.
-3. Create the biome multiset for that sector. Assign exactly one biome to each required slot, without replacement unless the catalog explicitly permits repeats. S2 has 2 permutations and S5 has 24 permutations before eligibility/rotation constraints; these are theoretical maxima, not guaranteed valid outputs.
+1. Build a quadrant-instance adjacency graph from the reference stencil. Reserve mainland connectivity, the ocean circuit, passes and required freshwater opportunities before allocating slots.
+2. Create each quadrant's slot graph with eligibility tags: coast/interior, highland/lowland, wet/dry tendency, required river/pass contacts and approximate area.
+3. Create the biome multiset for that quadrant. Assign exactly one biome to each required slot, without replacement unless the catalog explicitly permits repeats. Q2 has 2 permutations and Q5 has 24 permutations before eligibility/rotation constraints; these are theoretical maxima, not guaranteed valid outputs.
 4. Enumerate allowed 60-degree rotations for hex-native templates. Use each template's allowed subset; do not rotate north-facing climate requirements blindly. Reflections are a separate opt-in and disabled for named sites by default. Non-grid source artwork can be resampled; logical ports still need validation.
 5. Use a seeded constraint solver: pick the most constrained slot, shuffle eligible biome/orientation pairs, place, propagate neighbor constraints and backtrack. A biome's exact inner landmarks can remain fixed relative to one another while its exterior blends.
 6. Score valid layouts for useful variety: distinct routes, separated scarce resources, readable transitions and starting fairness. Use bounded deterministic retries; report why unsatisfiable catalogs fail instead of silently deleting a biome or cutting the ocean.
-7. Synthesize P from all adjacent ports/fields together. It is a positive-width transition area with its own tile ownership. Preserve each biome's protected interior; move/blend only declared buffer bands. Resolve four-way seams jointly, not four independent edge strips.
+7. Synthesize the intersections from all adjacent ports/fields together. It is a positive-width transition area with its own tile ownership. Preserve each biome's protected interior; move/blend only declared buffer bands. Resolve four-way seams jointly, not four independent edge strips.
 8. Validate the final terrain and feature graphs again. Record seed, generator version, catalog hash, assignments, orientations, port connections and any repairs.
 
 ### What must match at a seam
 
 Elevation and slope continuity; climate/moisture continuity unless an authored magical boundary allows a sharp change; river elevation, discharge and direction; road/pass reachability; coastline and water level; mandatory biome borders; and required exclusion space for unique features. River ports cannot be joined uphill. Build a global drainage solution after terrain constraints are stitched, then refine rivers into micro geometry. Lake outlets, closed basins and waterfalls require explicit treatment rather than broken slopes.
 
-A mountainous S5 is generated as one regional range system. Taiga occupies a compatible cold/wet part, Wind Plains a plateau/pass or rain shadow, Auric Grasslands a suitable valley/foothill, and Magical Rift a compatible fracture corridor. These subroles are proposals; variants can change elevations/climate envelopes. Do not force all 24 arrangements if some cannot satisfy the sector's geography. Conversely, do not reduce every seed to the same arrangement by overconstraining slots: authored variants and a deformable mountain backbone should allow meaningful alternatives.
+A mountainous Q5 is generated as one regional range system. Taiga occupies a compatible cold/wet part, Wind Plains a plateau/pass or rain shadow, Auric Grasslands a suitable valley/foothill, and Magical Rift a compatible fracture corridor. These subroles are proposals; variants can change elevations/climate envelopes. Do not force all 24 arrangements if some cannot satisfy the quadrant's geography. Conversely, do not reduce every seed to the same arrangement by overconstraining slots: authored variants and a deformable mountain backbone should allow meaningful alternatives.
 
 Random streams are split by stable purpose/ID: topology, slot allocation, terrain, hydrology, resources, features, and Age magic. Adding a landmark must not consume the random numbers that determine the continent or move the Capital in an existing version.
 
@@ -108,7 +108,7 @@ Generate elevation → drainage basins → flow accumulation → rivers/lakes/we
 
 Adopt the user's Coherence Seeds and Dissonance Seeds as generation sources. A source has a stable ID, position, strength, influence radius, falloff and affinity. Dissonance Seeds represent regional generation influences; an Atonalis Dissonance Core is a distinct living/entity feature that can add a moving or local negative source. They must not share a class merely because both dampen Coherence.
 
-Compute a proposed bounded Coherence field from a sector baseline + distance-decaying positive seed influences + leyline support + Sacred Site support + constructed Anchors − distance-decaying dissonance/core influences. Use terrain-aware/geodesic attenuation where barriers matter. Overlapping sources mean Coherence need not rise monotonically along every path away from one core; isolated-source tests must show the expected falloff. Track negative influence separately for attribution and hazards rather than calling a clipped value a negative Coherence score.
+Compute a proposed bounded Coherence field from a quadrant baseline + distance-decaying positive seed influences + leyline support + Sacred Site support + constructed Anchors − distance-decaying dissonance/core influences. Use terrain-aware/geodesic attenuation where barriers matter. Overlapping sources mean Coherence need not rise monotonically along every path away from one core; isolated-source tests must show the expected falloff. Track negative influence separately for attribution and hazards rather than calling a clipped value a negative Coherence score.
 
 **Sacred Sites are fixed local maxima and protected refuges.** Their protected interiors retain the highest harmonic integrity under ordinary Age drift and common dissonance effects. The vault says immune to most effects, not unconditionally invincible; exceptional story effects need explicit overrides. Atonalis avoidance is a movement rule as well as a map color.
 
@@ -116,7 +116,7 @@ Compute a proposed bounded Coherence field from a sector baseline + distance-dec
 
 ### Leylines from seeds and Grand Thread Rings
 
-A leyline is a persistent lineage plus an Age-specific embedded path, sourced from a Coherence Seed. Grand Thread Ring phase/orientation supplies the large-scale direction/potential field. Route curves through favorable Coherence, often alongside rivers, while allowing overland and undersea routes. Solve the network globally/coarsely first, then refine it continuously across P and chunk boundaries. Give line families stable IDs, capacities/flux and affinities; segment count does not determine identity.
+A leyline is a persistent lineage plus an Age-specific embedded path, sourced from a Coherence Seed. Grand Thread Ring phase/orientation supplies the large-scale direction/potential field. Route curves through favorable Coherence, often alongside rivers, while allowing overland and undersea routes. Solve the network globally/coarsely first, then refine it continuously across the intersections and chunk boundaries. Give line families stable IDs, capacities/flux and affinities; segment count does not determine identity.
 
 Use physical path intersections after refinement to create junctions:
 
@@ -160,7 +160,7 @@ Do not fully populate every category in Age 0. The vault describes few enclaves 
 
 A **Trade Nexus** is a rare geography-backed hub candidate: a sheltered estuary/harbor, traversable mountain pass, major crossing or meeting of viable routes. It is not every intersection and not automatically every magical Basin. Distinguish potential nexus terrain from an operating hub with infrastructure. Trade Nodes are controllable/fortifiable logistics points; Trade Routes are edges between nodes, hubs and settlements.
 
-Route cost considers terrain, physical crossings, safety, infrastructure and Coherence bonuses. The vault specifically says trade-route disruption occurs through blockade or pillage at a Trade Node. Therefore an Age's leyline shift changes efficiency/preferred routes, not automatic destruction of trade connectivity. Any new direct route-cutting mechanics need an explicit design change. Record alternate paths and chokepoints; do not make all sectors depend on one unavoidable bridge.
+Route cost considers terrain, physical crossings, safety, infrastructure and Coherence bonuses. The vault specifically says trade-route disruption occurs through blockade or pillage at a Trade Node. Therefore an Age's leyline shift changes efficiency/preferred routes, not automatic destruction of trade connectivity. Any new direct route-cutting mechanics need an explicit design change. Record alternate paths and chokepoints; do not make all quadrants depend on one unavoidable bridge.
 
 ### F. Landmarks, discovery and story sites
 
@@ -178,9 +178,9 @@ Fog of war, survey accuracy, last observed Age, old leyline routes, former silve
 
 ### Placement priority and conflicts
 
-World topology → protected canonical anchors/Sacred Sites → global terrain/drainage → biome interiors and P reconciliation → seeds/magic → resource distributions → habitable sites and nexus opportunities → discoveries/hazards → initial inhabitants. Some stages iterate: reserved sites constrain terrain before their final footprints are placed.
+World topology → protected canonical anchors/Sacred Sites → global terrain/drainage → Macro Biome interiors and intersection reconciliation → seeds/magic → resource distributions → habitable sites and nexus opportunities → discoveries/hazards → initial inhabitants. Some stages iterate: reserved sites constrain terrain before their final footprints are placed.
 
-Features use explicit compatibility/exclusion rules and budgets per sector/area. A Sacred Site excludes ordinary active Atonalis occupation; a grandfield can overlap a river only for compatible extraction types; settlements avoid inaccessible cliffs/flood channels unless authored for them. Keep scarcity, minimum separation and reachability diagnostics visible to content authors. No blanket guarantee that every sector contains every feature.
+Features use explicit compatibility/exclusion rules and budgets per quadrant/area. A Sacred Site excludes ordinary active Atonalis occupation; a grandfield can overlap a river only for compatible extraction types; settlements avoid inaccessible cliffs/flood channels unless authored for them. Keep scarcity, minimum separation and reachability diagnostics visible to content authors. No blanket guarantee that every quadrant contains every feature.
 
 ## 7. Age transition without regenerating the continent
 
@@ -196,23 +196,23 @@ Prototype progression can call this through a debug Age selector before S02 is i
 
 ## 8. Generation pipeline and data boundaries
 
-Proposed pure generation stages: WorldRecipe → SectorGraph → SlotAssignment → RegionalHeightClimate → SharedSeamConstraints → DrainageGraph → BiomeRefinement → SeedFields → AgeMagicGraph → Features → InitialSimulationState → ValidationReport. Authored constraints can require bounded feedback between adjacent stages; log why a repair occurred.
+Proposed pure generation stages: WorldRecipe → QuadrantGraph → SlotAssignment → RegionalHeightClimate → SharedSeamConstraints → DrainageGraph → BiomeRefinement → SeedFields → AgeMagicGraph → Features → InitialSimulationState → ValidationReport. Authored constraints can require bounded feedback between adjacent stages; log why a repair occurred.
 
-Proposed content assets: WorldRecipe, SectorDefinition, BiomeRecipe, BiomeVariant, EdgePortSet, LandmarkTemplate, ResourceGrandfieldDefinition and AgeMagicProfile. Runtime plain data: WorldTopology, SectorInstance, BiomePlacement, HierarchicalCellId, RiverGraph, LeylineGraph, MagicSource, ScalarField, FeatureInstance and WorldChangeSet. Names are proposals, not existing classes.
+Proposed content assets: WorldRecipe, QuadrantDefinition, BiomeRecipe, BiomeVariant, EdgePortSet, LandmarkTemplate, ResourceGrandfieldDefinition and AgeMagicProfile. Runtime plain data: WorldTopology, QuadrantInstance, BiomePlacement, HierarchicalCellId, RiverGraph, LeylineGraph, MagicSource, ScalarField, FeatureInstance and WorldChangeSet. Names are proposals, not existing classes.
 
 Keep render LOD separate from simulation. Mesos own normal economy/travel aggregation; micro cells own physical detail and local edits feeding those aggregates. A single quantity has one authoritative owner. Use chunk meshes/Tilemap batches, pooled feature markers and dirty-region updates; do not tick every visible plant or every tile independently. Cache fields and aggregate summaries with generation/version dependencies. Store generator version, catalog hash, original assignments and player deltas for future persistence; a seed alone is insufficient after generator changes.
 
 ## 9. Acceptance tests and remaining choices
 
-Required tests: same seed/version/catalog gives identical output; every required biome appears exactly once; rotations use allowed sets; P has no gaps/overlaps; shared heights and river endpoints agree; mainland and enclosing ocean circuit remain connected with minimum width; no river climbs uphill except an explicit magical override; every child has exactly one parent, including negative coordinates and map edges; aggregate yields equal authoritative children; zoom never changes paths/ownership; two lineages give Convergence and three-plus colocated lineages give Basin; repeated segments never overcount; ordinary water does not move on Age change; silver concentration changes only along reachable downstream water; Sacred Sites persist; Age change commits once; protected sites and generated features satisfy exclusion and reachability rules.
+Required tests: same seed/version/catalog gives identical output; every required biome appears exactly once; rotations use allowed sets; the intersections have no gaps/overlaps; shared heights and river endpoints agree; mainland and enclosing ocean circuit remain connected with minimum width; no river climbs uphill except an explicit magical override; every child has exactly one parent, including negative coordinates and map edges; aggregate yields equal authoritative children; zoom never changes paths/ownership; two lineages give Convergence and three-plus colocated lineages give Basin; repeated segments never overcount; ordinary water does not move on Age change; silver concentration changes only along reachable downstream water; Sacred Sites persist; Age change commits once; protected sites and generated features satisfy exclusion and reachability rules.
 
 Performance acceptance must be measured on the target device: generation time, memory, worst-case chunk build, panning/zoom frame time, Age recomputation and largest-feature overlays. No timing targets are certified by this document.
 
-Outstanding content decisions: complete S1–S7 biome catalogs and per-instance slot counts; attached/offshore role of outer sector instances; permitted orientations and reflection rules; detailed world dimensions; macro grouping ratio after prototype; seed influence/flow coefficients; silver-river retention; grandfield depletion; exceptional Sacred Site overrides; whether resets reshuffle geography. These do not block a deterministic S2/S5 seam prototype.
+Outstanding content decisions: complete Q1–Q7 biome catalogs and per-instance slot counts; attached/offshore role of outer quadrant instances; permitted orientations and reflection rules; detailed world dimensions; macro grouping ratio after prototype; seed influence/flow coefficients; silver-river retention; grandfield depletion; exceptional Sacred Site overrides; whether resets reshuffle geography. These do not block a deterministic Q2/Q5 seam prototype.
 
 ## Sources and authority
 
-The user's supplied image and clarifications establish S1–S7 sectors, P seams, W water, S2/S5 example catalogs, rotation/shuffling, the three zoom levels, seed fields, Convergence/Basin counts and silver-river interaction. Those instructions take precedence over earlier assumptions in this draft.
+The user's supplied image and clarifications establish Q1–Q7 quadrants, I intersections, W water, Q2/Q5 example catalogs, rotation/shuffling, the three zoom levels, seed fields, Convergence/Basin counts and silver-river interaction. Those instructions take precedence over earlier assumptions in this draft.
 
 Vault source: [Arcanoria — Map Features](<C:/Arcanoria Master/Arcanoria/Worldbuilding/Rise & Fall, Crisis/Arcanoria.md>) specifies moving leylines, fixed Sacred Sites, settlement/authority rules, grandfields, trade geography and enclave development. [Leylines](<C:/Arcanoria Master/Arcanoria/Worldbuilding/Origin of Magic/Conduits of Magic/Leylines.md>), [Grand Thread Rings](<C:/Arcanoria Master/Arcanoria/Worldbuilding/Origin of Magic/Conduits of Magic/Grand Thread Rings.md>) and [Sacred Site](<C:/Arcanoria Master/Arcanoria/Worldbuilding/World Environment/Landmarks/Sacred Site.md>) are short supporting notes; the detailed operational algorithms above are design proposals, not claims that those notes already specify them.
 
@@ -220,31 +220,31 @@ Vault source: [Arcanoria — Map Features](<C:/Arcanoria Master/Arcanoria/Worldb
 
 The hierarchy proposal was checked over 25,921 parent positions spanning positive and negative coordinates, with 181,447 child-to-parent round trips; a complete three-level group contains 343 distinct micro cells. A sign error in the draft forward transform was corrected before delivery. The final mapping in section 3 matches the validated inverse.
 
-The illustrative browser study was checked for seed-driven S5 catalog permutation, displayed orientations, meso/micro zoom and Age/field controls. Its 360-pixel layout had no horizontal overflow. This study demonstrates composition, exact cell grouping and example fields; it does not implement the production seam solver, drainage simulation, content-placement rules or Unity integration. The acceptance tests in section 9 and WG01–WG13 remain work to implement. No Unity runtime or EditMode validation is claimed for this documentation change.
+The illustrative browser study was checked for seed-driven Q5 catalog permutation, displayed orientations, meso/micro zoom and Age/field controls. Its 360-pixel layout had no horizontal overflow. This study demonstrates composition, exact cell grouping and example fields; it does not implement the production seam solver, drainage simulation, content-placement rules or Unity integration. The acceptance tests in section 9 and WG01–WG13 remain work to implement. No Unity runtime or EditMode validation is claimed for this documentation change.
 
 ## Implementation, September 27, 2026
 
 The generator and the three-scale viewer are built in Unity (uncommitted; roadmap 3.1 lists each WG task's state). How
 the design became code, and where it was simplified:
 
-- **Slots and catalogs.** Each same-sector block of the stencil is one slot; blocks of a sector that only P separates
-  form one sector instance ("S5 South-East"). A sector's catalog is shared by all its slots. S2 fills its two slots with
-  Violet Grove and Great Expanse in either order; **S5 has three slots in the stencil, so each world draws three of its
-  four biomes** and places and turns them. S1, S3, S4, S6 and S7 use placeholder catalogs until their biomes are named.
+- **Slots and catalogs.** Each same-quadrant block of the stencil is one slot; blocks of a quadrant that only an intersection separates
+  form one quadrant instance ("Q5 South-East"). A quadrant's catalog is shared by all its slots. Q2 fills its two slots with
+  Violet Grove and Great Expanse in either order; **Q5 has three slots in the stencil, so each world draws three of its
+  four biomes** and places and turns them. Q1, Q3, Q4, Q6 and Q7 use placeholder catalogs until their biomes are named.
 - **Handmade tiles (the hybrid).** Biomes own hand-drawn tiles (`Resources/World/Tiles/*.txt`, a honeycomb drawing with
   a legend, optional heights and allowed rotations). The generator stamps them at seeded places and rotations inside
   each slot's protected interior (three or more cells from its edge), never touching one another; the rest of the slot
-  is procedural, and P plus the slots' buffer bands blend the neighbours.
+  is procedural, and the intersections plus the slots' buffer bands blend the neighbours.
 - **Scale.** Eight meso cells across a stencil cell and an ocean apron of one and a half stencil cells: about 34,000
   meso cells, 237,000 micro hexes and 700 macro aggregates. Generation takes about half a second on the dev PC.
 - **Seams.** Instead of explicit edge ports, every slot within reach of a cell's nearest slot lends its recipe, weighted
   by how much nearer it is, so height, relief and moisture are continuous everywhere, including where the second-nearest
-  slot changes. The solver keeps facing seam heights within 0.3 (a simplified port check); P carries any remaining
-  slope. A mountainous sector raises a range along the P between its own slots. Ground is chosen by coherent noise,
+  slot changes. The solver keeps facing seam heights within 0.3 (a simplified port check); the intersections carry any remaining
+  slope. A mountainous quadrant raises a range along the intersections between its own slots. Ground is chosen by coherent noise,
   so it forms patches and seams interlock.
 - **Water.** A gentle continental dome, then priority-flood drainage (ties broken by a seeded hash so water fans across
   flats), lakes of 4 to 80 cells (a larger hollow stays land and drains across; a lake that would cut a slot off the
-  mainland stays dry), flow accumulation and rivers. The capital stands in S1 on the mainland within three cells of
+  mainland stays dry), flow accumulation and rivers. The capital stands in Q1 on the mainland within three cells of
   freshwater (a pond is placed and reported otherwise).
 - **Magic.** One leyline family per Coherence Seed, integrated as a curve through the Grand Thread Rings' field (each
   ring turns one way about a centre that orbits a little each Age); its footprint is the cells it crosses. Junctions
@@ -256,10 +256,10 @@ the design became code, and where it was simplified:
   scrolling in at the closest zoom over the capital returns.
 
 Still open: target-device profiling, the WG12 debug Age selector and transition overlay, grandfields, enclave
-candidates and trade nexus sites (WG10), the sector catalogs, island roles for outer sectors (the sector `island` flag
-turns its P to sea, but no sector is marked one yet), reflections, and edge ports for rivers and passes as authored data.
+candidates and trade nexus sites (WG10), the quadrant catalogs, island roles for outer quadrants (the quadrant `island` flag
+turns its intersections to sea, but no quadrant is marked one yet), reflections, and edge ports for rivers and passes as authored data.
 
-### World review follow-up � 2026-09-26
+### World review follow-up � 2026-09-26
 
 Implemented after review of the current generator:
 - Every meso tile has explicit authority, administrative reach and an impassable flag. The capital and independent enclave sites project authority across passable land; water and barriers stop it. Unclaimed land stays wilderness. Discovery does not annex land. Micro children inherit their meso tile's state; this is initial territorial geography, not the future diplomacy/annexation simulation. Existing exploration production rules remain unchanged pending that system.
@@ -540,3 +540,639 @@ in `World.asset` (`settlements.territory`, terrain `governance`/`beauty`, featur
   as seats with their own authority id.
 - Save schema: `WorldSystem._adopted _adoptionProgress _driftProgress _borderPolicy` (saves from before do not load,
   like earlier schema changes). Tests: `WorldTerritoryTests` (11). Rebuild at 34k cells ~5 ms; one adoption ~6 ms.
+
+## Resource sites, harvests, seeds and borders, September 27, 2026 (late night)
+
+Asked for: resources that make tiles worth having (the smaller cousins of Resource Grandfields), identified only by a
+survey, that raise the land's value and make their neighbours fairer or uglier and more or less coherent (an
+Emberwhisper spire is beautiful but unsettles Coherence); a proposal of 20 to populate the map; seeds (highland rice)
+carried to fertile land you hold; expeditions harvesting them as cargo and valuables without claiming the tile
+(grievances when the ground belongs to someone); and a default-view outline of each civilization's borders in its
+own colour (yours a faint gold). Built as `WorldResources` (pure, `WorldResourcesTests`) and
+`WorldSystem.Resources.cs`; every number, name and line of text is a proposal in `World.asset`
+(`generation.resourceSites`).
+
+- **Placement** (`WorldResources.PlaceAge`, with the grandfields each Age): each kind arrives in its Age, `count`
+  patches of up to `size` cells, `spacing` apart, `minDistance` steps from the Capital, on its terrains and biomes,
+  never on water, peaks, features, grandfields, settlements or enclaves. Rules can ask for nearby terrain (highland
+  rice within 2 cells of peaks), moisture, fertility, a Coherence window, dissonance, freshwater, silver water or a
+  leyline. Placed sites are saved (`WorldSystem._resourceSites`), so a site never moves after a load.
+- **Knowledge**: a site shows only its kind once its cell is known ("Unidentified flora", with a hint such as "a glow
+  among the leaves"); rays of Aetherlight and Emberwhisper spires show from afar. A survey that explores one of its
+  cells identifies it (a notice lists its land value, yields and harvest), awards discovery fragments, and the first
+  expedition to identify certain kinds is offered an event line.
+- **Land value** (identified only): City Development term *Resources* = 1.5 x the land value of each site a settlement
+  works (each site once, capped at +/-18); adoption priority +0.12 per point, so society reaches for valuable land
+  first. Blights (negative land value) push both down. Identified sites yield while their cell is yours or your
+  Outpost's (their yields shared among a patch's cells, scaled by improvement, beauty and administration).
+- **Neighbours** (`WorldResources.Refresh`, before beauty and authority in every rebuild): beauty of its own cell plus
+  an aura that fades over `auraRadius`; a Coherence aura handed to the magic as a per-cell shift (`WorldMagic.SetShifts`,
+  recomputed without re-routing leylines); a fertility aura added to land fertility (taken back before it is lent
+  again). The Resources lens colours identified sites, sighted ones grey, and the land around green where sites help
+  and red where they spoil it.
+- **Harvest** (expedition ability, 1 Seventh): once an Age per site, an identified site's harvest goes into the packs
+  (40 cargo per legend; seeds weigh nothing; the party's reward multiplier applies). The tile is not claimed. In the
+  wilderness or on your own land nothing else happens; on ground an enclave or independent claim holds, that holder's
+  grievances rise (5-15 per harvest), an enclave's standing with you falls by as much (below 75 it casts off your
+  Suzerainty), grievances fade 0.5 a Seventh, and an envoy answers them before it raises your standing. Cargo is
+  unloaded into your stores in any of your settlements.
+- **Seeds and planting** (expedition ability, 1.5 Sevenths): crops and silverreed give seeds with their
+  harvest (glimmerfern did until it became a sterile bloom). Planted on surveyed, fertile ground you hold (each kind's fertility and Coherence minimum), they become a
+  planted patch worth its `plantedShare` of a wild one (yields x the cell's fertility / 0.5); some change the soil
+  (earth-beans +8% fertility, feral peaches -6%). Plantings are saved.
+- **Borders**: every held cell is outlined where it meets another holder or the wilderness, in the holder's colour
+  (`settlements.borderColor`, a faint gold for you; each enclave its own; independent claims amber), at every lens and
+  zoom (`WorldRenderer.RefreshOwners`, `_OwnerTex` in `WorldTerrain.shader`).
+- **New usable resources**: Highland Rice (Stored Food, food value 1.2, spoils 0.4% a Seventh), and a new *Valuables*
+  section: Sky Glass, Silverreed, Lumenwool (placeholder icons borrowed from existing resources).
+
+### The 20 resource sites (proposal)
+
+| Site | Kind | Age | Where | Land value | Neighbours | Harvest (per Age) |
+|---|---|---|---|---|---|---|
+| Highland Rice Terraces | crop | 0 | highlands, foothills, mesas within 2 of peaks, moist | +3 | fairer | 20 Highland Rice + seeds |
+| Wild Earth-Bean Tangle | crop | 0 | plains and steppes, fertile | +2 | +fertility | 24 Earth-Beans + seeds (enrich soil) |
+| Feral Auric Peach Trees | crop | 0 | auric meadow/copse, orchards | +3 | fairer, -fertility | 18 Dried Auric Peaches + seeds (drain soil) |
+| Bitter Root Hollow | crop | 0 | marsh, bog, woodland, taiga | +1.5 | - | 22 Bitter Roots + seeds |
+| Deep-Rooted Grain Stand | crop | I | plains and steppes by fresh water | +3 | - | 16 Deep-Rooted Grain + seeds |
+| Lesser Glimmerfern Grove | bloom (was flora; sterile since the Eleos Blooms section) | 0 | beside Forsaken Flowers or on hurtful ground | +4 | much fairer, +Coherence | 12 Glimmerfern |
+| Elderwood Sentinel | flora | 0 | forests | +2 | fairer, +Coherence | 25 Elderwood |
+| Silverreed Beds | flora | I | wet ground by fresh water and silver or a leyline | +3 | fairer, +Coherence | 14 Silverreed + seeds |
+| Hollow Thornbriar | blight | I | rift scar, ruins, orchards, ash; wounded ground | -3 | uglier, -Coherence, -fertility | nothing |
+| Lanternback Grazers | Pure Light fauna | 0 | plains, steppes, meadows; Coherence 0.3+ | +3 | fairer | 10 Lumenwool (yields Aetherlight too) |
+| Ember Salamander Den | Pure Light fauna | I | highlands, mesas, rift scar, ash | +2 | -Coherence | 6 Emberwhisper |
+| Moonveil Moths | Pure Light fauna | II | moonlit groves, violet glades, marsh | +3 | fairer, +Coherence | 6 Lunehymn |
+| Choir Cicada Swarm | Pure Light blight | I | orchards, meadows, plains | -2 | -fertility (2 cells), -Coherence | nothing |
+| Rays of Aetherlight | light | 0 | anywhere, Coherence 0.45+; seen from afar | +5 | fairer, +Coherence, +fertility (2 cells) | 8 Aetherlight |
+| Lunehymn Well | water | 0 | groves, woods, marsh, taiga; Coherence 0.3+ | +5 | fairer, +Coherence (2 cells) | 10 Lunehymn |
+| Emberwhisper Spire | mineral | I | highlands, foothills, mesas, rift scar; seen from afar | +4 | much fairer, **-Coherence (2 cells)** | 10 Emberwhisper |
+| Duskstone Outcrop | mineral | 0 | highlands, foothills, ruins, scrub | +2 | - | 25 Duskstone |
+| Skyglass Shards | mineral | I | ash, rift scar, ruins, scrub | +3 | - | 8 Sky Glass |
+| Sour Tar Seep | blight | 0 | ash, scar, ruins, marsh, bog; out of tune | -4 | much uglier, -Coherence, -fertility (2 cells) | nothing |
+| Resonant Hot Spring | water | 0 | highlands, foothills, taiga, woods | +4 | fairer, +Coherence, +fertility | nothing (yields Faith) |
+
+Event lines (`Events/Expeditions.ink`, placeholder prose): *The Terraces No One Planted* (highland rice), *The Moonlit
+Vigil* (glimmerfern; the vault's courtship rite), *Lanterns in the Grass* (Lanternback Grazers), *The Whispering
+Spire* (Emberwhisper spire).
+
+- Save schema: `WorldSystem._plantings _grievances _resourceSites`, `WorldUnit.cargo/seeds` (optional fields), tile
+  `harvestedAge`. Saves from before do not load, like earlier schema changes. `ContentValidator` checks every site's
+  resources, terrains, event lines and that a site with no harvest says why.
+- Tests: `WorldResourcesTests` (placement by Age and determinism, knowledge, land value, auras and idempotent refresh,
+  harvest, grievances, planting, save round trip, and the real catalog placed on three real worlds).
+
+## Settling hex by hex, and surveys, September 27, 2026 (latest)
+
+Owner direction: land is acquired one micro hex at a time and takes longer; society's own adoption depends on the
+Capital's population (nothing below 25 citizens, likelier the more there are); an expedition explores a cell once it
+has seen all seven hexes, or, sent to survey a cell, walks each of the seven, and a survey is likelier to trigger events
+and find spare resources than passing by; the survey should be intuitive. Every number below is a proposal (World.asset
+defaults, `TerritoryRules` and `ExpeditionSettings`).
+
+- **Settling** (`WorldTerritory`): `WorldTile.microHeldMask` (saved, optional) holds the settled hexes of a wilderness
+  cell. `NextHex` picks the unsettled hex touching the most held ground (neighbour cells of the authority and the cell's
+  settled hexes), so land fills in from the border; crags come with the rest (`FullySettled`). A cell fully settled
+  joins `Adopted` (or `Claims`). `Candidates` puts begun cells first (most settled), so a seat finishes one cell before
+  starting another. Drift clears a lost cell's mask.
+- **Pace**: `SeatSpec.adoptPerSeventh` is now micro hexes per Seventh at full population (the Capital 1: a cell in 7
+  Sevenths instead of 1). `PopulationShare`: 0 below `adoptionMinPopulation` (25), `adoptionLeastShare` (0.2) at it,
+  rising to 1 at `adoptionFullPopulation` (100); `RealmContext.population` comes from `PopGrowthLogic.population` (-1:
+  not counted). With a roll (WorldSystem: `WorldNoise` stream "territory-adoption", saved counter `_adoptionRolls`) the
+  pace is a chance rolled once per seat per whole Seventh; without one (tests) the expected hexes accumulate.
+- **Claims**: paying puts the cell in `WorldMap.Claiming` (saved `WorldSystem._claiming`, `_claimProgress`);
+  `AdvanceClaims` settles one hex of each every `claimSeventhsPerHex` (0.6) and moves it to `Claims` when whole. Pending
+  claims count toward the claim cost growth; society does not adopt a cell being claimed.
+- **Passing exploration** (`WorldSystem.Look`): a cell whose every open hex has been seen up close
+  (`WorldMap.FullySeen`: known or surveyed, crags aside) is explored at once, its sites investigated, unless a party
+  was sent to survey it. `MicroNavigation.Surveyed` now means the hex's survey bit only (explored in passing is not
+  surveyed), so a survey can still follow.
+- **Surveys** (`WorldSystem.SurveyCell`, `WorldUnit.surveying/surveyCell`, optional save fields): the party walks to
+  the nearest hex still to survey (`UnitAbilities.CellTargets`), works `HexSevenths` there (`mesoSurveySevenths` / 7),
+  and goes on; when none is left the cell is explored (if it was not) and the survey rolls its finds. Any other order
+  (go, halt, camp by hand, return, retreat, auto-explore, going missing) ends it. The old "survey around" task is kept
+  only for saves made mid-task.
+- **Finds** (`Expeditions.RollSurvey`, `Cache`): deterministic per cell (streams "passing-finds" and "survey-finds").
+  Events 6% passing / 30% surveyed; spare resources 8% / 40% (the cell's forage x2.5, or its yields for 90 s, times the
+  party's reward multiplier, straight into the stores). Default events (`DefaultSurveyFinds`, no vault source): old
+  waymarks (reveal 3), a hidden spring (rations refilled, -25 fatigue), traces of those before (2 Lyrical Fragments of
+  discovery each); a `Story` find plays an ink knot with the party cast.
+- **UI**: unit card *Survey this meso hex* / *Survey another meso hex* (then click; Esc cancels) / *Stop surveying*,
+  Shift + right click surveys the cell, a selected cell's card offers *Survey it with* the nearest expedition; hover
+  shows hexes seen or surveyed and settling progress; settled hexes are dots in the border colour (gold ring and dots
+  for a claim); the Realm panel says when adoption waits for citizens.
+- Saves: new fields are `[SaveOptionalField]`, and `SaveStateCodec.Restore` now lets a system's or tile's optional
+  field be missing, so this change by itself does not break older saves. Tests: `WorldTerritoryTests` (15),
+  `ExpeditionTests` (survey rolls, caches), `WorldUnitTests` (cell survey targets), `SurveyPlayTests`,
+  `TerritoryPlayTests` (population gate, a cell settled hex by hex).
+
+## Cover and ordinary animals, September 27, 2026 (latest)
+
+Asked for: regular animals beside the Pure Light ones, and features like deep forests that hold intriguing things of
+their own, block the view and make exploring harder while being useful for production, several of that kind. Built as
+`WorldCover` (pure, `WorldCoverTests`); every number, name and line is a proposal in `World.asset`
+(`generation.covers`, `generation.resourceSites`).
+
+- **Cover** (`CoverSpec`, `WorldCover.Place`, once with the world at Age 0; the same seed and catalog give the same
+  patches, so nothing is saved): blob-shaped patches of `minSize`-`maxSize` cells on their terrains, `spacing` apart,
+  never within 3 cells of the capital, on settlements or enclaves. Each patch copies its effects onto its cells
+  (`WorldTile.cover/concealed/coverSight/coverTravel/coverSurvey/coverFinds/coverHardship`).
+- **Exploring it**: concealing cover blocks line of sight (`WorldCover.Visible`: a party sees a forest's edge, not what
+  lies beyond, unless it stands on high ground); from inside, sight is capped (1-3 micro hexes); travel is multiplied
+  (in `MicroGrid.CellFactor`, so micro routes and meso paths agree); surveys take longer (`UnitAbilities.Duration`); some
+  cover wears parties down (attrition per Seventh, `UnitSurroundings.hardship`); survey events and spare finds are
+  likelier inside (`Expeditions.RollSurvey` odds, capped at 90%). Features and resource sites inside concealing cover
+  stay hidden (no marker, no name, "Something unseen" in the beauty breakdown) until the cell is explored.
+- **Holding it**: held cells yield (`WorldCover.YieldsOf`, in land yields and hotspot improvement), cover adds to the
+  ground's forage, adds beauty, and multiplies governance difficulty (dense ground is harder to administer).
+- **UI**: cover tints the ground, mottled hex by hex; the hover card has a Cover row (effects, yields, "what stands
+  inside is hidden"), travel fatigue names it, and an unwalked forest reads "Deep Forest" instead of "Unknown wilderness".
+
+| Cover | Ground | Sight | Travel | Surveys | Wear | Finds | Held, per cell | Forage |
+|---|---|---|---|---|---|---|---|---|
+| Deep Forest | woodland, taiga, violet wood, auric copse | blocked, 1 inside | x1.6 | x1.5 | - | x1.6 | Elderwood, Game Meat | Game Meat 3, Bitter Roots 1 |
+| Mistfen | marsh, bog | blocked, 1 inside | x1.8 | x1.6 | 3 | x1.4 | Peat | River Fish 2 |
+| Reed Sea | plains, steppes | blocked, 2 inside | x1.3 | x1.3 | - | x1.3 | Game Meat, Hides | Game Meat 2, Earth-Beans 2 |
+| Canyon Maze | highlands, foothills, mesas, rift scar | blocked, 2 inside | x2 | x1.4 | 1 | x1.6 | Duskstone | - |
+| Bramble Thicket | scrub, ruins, orchards | open, 3 inside | x1.8 | x1.2 | 1.5 | x1.2 | Bitter Roots | Bitter Roots 3, Wild Honey 1 |
+| Ashen Haze | golden ash, rift scar | blocked, 1 inside | x1.3 | x1.5 | 4 | x2 | Sky Glass | - |
+
+- **Ordinary animals** (resource sites, harvested like any other): Steppe Aurochs Herd (+3, Game Meat and Hides, manure
+  +fertility), Highland Ibex (+2, near peaks), Taiga Elk (+2.5), River Trout Run (+3, by fresh water), Wild Bee Hollow
+  (+2.5, Wild Honey, pollination +fertility over 2 cells), Bog Eel Pools (+1.5), Wild Boar Sounder (+1.5, roots up
+  fields: -fertility), Grey Wolf Pack (-1.5 from Age I: takes calves; hunted for Hides).
+- **Sites found only inside cover** (`ResourceSiteSpec.covers`): Heartwood Hollow (Deep Forest; +4, +Coherence,
+  Elderwood and Glimmerfern), Drowned Cache (Mistfen; Duskstone and Sky Glass), Echo Vault (Canyon Maze; +4, yields
+  Research, cannot be carried off), Ash-Buried Relics (Ashen Haze; Sky Glass and Duskstone).
+- **New resources**: Game Meat (food value 2, spoils 6%), River Fish (1.2, 7%), Wild Honey (1.5, never spoils) in
+  Stored Food; Hides and Peat in Valuables (borrowed icons).
+- Measured on three real worlds: 12-24 patches of each cover (Deep Forest ~10 cells a patch; Mistfen patches stay small,
+  ~2 cells, because marsh ground is scattered); every one of the 32 resource sites places its full count.
+- The catalog fingerprint includes cover, so a save from before it names a different world. Tests: `WorldCoverTests`
+  (placement and determinism, line of sight, sight from inside, travel, hardship, find odds, hidden sites, yields,
+  forage and governance, and the real catalog).
+
+## Desirability, outskirt tributaries and districts, September 27, 2026 (latest)
+
+Owner direction: housing develops better where people want to live (beauty, high Coherence, magical and land
+fertility, leylines, the surrounding hexes); two ways to settle, minor and major civilization hubs: outskirt
+tributaries serve an existing settlement (the Capital's outskirt towns), lead back to it, help make trade routes, stand
+as nodes, build roads and raise administrative authority nearby without being full settlements, and are built only
+inside controlled territory, while settlers found independent Outposts and towns, beyond it too. Tributaries unlock at
+The Rekindling, begin as generalists and can be upgraded to one specialised district (defence, barracks, science...);
+districts gain from adjacency to one another and to what lies near them, never stand right beside one another, but
+their radii connect so one meso hex stands for the whole outskirt district. Every number below is a proposal
+(`SettlementRules.desirability`, `SettlementRules.tributaries`; World.asset takes the code defaults until saved).
+
+- **Desirability** (`WorldDesirability`, `DesirabilityRules`): a cell's own appeal is the weighted mean of beauty
+  (rescaled 0-1), Coherence, magical fertility, land fertility and leylines (a Basin 1, a Convergence 0.85, a line 0.7,
+  else 0.6 x leyline influence; weights 0.2/0.25/0.15/0.25/0.15), blended 40% with the mean appeal of the six land hexes
+  around it, less 0.4 x danger and 0.5 x dissonance, clamped 0-1 (0 on water and impassable ground). Not
+  `WorldTile.Desirability`, the generator's raw reading used for enclave placement. `GrowthFactor`: every settlement's
+  City Development grows (and falls) x0.5 on the least desirable ground to x1.6 on the most. New Desirability lens
+  (shared 0-100% scale; cells where a tributary could be raised now are lifted toward white); the land card shows it.
+- **Tributaries** (`SettlementKind.Tributary`, `WorldTributaries`; `Settlement.parent` = its hub, `Settlement.district`,
+  both `[SaveOptionalField]`): raised by `WorldSystem.RaiseTributary(tile, hub)` from a held cell's card, one action per
+  hub in reach. Rules: The Rekindling researched; known, dry, passable land inside your Administrative Authority,
+  nothing on it, no settlement or enclave within 1 cell (`spacing` 2); a hub (Capital, Major Settlement, Developing Town
+  or Religious Haven, not detached) within `hubReach` 3 with a free place: Capital and Major 3, Town and Haven 1, +1 per
+  25 City Development. Cost 40 Food + 20 Elderwood, +15% per tributary standing. Founded with a road to its hub
+  (`WorldCivilization.BuildRoad`, so it joins the network through its hub and other roads may end on it), its own cell a
+  Trade Node, radius 1 explored, named "<hub> Outskirts I, II...". Independent settlements keep only the tributary
+  spacing from a tributary. It answers to its hub, forms no expeditions (unless its district outfits them), holds no
+  Anchor, is never promoted, is not counted as a joined settlement for network capacity (its seat counts instead).
+- **Seat of pull**: `SeatKind.Tributary` (strength 0.45, reach 3.5, 5 cells, 0.2 hexes/Seventh, capacity 1.5 scaled by
+  development), times its district's pull; reach +1 at pull x1.5 or more.
+- **Growth**: toward 100 x its desirability, never more than `aboveHub` 15 above its hub's City Development, at 0.2 a
+  Seventh x the desirability pace (ticked after the hubs). It lends its hub City Development (`DevelopmentTerm.Outskirts`:
+  each district's `hubDevelopment` x adjacency, full from 40 development; at most 15 per hub).
+- **Districts** (`DistrictSpec`, `TributaryRules.districts`): the generalist Outskirt Hamlet (housing 2 per 10
+  development for the Capital's people through `PopGrowthLogic.SetBaseHousing("Outskirt tributaries")`, a little Food,
+  +2 hub development) and seven upgrades: Bastion (defence: wards off 45% of the danger within 2 cells, that land never
+  drifts away, pull +35%), Barracks (an expedition slot, two at adjacency +100%; outfits expeditions like a town),
+  Lyceum (Research 0.03/s per 10 development), Market Quarter (+6 hub development, capacity 1.5, some Food and Research),
+  Granary Fields (Food 0.08), Sanctum (Faith 0.04, +2 hub development), Artisan Quarter (Elderwood 0.04, Duskstone 0.02).
+  Each has a minimum development (5-15) and a cost; the first upgrade pays the price, a later change x1.5 and keeps 50%
+  of the development, a return to the hamlet is free (and keeps 50%).
+- **Adjacency** (`AdjacencyRule`, `WorldTributaries.Adjacency`): per district, shares of its effect per unit of a
+  source read within `adjacencyRadius` 1: linked districts (tributaries within `linkDistance` 2, whose radii touch; a
+  named district or any), a hub within 2, freshwater, coast, a leyline, a junction, mean Coherence / magical / land
+  fertility / beauty / dissonance, high ground, cover, a grandfield, identified resource sites, another road than its
+  own, a Trade Nexus, Sacred ground, danger. Effects are x (1 + adjacency), adjacency within -50%..+150%. Clashes: a
+  Barracks lowers a Lyceum (-25%) and a Lyceum a Barracks (-20%), an Artisan Quarter the hamlets (-10%), danger the
+  Granary (-40%). A Bastion reads the raw threat, a Granary the danger left after the watch, so a Bastion beside the
+  fields shields them. The tributary card lists every district with its adjacency on that ground, best first.
+- **Map**: a soft glow in the district's colour over its radius (linked districts run together into one quarter) and a
+  dot (generalist) or diamond (district) at its heart. Hub cards show "Tributaries n of m"; the expedition section shows
+  only where parties can form.
+- Content check: the technology, costs, yields, the generalist and district names in adjacency rules
+  (`ContentValidator`). Tests: `WorldTributaryTests` (6: desirability, placement, growth and hub development, district
+  upgrades, adjacency and links, the Bastion's watch); `WorldCivilizationTests` growth now expects the desirability pace.
+- Open: a tributary cut off when its hub is lost keeps standing (no hub: no cap, no hub development); districts on
+  enclave borders do not raise grievances; no events are cast on districts yet; the numbers need a balance pass against
+  the Capital's own housing and Research.
+
+### Follow-up: districts by Enclave category, and orphaned tributaries (same day)
+
+Owner direction: one district for each Enclave category (Enclave.md, "The Horizontal Worldbuilding of Enclaves": the ten
+categories and their activities), "fully Arcanoria"; tributaries whose hub is lost rejoin the nearest hub.
+
+- The seven districts above are folded into the categories (Bastion + Barracks -> Militant, Lyceum + Sanctum -> Auric,
+  Market Quarter -> Trading, Granary Fields -> Agromagical, Artisan Quarter -> Industrious) and five are new (Weaver,
+  Domestication, Regal, Indulgent, Esoteric); the Outskirt Hamlet stays the generalist. `DistrictSpec.enclave` names the
+  category, `role` repeats its activities. Ids are the category in lower case; an unknown saved id reads as the hamlet.
+- `DistrictSpec.stats` (`DistrictStat`: whole points per 50 development x (1 + adjacency), rounded down), applied by
+  `WorldSystem.RecomputeYields` through `EffectRouter` (`WorldTributaries.StatEffects`, one source per tributary): the
+  four categories that name a pillar raise it (Auric Aureus, Weaver Waltz, Regal Regalia, Esoteric Chorus), Militant
+  Ambition, Indulgent morale (`MoraleModifier`). A Capital council seat gives +1 to a pillar, the scale used here.
+- Yields per 10 development: Agromagical Food 0.07 + Glimmerfern 0.004 (housing 1.5); Militant Game Meat 0.02 + Hides 0.01
+  (ward, holds land, pull, expedition slot, outfits; min development 15); Auric Research 0.03 + Faith 0.02; Weaver
+  Silverreed 0.004 (+3 hub development); Domestication Game Meat 0.03 + Hides 0.01 + Lumenwool 0.005; Trading Food 0.02
+  (+6 hub development, capacity 1.5); Industrious Elderwood 0.04 + Duskstone 0.02; Regal none (capacity 2, pull, min
+  development 20); Indulgent Wild Honey 0.01 (housing 1); Esoteric Research 0.01 + Sky Glass 0.004.
+- New adjacency source `Enclave`: each enclave of the district's category within `enclaveReach` (5) cells, twice when
+  suzerain (+0.3 each for most districts); a Regal District's envoys count every category ("any", +0.15). Pairings
+  follow Enclave.md's interdependencies where it gives them (Agromagical with Weaver and Indulgent, Auric with
+  Domestication); the clashes (Militant vs Auric, Industrious vs hamlet and Domestication, Militant vs Indulgent, Regal
+  vs Regal, Esoteric away from hubs and thriving on dissonance) are game proposals, not vault canon.
+- Orphans (`WorldTributaries.Rehome`, run at the start of `WorldCivilization.Rebuild`): a tributary whose hub is gone,
+  detached or no longer a hub rejoins the nearest hub within reach with a free place, else the nearest within reach,
+  else the nearest anywhere (the Capital first on a tie), keeps its district and development, and gets a free road to
+  its new hub when none joins them (`BuildRoad(..., rebuild: false)`). Moves wait in `WorldMap.rehomed` (never saved)
+  for the next civilization notice. No code removes or detaches a hub yet (roadmap D07), so this only guards the future.
+- Tests: `WorldTributaryTests` now 9 (ten categories and pillar stats, kindred enclaves and Suzerainty, orphans
+  rejoining). `ContentValidator` checks every category has a district, each category name and each stat.
+
+## Loss, damage and ruins, September 27, 2026 (latest)
+
+Owner direction: settlements can be lost, pillaged or damaged; orphaned tributaries with no connecting route wither; anything
+but the Capital can be lost, and the Capital can be profoundly damaged; the fallen become ruins that stay on the map and can
+be investigated to compost the failure into a variety of bonuses (Enlightenment, sometimes civics, Research, resources), so
+loss is transformation without being fully punishing; adopting a civic from the ruins earns Digestive Rebirth. Every number
+is a proposal (`SettlementRules.loss`, `LossRules`).
+
+- **Damage** (`Settlement.damage` 0-100, `harmedBy`, `warned`; optional save fields; `WorldRuins.Tick` each Seventh once the
+  map is open, never while a save restores): danger at the cell above 0.15 (after a Militant ward) deals up to 5 a Seventh
+  at danger 1; a tributary no road joins to a hub (orphaned with no hub, or its road cut) withers at 4 a Seventh; stories
+  pillage through the new `settlement:<capital|exposed|Name> -N` consequence (`+N` repairs; `WorldSystem.Pillage`). Each point
+  of damage costs 0.25 City Development, and a damaged settlement grows slower (x (1 - damage/100)). Safe settlements heal
+  2 a Seventh (x1.5 on the Capital's roads); Repair pays 8 Elderwood + 6 Food per 10 points at once. A notice at 50.
+- **The Capital** is capped at 90 damage and never falls; while damaged the realm's land and settlement output is multiplied
+  by 1 - 0.5 x damage/100 (`WorldRuins.CapitalOutput`, in the yields, the ledger and the hover card). Threats sit at least 12
+  cells from it (radius 6-7), so only stories harm it at the start.
+- **Falling** (`WorldRuins.Fall`): at 100 a settlement leaves `WorldMap.Settlements` for `WorldMap.Ruins` (saved
+  `WorldSystem._ruins`); its roads stay, its tributaries rejoin the nearest hub (`WorldTributaries.Rehome`), Anchors re-sync,
+  danger is recomputed. A `Ruin` keeps the former kind, district, binding, founding and fallen Age, full Ages, development,
+  whether it stood beyond your authority, and the cause. 404 is reported for one lost beyond your authority.
+- **Ruins** (`UnitTask.Investigate`, `UnitAbilities.Investigate`, riding on the SurveyMeso flag so no unit asset changes;
+  `investigateSevenths` 3): an expedition standing on a ruin (or sent there from the ruin's card) reads it once
+  (`WorldRuins.Findings`, deterministic per ruin): base salvage 10 Elderwood + 4 Duskstone, 300 s of its former production
+  (its district's or kind's yields at the development it had), Research 8 + 0.4 per development; Enlightenment of a
+  researchable technology at 30% + 0.4% per development; a civic its people lived by at 20% (+20% for a town, Major
+  Settlement or haven, +10% for a Weaver, Regal or Auric district). Each legend of the party earns a discovery fragment;
+  Era Score 1. A civic left behind is adopted from the ruin's card with its requirements waived (slots and conflicts still
+  hold: `CivicManager.UnlockCivic(..., inherited: true)`), which reports Digestive Rebirth.
+- **UI**: settlement cards show damage, what harms it now or how fast it heals, and Repair; ruins show on bare land and under
+  settlements (what it was, when and why it fell, investigate or send the nearest expedition, adopt the civic); the unit card
+  offers "Investigate the ruins" on unread ruins; the map draws ruins as grey diamonds (a gold ring while a civic waits) and a
+  red ring under damaged settlements.
+- Tests: `WorldRuinTests` (5: harm and healing, withering and pillage; the fallen as ruins and the Capital never lost;
+  a hub's fall rehoming its tributary; findings and their odds; the story consequence), `AchievementTests.Rules_LossAndRuins`.
+- Open: reclaiming a ruin (Welcome Back, Traitors), random raids from threats (damage is continuous for now), grievances
+  or events when an enclave's neighbour falls, and the Digestive Rebirth "reform a culture" path.
+
+### Follow-up: settlement Composure, the Old World, reclaiming and the Chronicle (same night)
+
+Owner direction: rename damage/health to Composure with the exact five levels of legends, unified (withering lowers it);
+several broken roads and a few ruins at the start so the world looks like it ended once already; repairing or using those
+roads beats not using them but lacks the benefits of rebuilt roads; reclaiming lost land of your own gives +3 Era Score; a
+section showing the timeline of Era Score, dated by the Cycle/Echo/Phase calendar; the culture half of Digestive Rebirth is
+left to the agent building the culture system.
+
+- **Composure** replaces damage: `Settlement.strain` (optional save field) read through `ComposureState` and
+  `ComposureRules.StateOf` with the legends' `ComposureTuning` (`LossRules.composure`: Clouded 10, Fractured 40, Spiraling
+  70, Surrender 100, baseline 20, restRecovery 2). One shared step, `ComposureRules.Ease` (legends' `Next` now calls it):
+  the Seventh's strain is added (danger 6 at danger 1 above 0.15, withering 5), then it eases toward the baseline (x1.5
+  on the Capital's roads). Output while Fractured/Spiraling uses the legends' council factors (0.9/0.7) on settlement
+  yields, growth and district effects (`WorldRuins.Output`, in `WorldTributaries.Scale`); the Capital stops just short of
+  Surrender and its Spiraling costs the realm 30% output. Pillage and the `settlement:` consequence add strain; Mend pays
+  8 Elderwood + 6 Food per 10 strain above the baseline. Notices when a settlement deepens to Fractured or Spiraling.
+- **The Old World** (`WorldRuins.PlaceOldWorld`, `OldWorldRules`, stream "old-world", called when WorldSystem generates
+  the map): 9 ancient ruins (`Ruin.ancient`, cause "cataclysm", fallen before the Ages, one city, towns and outposts,
+  development 20-60) spaced 7 apart and at least 4 cells from the Capital, investigable like any ruin (Enlightenment
+  +15%), and broken roads joining them and the Capital's ground as a spanning tree (`WorldMap.OldRoads`,
+  `WorldTile.oldRoad`; laid again from the seed on every load, not saved). Walking one costs x0.75
+  (`WorldPaths.OldRoadFactor`, meso steps and the micro grid's `Mark.OldRoad`; a road is x0.5). Road planning prefers
+  them; a road built over one restores those cells at 35% of the cost (`TradeRoute.restored`, `WorldTile.restoredRoad`):
+  no Trade Node there, half worth to City Development and route efficiency, governance halfway, until "Rebuild" pays
+  the other 65%. Drawn faded and gapped; restored stretches paler.
+- **Reclaiming** (+3 Era Score, `LossRules.eraReclaim`): a settlement or tributary founded on the ruins of one of yours
+  (`WorldRuins.Reclaimable`, `Ruin.reclaimed`) earns it once and reports Welcome Back, Traitors (`SettlementReclaimed`);
+  cells of yours that slip away are remembered (`WorldSystem._lostLand`, `WorldRuins.TrackLand`) and bringing any back
+  earns +3 once per Seventh. The Old World's ruins are no one's to reclaim.
+- **The Chronicle** (`EraTimeline`, `EraAward`, `AgeProgression._eraTimeline`, optional save field; `EraTimelineWindow`):
+  every Era Score award since the world began, dated to its Age, Act, Cycle (and its name), Echo, Phase and Seventh,
+  shown oldest first by Age, then Cycle and Echo. Opened by clicking the Era Score sun or the world map's Chronicle
+  button; Esc closes it. Awards before this change are not in it (the old log kept only 12 lines per Age).
+- Save fix: `_ruins` was missing from `GameSnapshot`'s WorldSystem schema (ruins would not have been saved); it is now
+  listed with `_lostLand`, and AgeProgression lists `_eraTimeline`.
+- Tests: `WorldRuinTests` (Composure unified, Surrender and the Capital, Old World placement and travel, restoring and
+  rebuilding roads, lost land, the Chronicle's order), `AchievementTests.Rules_LossAndRuins` (Welcome Back, Traitors).
+- Open: the "reform a culture" half of Digestive Rebirth (another agent's culture system); random raids; drift-and-reclaim
+  cycles could farm the land award (once a Seventh); a settlement founded on an Old World ruin gets nothing special yet.
+
+## Eleos Blooms, September 27, 2026 (latest)
+
+Asked for: Eleos Blooms as resources on the map, fitted into the resource-site niche (food is being relabelled
+Edible / Ingredient / Spice by the culture session at the same time). Built on the resource sites as a new kind,
+`ResourceKind.Bloom`, from Eleos Bloom.md; every number and every placement rule is a proposal (Canon Gaps.md).
+
+- **Emotional Residue** (`WorldResources.Residue`, `WorldTile.residue`, `EleosSettings` in `generation.eleos`): the
+  feeling a place holds, 0-1, derived at every civilization rebuild and never saved. The wild's own is 0.1. A
+  settlement adds 0.5 (Capital), 0.4 (Major) or 0.25 (others), plus up to 0.3 more as its people's Composure strains,
+  fading over 3 cells. A ruin adds 0.45 over 2 cells (the grief of the fallen; the Old World ruins count too).
+  Dissonance adds 0.6 per point, counted before the blooms drink any (feeling left unmetabolized in the soil).
+- **Vigor** (`ResourceSite.vigor`, `[SaveOptionalField]`): the mean residue over a bloom's cells divided by its
+  `residueNeed`, capped at 1. Everything a bloom does scales with it: land value, yields, auras, danger, soothe
+  (`WorldResources.Gift`), and its harvest (`HarvestShare`). Below `witherBelow` (0.2) it withers: it gives nothing and
+  threatens nothing, a harvest brings back only its fallen leaves (25%), and its marker fades to grey. Blooms thrive
+  once your people live near them.
+- **Niches** (`BloomNiche`):
+  - *Listeners* (Tier 1) drink Dissonance around them (`dissonanceAura`, handed to the magic through
+    `WorldMagic.SetDissonanceShifts`; `BaseDissonance` keeps placement and residue reading the ground before the
+    blooms touch it). Their shed leaves make Eleos Tea.
+  - *Healers* (Bioluminescence-Dominant) ease an expedition's Composure strain each Seventh on and beside them
+    (`soothe` into `WorldTile.sanctuary` and `UnitSurroundings.sanctuary`, taken off `Expeditions.Hardship`). A party
+    camped in their light rests as in a settlement (`WorldSystem.HardshipOf`).
+  - *Predators* (Movement-Dominant) cast danger (`dangerAura` into `WorldTile.siteDanger`, the base of
+    `WorldSites.RecomputeDanger`, so travel, ambushes, City Development and desirability all feel it). They also lure
+    parties in: `WorldTile.lure` raises mishap risk by `lureRisk` (0.25 at full lure, not eased by a small party) and
+    allows the new `MishapKind.Lure` ("Lured by a bloom": strain 10, party strain 2, attrition 10, fatigue 15), which a
+    companion can ease by pulling the victim free.
+- **Lumen Seeds**: listeners and healers that give seeds plant like crops, but only where there is feeling to imprint
+  them. `WhyNotPlant` asks for residue of at least half the bloom's `residueNeed` ("plant near your people").
+- **UI**: an unidentified bloom reads "Unidentified bloom (petals that brighten as you draw near)". Identified, the
+  hover card adds an Eleos Bloom row (niche, vigor or withering, the residue it finds and needs), and the effects
+  around it (drinks Dissonance, eases strain, danger and lure). "From sites nearby" lists Dissonance drunk, a
+  sanctuary and a lure. The identify notice names the niche and flags a withering bloom.
+- **Validation** (`ContentValidator`): only blooms may drink Dissonance, heal or prey; a predator needs danger, a
+  healer needs soothe; Emotional Residue sources cannot be negative.
+
+| Bloom | Niche | Ground | Need | Land value | Around it | Harvest |
+|---|---|---|---|---|---|---|
+| Shame Moss | listener | marsh, bog, ruins, woodland (Dissonance 0.03+) | 0.25 | +1.5 | -6% Dissonance | Eleos Tea 6, seeds |
+| Sorrowbells | listener | ruins, ash, orchards, woodland, foothills (Dissonance 0.03+) | 0.3 | +2 | -10% Dissonance over 2 | Eleos Tea 8, seeds |
+| Memory Marigolds | listener | plains, steppes, auric meadow | 0.25 | +2 | -4% Dissonance, fairer | Eleos Tea 6, seeds |
+| Vow Orchids | listener | moonlit grove, violet glade/wood (Coherence 0.35+) | 0.35 | +3 | -5% Dissonance, +Coherence | witnessed, never picked |
+| Lullroots | listener | woodland, taiga, violet wood (moist) | 0.25 | +2 | -4% Dissonance, eases 1.5 strain | Eleos Tea 6, seeds |
+| Candlevein Bloom | healer | ruins, ash, orchards, plains, woodland | 0.4 | +3 | eases 3 strain | Eleos Tea 8, seeds |
+| Xochi-Singers | healer | auric meadow/copse, violet glade, woodland, plains | 0.35 | +3 | eases 2.5 strain, fairer | Eleos Tea 4, seeds |
+| Skyroot Matriarch | healer | taiga, violet wood, woodland (Coherence 0.4+, seen from afar) | 0.2 | +5 | eases 2, +10% Coherence, -8% Dissonance over 2 | untouchable |
+| Threshold Cushion | predator | scrub, mesas, ruins, ash | 0.15 | -1.5 | danger 35%, lure | untouchable |
+| Glottis-Mouth Trap | predator | ruins, leyline ravines, rift scar, taiga | 0.15 | -2 | danger 45%, lure | untouchable |
+| Hearth-Eater | predator | woodland, taiga, ash, ruins, foothills | 0.2 | -2.5 | danger 50%, lure | untouchable |
+
+- **Eleos Tea** (`GameResources/Eleos Tea.asset`, section Valuables, borrowed Glimmerfern icon): yielded while held and
+  harvested as cargo. The culture session gave it its own kitchen category, `FoodClass.EleosTea` (drunk like food, food value 0.5,
+  a "national tea"; more teas to come), and tagged it Agromagical in `CultureTuning.resources`.
+- Left out on purpose: Soul-Stitcher, the Tier 3 Nymphic blooms (Bride-of-the-Bell, Velvet Widows: Lazarus's garden,
+  Age II) and the Tier 4 dryads (Age IV).
+- **Sterile blooms that grow by themselves, Echo by Echo** (owner direction, same night; Eleos Bloom.md, Glimmerfern.md,
+  The Auric Aria's Suicide): Fated Flowers, Forsaken Flowers and Glimmerfern give no seeds and cannot be planted
+  (`WhyNotPlant`: "sterile"; stale seeds of them are dropped from packs on load). They are never placed with an Age:
+  the landscape moves with the game's clock. `WorldResources.GrowEcho` runs once at the world's start (after the Old
+  World's ruins; up to each count at once) and at every Echo (`TimeSystemLogic.OnEchoChange`, 63 Sevenths; never on
+  a load). `WorldSystem._echoesGrown` is saved and seeds each Echo's sprouting, so a world grows the same way once.
+  Changes the map can see are announced ("Something new grows at...", "The Fated Flowers at ... decay into
+  Forsaken Flowers.", "... heal into ...", "... fades away.").
+  - **History and hurt** (`WorldTile.history/hurt`, derived with the residue; `EleosSettings`): history is the strongest
+    past at a cell: a ruin 0.8 over 3 cells, an Atonalis Nest 0.7 over 2 (where Atonalis live and fall, and their Rose
+    Seeds with them), a landmark 0.6 over 1, a Sacred Site 0.5 over 2, an Old World road 0.3, ruin-like ground (ruin
+    field, skeletal orchard, golden ash, rift scar) 0.4, and a settlement 0.1 per Age it has stood (at most 0.5). Hurt
+    is the sorrowful part of the residue: a ruin's grief, the settlements' strain, and Dissonance.
+  - **Turning** (`turnsInto`; `ResourceSite.turning`, saved): each Echo a patch's turn runs `turnPerEcho` further
+    while it is due, plus `turnPerDissonance` per point of its Dissonance; it recedes as fast when not due. At 1 the
+    patch turns, unless the other site's own turn would be due there at once (no flickering).
+    - **Fated Flowers** (gold, +3, fairer, +Coherence, drink Dissonance): sprout on ground with history 0.3+ and hurt
+      at most 0.25, 1 an Echo up to 5. They decay into Forsaken Flowers while the field's hurt is 0.3+ (unless its
+      Coherence holds at 0.7+): about three Echoes at 0.35 a step, plus 2.5 per point of Dissonance, so high
+      Dissonance withers them within one Echo.
+    - **Forsaken Flowers** (crimson, +2, drink more Dissonance): also sprout where history and hurt (0.3+) meet, 1 an
+      Echo up to 3. They heal back into Fated Flowers while their Coherence is 0.7+, about three Echoes, slowed 1.5 per
+      point of Dissonance.
+  - **Fading** (`fadePerEcho`; `ResourceSite.fading`, saved): a sprouted Glimmerfern patch whose centre is no longer
+    rooted fades, and is gone at 1 (the sites are numbered again). This happens when its silver river lost the
+    leylines, or its Forsaken field healed and no sorrow remains.
+  - **Ways to grow** (`WorldResources.Rooted`; any one will do): hurt (`minimumHurt`), a site nearby (`nearSites`), a
+    silver river (`silverRiverReach`), or a lake a silver river runs into (`silverLakeReach`). Silver rivers are river
+    cells where a leyline's Lunehymn runs silver. A lake counts whole once a silver river flows into it or touches it
+    (`WorldResources.SilverShores`, `WorldTile.silverRiverSteps/silverLakeSteps`).
+    - **Lesser Glimmerfern Grove** (a healer: eases 1.5 strain; harvest Glimmerfern 12): within 2 cells of Forsaken
+      Flowers or on hurt 0.3+, 1 an Echo up to 4, fading over 3 Echoes.
+    - **Moonlit Glimmerfern** (Glimmerfern.md: "thrives in moonlit groves"): on the banks of a silver river (1 cell),
+      patches of 2, 1 an Echo up to 6, fading over 3 Echoes once the silver leaves.
+    - **Glimmerfern Lakeshore**: where a silver river runs into a lake, a grove of up to 30 cells around its shores
+      for 3 hexes, seen from afar (+5, eases 2 strain, harvest Glimmerfern 20), up to 3, fading over 4 Echoes.
+  - The hover card shows "Sterile" with the cell's history and sorrow, how far a Fated or Forsaken field's turn has
+    run and what drives it, "Moonlit" for the silver groves, and a fading warning. The validator rejects a sprouting
+    spec that gives seeds, an unknown `nearSites` or `turnsInto`, a turn with no trigger or no pace, and negative
+    reaches.
+- Tests: `EleosBloomTests` (residue sources, vigor and withering, non-blooms untouched, listeners drink Dissonance and
+  a second refresh changes nothing, predators' danger and lure mishap, withered predators harmless, healers ease
+  hardship, Lumen Seeds need residue, history and hurt, sprouting Echo by Echo, Fated decay hastened by Dissonance,
+  Forsaken healing on Coherence, Glimmerfern fading, silver rivers and silver-fed lakes). The real catalog is checked by
+  `WorldResourcesTests.Content_EveryResourceSiteFindsGroundOnRealWorlds` in the Test Runner.
+- Open: blooms that stay withered never die (no removal yet); no expedition event lines for blooms; predators cannot be
+  burned out or tamed; residue does not yet count legend deaths, battles or festivals; there is no Emotional Residue lens.
+
+## AECOR scale names, Sectors and the bestiary, September 28, 2026
+
+The owner adopted the scale names of their earlier design, AECOR: **Overall Map → Quadrant → Macro Biome →
+Inter-Biome Definitions → Sector** (section 1). The code, `World.asset`, the stencil (Q1-Q7, I, W), the handmade
+tiles (`macrobiome:`), tests and docs were renamed with no compatibility shims; scale ownership is in ARCHITECTURE.md,
+"World scales". The renames:
+
+| Before | Now |
+|---|---|
+| `SectorSpec`, `sectors`, stencil tokens S1–S7 | `QuadrantSpec`, `quadrants`, Q1–Q7 (`WorldTile.quadrant`) |
+| `BiomeSpec`, `biomes`, `WorldTile.biome`, tile header `biome:` | `MacroBiomeSpec`, `macroBiomes`, `WorldTile.macroBiome`, `macrobiome:` |
+| stencil P, `WorldRegion.Connective`, `connective` | I (intersections), `WorldComposition.Intersection`, `intersectionTerrains` |
+| `WorldRegion.Slot`, `WorldTile.region` | `WorldComposition.MacroBiome`, `WorldTile.composition` |
+| `WorldTile.quadrant` (quarters around the capital), `HexCoord.Quadrant()` | `WorldTile.quarter`, `HexCoord.Quarter()` |
+| `WeatherExtent.Sectors`, `WorldWeatherFront.sectors` | `WeatherExtent.Quadrants`, `.quadrants` |
+| the Biomes lens | the Macro Biomes lens |
+
+- **Sectors:** `WorldSectors.Assign` gives every Macro Biome cell one of nine `CompassSector`s, measured from the
+  centre of its slot's cells (Central about a ninth, then 45-degree wedges; north up). Intersections and the ocean have
+  none. Generator version 9. The hover card names the place "Violet Grove, North-East Sector".
+- **Bestiary:** `CreatureTaxonomy` holds AECOR's 21 diet-subgroup pairs; `generation.species` holds 15 species; every
+  Fauna site names its species, and the three predatory blooms name theirs (Trapper Apex Predators). None of it applies
+  to the Atonalis. The identified site's hover card shows the creature. Tests: `BestiaryTests`,
+  `WorldGenerationTests.Sectors_*`.
+- **Ecology (E2, the same day):** each Macro Biome's range (its cells plus the nearest intersection ground,
+  `WorldTile.habitatSlot`) holds populations of the bestiary's species, ticked each Echo by `WorldEcology`: capacity
+  from habitat, people's pressure and Pure Light fragility, prey, growth, migration into neighbouring Macro Biomes and
+  new dens. Dens are hunted once an Echo and can be depleted. Numbers in `generation.ecology`; details in
+  vault: Arcanorian Ecology.md, "Where Creatures Live".
+
+## Blooms among the living, September 28, 2026
+
+Asked for: blooms that grow near settlements according to what the settlement is living through (dark blooms where it
+suffers, gentle ones where it is content), only once seeds have been carried there or the land is highly coherent;
+Fated Flowers that move like Glimmerfern; districts that draw their own blooms (the Indulgent District draws Lust
+Berries); and creatures drawn to blooms as part of the food web. Canon anchors: Eleos Bloom.md (a bloom "near a
+hospice... develops differently from one growing near a battlefield"; a Lumen Seed needs physical inheritance plus an
+emotional imprint; sprite, animal and ritual pollinators; no residue means no movement) and the Canon Ledger note
+Nostalgia_Perfumery_And_Lust_Berries.md (Lust Berries cannot grow in natural earth). Every number is a proposal.
+
+- **Volunteer blooms** (`WorldResources.Volunteer`, run at the end of `GrowEcho` every Echo but never at the world's
+  start). For each settlement:
+  - **Lumen Seeds must reach the ground first** (`SeedSource`). Any of these counts: seeds planted within 3 cells
+    (`seedReach`; any planting, rice included, since lumen grains ride in the soil), mean Coherence 0.65+ within 2 cells
+    (`seedCoherence`; sprite pollinators), or a creature drawn to blooms living in its Macro Biome at 30% abundance or
+    more (`pollinatorAbundance`).
+  - **Mood** (`MoodOf`, from the settlement's Composure strain): Content at strain 10 or less, Suffering at 40 or more
+    (the legends' Fractured state). In between, no mood draws blooms, but districts still do.
+  - **What it draws** (`Draws`, `DrawReason`): `ResourceSiteSpec.drawnBy` (Content, Suffering, Either) and
+    `ResourceSiteSpec.districts`. A tributary's district draws its blooms whatever the mood. Sterile blooms, unmerged
+    refuges and den-blooms (those naming a species) never volunteer.
+  - Each Echo there is a 50% chance (`volunteerChance`) of one new patch, picked by `volunteerWeight`, within 2 cells
+    (never on the settlement's own cell), of up to 2 cells. It grows on "tended ground" (`FitsTended`): any open dry
+    land within the bloom's Coherence bounds, with residue of at least half its need (the imprint). No terrain or
+    climate rule applies. A settlement keeps at most 2 volunteers, plus 1 with a district.
+  - **They follow the settlement's life**: `ResourceSite.tendedBy` (`[SaveOptionalField]`, -1 wild) names the
+    settlement. When it no longer draws the bloom (the mood turned, the district changed, the settlement fell), the
+    patch fades by 0.34 an Echo (`volunteerFadePerEcho`), so it is gone in 3 Echoes. A settlement in grief loses its
+    marigolds and grows Sorrowbells, and the Sorrowbells fade again once it recovers.
+  - Notice: "Sorrowbells take root beside Hearth, fed by its people's grief." ("... ease", "drawn by its Indulgent
+    District"). Card: a "Drawn up" row names the settlement and why, or warns that it no longer draws the bloom.
+- **Drift** (`WorldResources.Drift`, `ResourceSiteSpec.driftPerEcho`, a chance each Echo). A patch lets go of its
+  poorest cell and takes the best fitting cell beside it (`DriftGround`: residue up to 1.5x its need; history and
+  sorrow if it needs them; away from sorrow for blooms that turn under it; its ways to grow). On even ground it still
+  wanders (slack 0.03 plus a little jitter). A withering bloom cannot move, volunteers stay home, a den-bloom keeps to
+  its Macro Biome, and a multi-cell patch stays in one piece. Fated and Forsaken Flowers also fade now (0.25 an Echo)
+  when their ground no longer holds them, and sprout again elsewhere, like Glimmerfern. Card: "Wandering".
+- **Food web** (`SpeciesSpec.blooms`: bloom ids, a niche word, or "bloom").
+  - `WorldResources.ThrivingBlooms`/`BloomGround` gather the cells within 2 of every non-withering bloom (vigor x
+    falloff).
+  - In `WorldEcology.Tick` every capacity goes through `Holds`: what the land holds, times
+    `BloomGain` = 1 + 0.5 (`ecology.bloomDraw`) x the bloom ground in the range over 10 cells (`bloomCellsFull`),
+    cached per species and Macro Biome each Echo. Predators feel it through their prey (the grey wolf hunts the
+    Lanternback Grazer that grazes Glimmerfern).
+  - `PlaceDen` puts a drawn species' new den beside its blooms when any stand in the Macro Biome.
+  - A thriving pollinator population seeds the settlements in its Macro Biome (above). Card: "Draws" lists the
+    identified species a bloom draws.
+- **Validation**: `driftPerEcho` is a chance. Only non-sterile, non-den Eleos Blooms may volunteer, and they need a
+  weight. Districts must exist. `SpeciesSpec.blooms` must name a bloom or a niche. `contentStrain` must be below
+  `sufferingStrain`.
+
+| Bloom | Drift | Drawn by | Districts | Weight |
+|---|---|---|---|---|
+| Fated / Forsaken Flowers | 0.5 (+ fade 0.25) | none | none | n/a |
+| Lesser / Moonlit / Lakeshore Glimmerfern | 0.5 | none | none | n/a |
+| Shame Moss | 0.15 | Suffering | none | 1 |
+| Sorrowbells | 0.15 | Suffering | Militant | 1 |
+| Memory Marigolds | 0.15 | Content | Trading | 1 |
+| Vow Orchids | 0.1 | Content | Regal | 0.6 |
+| Lullroots | 0.1 | Content | Hamlet, Agromagical | 1 |
+| Candlevein Bloom | 0.05 | Suffering | Agromagical | 0.8 |
+| Xochi-Singers | 0.05 | Content | Weaver | 0.8 |
+| Skyroot Matriarch | 0 (cannot leave its grove) | none | none | n/a |
+| Threshold Cushion / Glottis-Mouth Trap / Hearth-Eater | 0.35 / 0.35 / 0.3 | none (dens) | none | n/a |
+| **Lust Berries** (new, predator, count 0) | 0 | none | Indulgent | 1 |
+
+  Lust Berries: needs residue 0.35, adds 4% Dissonance, danger 10% with a lure, beauty 0.2, -2% Coherence. It is never
+  placed in the wild and cannot be gathered or planted. The card text stays clear of the ledger's explicit content.
+
+| Species | Drawn to |
+|---|---|
+| Wild Bee, Luminant Moth, Forest Sprite, Grassland Sprite | listeners, healers |
+| Moonveil Moth | the three Glimmerferns, Vow Orchids |
+| Choir Cicada | Xochi-Singers, Sorrowbells |
+| Ashfall Beetle | Forsaken Flowers, Sorrowbells, Shame Moss, Candlevein Bloom |
+| Lanternback Grazer | the three Glimmerferns |
+| Meadow Hare | Memory Marigolds, Lullroots |
+
+- Tests: `BloomLifeTests` (9): seeds first, coherence and pollinators as seed sources, grief replacing ease and fading
+  back, districts, determinism, sterile and den blooms never volunteer, Fated drift over remembering ground, withering
+  and volunteers stay put, food-web gain. Offline 785 pass; the batch EditMode run passed everything except
+  `EcologyTests.Content_TheRealBestiaryLivesOnARealWorld`'s 100 ms Echo budget. An A/B run showed that test failing just
+  as badly with the bloom step switched off (105-123 ms vs 104-107 ms), so the overrun predates this change.
+- Open: Lust Berries have no harvest resource yet (Canon: wine, distillate); predator blooms do not yet prey on the
+  creatures they lure; drift is not announced; festivals, battles and legend deaths do not yet feed the moods; no
+  Emotional Residue lens.
+
+## Surveys that keep their progress, surveying by itself, and routing, September 29, 2026
+
+Owner's asks: a survey should not be cancelled the moment the party moves or does something else (count it as
+progress), a clear sign over the unit that it is surveying and how far along, a survey that goes on by itself across
+the whole meso hex, pathfinding of production quality, and the "Land can be claimed" notice only when a claim can
+really be made.
+
+- **Progress kept** (`WorldUnit.surveyPaused/surveyWorkHex/surveyWork`, optional save fields). A move whose way ends
+  inside the survey cell keeps `surveying` on. Rest (exhausted, or weary between hexes), a retreat from a mishap and a
+  walk back for rations only interrupt it: the party takes the survey up again by itself once idle
+  (`WorldSystem.TickSurvey` in the idle branch of `StepUnits`). Player orders elsewhere (Go, Halt, Make camp, Explore
+  by itself, Return for rations, a chase, a retreat or going to ground by hand, other work) call `PauseSurvey`: the
+  work already done on the hex under way is kept, the card offers *Resume survey* / *Forget the survey*, and the survey
+  resumes by itself when the party's journey ends in that cell or it breaks a hand-made camp there. *Stop surveying*
+  (`StopSurvey`) ends it; hexes already surveyed always stay surveyed.
+- **Work on a hex** now scales with the cell's cover (`coverSurvey`, as `UnitAbilities.Duration` already did), and a
+  surveyor worn out at its work makes camp instead of working on at a crawl.
+- **Progress shown**: `WorldSystem.SurveyProgress` (hexes surveyed of those that can be walked, plus the share of the
+  hex under way) and `WorldUnits.WorkProgress` (`WorldUnit.workTotal`). WorldView draws a tag over each of your parties
+  at work, pooled in the HUD canvas under the other panels: "Surveying 43%", "Resting · survey 43%", "Resupplying ·
+  survey 43%", "Surveying 43% · waiting", "Survey paused 43%", "Foraging 60%", with a brass progress bar; hidden on the
+  atlas reading. A surveying party no longer counts as waiting for orders.
+- **Surveying by itself** (`WorldUnit.autoSurvey`, `SetAutoSurvey`): it finishes (or takes up) its survey, then picks
+  the nearest walkable cell out of the fog with hexes left, outside settlements and not surveyed by another party
+  (within about ten Sevenths' walk, `NextToSurvey`), resting and resupplying through the same `LookAfterItself` that
+  exploring by itself now shares; stranded without rations, or with nothing left in reach, it stops and says so.
+- **Routing**. `MicroGrid.Search` is one A* core (`Run`) with cached hex coordinates, an `avoid` set, and ties on the
+  estimate broken toward the goal (fewer hexes expanded on open ground, still deterministic). `CostsTo` prices many
+  targets in one search; `MicroNavigation.NextOnTour` orders a cell's hexes exactly (Held-Karp over at most seven,
+  weighed by the true walking costs between them) and gives the way to the first; the surveyor re-plans at each hex.
+  Others standing on hexes are walked around: a surveyor skips the hexes they hold and waits a quarter Seventh when
+  they bar the rest; any of your parties halted by others or finding its way closed re-routes to where it was going
+  (`WorldSystem.Reroute`; around others only for a fair detour, at most about twice the way plus six cheapest steps,
+  and never when they stand on the very hex it was going to). Chases keep their own planner (`WorldPursuit.Route`).
+- **Claim notice**: `ClaimableCount` now counts land only when a claim would go through: the map open, and the stores
+  and costs payable (`CanPayForClaim`). Before, it counted every known bordering cell while the stores were empty,
+  so the notice and the Claim hint showed for claims that could not be paid.
+- Tests: `WorldUnitTests.ASurveyTourWalksTheCellsHexesInTheOrderThatWalksLeast` (checked against every order),
+  `WaysGoAroundHexesOthersHoldAndOneSearchPricesManyTargets`; `SurveyPlayTests` now checks moves within the cell,
+  halting sets aside with progress kept, resume, stop.
+- Proposals (numbers): waiting 0.25 Sevenths, detour cap 2x + 6 steps, surveyor rests at fatigue 80 between hexes.
+
+## Survey plans on the map, faster surveys, claims at once and the settling forecast, September 29, 2026 (later)
+
+The owner asked that survey plans be shown on the map the way the research plan is shown in the technology tree, that
+surveying a hex take half as long, that a claim put its land in your sphere at once, and that the map show which hexes
+society will add by itself and how long that takes.
+
+- **Survey plans** (`MicroNavigation.NextOnTour` now fills an optional `order` with the whole tour;
+  `WorldSystem.SurveyPlan(unit)` / `SurveyPlan(unit, cell)`, planned from where the party stands, or from the cell's
+  hex nearest it when it is still on its way). WorldView draws them under the units (`WorldRenderer.PlanMark`,
+  `PlanLine`, in `SetUnits`) at the local and region readings: a ring on every hex still to survey, the tour's way
+  from the party (active surveys and the selected party), and, once hexes are about 34 px apart on screen, a numbered
+  rhombus badge per hex like the research plan's (`WorldRenderer.PlanColor` violet = the tree's planned rim,
+  `PlanActiveColor` gold on the hex under way). A set-aside survey shows too, dimmer. While picking a cell to survey,
+  the hovered cell shows the tour the party would walk. Tours are cached per party (moved, the cell's survey mask,
+  the land or knowledge changed).
+- **Survey time halved**: `UnitSpec.mesoSurveySevenths` 2.5 -> 1.25 (World.asset and the code default), so each hex
+  takes about 0.18 Sevenths before cover and party size.
+- **Claims at once**: `WorldTerritory.ClaimNow` settles every open hex of the cell, adds it to `Claims` and rebuilds;
+  `WorldSystem.Claim` calls it. `TerritoryRules.claimSeventhsPerHex` and `WorldSystem.ClaimSevenths` are gone;
+  `AdvanceClaims(map, settings)` only finishes claims an older save left half settled. `_claimProgress` stays in the
+  save schema, unused (the codec looks fields up by name).
+- **Settling forecast** (`WorldTerritory.Forecast` -> `AdoptionPlan`; `WorldSystem.AdoptionForecast`, refreshed on
+  land changes and at most once a second): for each seat with room, the cell `Tick` settles next and its hexes in
+  `NextHex` order, each timed at the seat's average pace (adoptPerSeventh x Pace x PopulationShare; seats on one cell
+  add up), counting the time already waited toward the next roll and the share of the current Seventh gone by
+  (`TimeSystemLogic.GetSeventhProgress`). Nothing on the map changes (the mask is put back). The map glows those hexes
+  in the border colour (the next one pulsing) with "~N" Sevenths plates up close (only the next hex's between 34 and
+  52 px), one "Settling · all ~N Sevenths" plate per cell farther out; the land card and hover say when the next hex
+  and the whole cell join; the Realm panel's *Next* row lists them with times; the key explains both plans.
+- Tests: `WorldTerritoryTests.Claims_TakeTheirWholeCellAtOnce`, `Claims_LeftHalfSettledByAnOlderSaveFinishAtOnce`,
+  `Forecast_NamesTheHexesSocietySettlesNextInOrderAndWhen`; `WorldUnitTests.ASurveyTourWalksTheCellsHexesInTheOrderThatWalksLeast`
+  checks the whole order. Pure tests green (WorldTerritory 17, WorldUnit 20, WorldCivilization 15, Expedition 49).
+- Proposals: the badge spacing thresholds (34 / 52 px), the forecast being an average (each Seventh is a roll).

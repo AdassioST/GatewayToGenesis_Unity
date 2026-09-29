@@ -210,3 +210,212 @@ The expedition turns for home, heavy with what it chose.
 
 * Return
 -> DONE
+
+// ===== RESOURCE SITES (ResourceSiteSpec.expeditionStories in World.asset) =====
+// Offered to the first expedition that identifies a site of that kind by surveying it. The Moonlit Vigil is the vault's
+// (Gateway To Genesis.md: courtship in Glimmerfern groves under a full Moon); Pure Light herds and the Domestication
+// Enclave's catalogue are the vault's ideas; the prose is placeholder, listed in Canon Gaps.md.
+
+=== expedition_terraces ===
+# title: The Terraces No One Planted
+# cast: expedition
+# description: Rice on the mountain, and no farmers.
+# conditions: event_completed:expedition_terraces < 1
+# event_type: Environmental
+# priority: 55
+# locked: true
+
+Below the peaks, the slope has been cut into steps, and every step is green with rice. Snowmelt runs from one terrace to the next through channels of fitted stone.
+
+There are no farmers, no huts, no tools. Only the rice, and the water, and the steps.
+
+* Walk the terraces
+-> expedition_terraces_chorus_1
+
+=== expedition_terraces_chorus_1 ===
+The grain is ripe. Whoever built this is long gone, and the terraces have kept going without them.
+
+* Idealism. Take seed, not harvest.&D Carry the seed down to your own fields and let the terraces be.&C pillar:waltz;strength:14;success:expedition_terraces_verse_1;failure:expedition_terraces_verse_2;success:consequences:resource:Highland Rice +15;score:famine_preparation +1;fragment:protagonist Vision +2;failure:consequences:resource:Highland Rice +5 -> expedition_terraces_verse_1
+
+* Realism. Harvest all of it.&D The capital is hungry now.&C success:expedition_terraces_verse_3;failure:expedition_terraces_verse_3;consequences:resource:Highland Rice +45 -> expedition_terraces_verse_3
+
+=== expedition_terraces_verse_1 ===
+They take a handful from every terrace, top to bottom, so that the seed remembers the whole slope.
+
+* Carry it home
+-> expedition_terraces_outro
+
+=== expedition_terraces_verse_2 ===
+A storm comes off the peaks before the work is done. They save what they can.
+
+* Take what there is
+-> expedition_terraces_outro
+
+=== expedition_terraces_verse_3 ===
+By nightfall the terraces are stubble. The water keeps running through the empty steps.
+
+* Load the packs
+-> expedition_terraces_outro
+
+=== expedition_terraces_outro ===
+The expedition turns downhill, the terraces behind it catching the last of the light.
+
+* Return
+-> DONE
+
+=== expedition_glimmerfern ===
+# title: The Moonlit Vigil
+# cast: expedition
+# description: A glimmerfern grove, and carved benches in the moss.
+# conditions: event_completed:expedition_glimmerfern < 1
+# event_type: Mystical
+# priority: 55
+# locked: true
+
+The grove glows faintly, every frond a branching pattern of light. In the moss between the ferns, someone once set stone benches in a ring.
+
+It is a full Moon tonight.
+
+* Sit and wait
+-> expedition_glimmerfern_chorus_1
+
+=== expedition_glimmerfern_chorus_1 ===
+Courtship rituals in Glimmerfern groves during a full Moon. In silence people meet a matching frequency.
+
+* Idealism. Keep the vigil.&D Sit in silence until the grove answers.&C pillar:chorus;strength:15;success:expedition_glimmerfern_verse_1;failure:expedition_glimmerfern_verse_2;success:consequences:stat:morale +6;fragment:cast Meaning +2;score:moonlit_vigil +1;failure:consequences:stat:morale +2 -> expedition_glimmerfern_verse_1
+
+* Realism. Cut fronds for the workshops.&D Glimmerfern is worth more in the capital than in the moss.&C success:expedition_glimmerfern_verse_3;failure:expedition_glimmerfern_verse_3;consequences:resource:Glimmerfern +20 -> expedition_glimmerfern_verse_3
+
+=== expedition_glimmerfern_verse_1 ===
+Near midnight, two of the party realize they have been breathing in time. Neither says anything. Neither needs to.
+
+* Remember it
+-> expedition_glimmerfern_outro
+
+=== expedition_glimmerfern_verse_2 ===
+The Moon goes behind cloud, and the grove is only a grove. Still, it was quiet, and quiet is rare.
+
+* Rest
+-> expedition_glimmerfern_outro
+
+=== expedition_glimmerfern_verse_3 ===
+The cut fronds keep glowing in the packs for three nights, then fade to green.
+
+* Pack them well
+-> expedition_glimmerfern_outro
+
+=== expedition_glimmerfern_outro ===
+The benches will be here at the next full Moon.
+
+* Return
+-> DONE
+
+=== expedition_lanternbacks ===
+# title: Lanterns in the Grass
+# cast: expedition
+# description: A Pure Light herd grazing at dusk.
+# conditions: event_completed:expedition_lanternbacks < 1
+# event_type: Environmental
+# priority: 55
+# locked: true
+
+At dusk the grass lights up. A herd of grazers moves through it slowly, and their backs glow like lanterns carried at walking pace.
+
+They are not afraid. They have never needed to be.
+
+* Watch them
+-> expedition_lanternbacks_chorus_1
+
+=== expedition_lanternbacks_chorus_1 ===
+Pure Light beings: part of the land's song, and not quite animals.
+
+* Idealism. Catalogue them.&D Follow the herd and write down everything.&C pillar:aureus;strength:14;success:expedition_lanternbacks_verse_1;failure:expedition_lanternbacks_verse_2;success:consequences:resource:Research +40;fragment:protagonist Lucidity +2;failure:consequences:resource:Research +10 -> expedition_lanternbacks_verse_1
+
+* Realism. Gather their shed wool.&D It keeps the light. The capital will pay for it.&C success:expedition_lanternbacks_verse_3;failure:expedition_lanternbacks_verse_3;consequences:resource:Lumenwool +15 -> expedition_lanternbacks_verse_3
+
+* Pragmatism. Try to lead a few home.&D A herd near the capital would light the fields.&C pillar:regalia;strength:18;success:expedition_lanternbacks_verse_4;failure:expedition_lanternbacks_verse_2;success:consequences:resource:Aetherlight +40;score:domestication +1;failure:consequences:stat:morale -3 -> expedition_lanternbacks_verse_4
+
+=== expedition_lanternbacks_verse_1 ===
+They graze in a spiral, never crossing their own path, and the grass they leave glows faintly until dawn.
+
+* Keep the notes
+-> expedition_lanternbacks_outro
+
+=== expedition_lanternbacks_verse_2 ===
+The herd drifts away into the dark, unhurried, and the grass goes dim behind it.
+
+* Let them go
+-> expedition_lanternbacks_outro
+
+=== expedition_lanternbacks_verse_3 ===
+The wool is soft and warm, and it shines faintly in the dark of the packs.
+
+* Pack it
+-> expedition_lanternbacks_outro
+
+=== expedition_lanternbacks_verse_4 ===
+Two young ones follow the expedition for a day before turning back. They leave light behind them, and it lingers.
+
+* Watch them go
+-> expedition_lanternbacks_outro
+
+=== expedition_lanternbacks_outro ===
+Some nights after, the expedition swears it can still see lanterns on the horizon.
+
+* Return
+-> DONE
+
+=== expedition_spire ===
+# title: The Whispering Spire
+# cast: expedition
+# description: Red crystal that whispers, and a land that has lost its tune.
+# conditions: event_completed:expedition_spire < 1
+# event_type: Mystical
+# priority: 55
+# locked: true
+
+The spire is velvet-red crystal, taller than any tower, and it whispers when the wind turns. It is the most beautiful thing any of them has seen in years.
+
+Around it, the land is wrong. The grass leans the wrong way, the air tastes of metal, and the party quarrels over nothing.
+
+* Go closer
+-> expedition_spire_chorus_1
+
+=== expedition_spire_chorus_1 ===
+Gleaming, velvet red crystal with quiet whispers. It resonates with Aetherlight.
+
+* Idealism. Listen to the whispers.&D Learn what the spire is saying, whatever it costs.&C pillar:chorus;strength:18;success:expedition_spire_verse_1;failure:expedition_spire_verse_2;success:consequences:resource:Research +60;fragment:protagonist Lucidity +3;failure:consequences:stat:morale -4 -> expedition_spire_verse_1
+
+* Realism. Chip crystal from its base.&D Emberwhisper for the capital. The spire has plenty.&C success:expedition_spire_verse_3;failure:expedition_spire_verse_3;consequences:resource:Emberwhisper +20 -> expedition_spire_verse_3
+
+* Pragmatism. Leave before it gets into your heads.&D Mark it on the map and keep walking.&C success:expedition_spire_verse_4;failure:expedition_spire_verse_4;consequences:stat:morale +2 -> expedition_spire_verse_4
+
+=== expedition_spire_verse_1 ===
+The whispers are a melody, half-remembered and out of tune with everything around it. That is what unsettles the land: it is singing a different song.
+
+* Write it down
+-> expedition_spire_outro
+
+=== expedition_spire_verse_2 ===
+The whispers get under their skin. For two days after, no one in the party can hold a tune.
+
+* Walk it off
+-> expedition_spire_outro
+
+=== expedition_spire_verse_3 ===
+The crystal comes away in warm, heavy shards. The whispering follows them for a mile.
+
+* Wrap it well
+-> expedition_spire_outro
+
+=== expedition_spire_verse_4 ===
+They mark it on the map and walk until the whispering is behind them. The quarrels stop.
+
+* Keep walking
+-> expedition_spire_outro
+
+=== expedition_spire_outro ===
+From the next ridge the spire still glows red on the skyline.
+
+* Return
+-> DONE

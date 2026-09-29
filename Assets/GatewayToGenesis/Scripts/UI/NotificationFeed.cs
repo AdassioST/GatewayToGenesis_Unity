@@ -21,7 +21,7 @@ using UnityEngine.UI;
 /// </summary>
 public class NotificationFeed : MonoBehaviour
 {
-    public enum Topic { Research, Council, Units, Land, Discovery, EraScore, Age, Crisis, World }
+    public enum Topic { Research, Council, Units, Land, Discovery, EraScore, Age, Crisis, World, Culture }
 
     private const LogChannel Log = LogChannel.UI;
     private const string GridName = "NotificationGrid";
@@ -316,6 +316,12 @@ public class NotificationFeed : MonoBehaviour
         }
         else if (PopGrowthLogic.Instance != null && PopGrowthLogic.Instance.isFoodScarce && PopGrowthLogic.Instance.population > 0)
             Add("hunger", "Hunger", "Food is falling and the stores are empty: people are starving.", Topic.Crisis, null);
+
+        // The people's health: a pressure shows only while it is active (dormant ones are hidden and harmless).
+        var health = PopulationHealth.Instance;
+        if (health != null)
+            foreach (var pressure in health.Active)
+                Add("health:" + pressure, $"{health.Title(pressure)} {health.Level(pressure):P0}", health.Describe(pressure), Topic.Crisis, null);
 
         var government = GovernmentLogic.Instance;
         var legends = LegendProgress.Instance;

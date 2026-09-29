@@ -17,6 +17,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 861c6cf1f72a2ec4e89ca005f28f871d, type: 3}
   order: 5
   allowedClasses: 010000000500000000000000
+  requiredStars: 2
   areas:
   - defense
   - security

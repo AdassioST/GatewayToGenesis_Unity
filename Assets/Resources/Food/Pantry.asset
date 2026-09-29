@@ -17,6 +17,10 @@ MonoBehaviour:
     foodValue: 1
     spoilPerSeventh: 0.02
     peach: 1
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: Peach Pits
+    leavesPerUnit: 0.25
   - resource: Earth-Beans
     foodValue: 0.5
     spoilPerSeventh: 0.01
@@ -37,6 +41,184 @@ MonoBehaviour:
     foodValue: 5
     spoilPerSeventh: 0.1
     peach: 0
+  - resource: Highland Rice
+    foodValue: 1.2
+    spoilPerSeventh: 0.004
+    peach: 0
+  - resource: Game Meat
+    foodValue: 2
+    spoilPerSeventh: 0.06
+    peach: 0
+  - resource: River Fish
+    foodValue: 1.2
+    spoilPerSeventh: 0.07
+    peach: 0
+  - resource: Wild Honey
+    foodValue: 1.5
+    spoilPerSeventh: 0
+    peach: 0
+    cuisine: 1
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Peach Pits
+    foodValue: 0.2
+    spoilPerSeventh: 0.002
+    peach: 0
+    cuisine: 1
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Glimmerfern
+    foodValue: 0
+    spoilPerSeventh: 0
+    peach: 0
+    cuisine: 2
+    keepsOwnRoom: 1
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Eleos Tea
+    foodValue: 0.5
+    spoilPerSeventh: 0.005
+    peach: 0
+    cuisine: 3
+    keepsOwnRoom: 1
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Peach Soup
+    foodValue: 2
+    spoilPerSeventh: 0.03
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Pit-Oil Flatbread
+    foodValue: 1.6
+    spoilPerSeventh: 0.01
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Riverfish Rice
+    foodValue: 1.6
+    spoilPerSeventh: 0.02
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Hunter's Stew
+    foodValue: 1.6
+    spoilPerSeventh: 0.03
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Honeyed Grain Porridge
+    foodValue: 1.8
+    spoilPerSeventh: 0.01
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Ash-Loaf
+    foodValue: 1
+    spoilPerSeventh: 0
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Behemoth Feast Roast
+    foodValue: 2.2
+    spoilPerSeventh: 0.05
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+    leaves: 
+    leavesPerUnit: 0
+  - resource: Auric Saffron
+    foodValue: 0
+    spoilPerSeventh: 0.002
+    peach: 0
+    cuisine: 2
+    keepsOwnRoom: 1
+  - resource: Silver Salt
+    foodValue: 0
+    spoilPerSeventh: 0
+    peach: 0
+    cuisine: 2
+    keepsOwnRoom: 1
+  - resource: Candlevein Grief Tea
+    foodValue: 0.5
+    spoilPerSeventh: 0.005
+    peach: 0
+    cuisine: 3
+    keepsOwnRoom: 1
+  - resource: Lullroot Tea
+    foodValue: 0.5
+    spoilPerSeventh: 0.005
+    peach: 0
+    cuisine: 3
+    keepsOwnRoom: 1
+  - resource: Hearthleaf Tea
+    foodValue: 0.5
+    spoilPerSeventh: 0.01
+    peach: 0
+    cuisine: 3
+    keepsOwnRoom: 1
+  - resource: Saffron Riverfish Pilaf
+    foodValue: 2.4
+    spoilPerSeventh: 0.025
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+  - resource: Honeyed Peach Tart
+    foodValue: 2.2
+    spoilPerSeventh: 0.02
+    peach: 0
+    cuisine: 0
+    keepsOwnRoom: 0
+  - resource: Rootgrain Ale
+    foodValue: 0.6
+    spoilPerSeventh: 0.05
+    peach: 0
+    cuisine: 4
+    keepsOwnRoom: 0
+  - resource: Wild Honey Mead
+    foodValue: 0.6
+    spoilPerSeventh: 0.004
+    peach: 0
+    cuisine: 4
+    keepsOwnRoom: 0
+  - resource: Highland Rice Wine
+    foodValue: 0.6
+    spoilPerSeventh: 0.004
+    peach: 0
+    cuisine: 4
+    keepsOwnRoom: 0
+  - resource: Auric Peach Wine
+    foodValue: 0.5
+    spoilPerSeventh: 0.004
+    peach: 1
+    cuisine: 4
+    keepsOwnRoom: 0
+  - resource: Bitterroot Spirit
+    foodValue: 0.4
+    spoilPerSeventh: 0
+    peach: 0
+    cuisine: 4
+    keepsOwnRoom: 0
+  - resource: Auric Peach Brandy
+    foodValue: 0.4
+    spoilPerSeventh: 0
+    peach: 1
+    cuisine: 4
+    keepsOwnRoom: 0
   capacity: 200
   preservation:
   - technology: Resource Storage
@@ -50,3 +232,6 @@ MonoBehaviour:
     amount: 40
   maxCoverPerSecond: 5
   varietyMinimumValue: 5
+  bankTechnology: Resource Storage
+  bankedKind: Dried Auric Peaches
+  keepInHand: 12

@@ -14,7 +14,7 @@ using System.Linq;
 /// character from the last (the "doubled" hex layout). <c>.</c> leaves a cell to the generator.
 /// <code>
 /// tile: violet-grove/ring-glade
-/// biome: violet-grove
+/// macrobiome: violet-grove
 /// weight: 2
 /// rotations: any          (or: none, or a list of sixths of a turn such as 0 2 4)
 /// legend: V=violet-wood G=violet-glade L=lake
@@ -30,7 +30,7 @@ using System.Linq;
 public class TileTemplate
 {
     public string id;
-    public string biome;
+    public string macroBiome;
     public float weight = 1f;
     /// <summary>Allowed rotations, sixths of a turn counter-clockwise (0 always means as drawn).</summary>
     public List<int> rotations = new List<int> { 0 };
@@ -82,7 +82,7 @@ public class TileTemplate
             switch (key)
             {
                 case "tile": tile.id = value; break;
-                case "biome": tile.biome = value; break;
+                case "macrobiome": tile.macroBiome = value; break;
                 case "weight": tile.weight = float.Parse(value, CultureInfo.InvariantCulture); break;
                 case "rotations": tile.rotations = ParseRotations(value, tile.id); break;
                 case "legend":
@@ -95,7 +95,7 @@ public class TileTemplate
             }
         }
         if (string.IsNullOrEmpty(tile.id)) throw new FormatException("A tile has no 'tile:' id.");
-        if (string.IsNullOrEmpty(tile.biome)) throw new FormatException($"Tile '{tile.id}' names no biome.");
+        if (string.IsNullOrEmpty(tile.macroBiome)) throw new FormatException($"Tile '{tile.id}' names no biome.");
         if (drawing.Count == 0) throw new FormatException($"Tile '{tile.id}' has no drawing after '---'.");
 
         // Doubled layout: a cell's column is 2q + r, so column + row keeps one parity for every cell.

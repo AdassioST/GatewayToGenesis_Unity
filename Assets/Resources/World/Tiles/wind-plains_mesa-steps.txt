@@ -1,6 +1,6 @@
 # Mesas stepping up out of the windswept plain.
 tile: wind-plains/mesa-steps
-biome: wind-plains
+macrobiome: wind-plains
 weight: 2
 rotations: any
 legend: W=wind-plain M=wind-mesa

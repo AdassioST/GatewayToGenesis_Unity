@@ -27,5 +27,10 @@ MonoBehaviour:
     trigger: Glimmerfern
     requiredAmount: 1
     description: Acquire Glimmerfern
+    riddle: A fern that bears no seed grows where sorrow was spilled, and along water the moon has silvered. Bring a sprig of it home.
+    clue: Walk beside the silver rivers and the lakes they feed. An expedition may harvest what it does not claim.
+    clueAt: 0.5
+    clueTrigger: journeys
+    clueAmount: 3
   techUnlockables:
   - {fileID: 11400000, guid: 525a77e93755d98d50fc695769f73d56, type: 2}

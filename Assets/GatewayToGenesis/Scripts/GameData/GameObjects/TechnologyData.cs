@@ -38,17 +38,29 @@ public class TechnologyData : ScriptableObject
         return any;
     }
 
-    /// <summary>The Enlightenment goals in words ("Build 3 Decaying Hut"), each with its progress when <paramref name="withProgress"/> ("(1/3)").</summary>
-    public string DescribeEnlightenment(bool withProgress = false)
+    /// <summary>
+    /// The Enlightenment goals in words ("Build 3 Decaying Hut"), each with its progress when <paramref name="withProgress"/>
+    /// ("(1/3)"). An unanswered riddle is only named as one (<paramref name="shortRiddles"/>: the card's bar has no room
+    /// for it) or read out whole with its clue; an answered one says what it was.
+    /// </summary>
+    public string DescribeEnlightenment(bool withProgress = false, bool shortRiddles = false)
     {
         var parts = new List<string>();
         foreach (var goal in enlightenedConditions)
         {
             if (goal == null) continue;
+            if (goal.IsRiddle && !goal.IsMet()) { parts.Add(shortRiddles ? "A riddle (hover to read)" : goal.RiddleText()); continue; }
             string progress = withProgress ? goal.ProgressText() : string.Empty;
             parts.Add(string.IsNullOrEmpty(progress) ? goal.Describe() : $"{goal.Describe()} {progress}");
         }
         return string.Join("; ", parts);
+    }
+
+    /// <summary>Some goal of its Enlightenment is a riddle (answered or not).</summary>
+    public bool HasRiddle()
+    {
+        foreach (var goal in enlightenedConditions) if (goal != null && goal.IsRiddle) return true;
+        return false;
     }
 }
 
@@ -78,7 +90,46 @@ public class EnlightenedCondition
     public float requiredAmount;  // Threshold for counting conditions.
     public string description;
 
+    [Header("Riddle (a goal to work out rather than to read)")]
+    [Tooltip("Shown instead of the goal, with no progress, until the goal is met (empty: the goal is shown plainly with its progress).")]
+    [TextArea(1, 4)] public string riddle;
+    [Tooltip("A plainer clue shown under the riddle once the player is on the right path: the goal part met (clueAt), or clueTrigger reached.")]
+    [TextArea(1, 3)] public string clue;
+    [Tooltip("Share of the goal (0-1) that brings the clue out; 0: only clueTrigger does.")]
+    [Range(0f, 1f)] public float clueAt = 0.5f;
+    [Tooltip("Optional GameValue 'domain:target' that also brings the clue out once it reaches clueAmount (a species known, a place found).")]
+    public string clueTrigger;
+    public float clueAmount = 1f;
+
     public bool IsMet() => TryProgress(out float current, out float required) && current >= required;
+
+    /// <summary>The goal is authored as a riddle (<see cref="riddle"/>).</summary>
+    public bool IsRiddle => !string.IsNullOrWhiteSpace(riddle);
+
+    /// <summary>The riddle's clue is known: the goal is met, partly met (<see cref="clueAt"/>), or <see cref="clueTrigger"/> reached.</summary>
+    public bool ClueShown()
+    {
+        if (!IsRiddle || string.IsNullOrWhiteSpace(clue)) return false;
+        if (TryProgress(out float current, out float required))
+        {
+            if (current >= required) return true;
+            if (clueAt > 0f && required > 0f && current > 0f && current / required >= clueAt - 1e-4f) return true;
+        }
+        if (string.IsNullOrWhiteSpace(clueTrigger)) return false;
+        string text = clueTrigger.Trim();
+        int colon = text.IndexOf(':');
+        string domain = colon < 0 ? text : text.Substring(0, colon).Trim();
+        string target = colon < 0 ? string.Empty : text.Substring(colon + 1).Trim();
+        return GameValues.TryGet(domain, target, out float value) && value >= clueAmount;
+    }
+
+    /// <summary>The riddle, and its clue once known ("… Clue: …"); the plain goal once met.</summary>
+    public string RiddleText()
+    {
+        if (!IsRiddle) return Describe();
+        if (IsMet()) return $"{Describe()} (the riddle answered)";
+        return ClueShown() ? $"{riddle.Trim()} Clue: {clue.Trim()}" : riddle.Trim();
+    }
 
     /// <summary>
     /// The value the goal reads now and the value it needs. False when its system is missing or its trigger is empty
@@ -104,10 +155,18 @@ public class EnlightenedCondition
         }
     }
 
-    /// <summary>"(120/250)" after the wording, "(3.5/55 /s)" for a rate, nothing for a goal simply met or not.</summary>
-    public string ProgressText() => TryProgress(out float current, out float required)
+    /// <summary>"(120/250)" after the wording, "(3.5/55 /s)" for a rate, nothing for a goal simply met or not, or for a
+    /// goal whose halfway value is a secret (one species: <see cref="SpeciesKnowledge.HidesProgress"/>).</summary>
+    public string ProgressText() => TryProgress(out float current, out float required) && !HidesProgress() && !IsRiddle
         ? TechTreeRules.ProgressText(current, required, type == EnlightenedType.ReachProductionRate)
         : string.Empty;
+
+    private bool HidesProgress()
+    {
+        if (type != EnlightenedType.GameValue) return false;
+        SplitTrigger(out string domain, out string target);
+        return SpeciesKnowledge.HidesProgress(domain, target);
+    }
 
     /// <summary>The authored wording, or one made from the goal when none was written ("Build 3 Timber Camp").</summary>
     public string Describe()
