@@ -35,6 +35,8 @@ public enum AchievementSignal
     FoundingCivicsGone,
     /// <summary>Children were born in the Civilization (<see cref="PopGrowthLogic"/>): <see cref="AchievementEvent.amount"/> is the number born since the founding.</summary>
     PeopleBorn,
+    PremonitionsExhausted,
+    MythicalBattleWon,
 }
 
 /// <summary>
@@ -88,6 +90,8 @@ public static class AchievementTriggers
 
     public static readonly IReadOnlyDictionary<string, Func<AchievementEvent, bool>> Rules = new Dictionary<string, Func<AchievementEvent, bool>>
     {
+        ["this-is-gateway-to-genesis"] = e => e.signal == AchievementSignal.PremonitionsExhausted && e.amount >= 3,
+        ["veni-vidi-vici"] = e => e.signal == AchievementSignal.MythicalBattleWon,
         // Meet The White-Touched Archivist: "Find the entrance to an impossible library and a very peculiar narrator."
         ["an-eccentric-madman"] = e => e.signal == AchievementSignal.LibraryOpened,
 

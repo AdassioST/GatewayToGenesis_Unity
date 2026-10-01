@@ -23,7 +23,7 @@ public class DefaultSeatBonus
 ///
 /// Council: a Head of State plus six regular positions, of which <see cref="unlockedSeatCount"/> are open: at first only
 /// the Head of State (<see cref="openSeatsAtStart"/>), then technologies open more (TechUnlockableType.CouncilSeat:
-/// The Rekindling and Edicts of Stone and Bone, so the council holds three by the end of Act I). Each
+/// The Rekindling and Call and Response, so the council holds three by the end of Act I). Each
 /// holds one of the default seats (positions such as High Arbiter, each open to legends of several classes:
 /// Resources/Council, <see cref="CouncilSeatData"/>) or a seat granted by an active civic. A seat's bonuses apply as soon as a legend sits in it; the legend's
 /// own bonuses apply after <see cref="SeatActivationSevenths"/>. The council's contribution is re-applied from

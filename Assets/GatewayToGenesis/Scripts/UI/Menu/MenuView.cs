@@ -26,7 +26,8 @@ public class MenuView : MonoBehaviour
     private CanvasScaler _scaler;
     private RectTransform _canvasRect, _root, _column, _panel, _wings, _birth, _corner;
     private Image _backdrop, _orb, _birthGlow;
-    private TextMeshProUGUI _birthText, _cornerLabel, _message, _status, _note;
+    private TextMeshProUGUI _birthText, _message, _status, _note;
+    private IconActionButton _cornerAction;
     private ScrollRect _scroll;
     private Texture2D _glowTexture;
     private Sprite _glowSprite;
@@ -72,7 +73,13 @@ public class MenuView : MonoBehaviour
         }
         if (birth) Birth();
         _corner.gameObject.SetActive(_menu.Playable && !_menu.Visible && !birth);
-        if (_corner.gameObject.activeSelf) _cornerLabel.text = $"Menu{TooltipText.Separator}{SaveSession.Anchors} Anchors";
+        if (_corner.gameObject.activeSelf)
+        {
+            _corner.sizeDelta = new Vector2(GameSettings.ActionLabels ? 126 : 56, GameSettings.ActionLabels ? 84 : 56) * GameSettings.ActionSize;
+            _cornerAction.RefreshPresentation();
+            _cornerAction.SetState(false, false, SaveSession.Anchors.ToString());
+            TooltipTrigger.Ensure(_cornerAction.gameObject).SetCustom("Menu", $"Save, load, options and achievements. {SaveSession.Anchors} Anchors available.");
+        }
         if (_message != null && _menu.Message != _shownMessage) { _shownMessage = _menu.Message; _message.text = _shownMessage; }
         if (_status != null && Time.unscaledTime >= _statusAt) { _statusAt = Time.unscaledTime + 0.5f; _status.text = Status(); }
     }
@@ -150,12 +157,9 @@ public class MenuView : MonoBehaviour
         _corner = CodeUI.Panel(canvas.transform, "Menu Button", new Vector2(1f, 1f), new Vector2(1f, 1f));
         _corner.pivot = new Vector2(1f, 1f);
         _corner.anchoredPosition = new Vector2(-14f, -14f);
-        _corner.sizeDelta = new Vector2(250f, 46f);
-        CodeUI.Plate(_corner, _theme, _scaler);
-        _cornerLabel = CodeUI.TextButton(_corner, "Menu", () => _menu.Open(), _theme, _theme.subtitleSize + 4f);
-        _cornerLabel.alignment = TextAlignmentOptions.Center;
-        _cornerLabel.textWrappingMode = TextWrappingModes.NoWrap;
-        CodeUI.Stretch(_cornerLabel.rectTransform);
+        _corner.sizeDelta = new Vector2(56f, 56f);
+        _cornerAction = IconActionButton.Create(_corner, "Menu", PixelIcon.Settings, () => _menu.Open(), "Save, load, options and achievements.", _theme);
+        CodeUI.Stretch(_cornerAction.Rect);
 
         _root = CodeUI.Panel(canvas.transform, "Menu", Vector2.zero, Vector2.one);
         _backdrop = CodeUI.Solid(_root, "Backdrop", Color.black, true);
@@ -471,6 +475,11 @@ public class MenuView : MonoBehaviour
         Cycler(Row(content, "Tooltip hold", "How long the pointer rests on a tooltip before it turns solid and its keywords can be opened."),
             new[] { "Quick", "Normal", "Patient", "Slow" }, Nearest(holds, GameSettings.TooltipHold), i => GameSettings.TooltipHold = holds[i]);
 
+        Group(content, "Accessibility");
+        Toggle(Row(content, "Action labels", "Show names under quick-action icons. Tooltips are also available on keyboard focus."),
+            GameSettings.ActionLabels, value => GameSettings.ActionLabels = value);
+        Slide(Row(content, "Action target size", "Enlarge the quick-action bar's buttons."), 1f, 1.5f, GameSettings.ActionSize, Times, value => GameSettings.ActionSize = value);
+
         Group(content, "Camera");
         Toggle(Row(content, "Edge scrolling", "The capital's view drifts when the pointer rests at a screen edge."),
             GameSettings.EdgeScrolling, v => GameSettings.EdgeScrolling = v);
@@ -516,8 +525,16 @@ public class MenuView : MonoBehaviour
         Slide(Row(content, "Sound effects", "Stories, work and the world's events."), 0f, 1f, GameSettings.Volume(SoundChannel.Effects), Percent, v => GameSettings.SetVolume(SoundChannel.Effects, v));
         Slide(Row(content, "Ambience", "Wind, weather and the capital's life."), 0f, 1f, GameSettings.Volume(SoundChannel.Ambience), Percent, v => GameSettings.SetVolume(SoundChannel.Ambience, v));
         Slide(Row(content, "Interface", "Clicks, pages and notices."), 0f, 1f, GameSettings.Volume(SoundChannel.Interface), Percent, v => GameSettings.SetVolume(SoundChannel.Interface, v));
+        Slide(Row(content, "Voice", "The Auric Aria's spoken words."), 0f, 1f, GameSettings.Volume(SoundChannel.Voice), Percent, v => GameSettings.SetVolume(SoundChannel.Voice, v));
         Group(content, "Focus");
         Toggle(Row(content, "Mute in the background", "Silence while the game's window is not in front."), GameSettings.MuteInBackground, v => GameSettings.MuteInBackground = v);
+        Group(content, "Combat rhythm");
+        Slide(Row(content, "Input latency", "Positive when your taps arrive late. Match the echoes after the call."), -250f, 250f,
+            GameSettings.RhythmLatency, v => $"{v:0} ms", v => GameSettings.RhythmLatency = v);
+        Slide(Row(content, "Timing window", "Wider windows help with motor or device timing differences."), .5f, 2f,
+            GameSettings.RhythmWindow, Times, v => GameSettings.RhythmWindow = v);
+        Toggle(Row(content, "Rhythm assistance", "Performs your Notes and prepared defenses at Clean; Perfect Echo and Tempo Fever require measured input."),
+            GameSettings.RhythmAssist, v => GameSettings.RhythmAssist = v);
     }
 
     private void ControlsTab(RectTransform content)

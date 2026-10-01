@@ -68,7 +68,7 @@ public class TraditionTuning
         new TraditionDefinition
         {
             id = "naming-of-the-lost", name = "The Naming of the Lost", family = "Esoteric", canon = CanonStatus.CanonSupported,
-            canonSource = "Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md", technology = "Rites of Harvest",
+            canonSource = "Worldbuilding/Rise & Fall, Crisis/Crisis/The Inescapable Hunger.md", technology = "Harvest Hymns",
             description = "The names of those the Hunger took are spoken aloud, one by one, so that no one is ground into the dust unremembered. It asks for no feast and no high spirits.",
             triggers =
             {

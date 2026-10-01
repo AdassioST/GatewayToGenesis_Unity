@@ -132,7 +132,7 @@ public static class GameValues
         Register("edicts", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("edicts", t) : 0f; return EdictSystem.Instance != null; });
         Register("stance", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("stance", t) : 0f; return EdictSystem.Instance != null; });
         Register("edict", (string t, out float v) => { v = EdictSystem.Instance != null ? EdictSystem.Instance.Value("edict", t) : 0f; return EdictSystem.Instance != null; });
-        // Placeholder: Keynote Relics (Celestial Astrology) have no system yet, so none is ever held.
+        // Placeholder: Keynote Relics (The Stave of Stars) have no system yet, so none is ever held.
         Register("keynote_relics", (string t, out float v) => { v = 0f; return true; });
         // Legends: "legend" 1 once met, "legend_rank" 1-5, "fragments" (a legend's Lyrical Fragments, or one kind:
         // "fragments:Name Vision"); "renown" is the older name for the total.
@@ -150,6 +150,9 @@ public static class GameValues
         // The people's health: "health:Nutrition" (or "Disease Burden", "Sanitation", "Exposure", "Harmonic Stability")
         // is the pressure's level 0-100 while active, 0 while dormant; "health" alone counts the active pressures.
         Register("health", (string t, out float v) => { v = 0f; return PopulationHealth.Instance != null && PopulationHealth.Instance.TryValue(t, out v); });
+        // The Grimoire (Grimoire.Value): "grimoire" seats in all, or "symphony_seats", "ceremonies", "ceremony_seats",
+        // "cards", "wildcards", "card:<id>" (1 once owned). It follows the researched technologies.
+        Register("grimoire", (string t, out float v) => { v = GameUnitsLogic.Instance != null ? Grimoire.Value(Grimoire.Current(), t) : 0f; return GameUnitsLogic.Instance != null; });
     }
 
     /// <summary>Add or replace the resolver for a domain.</summary>

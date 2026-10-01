@@ -66,6 +66,8 @@ public class WeatherProfileSO : ScriptableObject
     [Header("Regional map weather")]
     [Tooltip("Travel fatigue on tiles covered by this weather; also affects units travelling to other cities.")]
     [Range(0.25f, 4f)] public float mapTravelMultiplier = 1f;
+    [Tooltip("Snow on the combat hexes covered by this regional weather.")]
+    public bool combatSnow;
     #region Nested Structures
     /// <summary>
     /// Weather effect that modifies game systems (consistent with CivicEffect/LegendBonus)

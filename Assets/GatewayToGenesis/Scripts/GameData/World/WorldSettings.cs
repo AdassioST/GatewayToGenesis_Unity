@@ -15,6 +15,8 @@ public class ResourceAmount
 [Serializable]
 public class TerrainSpec
 {
+    [Tooltip("Local combat geometry in defender coordinates: walls, snow, passes, channels and blockers. Attacker-native terrain is mirrored.")]
+    public List<BattleHexTerrain> combatHexes = new List<BattleHexTerrain>();
     public string id;
     public string name;
     [TextArea(1, 3)] public string description;
@@ -124,6 +126,7 @@ public class QuadrantSpec
 [Serializable]
 public class FeatureSpec
 {
+    public List<BattleHexTerrain> combatHexes = new List<BattleHexTerrain>();
     public enum Preference { None, LandFertility, MagicalFertility, Coherence, River }
 
     public string id;
@@ -724,11 +727,11 @@ public class SettlementRules
     public float envoyInfluence = 25f;
 
     [Header("Claiming land")]
-    [Tooltip("Food value paid from the stored food (any kind, the most perishable first) to bring one known wilderness cell bordering your authority inside it.")]
+    [Tooltip("Food value paid from the stored food (any kind, the most perishable first) for a whole cell's worth of claims: land is claimed one micro hex at a time, each costing a seventh of this.")]
     public float claimFoodValue = 12f;
-    [Tooltip("Other resources a claim also costs (none by default).")]
+    [Tooltip("Other resources a whole cell's worth of claims also costs (each hex a seventh of it).")]
     public List<ResourceAmount> claimCost = new List<ResourceAmount>();
-    [Tooltip("Each cell already claimed raises the next claim's cost by this share (0.1 = +10%).")]
+    [Tooltip("Each cell's worth of hexes already claimed (7 hexes) raises the next claim's cost by this share (0.1 = +10%).")]
     public float claimCostGrowth = 0.1f;
 
     [Header("Travel")]
@@ -821,6 +824,10 @@ public class TerritoryRules
     public float anchorPullBonus = 0.25f;
     [Tooltip("Adopting needs the cell known (an expedition passed over it), except within this many cells of a settlement (the locals know it).")]
     public int localKnowledge = 1;
+
+    [Header("Holding hex by hex (WorldHoldings)")]
+    [Tooltip("Micro hexes of a cell (of 7) a holder needs, and more than anyone else, for the cell to answer to it de facto; all of them make it core territory.")]
+    [Range(1, 7)] public int deFactoHexes = 4;
 
     [Header("Settling hex by hex (who goes out to live on the land)")]
     [Tooltip("Citizens the Capital needs before society settles any land by itself.")]
@@ -1402,6 +1409,8 @@ public enum ExpeditionCharter
 [Serializable]
 public class UnitSpec
 {
+    public bool majorEncounter, boss, decisiveEncounter, originalEight;
+    public string battleObjective;
     public string id;
     public string name;
     public UnitRole role;
@@ -1591,7 +1600,7 @@ public class ExpeditionSettings
     public float settlerPace = 0.5f;
     [Header("Improving the land (the legends' own work: builders are folded into expeditions)")]
     [Tooltip("The technology that teaches expeditions to improve hotspots.")]
-    public string improveTechnology = "Woodcraft Mastery";
+    public string improveTechnology = "Elderwood Felling";
     [Tooltip("Paid when an improvement starts (materials; the legends' time is the rest).")]
     public List<ResourceAmount> improveCost = new List<ResourceAmount>();
     [Tooltip("The improvement's work time is multiplied by this for each legend beyond the first (more hands, quicker work).")]
@@ -1862,7 +1871,7 @@ public class WorldSettings : ScriptableObject
 
     [Header("Beyond the walls")]
     [Tooltip("The world map opens when this technology is researched; before it only the Capital is known. Empty: open from the start.")]
-    public string mapTechnology = "Pathfinder Training";
+    public string mapTechnology = "Lookout Towers";
     [Tooltip("Roads, Resonance Anchors, promotions, envoys and claims need this technology (lookouts need something to report to).")]
     public string unlockTechnology = "Reconstruction";
     [Tooltip("Units that set out with the survivors when a world begins (unit ids).")]

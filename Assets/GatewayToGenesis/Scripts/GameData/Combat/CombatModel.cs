@@ -17,6 +17,14 @@ public sealed class CombatSection
     public string speciesId;
     public FormationRow row;
     public SectionKind kind;
+    /// <summary>Primary combat hex (BattleHexLayout), -1 until deployed. Independent of the section's role.</summary>
+    public int battleHex = -1;
+    public BattleDeploymentSlot deployment;
+    public BattleEliteRole eliteRole;
+    public BattleAbstraction abstraction;
+    public string trainingTechnology, productionUnit, equipment;
+    public int productionTier = 1;
+    public List<string> trainingCards = new List<string>(), equipmentCards = new List<string>();
 
     public float maxIntegrity, maxComposure, structure = 0.75f;
     public float attack, defense, breakthrough, armor, piercing, width = 1f, speed = 3f, charge = 1f;
@@ -51,6 +59,10 @@ public sealed class CombatSection
 
     // State through a battle.
     public float integrity, composure;
+    public float parasiticStrain;
+    public bool deathKnell, permanentDeath, evacuated, eliteCheck, eliteCheckmate, savingRelic, equipmentLost;
+    public int deathblowChecks;
+    public float severeWounds, knellCapability = .15f;
     /// <summary>Mind Break: Composure broke. Attacks, parries, armor and wards fall (<see cref="CombatTuning.mindBreakAttack"/>), no spells, until it steadies.</summary>
     public bool mindBroken;
     /// <summary>Integrity gone, or run down after its side lost: out of the battle.</summary>
@@ -65,11 +77,11 @@ public sealed class CombatSection
 
     public bool Standing => !destroyed && !fled && !captured;
     /// <summary>Individuals left, by its Integrity.</summary>
-    public int Alive => count <= 0 ? 0 : Math.Max(integrity > 0f ? 1 : 0, (int)Math.Round(count * IntegrityShare));
-    public bool Fighting => Standing && (committed || row != FormationRow.Front);
+    public int Alive => count <= 0 || permanentDeath ? 0 : deathKnell ? Math.Max(1, count) : Math.Max(integrity > 0f ? 1 : 0, (int)Math.Round(count * IntegrityShare));
+    public bool Fighting => Standing && battleHex >= 0;
     public bool Casts => potency > 0f;
     public bool PureLight => structure < CreatureTaxonomy.PureLightBeingBelow || organ != BindingOrgan.None;
-    public float IntegrityShare => maxIntegrity <= 0f ? 0f : Math.Max(0f, integrity) / maxIntegrity;
+    public float IntegrityShare => maxIntegrity <= 0f ? 0f : deathKnell ? knellCapability : Math.Max(0f, integrity) / maxIntegrity;
     public float ComposureShare => maxComposure <= 0f ? 0f : Math.Max(0f, composure) / maxComposure;
     public ChordTier Tier => (ChordTier)Math.Min(3, harmony?.Count ?? 0);
 
@@ -89,7 +101,9 @@ public sealed class CombatSection
     {
         integrity = maxIntegrity;
         composure = maxComposure;
+        battleHex = -1;
         committed = mindBroken = destroyed = fled = captured = false;
+        deathKnell = permanentDeath = evacuated = eliteCheck = eliteCheckmate = false; deathblowChecks = 0;
         lost = dead = wounded = 0f;
         casts = misfires = timesMindBroken = 0;
     }
@@ -99,7 +113,12 @@ public sealed class CombatSection
         var c = (CombatSection)MemberwiseClone();
         c.secondary = new List<SpellBinding>(secondary ?? new List<SpellBinding>());
         c.harmony = new List<SpellBinding>(harmony ?? new List<SpellBinding>());
-        c.grounds = new List<GroundModifier>(grounds ?? new List<GroundModifier>());
+        c.grounds = (grounds ?? new List<GroundModifier>()).Select(g => g == null ? null : new GroundModifier { ground = g.ground, attack = g.attack, defense = g.defense }).ToList();
+        c.bonds = bonds == null ? null : new Dictionary<string, int>(bonds, bonds.Comparer);
+        c.leader = leader?.Clone();
+        c.trainingCards = new List<string>(trainingCards ?? new List<string>());
+        c.equipmentCards = new List<string>(equipmentCards ?? new List<string>());
+        c.deployment = deployment == null ? null : new BattleDeploymentSlot { role = deployment.role, rank = deployment.rank, lane = deployment.lane };
         return c;
     }
 
@@ -111,6 +130,8 @@ public sealed class CombatSection
         {
             name = caster && binding != SpellBinding.Unattuned ? $"{spec.name} ({binding})" : spec.name,
             specId = spec.id, row = spec.row, kind = spec.kind,
+            trainingTechnology = spec.technology, productionUnit = spec.productionUnit, productionTier = Math.Max(1, spec.productionTier),
+            trainingCards = new List<string>(spec.trainingCards ?? new List<string>()),
             maxIntegrity = spec.integrity, maxComposure = spec.composure, structure = spec.structure,
             attack = spec.attack, defense = spec.defense, breakthrough = spec.breakthrough, armor = spec.armor, piercing = spec.piercing,
             width = spec.width, speed = spec.speed, charge = spec.charge,
@@ -141,6 +162,9 @@ public sealed class CombatSection
 /// </summary>
 public sealed class BattleLegend
 {
+    public BattleDeckEvolution deckEvolution = new BattleDeckEvolution();
+    /// <summary>Negative: derive tactical intelligence from Seer/Vanguard stars and reconnaissance.</summary>
+    public float tacticalIntelligence = -1f;
     public string name;
     public SpellBinding leitmotif;
     public List<SpellBinding> ornaments = new List<SpellBinding>();
@@ -152,6 +176,28 @@ public sealed class BattleLegend
     public float strain = 20f;
     /// <summary>Where each Composure state begins (null: the defaults).</summary>
     public ComposureTuning composureTuning;
+    /// <summary>Symphony Cards it has learned into its personal grimoire (ids; <see cref="LegendGrimoires"/>). Empty: none.</summary>
+    public List<string> grimoire = new List<string>();
+    /// <summary>Awakened (an Ornament, or the Awakened State): it can sound Major Notes, its own leitmotif among them.</summary>
+    public bool awakened;
+    public List<string> traits = new List<string>(), conditions = new List<string>(), memories = new List<string>();
+    public int piety;
+
+    /// <summary>A forecast owns its legend data; persistent souls are changed only by applying the final fate.</summary>
+    public BattleLegend Clone()
+    {
+        var c = (BattleLegend)MemberwiseClone();
+        c.deckEvolution = deckEvolution?.Clone() ?? new BattleDeckEvolution();
+        c.ornaments = new List<SpellBinding>(ornaments ?? new List<SpellBinding>());
+        c.scores = scores == null ? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) : new Dictionary<string, int>(scores, scores.Comparer);
+        c.greats = new Dictionary<LegendClass, int>(greats ?? new Dictionary<LegendClass, int>());
+        c.grimoire = new List<string>(grimoire ?? new List<string>());
+        c.traits = new List<string>(traits ?? new List<string>());
+        c.conditions = new List<string>(conditions ?? new List<string>());
+        c.memories = new List<string>(memories ?? new List<string>());
+        c.composureTuning = composureTuning?.Clone();
+        return c;
+    }
 
     public ComposureTuning ComposureTuning => composureTuning ?? DefaultComposure;
     private static readonly ComposureTuning DefaultComposure = new ComposureTuning();
@@ -184,12 +230,17 @@ public sealed class BattleLegend
         greats = greats == null ? new Dictionary<LegendClass, int>() : greats.ToDictionary(p => p.Key, p => p.Value),
         strain = soul?.strain ?? (tuning ?? DefaultComposure).baseline,
         composureTuning = tuning,
+        awakened = LegendGrimoires.Awakened(soul),
+        traits = (soul?.wish ?? new List<string>()).Concat(soul?.expression ?? new List<string>()).Distinct().ToList(),
     };
 }
 
 /// <summary>One side of a battle.</summary>
 public sealed class BattleSide
 {
+    /// <summary>Physical Seer selected at deployment; -1 selects the most capable eligible elite.</summary>
+    public int seerVoice = -1;
+    public bool objectiveLost;
     public string name;
     public List<CombatSection> sections = new List<CombatSection>();
     /// <summary>The stack's commander (the Battle Conductor), or null.</summary>
@@ -203,14 +254,69 @@ public sealed class BattleSide
     public bool wild;
     /// <summary>Withdraws once its standing sections' Composure falls below this share (negative: the tuning's <see cref="CombatTuning.withdrawAt"/>). Shy creatures leave early.</summary>
     public float withdrawAt = -1f;
+    /// <summary>
+    /// Its Symphony: the cards it performs each measure (<see cref="SymphonyDecks"/>), each voiced by one of its sections
+    /// (by index) or its conductor. Empty: no cards, and its sections fight wholly by their drilled rhythm (the plain
+    /// auto-resolve).
+    /// </summary>
+    public List<DeckCard> deck = new List<DeckCard>();
+    public List<BattleEchoingBond> echoingBonds = new List<BattleEchoingBond>();
+    /// <summary>The player performs its Symphony (a manual battle, <see cref="BattleResolver.Begin"/>): the resolver does not play its cards for it.</summary>
+    public bool manual;
+
+    /// <summary>Chosen doctrine and its independent cohesion condition. 100 is a normalized full bar, not a bonus.</summary>
+    public BattleStance stance = BattleStance.Line;
+    public string doctrine;
+    public BattleScoreInputs scoreInputs;
+    public float maxStanceStability = 100f, stanceStability = 100f;
+    public bool StanceBroken => stanceStability <= 0f;
+    /// <summary>Known population, with one element for an uncounted section; a separate conductor counts once.</summary>
+    public int CombatantCount
+    {
+        get
+        {
+            long total = sections.Sum(s => (long)Math.Max(1, s.count));
+            if (conductor != null && !sections.Any(s => s.leader == conductor ||
+                (s.leader != null && !string.IsNullOrEmpty(conductor.name) && s.leader.name == conductor.name))) total++;
+            return (int)Math.Max(1L, Math.Min(int.MaxValue, total));
+        }
+    }
 
     public IEnumerable<CombatSection> Standing => sections.Where(s => s.Standing);
+    public bool HasSymphony => deck != null && deck.Count > 0;
 
-    public BattleSide Clone() => new BattleSide
+    /// <summary>Copies the current condition without healing it. Shared legend identities stay shared within the copy.</summary>
+    public BattleSide Clone()
     {
-        name = name, conductor = conductor, tempo = tempo, entrenchment = entrenchment, wild = wild, withdrawAt = withdrawAt, takesCaptives = takesCaptives,
-        sections = sections.Select(s => { var c = s.Clone(); c.Reset(); return c; }).ToList(),
-    };
+        var legends = new Dictionary<BattleLegend, BattleLegend>();
+        BattleLegend CopyLegend(BattleLegend legend)
+        {
+            if (legend == null) return null;
+            if (!legends.TryGetValue(legend, out var copy)) legends[legend] = copy = legend.Clone();
+            return copy;
+        }
+        var copySide = new BattleSide
+        {
+            name = name, conductor = CopyLegend(conductor), tempo = tempo, entrenchment = entrenchment, seerVoice = seerVoice,
+              wild = wild, withdrawAt = withdrawAt, takesCaptives = takesCaptives, manual = manual, objectiveLost = objectiveLost,
+            stance = stance, maxStanceStability = maxStanceStability, stanceStability = stanceStability,
+            doctrine = doctrine, scoreInputs = scoreInputs?.Clone(),
+            echoingBonds = echoingBonds.Select(b => b.Clone()).ToList(),
+        };
+        foreach (var section in sections)
+        {
+            var copy = section.Clone();
+            copy.leader = CopyLegend(section.leader);
+            copySide.sections.Add(copy);
+        }
+        foreach (var dc in deck ?? new List<DeckCard>())
+            copySide.deck.Add(dc == null ? null : new DeckCard
+            {
+                card = dc.card?.Clone(), voice = dc.voice, legend = CopyLegend(dc.legend),
+                scale = dc.scale, major = dc.major, source = dc.source,
+            });
+        return copySide;
+    }
 
     public float MaxIntegrity => sections.Sum(s => s.maxIntegrity);
     /// <summary>Integrity still with the side (captives are the enemy's now).</summary>
@@ -231,6 +337,15 @@ public sealed class BattleSide
 /// </summary>
 public sealed class Battlefield
 {
+    /// <summary>Sparse terrain overrides for the sixteen primary combat hexes.</summary>
+    public List<BattleHexTerrain> hexes = new List<BattleHexTerrain>();
+
+    public Battlefield Clone()
+    {
+        var copy = (Battlefield)MemberwiseClone();
+        copy.hexes = hexes == null ? new List<BattleHexTerrain>() : hexes.Select(h => h?.Clone()).ToList();
+        return copy;
+    }
     public string terrain = "plains";
     public string place = "open ground";
     public BattleGround ground = BattleGround.Open;
@@ -293,19 +408,31 @@ public sealed class Battlefield
 /// <summary>A battle to resolve.</summary>
 public sealed class BattleSetup
 {
+    public bool majorEncounter, boss, decisive, originalEight;
+    public string objective;
+    public bool RequiresManual => majorEncounter || boss || decisive || originalEight;
     public BattleSide attacker, defender;
     public Battlefield field = new Battlefield();
     public int seed = 1;
 
-    public BattleSetup Clone(int newSeed) => new BattleSetup { attacker = attacker.Clone(), defender = defender.Clone(), field = field, seed = newSeed };
+    public BattleSetup Clone(int newSeed) => new BattleSetup { attacker = attacker.Clone(), defender = defender.Clone(), field = field?.Clone(), seed = newSeed,
+        majorEncounter = majorEncounter, boss = boss, decisive = decisive, originalEight = originalEight, objective = objective };
 }
 
-/// <summary>How a battle ended, for the attacker.</summary>
-public enum BattleOutcome { DecisiveVictory, Victory, PyrrhicVictory, Stalemate, Defeat, Rout }
+/// <summary>
+/// How a battle ended for one side (<see cref="BattleVerdicts"/>): three victories, three defeats, and the Legendary
+/// Victory. Each battle's two verdicts mirror each other (a Decisive Victory is the other side's Crushing Defeat, a Close
+/// Victory its Close Defeat, a Pyrrhic Victory its Valiant Defeat). The Legendary Victory is never given by the
+/// auto-resolve: only to a battle won by hand (the micro layer) that the forecast said would be lost. A side that holds
+/// the field when the measures run out has won it (<see cref="BattleReport.Held"/>). Append only.
+/// </summary>
+public enum BattleOutcome { DecisiveVictory, CloseVictory, PyrrhicVictory, CloseDefeat, ValiantDefeat, CrushingDefeat, LegendaryVictory }
 
 /// <summary>What one side came out with.</summary>
 public sealed class SideResult
 {
+    public float lossBurden;
+    public bool mythical;
     public string name;
     /// <summary>Integrity (bodies) of every section at the start and the end; the loss is split into dead and wounded.</summary>
     public float integrityBefore, integrityAfter, dead, wounded;
@@ -321,16 +448,26 @@ public sealed class SideResult
     public bool beaten;
     /// <summary>Wild creatures that left the fight on their own.</summary>
     public bool withdrew;
+    /// <summary>How the battle ended for this side (<see cref="BattleVerdicts"/>).</summary>
+    public BattleOutcome outcome;
     /// <summary>Its commander's battle Composure broke (a Mind Break: the stack fought on leaderless).</summary>
     public bool conductorBroke;
     /// <summary>The commander's battle Composure at the start and the end (0 with no commander).</summary>
     public float conductorBefore, conductorAfter;
+    /// <summary>Its Symphony's power when the battle began (<see cref="SymphonyPower"/>, on this field), the cards it played, and how many flickered.</summary>
+    public float symphonyPower;
+    public int cardsPlayed, cardFlickers;
+    /// <summary>The card it played most, or null.</summary>
+    public string signatureCard;
     public float LossShare => integrityBefore <= 0f ? 0f : (integrityBefore - integrityAfter) / integrityBefore;
 }
 
 /// <summary>The bars of one side at the end of a measure (Stellaris's and Total War's battle bars).</summary>
 public struct SideBars
 {
+    /// <summary>Independent formation cohesion; spatial consequences are resolved by the Stance rules.</summary>
+    public BattleStance stance;
+    public float stanceStability, stanceStabilityMax;
     /// <summary>The line's Integrity (the bar that decides) and Composure (the one that shakes it).</summary>
     public float integrity, integrityMax, composure, composureMax;
     /// <summary>The commander's battle Composure, and where it began (0 and 0 with no commander).</summary>
@@ -340,18 +477,32 @@ public struct SideBars
     public float IntegrityShare => integrityMax <= 0f ? 0f : integrity / integrityMax;
     public float ComposureShare => composureMax <= 0f ? 0f : composure / composureMax;
     public float ConductorShare => conductorMax <= 0f ? 1f : conductor / conductorMax;
+    public float StanceShare => stanceStabilityMax <= 0f ? 0f : stanceStability / stanceStabilityMax;
 }
 
 /// <summary>One measure of the timeline (measure 0: the line-up, after the Overture).</summary>
 public struct BattleMeasure
 {
     public int measure;
+    public int beat;
     public SideBars attacker, defender;
+    public List<BattlePosition> positions;
 }
 
 /// <summary>The resolved battle: the outcome, each side's losses and a readable account, measure by measure.</summary>
 public sealed class BattleReport
 {
+    public List<BattleSurvivalEvent> survival = new List<BattleSurvivalEvent>();
+    public List<BattlePopulationFate> population = new List<BattlePopulationFate>();
+    public List<BattleCrisisEvent> crises = new List<BattleCrisisEvent>();
+    public List<BattleRhythmRecord> rhythm = new List<BattleRhythmRecord>();
+    /// <summary>Every Resolution performed (vault: "Performances Remembered"): who contributed, what they built, how it ended.</summary>
+    public List<BattleResolutionRecord> resolutions = new List<BattleResolutionRecord>();
+    public List<BattlePhaseEvent> phases = new List<BattlePhaseEvent>();
+    public List<BattleActionIntent> commitments = new List<BattleActionIntent>();
+    public List<BattleChordEvent> chordEvents = new List<BattleChordEvent>();
+    public List<BattleSpatialEvent> spatialEvents = new List<BattleSpatialEvent>();
+    /// <summary>How the battle ended for the attacker (the defender's is <see cref="SideResult.outcome"/> on <see cref="defender"/>).</summary>
     public BattleOutcome outcome;
     /// <summary>1 attacker, -1 defender, 0 neither (a stalemate: the defender holds).</summary>
     public int winner;
@@ -366,6 +517,8 @@ public sealed class BattleReport
     public List<BattleCaptive> captives = new List<BattleCaptive>();
     /// <summary>What the battle did to every legend in it, for the caller to apply to their souls.</summary>
     public List<LegendBattleFate> legends = new List<LegendBattleFate>();
+    /// <summary>Every card played, in order, for a battle screen to play back.</summary>
+    public List<CardPlay> plays = new List<CardPlay>();
     public int seed;
 
     public bool AttackerWon => winner > 0;
@@ -373,15 +526,16 @@ public sealed class BattleReport
     /// <summary>The captives one side took (true: the attacker's).</summary>
     public IEnumerable<BattleCaptive> TakenBy(bool attacker) => captives.Where(c => c.takenByAttacker == attacker);
 
-    public static string Words(BattleOutcome outcome)
-    {
-        switch (outcome)
-        {
-            case BattleOutcome.DecisiveVictory: return "Decisive Victory";
-            case BattleOutcome.PyrrhicVictory: return "Pyrrhic Victory";
-            default: return outcome.ToString();
-        }
-    }
+    public static string Words(BattleOutcome outcome) => BattleVerdicts.Words(outcome);
+
+    /// <summary>Neither line gave way before the measures ran out: the defender held the field (and so won it).</summary>
+    public bool Held => winner == 0;
+
+    /// <summary>How the battle ended for one side (true: the attacker).</summary>
+    public BattleOutcome OutcomeFor(bool attacker) => attacker ? this.attacker.outcome : defender.outcome;
+
+    /// <summary>Won by hand against the forecast (<see cref="BattleOutcome.LegendaryVictory"/>): the side that did, or null.</summary>
+    public bool? legendaryFor;
 }
 
 /// <summary>A section taken alive: a creature group to bring home (tamed, penned, returned to an Enclave), or prisoners.</summary>
@@ -403,18 +557,42 @@ public sealed class BattleCaptive
     public int measure;
 }
 
+/// <summary>One card played in a battle.</summary>
+public sealed class CardPlay
+{
+    public int beat;
+    public long action;
+    public int countdown;
+    public bool minor, reaction;
+    public bool failed;
+    public string failure;
+    public int measure;
+    public bool attacker;
+    public string card, cardName;
+    /// <summary>The section that voiced it (or the commander), and the section it was aimed at (null: none, or a whole line).</summary>
+    public string voice, target;
+    /// <summary>A spell that flickered into Discordant Interference (it landed weakly).</summary>
+    public bool flicker;
+    /// <summary>Its effects' multiplier from the field (its ground, its condition) and from the rendition.</summary>
+    public float field = 1f, rendition = 1f;
+    /// <summary>Its Purpose, and the Setups performed before it this measure (groundwork: an Offensive card after them lands harder).</summary>
+    public SpellPurpose purpose;
+    public int groundwork;
+}
+
 /// <summary>How a legend fought: commanding the stack, or leading one section.</summary>
 public enum BattleRole { Commander, SectionLeader }
 
 /// <summary>
 /// What a battle did to one legend, for the caller to apply (<see cref="LegendProgress.ApplyBattleFate"/>): the strain
 /// its real Composure takes, the fragments it earned, conditions it carries home, and whether it went missing in action.
-/// A legend on a doomed side (or whose section was cut down or taken) never stays to die: it retreats alone, leaving the
-/// rest behind, and turns up in a settlement <see cref="missingSevenths"/> later. Legends are never captured yet (that
-/// is another system's).
+/// Named aftermath distinguishes permanent death, capture and missing-in-action recovery. Ordinary strain cannot
+/// cross persistent Surrender; explicit parasitic strain is recorded separately. Deck changes commit with the fate.
 /// </summary>
 public sealed class LegendBattleFate
 {
+    public BattleDeckEvolution deckEvolution;
+    public bool dead, captured, deathKnell;
     public string name;
     public BattleRole role;
     /// <summary>The section it led (section leaders), or the side's name.</summary>
@@ -427,6 +605,8 @@ public sealed class LegendBattleFate
     public int missingSevenths;
     /// <summary>Strain for its real Composure (the caller adds it to the soul).</summary>
     public float strain;
+    /// <summary>The explicitly extraordinary part of strain; ordinary aftermath cannot cause Surrender.</summary>
+    public float parasiticStrain;
     /// <summary>The part of <see cref="strain"/> owed to the companies it is attached to (cut down, taken, or left behind).</summary>
     public float grief;
     public List<FragmentAward> fragments = new List<FragmentAward>();

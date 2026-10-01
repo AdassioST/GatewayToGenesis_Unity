@@ -125,4 +125,56 @@ public class EmotionalAlchemyTests
         Assert.AreSame(site.lineage.palate, WorldResources.PalateOf(site, shameMoss), "an evolved lineage eats as it has become");
         Assert.Less(WorldResources.Vigor(map, site, shameMoss), 1f, "and a joy-eater finds no joy here");
     }
+
+    [Test]
+    public void EcstasyEuphoriaAndLust_AreCocktailsOfTheirOwn()
+    {
+        foreach (string id in new[] { "ecstasy", "euphoria", "lust" })
+        {
+            var compound = EmotionalAlchemy.CompoundById(id);
+            Assert.IsNotNull(compound, id);
+            Assert.AreEqual(id, EmotionalAlchemy.Detect(EmotionalRegister.Of(compound.recipe))[0].compound.id, $"{id} reads as itself");
+            Assert.AreEqual(id, EmotionalAlchemy.Nearest(compound.recipe).compound.id);
+        }
+        var lust = EmotionalAlchemy.CompoundById("lust").recipe;
+        Assert.AreNotEqual("desire", EmotionalAlchemy.Nearest(lust).compound.id, "lust is desire in the body, with a thrill of the forbidden");
+        Assert.Less(EmotionalAlchemy.Fit(EmotionalRegister.Of(EmotionalAlchemy.CompoundById("euphoria").recipe), EmotionalAlchemy.CompoundById("ecstasy").recipe), 0.95f, "ecstasy reaches past euphoria");
+        // What feeds on lust: the pleasure parasites' Path.
+        var (path, hybrid) = EmotionalProfile.Match(EmotionalRegister.Of(lust));
+        Assert.IsTrue(path == AtonalPath.Erosyx || hybrid == AtonalPath.Erosyx, $"{path}-{hybrid}");
+    }
+
+    // The real Lust Berries (World.asset) ripen on Lust. Needs the Test Runner (Resources).
+    [Test]
+    public void Content_TheLustBerriesEatLust()
+    {
+        GameCatalog.InvalidateAll();
+        var berries = GameCatalog.World.All.First().generation.ResourceSite("lust-berries");
+        Assert.AreEqual("lust", EmotionalAlchemy.Nearest(berries.flavors).compound.id);
+    }
+
+    // The real Anemoia Lunaria (World.asset): a near-purist healer of the Anemoia cocktail, sparse and superloaded where it
+    // finds it, whose seed pods are an ornament luxury kept and never used up. Needs the Test Runner (Resources).
+    [Test]
+    public void Content_TheAnemoiaLunariaEatsAnemoia_AndItsPodsAreALuxury()
+    {
+        GameCatalog.InvalidateAll();
+        var gen = GameCatalog.World.All.First().generation;
+        var lunaria = gen.ResourceSite("anemoia-lunaria");
+        Assert.IsNotNull(lunaria, "World.asset lists the Anemoia Lunaria");
+        Assert.AreEqual(ResourceKind.Bloom, lunaria.kind);
+        Assert.AreEqual(BloomNiche.Healer, lunaria.niche, "it turns longing into love and estrangement into belonging");
+        Assert.GreaterOrEqual(lunaria.specificity, 0.8f, "a near-purist: it grows sparsely");
+        Assert.AreEqual("anemoia", EmotionalAlchemy.Nearest(lunaria.flavors).compound.id, "its cocktail is Anemoia itself");
+        Assert.AreEqual(1f, EmotionalAlchemy.Fit(EmotionalRegister.Of(EmotionalAlchemy.CompoundById("anemoia").recipe), lunaria.flavors), 1e-4f);
+        Assert.IsTrue(lunaria.harvest.Any(h => h.resource == "Anemoia Pods"), "its harvest is its seed pods");
+        Assert.IsTrue(GameCatalog.Units.TryGet("Anemoia Pods", out var pods), "the pods are a resource");
+        Assert.AreEqual("Valuables", pods.type.ToString());
+        var life = new CultureLifeTuning();
+        Assert.IsTrue(life.luxuries.Any(l => l.resources.Contains("Anemoia Pods")), "a luxury");
+        Assert.IsTrue(life.goods.Single(g => g.resource == "Anemoia Pods").amenity, "kept, never used up");
+        var exact = EmotionalRegister.Of(lunaria.flavors);
+        exact.Scale(0.01f);
+        Assert.Greater(EmotionalEvolution.Feed(new Palate { recipe = lunaria.flavors, specificity = lunaria.specificity }, exact, lunaria.residueNeed).potency, 2f, "on its exact cocktail: superloaded");
+    }
 }

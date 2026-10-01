@@ -33,7 +33,7 @@ public enum HarmonicMatch
 ///
 /// A being's PRIMARY binding is its weakness (owner's rule, Sept 28 2026): it is what an attack's element is measured
 /// against. Secondary bindings (a legend's Ornaments, a creature's other attunements) only widen what it can cast.
-/// The multipliers are proposals (<see cref="CombatTuning"/>); the circle itself is canon.
+/// Default multipliers follow Combat System.md: advantage 1.5, resistance 0.5, Light/Shadow 1.5 (<see cref="CombatTuning"/>).
 /// </summary>
 public static class HarmonicCircle
 {

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56fa04d4184ec8340a3828b6259f319b, type: 3}
   m_Name: Knowledge Sanctums
   m_EditorClassIdentifier: 
-  name: Knowledge Sanctums
+  name: 'Knowledge Sanctums'
   type: Normal
   section: Age of Desolation
   description: '"Learn to preserve and expand knowledge."'

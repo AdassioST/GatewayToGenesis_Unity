@@ -15,7 +15,6 @@ public class CultureHud : MonoBehaviour
     private const string SlotName = "NationSlot";
     private GameObject _slot;
     private CultureSystem _culture;
-    private TextMeshProUGUI _opportunity;
 
     private void Start()
     {
@@ -46,16 +45,6 @@ public class CultureHud : MonoBehaviour
         CultureField.Name = CultureSystem.IsNamed ? CultureSystem.Adjective : "Your people's";
         if (_slot == null) return;
         TooltipTrigger.Ensure(_slot).SetCustom(CultureSystem.NationName, Flavour(), "Nation", Summary());
-        if (_opportunity == null)
-        {
-            _opportunity = CodeUI.TextButton(_slot.transform, "Culture atlas", () => CultureAtlasWindow.Open(), CodeUI.Theme(nameof(CultureHud)), 16f);
-            CodeUI.Place(_opportunity.rectTransform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, -36), new Vector2(0, -4));
-            _opportunity.textWrappingMode = TextWrappingModes.NoWrap;
-            _opportunity.overflowMode = TextOverflowModes.Ellipsis;
-            _opportunity.richText = false;
-        }
-        _opportunity.text = Opportunity(_culture);
-        TooltipTrigger.Ensure(_opportunity.gameObject).SetCustom("Cultural atlas", _opportunity.text);
     }
 
     public static string Opportunity(CultureSystem c)

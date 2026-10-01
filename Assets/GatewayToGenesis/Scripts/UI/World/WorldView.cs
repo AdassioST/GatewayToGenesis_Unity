@@ -78,7 +78,7 @@ public class WorldView : MonoBehaviour
     {
         if (_instance == null || _instance._mode != Mode.World) return null;
         var label = _instance._dockButtons.FirstOrDefault(b => b != null && b.gameObject.name == name);
-        return label != null && label.transform.parent != null ? label.transform.parent.GetComponent<Graphic>() : null;
+        return label != null ? label.GetComponent<Graphic>() : null;
     }
 
     /// <summary>Where a point of the map is on screen (pixels), while the map has the screen.</summary>
@@ -106,12 +106,13 @@ public class WorldView : MonoBehaviour
     private RectTransform _canvasRect, _hoverCard, _card;
     private TextMeshProUGUI _hoverText;
     private readonly Dictionary<Popup, RectTransform> _popups = new Dictionary<Popup, RectTransform>();
-    private TextMeshProUGUI _mapDock, _unitsDock, _realmDock, _keyText;
+    private IconActionButton _mapDock, _unitsDock, _realmDock, _guide;
+    private QuickActionBar _actionBar;
     private RectTransform _key;
     private readonly Dictionary<Popup, HudList> _menuLists = new Dictionary<Popup, HudList>();
     private HudList _selectionList, _rosterList;
     private RectTransform _dock;
-    private readonly List<TextMeshProUGUI> _dockButtons = new List<TextMeshProUGUI>();
+    private readonly List<IconActionButton> _dockButtons = new List<IconActionButton>();
     private readonly HashSet<string> _expandedSections = new HashSet<string>();
     private string _cardIdentity;
     private Popup _popup;
@@ -119,6 +120,8 @@ public class WorldView : MonoBehaviour
     // Interaction
     private int _selectedUnit = -1;
     private HexCoord? _selected, _selectedMacro;
+    // The micro hex clicked with the cell at the micro reading (what a claim takes), or null.
+    private HexCoord? _selectedHex;
     private bool _rivers = true, _leylines, _forecast, _previous;
     private Vector2 _pressAt;
     private int _pressButton = -1;
@@ -262,6 +265,7 @@ public class WorldView : MonoBehaviour
         GameInput.CancelPressed -= OnCancel;
         var world = WorldSystem.Instance;
         if (world != null) world.Changed -= MarkDirty;
+        BattleWindow.Unwatch(world);
         if (LegendProgress.Instance != null) LegendProgress.Instance.Changed -= MarkDirty;
         RumourKeeper.Changed -= MarkDirty;
         RestoreCapital();
@@ -276,6 +280,9 @@ public class WorldView : MonoBehaviour
         // The Chronicle takes the Esc that closes it.
         if (EraTimelineWindow.IsOpen || EraTimelineWindow.ClosedFrame == Time.frameCount) return;
         if (RumoursWindow.IsOpen || RumoursWindow.ClosedFrame == Time.frameCount) return;
+        if (BattleWindow.IsOpen || BattleWindow.ClosedFrame == Time.frameCount) return;
+        if (BattleEncounterWindow.IsOpen || BattleRecoveryWindow.IsOpen || BalladJournalView.IsOpen || BestiaryWindow.IsOpen || BestiaryWindow.ClosedFrame == Time.frameCount) return;
+        if (SymphonyWindow.IsOpen || SymphonyWindow.ClosedFrame == Time.frameCount) return;
         // So do the nation's windows.
         if (CultureAtlasWindow.IsOpen || CultureAtlasWindow.ClosedFrame == Time.frameCount || CultureWindow.IsOpen || CultureWindow.ClosedFrame == Time.frameCount || CultureNamingDialog.IsOpen || CultureNamingDialog.ClosedFrame == Time.frameCount) return;
         if (_surveyPick) { _surveyPick = false; Refresh(force: true); return; }
@@ -459,7 +466,7 @@ public class WorldView : MonoBehaviour
     private void Animate()
     {
         bool opening = _mode == Mode.Opening;
-        _t = Mathf.Min(1f, _t + Time.unscaledDeltaTime / (opening ? OpenSeconds : CloseSeconds));
+        _t = GameSettings.ReduceMotion ? 1f : Mathf.Min(1f, _t + Time.unscaledDeltaTime / (opening ? OpenSeconds : CloseSeconds));
         float e = _t * _t * (3f - 2f * _t);
         _cx = Mathf.Lerp(_fromX, _toX, e);
         _cy = Mathf.Lerp(_fromY, _toY, e);
@@ -645,6 +652,8 @@ public class WorldView : MonoBehaviour
             Deselect();
             return;
         }
+        // At the micro reading the click also picks the hex (land is claimed hex by hex).
+        _selectedHex = WorldZoom.ScaleOf(_size) == WorldScale.Micro ? HexHierarchy.MicroAt(point.x, point.y) : (HexCoord?)null;
         Refresh(force: true);
     }
 
@@ -735,6 +744,7 @@ public class WorldView : MonoBehaviour
         _farthest = WorldZoom.Farthest((map.maxY - map.minY) / 2f, (map.maxX - map.minX) / 2f, aspect);
         BuildHud();
         world.Changed += MarkDirty;
+        BattleWindow.Watch(world);
         if (LegendProgress.Instance != null) LegendProgress.Instance.Changed += MarkDirty;
         RumourKeeper.Changed += MarkDirty;
         _built = true;
@@ -789,34 +799,21 @@ public class WorldView : MonoBehaviour
     // The map key, upper left: the reading and the lens in force, what the lens's colours mean, and how to drive the map.
     private void BuildKey()
     {
-        // The nation's banner holds the corner (it opens the Culture window); the key sits under it.
-        NationBanner.Attach(_canvas.transform, _theme, _scaler, new Vector2(Pad, -Pad), KeyWidth);
+        // The map guide has one button; the nation's report is available from the action bar.
         _key = CodeUI.Panel(_canvas.transform, "Map Key", new Vector2(0f, 1f), new Vector2(0f, 1f));
         _key.pivot = new Vector2(0f, 1f);
-        _key.anchoredPosition = new Vector2(Pad, -Pad - NationBanner.Height - 8f);
-        _key.sizeDelta = new Vector2(KeyWidth, 90f);
-        CodeUI.Plate(_key, _theme, _scaler, 0.9f);
-        foreach (var g in _key.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
-        _keyText = CodeUI.Label(_key, "Text", string.Empty, _theme.bodySize - 4f, _theme.bodyColor, FontStyles.Normal, _theme);
-        _keyText.lineSpacing = TooltipText.LineSpacing;
-        _keyText.alignment = TextAlignmentOptions.TopLeft;
-        CodeUI.Place(_keyText.rectTransform, Vector2.zero, Vector2.one, new Vector2(Inner, 12f), new Vector2(-Inner, -13f));
+        _key.anchoredPosition = new Vector2(Pad, -Pad);
+        _key.sizeDelta = new Vector2(56f, 56f);
+        _guide = IconActionButton.Create(_key, "Map guide", PixelIcon.Help, () => ShowPopup(Popup.Map), "Map controls and the active lens.", _theme);
+        _guide.Rect.anchorMin = _guide.Rect.anchorMax = new Vector2(.5f, .5f);
+        _guide.Rect.anchoredPosition = Vector2.zero;
     }
 
-    private TextMeshProUGUI DockButton(RectTransform dock, string name, Action onClick, string title, string tip, HudIcon icon)
+    private IconActionButton DockButton(RectTransform dock, string name, Action onClick, string title, string tip, HudIcon icon)
     {
-        var button = CodeUI.TextButton(dock, name, onClick, _theme, _theme.subtitleSize + 5f);
-        button.alignment = TextAlignmentOptions.MidlineLeft;
-        button.textWrappingMode = TextWrappingModes.NoWrap;
-        button.enableAutoSizing = true;
-        button.fontSizeMin = 13f;
-        button.fontSizeMax = _theme.subtitleSize + 5f;
-        button.color = _theme.titleColor;
+        var glyph = name == "Rumours" ? PixelIcon.Rumour : name == "Chronicle" ? PixelIcon.Chronicle : PixelFor(icon);
+        var button = _actionBar.Add(name, glyph, onClick, tip, _theme, name == "Map" || name == "Parties");
         _dockButtons.Add(button);
-        ButtonSurface(button);
-        var art = Icon(button.transform.parent, icon, Hud.Brass);
-        CodeUI.Place(art, new Vector2(0, .5f), new Vector2(0, .5f), new Vector2(12, -11), new Vector2(34, 11));
-        button.margin = new Vector4(44, 2, 8, 2);
         TooltipTrigger.Ensure(button.gameObject).SetCustom(title, tip);
         return button;
     }
@@ -824,16 +821,17 @@ public class WorldView : MonoBehaviour
     // Five doors, the same on every screen size: the map (lens, layers, reading), the parties, the realm, the Chronicle, home.
     private void BuildDock()
     {
-        var dock = CodeUI.Panel(_canvas.transform, "Dock", Vector2.zero, Vector2.zero);
+        _actionBar = QuickActionBar.Create(_canvas.transform, _theme, _scaler);
+        var dock = _actionBar.Rect;
         _dock = dock;
         dock.pivot = Vector2.zero;
         dock.sizeDelta = new Vector2(DockWidth, 62f);
         dock.anchoredPosition = new Vector2(Pad, Pad);
-        CodeUI.Plate(dock, _theme, _scaler, 0.9f);
         _mapDock = DockButton(dock, "Map", () => ShowPopup(Popup.Map), "Map",
             "How the map reads: one lens at a time (Settle, fertility, Coherence and leylines, magic, authority, trade, danger...), the layers drawn over it, and the reading (micro, meso, macro).", HudIcon.Compass);
         _unitsDock = DockButton(dock, "Parties", () => ShowPopup(Popup.Units), "Parties",
             "Every party in the field: its captain, where it is and how it fares. Select one to find it on the map. Form expeditions at a settlement.", HudIcon.Crew);
+        _actionBar.Add("Next idle party", PixelIcon.Idle, NextIdleUnit, "Select the next party waiting for orders. Its actions appear beside the map.", _theme, true);
         _realmDock = DockButton(dock, "Realm", () => ShowPopup(Popup.Realm), "Realm",
             "Administrative Capacity, territorial pull and the border policy: how much land your administration can hold, and whether growing wider or taller pays now.", HudIcon.Crown);
         DockButton(dock, "Rumours", RumoursWindow.Toggle, "Rumours",
@@ -841,6 +839,12 @@ public class WorldView : MonoBehaviour
         DockButton(dock, "Chronicle", EraTimelineWindow.Toggle, "Chronicle",
             "Every award of Era Score since the world began, oldest first, dated to its Cycle, Echo, Phase and Seventh and its Act of Fate.", HudIcon.Pin);
         DockButton(dock, "Capital", Close, "Return to the capital", "Back to the capital (Esc, or scroll in over it at the closest zoom).", HudIcon.Home);
+        _actionBar.Add("Culture", PixelIcon.Culture, () => CultureAtlasWindow.Open(), "Traditions, cultural choices and history.", _theme);
+        _actionBar.Add("Nation", PixelIcon.Crown, CultureWindow.Toggle, "Your nation, its people, culture and character.", _theme);
+        _actionBar.Add("Ballads & Bonds", PixelIcon.Music, BalladJournalView.ToggleJournal, "Ballads and relationships between legends.", _theme);
+        _actionBar.Add("Bestiary", PixelIcon.Beast, BestiaryWindow.Toggle, "Identified creatures and their known habitats.", _theme, visible: () => BestiaryHud.Unlocked);
+        _actionBar.Add("Library", PixelIcon.Book, LibraryWindow.Toggle, "Browse the White-Haven Library (L).", _theme);
+        _actionBar.Reflow();
     }
 
     private RectTransform PopupPanel(string name, Vector2 size)
@@ -1434,14 +1438,14 @@ public class WorldView : MonoBehaviour
     // Wilderness your people are settling hex by hex (or will settle next, and when), or null.
     private static string SettlingState(WorldSystem world, WorldTile tile)
     {
-        if (tile.water || tile.authorityId != WorldAuthority.Wilderness) return null;
+        if (!WorldHoldings.Fillable(tile, WorldAuthority.Player)) return null;
         var plan = world.AdoptionForecast().FirstOrDefault(p => p.cell == tile.index);
         if (plan == null && tile.microHeldMask == 0) return null;
-        string hexes = $"{WorldMap.SettledHexes(tile)}/{WorldMap.OpenHexes(tile)} hexes settled";
-        if (plan == null || plan.sevenths.Count == 0) return $"Your society is settling it: {hexes}";
+        string hexes = $"{WorldMap.SettledHexes(tile)}/{WorldMap.OpenHexes(tile)} hexes yours";
+        if (plan == null || plan.sevenths.Count == 0) return WorldAuthority.IsPlayers(tile.authorityId) ? $"Yours de facto: {hexes}" : $"Held in part: {hexes}";
         string by = plan.seats.Count > 0 ? $" (drawn by {string.Join(", ", plan.seats)})" : string.Empty;
         string doing = tile.microHeldMask == 0 ? "Your society settles it next" : $"Your society is settling it ({hexes})";
-        return $"{doing}{by}: the next hex in about {Sevenths(plan.sevenths[0])}, all of it in about {Sevenths(plan.WholeCell)}";
+        return $"{doing}{by}: the next hex in about {Sevenths(plan.sevenths[0])}, core in about {Sevenths(plan.WholeCell)}";
     }
 
     private void FollowCursor()
@@ -1549,10 +1553,24 @@ public class WorldView : MonoBehaviour
             text.AppendLine(TooltipText.Row("Harmony", $"{feel.Harmony:P0} consonant" + TooltipText.Muted(feel.Harmony >= 0.5f ? ": its feelings are mostly whole" : ": its feelings are mostly wounds")));
         string owner = tile.authorityId == WorldAuthority.Player ? TooltipText.Good("Your authority") : tile.authorityId == WorldAuthority.Outpost ? "Your Outpost"
             : tile.authorityId == WorldAuthority.Wilderness ? TooltipText.Muted(tile.water ? "Unclaimed waters" : "Wilderness")
-            : tile.enclave >= 0 || tile.authorityId.StartsWith("enclave:", StringComparison.Ordinal) ? EnclaveOwner(world, tile) : tile.authorityId;
+            : tile.enclave >= 0 || tile.authorityId.StartsWith("enclave:", StringComparison.Ordinal) ? EnclaveOwner(world, tile) : HolderName(world, tile.authorityId);
         text.AppendLine(TooltipText.Row("Held by", owner));
+        // Held hex by hex: de facto or core, who else holds hexes, and any dispute.
+        string hold = HoldText(world, tile);
+        if (hold != null) text.AppendLine(TooltipText.Row("Hold", hold));
         string settling = SettlingState(world, tile);
         if (settling != null) text.AppendLine(TooltipText.Row("Settling", settling));
+        // Land is held hex by hex: at the micro reading, the hex under the cursor.
+        if (!tile.water && tile.known && WorldZoom.ScaleOf(_size) == WorldScale.Micro
+            && _hoveredMicro.HasValue && HexHierarchy.Parent(_hoveredMicro.Value) == tile.coord)
+        {
+            int id = MicroNavigation.Index(world.Map, _hoveredMicro.Value), bit = 1 << (id % MicroNavigation.PerCell);
+            string holder = WorldHoldings.HexHolder(world.Map, id);
+            string why = holder == null ? world.WhyNotClaim(tile, _hoveredMicro.Value) : null;
+            text.AppendLine(TooltipText.Row("This hex", WorldAuthority.IsPlayers(holder) ? TooltipText.Good((tile.microClaimMask & bit) != 0 ? "yours (claimed)" : "yours")
+                : holder != null ? $"held by {HolderName(world, holder)}"
+                : why == null ? $"can be claimed ({world.ClaimCostText}): click it, then Claim this hex" : TooltipText.Muted(why)));
+        }
         if (!tile.water)
         {
             var beautyWhy = WorldBeauty.Explain(world.Map, gen, tile).Take(2).Select(r => r.reason).ToList();
@@ -1863,6 +1881,46 @@ public class WorldView : MonoBehaviour
         return index >= 0 && index < world.Map.Enclaves.Count ? $"{world.Map.Enclaves[index].name} ({world.Map.Enclaves[index].family})" : "an enclave";
     }
 
+    // A holder's name in words: you, your Outpost, an enclave, or an independent claim.
+    private static string HolderName(WorldSystem world, string holder) =>
+        holder == WorldAuthority.Player ? "you" : holder == WorldAuthority.Outpost ? "your Outpost"
+        : WorldResources.EnclaveOf(world.Map, holder) is Enclave e ? e.name : "an independent claim";
+
+    // How the cell is held, hex by hex (WorldHoldings): your share and status, anyone else's, and any dispute over it
+    // (a grievance, a casus belli). Null for plain wilderness no one holds any of.
+    private static string HoldText(WorldSystem world, WorldTile tile)
+    {
+        var map = world.Map;
+        if (tile.water) return null;
+        var shares = WorldHoldings.Shares(map, tile);
+        if (shares.Count == 0) return null;
+        int open = WorldMap.OpenHexes(tile);
+        var parts = new List<string>();
+        int mine = WorldHoldings.Hexes(map, tile, WorldAuthority.Player);
+        switch (WorldHoldings.Status(map, tile, WorldAuthority.Player))
+        {
+            case HoldStatus.Core: parts.Add(TooltipText.Good("core territory of yours")); break;
+            case HoldStatus.DeFacto: parts.Add($"{TooltipText.Good($"yours de facto ({mine}/{open} hexes)")}: hold every hex to make it core"); break;
+            case HoldStatus.Partial: parts.Add($"{mine}/{open} hexes yours"); break;
+        }
+        foreach (var s in shares.Where(s => !WorldAuthority.IsPlayers(s.holder)))
+        {
+            var status = WorldHoldings.Status(map, tile, s.holder);
+            parts.Add($"{HolderName(world, s.holder)} {(status == HoldStatus.Core ? "holds all of it" : status == HoldStatus.DeFacto ? $"rules it de facto ({s.hexes}/{open} hexes)" : $"holds {s.hexes}/{open} hexes")}");
+        }
+        var dispute = WorldHoldings.Dispute(map, tile);
+        if (dispute != null)
+        {
+            var why = WorldHoldings.CasusBelliOf(dispute, WorldAuthority.Player);
+            int grievance = dispute.Grievance(WorldAuthority.Player);
+            if (why == CasusBelli.Recover) parts.Add(TooltipText.Warn("disputed: a core of yours others hold: a casus belli to recover it"));
+            else if (why == CasusBelli.Integrate) parts.Add(TooltipText.Warn("disputed: a casus belli to integrate the rest as core"));
+            else if (grievance > 0) parts.Add(TooltipText.Warn($"disputed: a grievance over your {grievance} hexes under another's rule"));
+            else parts.Add(TooltipText.Warn("disputed"));
+        }
+        return string.Join("; ", parts);
+    }
+
     // The hex under the cursor at the micro reading: its own ground, what lies on it, what entering it costs and
     // whether a unit walked or surveyed it.
     private static void AppendHex(WorldSystem world, WorldTile tile, HexCoord hex, StringBuilder text)
@@ -1978,14 +2036,11 @@ public class WorldView : MonoBehaviour
     private void DrawHud(WorldSystem world)
     {
         LayoutHud();
-        string muted = Hud.Hex(Hud.Muted);
-        _mapDock.text = "Map";
-        Hud.Active(_mapDock.GetComponent<Button>(), _popup == Popup.Map);
-        Hud.Active(_unitsDock.GetComponent<Button>(), _popup == Popup.Units);
-        Hud.Active(_realmDock.GetComponent<Button>(), _popup == Popup.Realm);
-        _unitsDock.text = $"Parties <color=#{muted}>{world.Map.Units.Count(WorldBattles.IsPlayers)}</color>";
+        _mapDock.SetState(_popup == Popup.Map);
+        _unitsDock.SetState(_popup == Popup.Units, false, world.Map.Units.Count(WorldBattles.IsPlayers).ToString());
         var realm = world.Realm;
-        _realmDock.text = realm.favoured == Expansion.Overextended ? $"Realm {TooltipText.Warn($"{realm.strain:P0}")}" : $"Realm <color=#{muted}>{realm.strain:P0}</color>";
+        _realmDock.SetState(_popup == Popup.Realm, realm.favoured == Expansion.Overextended);
+        TooltipTrigger.Ensure(_realmDock.gameObject).SetCustom("Realm", $"Administrative strain: {realm.strain:P0}. Open capacity and border policy.");
         DrawKey(world);
         if (_popup == Popup.Units) DrawUnitList(world);
         else if (_popup != Popup.None) DrawMapMenu(world);
@@ -2000,7 +2055,16 @@ public class WorldView : MonoBehaviour
         string strain = realm.favoured == Expansion.Overextended ? TooltipText.Warn($"{realm.strain:P0}") : realm.strain > 0.8f ? $"{realm.strain:P0}" : TooltipText.Good($"{realm.strain:P0}");
         text.AppendLine(TooltipText.Heading("Administrative Capacity", RealmReport.Name(realm.favoured)));
         text.AppendLine(TooltipText.Row("Load / capacity", $"{realm.load:0.#} / {realm.capacity:0.#} (strain {strain}, efficiency {realm.efficiency:P0})"));
-        text.AppendLine(TooltipText.Row("Held", $"{realm.cells} cells ({realm.adopted} adopted, {realm.claimed} claimed), {realm.averageLoad:0.00} load each"));
+        string partly = realm.hexes > 0 ? $", and {realm.hexes} hexes of cells not yet core ({realm.deFacto} of them yours de facto; {realm.land:0.#} cells' worth in all)" : string.Empty;
+        text.AppendLine(TooltipText.Row("Held", $"{realm.cells} core cells ({realm.adopted} adopted, {realm.claimed} claimed){partly}, {realm.averageLoad:0.00} load a cell"));
+        var disputes = WorldHoldings.Disputes(world.Map);
+        if (disputes.Count > 0)
+        {
+            int integrate = disputes.Count(d => WorldHoldings.CasusBelliOf(d, WorldAuthority.Player) == CasusBelli.Integrate);
+            int recover = disputes.Count(d => WorldHoldings.CasusBelliOf(d, WorldAuthority.Player) == CasusBelli.Recover);
+            int grievances = disputes.Count(d => d.Grievance(WorldAuthority.Player) > 0 && WorldHoldings.CasusBelliOf(d, WorldAuthority.Player) == CasusBelli.None);
+            text.AppendLine(TooltipText.Row("Disputed", TooltipText.Warn($"{disputes.Count} cells: {recover} cores of yours to recover, {integrate} to integrate, {grievances} grievances")));
+        }
         text.AppendLine(TooltipText.Row("Wide or tall", $"horizontal pays to ~{realm.comfortCells:0} cells, breaks even at ~{realm.breakEvenCells:0}, society stops at ~{realm.stopCells:0}"));
         text.AppendLine(TooltipText.Row("Held land", $"Coherence {realm.averageCoherence:P0}, beauty {WorldBeauty.Word(realm.averageBeauty)}, City Development {realm.averageDevelopment:0} on average"));
         text.AppendLine(TooltipText.Muted(realm.Advice));
@@ -2009,7 +2073,7 @@ public class WorldView : MonoBehaviour
         var map = world.Map;
         var seats = map.territory?.Seats.Where(s => s.IsPlayers).ToList() ?? new List<TerritorySeat>();
         if (seats.Count > 0)
-            text.AppendLine(TooltipText.Row("Seats", string.Join(", ", seats.Take(8).Select(s => $"{s.name} {s.held}/{s.maxCells}")) + (seats.Count > 8 ? $" and {seats.Count - 8} more" : string.Empty)));
+            text.AppendLine(TooltipText.Row("Seats", string.Join(", ", seats.Take(8).Select(s => $"{s.name} {s.held:0.#}/{s.maxCells}")) + (seats.Count > 8 ? $" and {seats.Count - 8} more" : string.Empty)));
         var rules = world.Rules.territory;
         string rate = world.BorderPolicy == BorderPolicy.Hold ? "held by policy"
             : realm.population >= 0 && realm.populationShare <= 0f ? TooltipText.Warn($"waits for {rules.adoptionMinPopulation} citizens in the Capital (now {realm.population})")
@@ -2017,7 +2081,7 @@ public class WorldView : MonoBehaviour
             : "none now";
         text.AppendLine(TooltipText.Row("Adoption", !world.MapUnlocked || !world.IsOpen ? TooltipText.Muted("begins once the world map is open") : rate));
         if (realm.settling > 0 || realm.claiming > 0)
-            text.AppendLine(TooltipText.Row("Being settled", $"{realm.settling} cells by society, {realm.claiming} claims"));
+            text.AppendLine(TooltipText.Row("Held in part", $"{realm.settling} cells, hex by hex{(realm.claiming > 0 ? $"; {realm.claiming} older whole-cell claims" : string.Empty)}"));
         // What each seat settles next and when (the glowing hexes on the map).
         var next = world.AdoptionForecast().Where(p => p.sevenths.Count > 0).OrderBy(p => p.sevenths[0]).Take(4).ToList();
         if (next.Count > 0)
@@ -2042,18 +2106,15 @@ public class WorldView : MonoBehaviour
     {
         _rosterList.Begin(_popups[Popup.Units].sizeDelta.x - 2f * Inner - 14f);
         _rosterList.Text("Expeditions & units", HudIcon.Crew);
-        _rosterList.Text("Select a party to focus it on the map. Scroll to see every party.");
         var parties = world.Map.Units.Where(WorldBattles.IsPlayers).ToList();
         if (parties.Count == 0)
             _rosterList.Text("No parties in the field. Select a settlement to form an expedition.");
         foreach (var unit in parties)
         {
             int id = unit.id;
-            string members = string.Join(", ", Expeditions.Members(unit));
             string title = (id == _selectedUnit ? "Selected: " : string.Empty) + unit.name;
-            string caption = $"{Location(world, unit)}\nCaptain: {unit.leader ?? "Unassigned"} - {CaptainState(unit)}";
-            if (!string.IsNullOrEmpty(members)) caption += $"\nCrew: {members}";
-            caption += $"\n{Status(world, unit, world.SpecOf(unit))}";
+            string caption = $"{Status(world, unit, world.SpecOf(unit))}\n{Location(world, unit)}";
+            if (world.IsExpedition(unit)) caption += $"  |  {Expeditions.PartySize(unit)} crew";
             _rosterList.Action(title, caption, HudIcon.Pin, () => { SelectUnit(id); ShowPopup(Popup.None); });
         }
         _rosterList.End();
@@ -2159,10 +2220,10 @@ public class WorldView : MonoBehaviour
         {
             if (tile.settlement >= 0 && tile.settlement < world.Map.Settlements.Count) DescribeSettlement(world, world.Map.Settlements[tile.settlement], text, actions);
             else if (tile.enclave >= 0 && tile.enclave < world.Map.Enclaves.Count) DescribeEnclave(world, world.Map.Enclaves[tile.enclave], text, actions);
-            else DescribeLand(world, tile, text, actions);
+            else DescribeLand(world, tile, _selectedHex, text, actions);
         }
         if (text.Length == 0) { _card.gameObject.SetActive(false); return; }
-        string identity = $"{_selectedUnit}/{_selected}/{_selectedMacro}";
+        string identity = $"{_selectedUnit}/{_selected}/{_selectedMacro}/{_selectedHex}";
         bool changed = identity != _cardIdentity;
         _cardIdentity = identity;
         float width = Mathf.Min(500f, _canvasRect.rect.width - Pad * 2f);
@@ -2186,7 +2247,15 @@ public class WorldView : MonoBehaviour
             {
                 _selectionList.Text(TooltipText.Heading(unit.name) + (spec != null ? "  " + TooltipText.Muted(spec.role.ToString()) : string.Empty), HudIcon.Compass);
                 _selectionList.Text($"{Status(world, unit, spec)}\n{TooltipText.Muted(Location(world, unit))}", HudIcon.Pin);
-                if (!unit.Missing && spec != null) _selectionList.Text(Vitals(unit, spec), HudIcon.Supply);
+                if (!unit.Missing && spec != null)
+                {
+                    if (spec.supplyCapacity > 0f && spec.supplyUsePerSeventh > 0f)
+                        _selectionList.Meter("Rations", unit.supplies / spec.supplyCapacity, $"{unit.supplies:0.#} / {spec.supplyCapacity:0.#}", unit.supplies < spec.supplyCapacity * 0.25f);
+                    _selectionList.Meter("Fatigue", unit.fatigue / 100f, $"{unit.fatigue:0}%", unit.fatigue >= 75f);
+                    if (unit.attrition > 0f) _selectionList.Meter("Attrition", unit.attrition / 100f, $"{unit.attrition:0}%", unit.attrition >= 50f);
+                    if (unit.winded || unit.sprinting || unit.endurance < 99.5f)
+                        _selectionList.Meter("Endurance", unit.endurance / 100f, unit.winded ? "Winded" : $"{unit.endurance:0}%", unit.winded);
+                }
             }
         }
         else
@@ -2198,10 +2267,38 @@ public class WorldView : MonoBehaviour
         }
         if (actions.Count > 0)
         {
+            var forming = actions.Where(a => a.label.StartsWith("Director:") || a.label.StartsWith("Charter:") || a.label.StartsWith("Form ")).ToList();
+            if (forming.Count > 0)
+            {
+                _selectionList.Text(TooltipText.Heading("Form a party"), HudIcon.Crew);
+                _selectionList.Meter("Party capacity", world.ExpeditionSlotsUsed / (float)Mathf.Max(1, world.ExpeditionSlots),
+                    $"{world.ExpeditionSlotsUsed} / {world.ExpeditionSlots}", world.ExpeditionSlotsUsed >= world.ExpeditionSlots);
+                foreach (var action in forming) DrawAction(action);
+                _selectionList.Grid(false);
+            }
+            actions = actions.Except(forming).ToList();
             _selectionList.Text(TooltipText.Heading("Orders"));
             _selectionList.Grid(true);
-            foreach (var action in actions) DrawAction(action);
+            var available = actions.Where(a => a.why == null).ToList();
+            bool expedition = unit != null && world.IsExpedition(unit);
+            foreach (var action in available.Where(a => !expedition || ExpeditionActionGroup(a.label) == null)) DrawAction(action);
             _selectionList.Grid(false);
+            if (expedition)
+                foreach (string group in new[] { "Outfit party", "Battle preparation", "Cargo & retirement" })
+                {
+                    var grouped = available.Where(a => ExpeditionActionGroup(a.label) == group).ToList();
+                    if (grouped.Count == 0 || !Section(group, group == "Outfit party" ? HudIcon.Crew : HudIcon.Supply, $"{grouped.Count} options")) continue;
+                    _selectionList.Grid(true);
+                    foreach (var action in grouped) DrawAction(action);
+                    _selectionList.Grid(false);
+                }
+            int unavailable = actions.Count(a => a.why != null);
+            if (unavailable > 0 && Section("Unavailable orders", HudIcon.Compass, $"{unavailable} - view requirements"))
+            {
+                _selectionList.Grid(true);
+                foreach (var action in actions.Where(a => a.why != null)) DrawAction(action);
+                _selectionList.Grid(false);
+            }
         }
         if (unit != null)
         {
@@ -2256,22 +2353,21 @@ public class WorldView : MonoBehaviour
         else body = $"<color=#{Hud.Hex(Hud.Muted)}>" + (world.UnitById(_selectedUnit) != null
             ? "Right click: move  /  Shift + right click: survey\nDrag: pan  /  Wheel: zoom  /  Esc: back"
             : $"Click: inspect  /  Drag: pan  /  Wheel: zoom\n{KeyBindings.Keys("next-idle")}: next idle party  /  Esc: back") + "</color>";
-        body += "\n" + WorldExplorationAppearance.Legend;
+        string expandedKey = body + "\n" + WorldExplorationAppearance.Legend;
         // The plans on the map, once there are any.
         var plans = new List<string>();
         if (_surveyPick || world.Map.Units.Any(u => WorldBattles.IsPlayers(u) && (u.surveying || u.surveyPaused)))
             plans.Add($"<color=#{Hud.Hex(WorldRenderer.PlanColor)}>Violet numbers</color> the order a survey walks its hexes (<color=#{Hud.Hex(WorldRenderer.PlanActiveColor)}>gold</color> under way)");
         if (world.AdoptionForecast().Count > 0)
             plans.Add($"<color=#{Hud.Hex(world.Rules.borderColor)}>Glowing hexes</color> your society settles next, ~Sevenths until each");
-        if (plans.Count > 0) body += $"\n<color=#{Hud.Hex(Hud.Muted)}>{string.Join("  /  ", plans)}</color>";
+        if (plans.Count > 0) expandedKey += $"\n<color=#{Hud.Hex(Hud.Muted)}>{string.Join("  /  ", plans)}</color>";
         // Once bands are in sight: what their colours and marks mean.
         if (lens == WorldLens.Normal && !_surveyPick && world.Map.Units.Any(u => !WorldBattles.IsPlayers(u) && world.Sees(u)))
-            body += $"\n<color=#{Hud.Hex(WorldBattles.Red)}>Red</color> hunts you  /  <color=#{Hud.Hex(WorldBattles.Orange)}>Orange</color> wary  /  <color=#{Hud.Hex(WorldBattles.Timid)}>Pale</color> flees\n" +
+            expandedKey += $"\n<color=#{Hud.Hex(WorldBattles.Red)}>Red</color> hunts you  /  <color=#{Hud.Hex(WorldBattles.Orange)}>Orange</color> wary  /  <color=#{Hud.Hex(WorldBattles.Timid)}>Pale</color> flees\n" +
                     $"<color=#{Hud.Hex(Hud.Muted)}>Paw creature  /  Fish water creature  /  Burst Atonalis  /  Blob Formless Mass  /  Cocoon  /  Shield humans  /  Horns demihumans  /  Hood humanoids. Right click a band to give chase.</color>";
-        _keyText.text = FlowText($"{head}\n{body}");
-        float width = Mathf.Min(KeyWidth, Mathf.Max(260f, (_canvasRect.rect.width - _theme.bannerWidth) / 2f - 2f * Pad));
-        float height = _keyText.GetPreferredValues(_keyText.text, width - 2f * Inner, 0f).y + 27f;
-        _key.sizeDelta = new Vector2(width, height);
+        TooltipTrigger.Ensure(_guide.gameObject).SetCustom("Map guide", FlowText(head + "\n" + expandedKey));
+        _guide.SetState(lens != WorldLens.Normal, _surveyPick);
+        _guide.RefreshPresentation();
     }
 
     private void DrawCrew(WorldSystem world, WorldUnit unit)
@@ -2298,6 +2394,20 @@ public class WorldView : MonoBehaviour
     {
         var (name, detail) = Split(action.label);
         bool companion = name.StartsWith("Companion: ", StringComparison.Ordinal);
+        if (name.StartsWith("Charter: ", StringComparison.Ordinal))
+        {
+            _selectionList.Grid(false);
+            if (Section("Purpose: " + WorldSystem.CharterName(_formCharter, plural: false), HudIcon.Compass, "Choose what this party will do"))
+                foreach (ExpeditionCharter charter in Enum.GetValues(typeof(ExpeditionCharter)))
+                {
+                    var choice = charter;
+                    var why = WorldSystem.Instance.WhyNotCharter(choice);
+                    _selectionList.Action(WorldSystem.CharterName(choice, plural: false), why ?? WorldSystem.CharterDescription(choice), HudIcon.Compass,
+                        () => { _expandedSections.Remove("Purpose: " + WorldSystem.CharterName(_formCharter, plural: false)); _formCharter = choice; Refresh(force: true); }, why == null);
+                }
+            _selectionList.Grid(true);
+            return;
+        }
         if (companion || name.StartsWith("Director: ", StringComparison.Ordinal))
         {
             string key = companion ? "Choose companion" : "Choose captain";
@@ -2321,6 +2431,14 @@ public class WorldView : MonoBehaviour
         string caption = detail;
         if (action.why != null) caption = string.IsNullOrEmpty(detail) ? $"Unavailable: {action.why}" : $"{detail}\nUnavailable: {action.why}";
         _selectionList.Action(name, caption, ActionIcon(name), () => { action.call(); Refresh(force: true); }, action.why == null);
+    }
+
+    private static string ExpeditionActionGroup(string label)
+    {
+        if (label.StartsWith("Prepare ") || label.StartsWith("Rest and integrate") || label.StartsWith("Initial advance:")) return "Battle preparation";
+        if (label.StartsWith("Companion:") || label.StartsWith("Add ") || label.StartsWith("Take on settlers") || label.StartsWith("Kit:")) return "Outfit party";
+        if (label.StartsWith("Discard ") || label.StartsWith("Disband")) return "Cargo & retirement";
+        return null;
     }
 
     private static HudIcon ActionIcon(string name)
@@ -2373,6 +2491,17 @@ public class WorldView : MonoBehaviour
         if (band.habitat != CreatureHabitat.Land)
             text.AppendLine(TooltipText.Row("Lives", band.habitat == CreatureHabitat.Water ? "in the water: it never leaves it, so the shore is as far as it follows" : "on land and in the water alike"));
         text.AppendLine(TooltipText.Row("Numbers", band.creatures.ToString()));
+        // Its Symphony (its instincts as cards) and how it weighs against your nearest party.
+        var bandSide = world.SideOf(band);
+        if (bandSide != null)
+        {
+            var yours = world.NearestOfYours(band);
+            var quick = yours != null ? world.QuickPreview(yours, band) : null;
+            bool yoursAttack = yours != null && world.WouldAttack(yours, band);
+            string against = quick == null ? string.Empty
+                : $"; against {yours.name}: {quick.Side(!yoursAttack).Strength} vs {quick.Side(yoursAttack).Strength} ({SymphonyPower.Words(yoursAttack ? 1f - quick.balance : quick.balance)} for it)";
+            text.AppendLine(TooltipText.Row("Symphony", $"strength {SymphonyPower.Rate(bandSide, world.Combat).power:0}, {SymphonyDecks.Describe(bandSide.deck)}{against}"));
+        }
         if (band.captives != null && band.captives.Count > 0)
             text.AppendLine(TooltipText.Row("Holds captive", TooltipText.Warn($"{string.Join(", ", band.captives)}: destroy it to free them")));
         if (band.identity == BandIdentity.FormlessMass)
@@ -2450,6 +2579,7 @@ public class WorldView : MonoBehaviour
         }
         bool expedition = world.IsExpedition(unit);
         if (expedition) DescribeParty(world, unit, text);
+        if (WorldBattles.IsPlayers(unit)) DescribeSymphony(world, unit, text);
         if (spec == null) return;
         // An expedition in one of your settlements is outfitted there; in the field it works the land.
         var cell = map.Get(unit.coord);
@@ -2501,6 +2631,16 @@ public class WorldView : MonoBehaviour
                 PartyActions(world, unit, home, actions);
                 break;
         }
+        // Its cards, as the Spell Builder draws them.
+        var ownSide = world.SideOf(unit);
+        if (ownSide != null && WorldBattles.Fights(unit))
+            foreach (var doctrine in world.BattleDoctrines.Where(d => d.id != ownSide.doctrine && (ownSide.doctrine != null || d.stance != ownSide.stance)))
+            {
+                string id = doctrine.id;
+                actions.Add(($"Initial advance: {ownSide.stance}; deploy {doctrine.name}", null, () => world.ChooseBattleDoctrine(unit, id)));
+            }
+        if (ownSide != null && ownSide.deck.Count > 0)
+            actions.Add(($"See its Symphony ({ownSide.deck.Count} cards)", null, () => SymphonyWindow.ShowUnit(world, unit)));
         // Running, and the bands in sight it could give chase to (nearest first).
         if (unit.quarryId >= 0) actions.Add(("Stop the chase", null, () => { world.Halt(unit); world.SetSprint(unit, false); }));
         else actions.Add((unit.sprinting ? "Walk (stop running)" : "Run (faster, spends endurance)", unit.winded ? "Winded: catching its breath." : null, () => world.SetSprint(unit, !unit.sprinting)));
@@ -2510,8 +2650,16 @@ public class WorldView : MonoBehaviour
                      .OrderBy(b => HexCoord.Distance(from, WorldUnits.MicroPosition(b))).ThenBy(b => b.id).Take(3))
         {
             var target = band;
-            actions.Add(($"{(WorldBattles.Angry(band) ? "Attack" : "Hunt")} {band.name} ({Hexes(HexCoord.Distance(from, WorldUnits.MicroPosition(band)))} away)",
+            // The odds on the order itself (Civ VI's strengths, Stellaris's word), and the full pre-battle screen.
+            var quick = world.QuickPreview(unit, band);
+            string odds = quick == null ? string.Empty : $", {quick.Side(world.WouldAttack(unit, band)).Strength} vs {quick.Side(!world.WouldAttack(unit, band)).Strength}, {SymphonyPower.Words(world.WouldAttack(unit, band) ? quick.balance : 1f - quick.balance)}";
+            actions.Add(($"{(WorldBattles.Angry(band) ? "Attack" : "Hunt")} {band.name} ({Hexes(HexCoord.Distance(from, WorldUnits.MicroPosition(band)))} away){odds}",
                 world.WhyNotEngage(unit, band), () => world.EngageBand(unit, target)));
+            if (quick != null)
+            {
+                actions.Add(($"Battle preview: {band.name}", null, () => BattleWindow.ShowPreview(world.PreviewBattle(unit, target, 20), world.WouldAttack(unit, target))));
+                actions.Add(($"Its instincts: {band.name}", null, () => SymphonyWindow.ShowUnit(world, target)));
+            }
         }
         if (unit.Moving) actions.Add(("Halt", null, () => world.Halt(unit)));
         else text.AppendLine(TooltipText.Muted(WorldUnits.Can(spec, UnitAbility.Survey) || WorldUnits.Can(spec, UnitAbility.SurveyMeso)
@@ -2558,6 +2706,8 @@ public class WorldView : MonoBehaviour
     // ===== ADAPTIVE HUD BUILDING BLOCKS =====
 
     private enum HudIcon { None, Compass, Pin, Crown, Crew, Supply, Home }
+    private static PixelIcon PixelFor(HudIcon icon) => icon == HudIcon.Crown ? PixelIcon.Crown : icon == HudIcon.Crew ? PixelIcon.Crew
+        : icon == HudIcon.Supply ? PixelIcon.Supply : icon == HudIcon.Home ? PixelIcon.Home : icon == HudIcon.Pin ? PixelIcon.Chronicle : PixelIcon.Compass;
 
     // The world HUD's palette, the capital's own: dark stone slots rimmed in worn brass, cream titles, parchment captions.
     private static class Hud
@@ -2606,56 +2756,15 @@ public class WorldView : MonoBehaviour
         }
     }
 
-    // Geometric icons use UI graphics, so they never depend on the game font having a glyph.
+    // A single point-filtered graphic replaces many individual line graphics per icon.
     private static RectTransform Icon(Transform parent, HudIcon kind, Color color)
     {
         var root = CodeUI.Panel(parent, kind.ToString(), Vector2.zero, Vector2.one);
-        void Stroke(float ax, float ay, float bx, float by)
-        {
-            var image = CodeUI.Solid(root, "Stroke", color);
-            var rect = image.rectTransform;
-            rect.anchorMin = rect.anchorMax = new Vector2((ax + bx) / 2f, (ay + by) / 2f);
-            rect.sizeDelta = new Vector2(Vector2.Distance(new Vector2(ax, ay), new Vector2(bx, by)) * 24f, 2f);
-            rect.anchoredPosition = Vector2.zero;
-            rect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(by - ay, bx - ax) * Mathf.Rad2Deg);
-        }
-        if (kind == HudIcon.Crown)
-        {
-            Stroke(.15f, .25f, .85f, .25f); Stroke(.15f, .25f, .05f, .75f);
-            Stroke(.05f, .75f, .3f, .55f); Stroke(.3f, .55f, .5f, .9f);
-            Stroke(.5f, .9f, .7f, .55f); Stroke(.7f, .55f, .95f, .75f); Stroke(.95f, .75f, .85f, .25f);
-        }
-        else if (kind == HudIcon.Crew)
-        {
-            foreach (float x in new[] { .25f, .75f })
-            {
-                Stroke(x - .1f, .75f, x + .1f, .75f); Stroke(x, .65f, x, .45f);
-                Stroke(x - .17f, .4f, x + .17f, .4f); Stroke(x - .17f, .4f, x - .17f, .15f); Stroke(x + .17f, .4f, x + .17f, .15f);
-            }
-        }
-        else if (kind == HudIcon.Pin)
-        {
-            Stroke(.5f, .08f, .15f, .6f); Stroke(.15f, .6f, .3f, .9f); Stroke(.3f, .9f, .7f, .9f);
-            Stroke(.7f, .9f, .85f, .6f); Stroke(.85f, .6f, .5f, .08f); Stroke(.4f, .65f, .6f, .65f);
-        }
-        else if (kind == HudIcon.Home)
-        {
-            Stroke(.08f, .5f, .5f, .9f); Stroke(.5f, .9f, .92f, .5f);
-            Stroke(.22f, .5f, .22f, .15f); Stroke(.22f, .15f, .78f, .15f); Stroke(.78f, .15f, .78f, .5f);
-        }
-        else if (kind == HudIcon.Supply)
-        {
-            Stroke(.2f, .15f, .8f, .15f); Stroke(.8f, .15f, .8f, .75f); Stroke(.8f, .75f, .2f, .75f);
-            Stroke(.2f, .75f, .2f, .15f); Stroke(.4f, .9f, .6f, .9f); Stroke(.5f, .3f, .5f, .6f); Stroke(.35f, .45f, .65f, .45f);
-        }
-        else if (kind == HudIcon.Compass)
-        {
-            Stroke(.5f, .95f, .1f, .1f); Stroke(.1f, .1f, .5f, .35f);
-            Stroke(.5f, .35f, .9f, .1f); Stroke(.9f, .1f, .5f, .95f);
-        }
+        var image = CodeUI.Solid(root, "Pixel icon", color);
+        image.sprite = PixelIcons.Get(PixelFor(kind));
+        image.preserveAspect = true;
         return root;
     }
-
     private static void ButtonSurface(TextMeshProUGUI label)
     {
         // A parent plate renders behind the label. The button keeps its label and tooltip hit target.
@@ -2701,24 +2810,12 @@ public class WorldView : MonoBehaviour
 
     private void LayoutHud()
     {
-        // The dock: one row of four doors, two rows on a narrow screen.
-        const float rowHeight = 50f, inset = 14f, gap = 8f;
-        float width = Mathf.Min(DockWidth, _canvasRect.rect.width - Pad * 2f);
-        int columns = width >= 560f ? _dockButtons.Count : 2;
-        int rows = (_dockButtons.Count + columns - 1) / columns;
-        float height = rows * rowHeight + 2f * inset - gap;
-        _dock.sizeDelta = new Vector2(width, height);
-        float cell = (width - 2f * inset + gap) / columns;
-        for (int i = 0; i < _dockButtons.Count; i++)
-        {
-            int column = i % columns, row = rows - 1 - i / columns;
-            CodeUI.Place((RectTransform)_dockButtons[i].transform.parent, Vector2.zero, Vector2.zero,
-                new Vector2(inset + column * cell, inset + row * rowHeight), new Vector2(inset + (column + 1) * cell - gap, inset + (row + 1) * rowHeight - gap));
-        }
+        _actionBar.Reflow();
+        float height = _dock.sizeDelta.y;
         foreach (var entry in _popups)
         {
             float preferred = entry.Key == Popup.Units ? 460f : 540f;
-            entry.Value.sizeDelta = new Vector2(Mathf.Min(preferred, _canvasRect.rect.width - Pad * 2f), Mathf.Max(100f, Mathf.Min(640f, _canvasRect.rect.height - height - _key.sizeDelta.y - NationBanner.Height - 8f - 3f * Pad)));
+            entry.Value.sizeDelta = new Vector2(Mathf.Min(preferred, _canvasRect.rect.width - Pad * 2f), Mathf.Max(100f, Mathf.Min(640f, _canvasRect.rect.height - height - _key.sizeDelta.y - 8f - 3f * Pad)));
             entry.Value.anchoredPosition = new Vector2(Pad, Pad + height + 8f);
         }
         // Expanded menus should remain usable when they overlap the selection on narrow windows.
@@ -2734,7 +2831,7 @@ public class WorldView : MonoBehaviour
             public TextMeshProUGUI label;
             public string title;
             public Button button;
-            public Image plate, accent;
+            public Image plate, accent, meterTrack, meterFill;
             public readonly Dictionary<HudIcon, RectTransform> icons = new Dictionary<HudIcon, RectTransform>();
         }
         private readonly ScrollRect _scroll;
@@ -2752,6 +2849,20 @@ public class WorldView : MonoBehaviour
             _grid = enabled && _width >= 330f;
         }
         public void Text(string text, HudIcon icon = HudIcon.None) => Add(text, null, icon, null, true);
+        public void Meter(string title, float fraction, string value, bool warning)
+        {
+            Add($"{title}  <b>{value}</b>", null, HudIcon.None, null, true);
+            var row = _rows[_used - 1];
+            if (row.meterTrack == null)
+            {
+                row.meterTrack = CodeUI.Solid(row.rect, "Meter track", new Color(1f, 1f, 1f, 0.12f));
+                CodeUI.Place(row.meterTrack.rectTransform, Vector2.zero, new Vector2(1f, 0f), new Vector2(10f, 1f), new Vector2(-10f, 6f));
+                row.meterFill = CodeUI.Solid(row.meterTrack.transform, "Meter fill", Hud.Brass);
+            }
+            row.meterTrack.gameObject.SetActive(true);
+            row.meterFill.color = warning ? new Color(0.94f, 0.48f, 0.30f) : new Color(0.48f, 0.73f, 0.66f);
+            CodeUI.Place(row.meterFill.rectTransform, Vector2.zero, new Vector2(Mathf.Clamp01(fraction), 1f), Vector2.zero, Vector2.zero);
+        }
         /// <summary>The plate of the shown order whose title starts with <paramref name="name"/> and can be given now, or null.</summary>
         public Graphic Find(string name)
         {
@@ -2781,11 +2892,12 @@ public class WorldView : MonoBehaviour
                 // A brass mark down the left edge of every order (dim when it cannot be given now).
                 var accent = CodeUI.Solid(rect, "Accent", Hud.Brass);
                 CodeUI.Place(accent.rectTransform, Vector2.zero, new Vector2(0f, 1f), new Vector2(0f, 3f), new Vector2(3f, -3f));
-                var label = CodeUI.Label(rect, "Label", string.Empty, _theme.bodySize - 3f, _theme.bodyColor, FontStyles.Normal, _theme);
+                var label = CodeUI.Label(rect, "Label", string.Empty, Mathf.Max(16, _theme.bodySize - 3f), _theme.bodyColor, FontStyles.Normal, _theme);
                 label.alignment = TextAlignmentOptions.TopLeft;
                 _rows.Add(new Row { rect = rect, plate = plate, accent = accent, button = button, label = label });
             }
             var row = _rows[_used++];
+            if (row.meterTrack != null) row.meterTrack.gameObject.SetActive(false);
             row.title = title;
             row.rect.gameObject.SetActive(true);
             Hud.Active(row.button, false);
@@ -2794,15 +2906,23 @@ public class WorldView : MonoBehaviour
             row.accent.color = enabled ? Hud.Brass : Hud.BrassDim;
             row.plate.raycastTarget = call != null;
             row.button.enabled = call != null; row.button.interactable = enabled;
+            if (call != null) UiFocus.Ensure(row.button);
             row.button.onClick.RemoveAllListeners();
             if (call != null) row.button.onClick.AddListener(() => call());
             row.label.color = !enabled ? Hud.Disabled : call != null ? _theme.titleColor : _theme.bodyColor;
             string value = call == null ? FlowText(title) : $"<b>{FlowText(title)}</b>";
-            if (!string.IsNullOrEmpty(detail)) value += $"\n<size={Mathf.Max(14f, _theme.bodySize - 6f)}><color=#{Hud.Hex(enabled ? Hud.Muted : Hud.Disabled)}>{FlowText(detail)}</color></size>";
+            // Costs, consequences and requirements remain available without making every order a paragraph.
+            var tip = row.rect.GetComponent<TooltipTrigger>();
+            if (call != null)
+            {
+                tip = TooltipTrigger.Ensure(row.rect.gameObject); tip.enabled = true;
+                tip.SetCustom(FlowText(title), FlowText(detail ?? "Select to perform this action."));
+            }
+            else if (tip != null) tip.enabled = false;
             row.label.text = value;
             float width = _grid ? (_width - 6f) / 2f : _width;
             float inset = icon == HudIcon.None ? 10f : 40f;
-            float height = Mathf.Max(call == null ? 28f : 44f, row.label.GetPreferredValues(value, width - inset - 10f, 0f).y + 18f);
+            float height = Mathf.Max(call == null ? 28f : 48f, row.label.GetPreferredValues(value, width - inset - 10f, 0f).y + 18f);
             CodeUI.Place(row.rect, new Vector2(0, 1), new Vector2(0, 1),
                 new Vector2(_column * (width + 6f), -_y - height), new Vector2(_column * (width + 6f) + width, -_y));
             CodeUI.Place(row.label.rectTransform, Vector2.zero, Vector2.one, new Vector2(inset, 9f), new Vector2(-10f, -9f));
@@ -2855,6 +2975,28 @@ public class WorldView : MonoBehaviour
     {
         var seat = world.SeatLeftBy(legend);
         return seat != null ? $", leaves the {seat.GetEffectiveTitle()} seat" : string.Empty;
+    }
+
+    // Its Symphony: the cards it fights with (its kit or companies, its legends' grimoires, its commander's orders) and
+    // the strength they make it on the battle screen; then each legend's personal grimoire.
+    private static void DescribeSymphony(WorldSystem world, WorldUnit unit, StringBuilder text)
+    {
+        var side = world.SideOf(unit);
+        if (side == null) return;
+        var rating = SymphonyPower.Rate(side, world.Combat);
+        var kit = world.KitOf(unit);
+        text.AppendLine(TooltipText.Row("Symphony", $"strength {rating.power:0}: {SymphonyDecks.Describe(side.deck)}, {rating.beats} Beats a measure{(kit != null ? $" ({kit.name})" : string.Empty)}"));
+        var legends = LegendProgress.Instance;
+        if (legends == null) return;
+        var owned = Grimoire.Current();
+        foreach (string name in Expeditions.Members(unit))
+        {
+            var soul = legends.Soul(name);
+            var own = world.Symphony.Card(SymphonyCards.LeitmotifId(HarmonicCircle.Of(soul?.leitmotif)));
+            var learned = legends.PersonalGrimoire(name).Select(id => owned.cards.FirstOrDefault(c => c != null && c.id == id)?.DisplayName ?? id).ToList();
+            string pages = $"{learned.Count}/{legends.GrimoirePages(name)} pages";
+            text.AppendLine(TooltipText.Row($"{name}'s grimoire", $"{(own != null ? own.name : "no leitmotif")}{(learned.Count > 0 ? ", " + string.Join(", ", learned) : string.Empty)} {TooltipText.Muted($"({pages})")}"));
+        }
     }
 
     // Who walks, who leads and what the road is doing to them.
@@ -2912,12 +3054,30 @@ public class WorldView : MonoBehaviour
         var companions = unit.companions.Where(n => !string.IsNullOrEmpty(n)).ToList();
         if (home)
         {
+            foreach (BattlePremonitionKind kind in Enum.GetValues(typeof(BattlePremonitionKind)))
+            {
+                var preparation = kind;
+                var cost = world.Combat.Preparation.Cost(kind) ?? Enumerable.Empty<ResourceAmount>();
+                string label = "Prepare " + kind + " premonition (" + string.Join(", ", cost.Select(c => $"{c.amount:0.#} {c.resource}")) + ")";
+                actions.Add((label, null, () =>
+                {
+                    string why = world.PreparePremonition(preparation);
+                    NotificationFeed.Push("Premonition preparation", why ?? $"{world.PreparedPremonitions.Remaining} prepared attempts remain.", NotificationFeed.Topic.World);
+                }));
+            }
+            if (LegendProgress.Instance != null)
+                foreach (string member in Expeditions.Members(unit))
+                { string name = member; actions.Add(("Rest and integrate Legend Opus: " + name, null, () => BattleRecoveryWindow.Show(name))); }
             string pick = Chosen(world, ref _companionPick);
             int free = world.Candidates().Count;
             actions.Add(($"Companion: {pick ?? "none free"}", free == 0 ? "No legend is free to go." : free == 1 ? "No other legend is free." : null, () => _companionPick = world.NextCandidate(_companionPick)));
             actions.Add(($"Add {pick ?? "a companion"} ({world.OutfitCostText}{SeatNote(world, pick)})", world.WhyNotAddCompanion(unit, pick), () => world.AddCompanion(unit, _companionPick)));
             if (unit.settlers == 0 && unit.charter == ExpeditionCharter.Expedition)
                 actions.Add(($"Take on settlers ({world.SettlerCostText})", world.WhyNotTakeSettlers(unit), () => world.TakeSettlers(unit)));
+            // Its kit: the cards it fights with in the field (changed only here, in a settlement).
+            var nextKit = world.NextKit(unit, null);
+            if (nextKit != null)
+                actions.Add(($"Kit: {world.KitOf(unit)?.name ?? "none"}; take up the {nextKit.name}{(nextKit.weight > 0f ? $" (+{nextKit.weight:0.#} weight)" : string.Empty)}", world.WhyNotEquip(unit, nextKit.id), () => world.EquipKit(unit, nextKit.id)));
             actions.Add(("Disband (its legends go home)", world.WhyNotDisband(unit), () => world.Disband(unit)));
             return;
         }
@@ -3098,7 +3258,7 @@ public class WorldView : MonoBehaviour
         // Its territorial pull: the cells it holds by its own pull, how far it reaches and how fast it brings land in.
         var own = map.territory?.OfSettlement(s.id);
         if (own != null)
-            text.AppendLine(TooltipText.Row("Territorial pull", $"holds {own.held}/{own.maxCells} cells, strength {own.strength:0.##}, reach {own.reach:0.#}, settles up to {own.adoptPerSeventh:0.##} hexes/Seventh, +{own.capacity:0.#} capacity"));
+            text.AppendLine(TooltipText.Row("Territorial pull", $"holds {own.held:0.#}/{own.maxCells} cells, strength {own.strength:0.##}, reach {own.reach:0.#}, settles up to {own.adoptPerSeventh:0.##} hexes/Seventh, +{own.capacity:0.#} capacity"));
         if (s.kind != SettlementKind.Capital) text.AppendLine(TooltipText.Row("Roads", networked ? "joined to the Capital" : "isolated"));
         if (s.anchor) text.AppendLine(TooltipText.Row("Resonance Anchor", $"+{rules.anchorCoherence:P0} Coherence within {rules.anchorRadius}"));
         // Its Composure (a legend's five states), what strains it now and what mending it costs (WorldRuins).
@@ -3257,8 +3417,8 @@ public class WorldView : MonoBehaviour
         }
     }
 
-    /// <summary>A cell of bare land: who holds it and, for wilderness, claiming it into your authority.</summary>
-    private static void DescribeLand(WorldSystem world, WorldTile tile, StringBuilder text, List<(string label, string why, Action call)> actions)
+    /// <summary>A cell of bare land: who holds it and, for wilderness, claiming it into your authority hex by hex (<paramref name="hex"/>: the hex clicked, if any).</summary>
+    private static void DescribeLand(WorldSystem world, WorldTile tile, HexCoord? hex, StringBuilder text, List<(string label, string why, Action call)> actions)
     {
         text.AppendLine(TooltipText.Heading(world.Place(tile), tile.explored ? TooltipText.Good("Explored") : "Seen, not explored"));
         if (!tile.water) text.AppendLine(TooltipText.Row("Survey", SurveyState(world, tile)));
@@ -3272,29 +3432,44 @@ public class WorldView : MonoBehaviour
             float desire = WorldDesirability.Of(world.Map, tile);
             text.AppendLine(TooltipText.Row("Desirability", $"{WorldDesirability.Word(desire)} ({desire:P0}): settlements grow x{WorldDesirability.RulesOf(world.Map).GrowthFactor(desire):0.0#} here"));
         }
-        if (tile.authorityId == WorldAuthority.Player)
+        string hold = HoldText(world, tile);
+        bool fillable = WorldHoldings.Fillable(tile, WorldAuthority.Player);
+        if (WorldAuthority.IsPlayers(tile.authorityId) && !fillable)
         {
-            text.AppendLine(TooltipText.Row("Held by", TooltipText.Good("Your authority")));
-            TributaryActions(world, tile, text, actions);
+            text.AppendLine(TooltipText.Row("Held by", TooltipText.Good(tile.authorityId == WorldAuthority.Outpost ? "Your Outpost" : "Your authority")));
+            if (hold != null) text.AppendLine(TooltipText.Row("Hold", hold));
+            if (tile.authorityId == WorldAuthority.Player) TributaryActions(world, tile, text, actions);
             return;
         }
-        if (tile.authorityId != WorldAuthority.Wilderness)
+        if (!fillable)
         {
-            text.AppendLine(TooltipText.Row("Held by", tile.authorityId == WorldAuthority.Outpost ? "Your Outpost" : EnclaveOwner(world, tile)));
+            text.AppendLine(TooltipText.Row("Held by", WorldResources.EnclaveOf(world.Map, tile.authorityId) != null ? EnclaveOwner(world, tile) : HolderName(world, tile.authorityId)));
+            if (hold != null) text.AppendLine(TooltipText.Row("Hold", hold));
             return;
         }
         string settling = SettlingState(world, tile);
         if (settling != null) text.AppendLine(TooltipText.Row("Settling", settling));
-        text.AppendLine(TooltipText.Row("Held by", TooltipText.Muted("Wilderness")));
+        int held = WorldMap.SettledHexes(tile), open = WorldMap.OpenHexes(tile), claimed = MicroNavigation.Crags(tile.microClaimMask);
+        text.AppendLine(TooltipText.Row("Held by", held == 0 ? TooltipText.Muted("Wilderness")
+            : $"{TooltipText.Good(WorldAuthority.IsPlayers(tile.authorityId) ? $"You de facto, {held}/{open} hexes" : $"You, {held}/{open} hexes")}{(claimed > 0 ? $" ({claimed} claimed)" : string.Empty)}; the rest {(WorldHoldings.FreeMask(world.Map, tile) != 0 ? "wilderness" : "held by others")}"));
+        if (hold != null && WorldHoldings.Shares(world.Map, tile).Count > 1) text.AppendLine(TooltipText.Row("Hold", hold));
         var yields = world.Settings.generation.Terrain(tile.terrain)?.yields?.Where(y => y != null && y.amount != 0f).ToList();
         if (yields != null && yields.Count > 0)
-            text.AppendLine(TooltipText.Row("Its ground would yield", string.Join(", ", yields.Select(y => $"{y.amount:+0.###} {y.resource}/s"))));
+            text.AppendLine(TooltipText.Row("Its ground would yield", string.Join(", ", yields.Select(y => $"{y.amount:+0.###} {y.resource}/s")) + $" (all {open} hexes; each hex its share)"));
         string pull = WorldLenses.TerritoryHover(world.Map, tile, world.Settings.generation);
         if (!string.IsNullOrEmpty(pull)) text.AppendLine(TooltipText.Row("Territorial pull", pull));
         var rules = world.Rules.territory;
-        text.AppendLine(TooltipText.Muted($"Once the Capital has {rules.adoptionMinPopulation} citizens, society settles known wilderness by itself where your seats pull it, one hex at a time (more people, more often; the glowing hexes on the map show where next, and when). Claiming a bordering cell, paid in stored food of any kind, makes all of it yours at once; it still weighs on Administrative Capacity."));
-        if (!world.Map.Claiming.Contains(tile.index))
-            actions.Add(($"Claim ({world.ClaimCostText}; yours at once)", world.WhyNotClaim(tile), () => world.Claim(tile)));
+        text.AppendLine(TooltipText.Muted($"Land is held one hex at a time: each hex settled or claimed is yours at once (inside your border, with its share of the cell's yields and Administrative load). With {WorldHoldings.DeFactoHexes(world.Map)} of a cell's hexes, more than anyone else, the cell answers to you de facto; with all of them it is core territory. A cell shared with another holder is disputed: a grievance for the one under the other's rule, a casus belli for the ruler to integrate it. Once the Capital has {rules.adoptionMinPopulation} citizens, society settles known wilderness by itself where your seats pull it (more people, more often; the glowing hexes on the map show where next, and when). A claim takes one hex bordering land you hold, paid in stored food of any kind: zoom in to the local reading and click a hex to claim that one."));
+        if (world.Map.Claiming.Contains(tile.index)) return;
+        int best = world.ClaimTarget(tile);
+        bool picked = hex.HasValue && HexHierarchy.Parent(hex.Value) == tile.coord;
+        if (picked)
+        {
+            var h = hex.Value;
+            actions.Add(($"Claim this hex ({world.ClaimCostText}; yours at once)", world.WhyNotClaim(tile, h), () => world.Claim(tile, h)));
+        }
+        if (!picked || world.ClaimTarget(tile, hex) != best)
+            actions.Add(($"Claim {(picked ? "the hex bordering your land most" : held > 0 ? "the next hex" : "a bordering hex")} ({world.ClaimCostText}; yours at once)", world.WhyNotClaim(tile), () => world.Claim(tile)));
     }
 
     // Send the nearest expedition free for it to survey the selected cell.

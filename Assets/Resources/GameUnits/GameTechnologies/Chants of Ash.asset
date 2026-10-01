@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56fa04d4184ec8340a3828b6259f319b, type: 3}
   m_Name: Chants of Ash
   m_EditorClassIdentifier: 
-  name: Chants of Ash
+  name: 'Chants of Ash'
   type: Normal
   section: Age of Desolation
   description: '"Fiery light of deep shadows."'

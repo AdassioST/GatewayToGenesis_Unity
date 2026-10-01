@@ -129,7 +129,8 @@ public class CombatTests
         Assert.IsNotNull(template, id);
         CollectionAssert.IsEmpty(OrchestralFormations.Validate(template, Settings, age));
         var side = OrchestralFormations.Raise(template, Settings, age);
-        Assert.AreEqual(template.Slots.Count(), side.sections.Count);
+        Assert.AreEqual(template.Slots.Sum(slot => System.Math.Max(1, Settings.Section(slot.section).people)), side.sections.Sum(s => System.Math.Max(1, s.count)),
+            "raising preserves template population when Elite scale expands companies into individual pieces");
     }
 
     [Test]
@@ -266,7 +267,9 @@ public class CombatTests
         {
             var r = BattleResolver.Resolve(Setup("ember-host", "hearth-guard", 0, seed), Settings);
             Assert.LessOrEqual(r.measures, CombatTuning.Default.maxMeasures);
-            Assert.AreEqual(r.outcome == BattleOutcome.Stalemate, r.winner == 0);
+            Assert.AreEqual(r.winner == 0, r.Held);
+            Assert.AreEqual(r.winner <= 0, BattleVerdicts.IsVictory(r.defender.outcome), "a held field is the defender's victory");
+            Assert.AreEqual(BattleVerdicts.Mirror(r.attacker.outcome), r.defender.outcome, "the two verdicts mirror each other");
             Assert.GreaterOrEqual(r.attacker.dead + r.attacker.wounded, 0f);
             Assert.AreEqual(r.attacker.integrityBefore - r.attacker.integrityAfter, r.attacker.dead + r.attacker.wounded + r.attacker.capturedIntegrity, 0.01f);
         }
@@ -319,7 +322,7 @@ public class CombatTests
         Assert.AreEqual(0f, pure.attacker.dead + pure.attacker.wounded, 1e-4f, "Humanity's Structure does not");
         var discordant = BattleResolver.Resolve(new BattleSetup { attacker = Dummy(), defender = Dummy(0.3f, HarmonicNiche.Discordant), field = field, seed = 1 }, Settings);
         Assert.AreEqual(0f, discordant.defender.dead + discordant.defender.wounded, 1e-4f, "Dead-zone lineages feed there");
-        Assert.AreEqual(BattleOutcome.Stalemate, pure.outcome);
+        Assert.IsTrue(pure.Held);
     }
 
     [Test]
@@ -368,16 +371,33 @@ public class CombatTests
     {
         var great = Legend("A", greats: (LegendClass.Vanguard, 3));
         var unattuned = Legend("B");
-        BattleSetup With(BattleLegend c) => new BattleSetup
+        BattleSetup With(BattleLegend c)
         {
+            var setup = new BattleSetup
+            {
             attacker = OrchestralFormations.Raise(Settings.Template("cinder-vanguard"), Settings, 1, c),
             defender = OrchestralFormations.Raise(Settings.Template("tidebound-choir"), Settings, 1),
-            field = new Battlefield { age = 1, magicAccess = 0.6f }, seed = 21,
-        };
+                field = new Battlefield { age = 1, magicAccess = 0.6f }, seed = 21,
+            };
+            // Isolate command's steel multiplier. A stronger spell can now also produce stronger friendly Dissonance.
+            setup.attacker.conductor = c.Clone(); setup.attacker.conductor.leitmotif = SpellBinding.Unattuned;
+            foreach (var section in setup.attacker.sections.Concat(setup.defender.sections)) section.potency = 0f;
+            return setup;
+        }
         var greatF = BattleResolver.Forecast(With(great), Settings, 15);
         var plainF = BattleResolver.Forecast(With(unattuned), Settings, 15);
         Assert.GreaterOrEqual(greatF.Balance, plainF.Balance);
-        Assert.Less(greatF.attackerLoss, plainF.attackerLoss, "a 3★ Great Vanguard's stack strikes harder and wins cheaper");
+        float FirstSteel(BattleLegend commander)
+        {
+            var setup = Duel(Line("warband", "Raiders"), Line("shieldwall", "Wall"), 21);
+            setup.attacker.conductor = commander.Clone(); setup.attacker.conductor.leitmotif = SpellBinding.Unattuned;
+            setup.attacker.manual = setup.defender.manual = true;
+            setup.attacker.sections[0].battleHex = 7; setup.defender.sections[0].battleHex = 8;
+            setup.defender.sections[0].maxIntegrity = setup.defender.sections[0].integrity = 10000f;
+            var run = BattleResolver.Begin(setup, Settings, forecastRuns: 1); run.BeginMeasure(); run.Wait(2);
+            return 10000f - setup.defender.sections[0].integrity;
+        }
+        Assert.Greater(FirstSteel(great), FirstSteel(unattuned), "Vanguard command strengthens the same declared steel action; total casualties also depend on timing and collapsed promises.");
         Assert.AreEqual("3★ Great Vanguard", great.Title);
         Assert.AreEqual(LegendGreats.UnattunedTitle, unattuned.Title);
         var t = CombatTuning.Default;
@@ -403,8 +423,15 @@ public class CombatTests
     [Test]
     public void MindBreak_FightsOnButCannotGuardItself()
     {
-        var steady = BattleResolver.Resolve(Duel(Line("warband", "Raiders"), Line("shieldwall", "Wall")), Settings);
-        var broken = BattleResolver.Resolve(Duel(Line("warband", "Raiders"), Line("shieldwall", "Wall", composure: 0f)), Settings);
+        BattleReport Holding(float composure)
+        {
+            var setup = Duel(Line("warband", "Raiders"), Line("shieldwall", "Wall", composure: composure));
+            setup.attacker.manual = setup.defender.manual = true;
+            setup.attacker.sections[0].battleHex = 7; setup.defender.sections[0].battleHex = 8;
+            var run = BattleResolver.Begin(setup, Settings, forecastRuns: 1); run.ResolveMeasure(); return run.Report;
+        }
+        var steady = Holding(-1f);
+        var broken = Holding(0f);
         Assert.AreEqual(1, broken.timeline[0].defender.mindBroken, "Composure at 0: a Mind Break from the start");
         Assert.Less(broken.timeline[1].defender.integrity, steady.timeline[1].defender.integrity, "its parries and armor fall: steel bites deeper");
         Assert.Greater(broken.timeline[1].attacker.integrity, steady.timeline[1].attacker.integrity, "its own blows land softer");

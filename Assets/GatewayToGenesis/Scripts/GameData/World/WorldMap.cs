@@ -79,9 +79,13 @@ public class WorldTile
     public int microSurveyMask;
     /// <summary>Micro hexes a unit walked on or beside (saved). Any of them known makes the cell known.</summary>
     public int microKnownMask;
-    /// <summary>Micro hexes your people have settled while the cell is still wilderness (saved; <see cref="WorldTerritory"/>).
-    /// All of them settled (crags aside), the cell is adopted or its claim completes.</summary>
+    /// <summary>Micro hexes of a wilderness cell your people hold (saved; <see cref="WorldTerritory"/>), adopted or claimed
+    /// hex by hex: each is yours at once (your border, its share of the cell's yields and load). All of them held (crags
+    /// aside), the whole cell joins your authority.</summary>
     [SaveOptionalField] public int microHeldMask;
+    /// <summary>Of <see cref="microHeldMask"/>, the hexes you paid a claim for (saved): they never slip away, and they set
+    /// the next claim's cost.</summary>
+    [SaveOptionalField] public int microClaimMask;
 
     // Magic (recomputed each Age by WorldMagic)
     public float coherence, dissonance, magicFertility, lunehymn;
@@ -94,6 +98,11 @@ public class WorldTile
     // Ownership is independent of discovery and terrain accessibility.
     public string authorityId = "wilderness";
     public float administrativeAuthority;
+    /// <summary>The authority was given the whole cell (a settlement's or the Capital's reach, an enclave, an independent
+    /// site): its hexes no one else holds are the authority's (derived by <see cref="WorldAuthority.Establish"/>).</summary>
+    public bool whole;
+    /// <summary>How firmly <see cref="authorityId"/> holds the cell: de facto or core (derived; <see cref="WorldHoldings"/>).</summary>
+    public HoldStatus hold;
     public bool impassable;
     public float leylineInfluence;
     // Territory (WorldTerritory, WorldBeauty; derived, rebuilt with the civilization)
@@ -105,6 +114,9 @@ public class WorldTile
     public float rivalPull;
     /// <summary>Index into <see cref="TerritoryState.Seats"/> of your seat pulling strongest here, or -1.</summary>
     public int pullSeat = -1;
+    /// <summary>A shallow copy that keeps this moment's values (a background save reads its fields while play goes on).</summary>
+    public WorldTile CopyForSave() => (WorldTile)MemberwiseClone();
+
     public float Desirability => water || impassable ? 0f :
         0.45f * landFertility + 0.35f * coherence + 0.2f * magicFertility;
 
@@ -290,9 +302,15 @@ public class WorldMap
     public List<Ruin> Ruins { get; set; } = new List<Ruin>();
     /// <summary>The Old World's broken roads, cell by cell (placed with the world; never saved: the same seed lays them again).</summary>
     public List<List<int>> OldRoads { get; set; } = new List<List<int>>();
-    /// <summary>Wilderness cells the player claimed (cell indices, in the order claimed): held like the Capital's own ground.</summary>
+    /// <summary>Wilderness cells that joined your authority whole with a hex of them claimed (cell indices, in order;
+    /// older saves: cells claimed whole): held like the Capital's own ground.</summary>
     public List<int> Claims { get; set; } = new List<int>();
-    /// <summary>Wilderness cells your society adopted by territorial pull (cell indices, in order; <see cref="WorldTerritory"/>).</summary>
+    /// <summary>Hexes held by holders other than you (rivals, occupiers), cell by cell, and their core claims (saved by
+    /// <see cref="WorldSystem"/>; <see cref="WorldHoldings"/>). Yours live in <see cref="WorldTile.microHeldMask"/>.</summary>
+    public List<HexHolding> HexHoldings { get; set; } = new List<HexHolding>();
+    /// <summary><see cref="HexHoldings"/> by cell (derived; <see cref="WorldHoldings.Invalidate"/> after changing the list).</summary>
+    [NonSerialized] public Dictionary<int, List<HexHolding>> holdingIndex;
+    /// <summary>Wilderness cells your society adopted by territorial pull, every hex of them (cell indices, in order; <see cref="WorldTerritory"/>).</summary>
     public List<int> Adopted { get; set; } = new List<int>();
     /// <summary>Claims an older save left half settled (cell indices, in order): a claim takes its land at once now (<see cref="WorldTerritory.ClaimNow"/>), and these are finished on the next Seventh.</summary>
     public List<int> Claiming { get; set; } = new List<int>();
@@ -456,7 +474,7 @@ public class WorldMap
     public static int SurveyedHexes(WorldTile tile) =>
         tile == null ? 0 : MicroNavigation.Crags(tile.microSurveyMask & ~tile.microBlockedMask);
 
-    /// <summary>Hexes of a wilderness cell your people have settled (crags aside), out of <see cref="OpenHexes"/>.</summary>
+    /// <summary>Hexes of a wilderness cell your people hold (crags aside), out of <see cref="OpenHexes"/>.</summary>
     public static int SettledHexes(WorldTile tile) =>
         tile == null ? 0 : MicroNavigation.Crags(tile.microHeldMask & ~tile.microBlockedMask);
 
@@ -583,8 +601,9 @@ public class WorldMap
 /// at water, barriers and other claims; discovering a tile never annexes it. Rebuilt from scratch in a fixed order:
 /// the Capital, then the independent claims already standing (enclaves, independent sites), then the Major
 /// Settlements and Developing Towns that extend the Capital's reach. Outposts are detached: they hold their own cell
-/// outside Administrative Authority. Beyond each settlement's core, land joins by claims (paid) and by territorial
-/// pull (<see cref="WorldTerritory"/>: adopted a cell at a time, saved in <see cref="WorldMap.Adopted"/>).
+/// outside Administrative Authority. Beyond each settlement's core, land joins one micro hex at a time, by claims
+/// (paid) and by territorial pull (<see cref="WorldTerritory"/>; <see cref="WorldTile.microHeldMask"/>): a cell whose
+/// every hex is held joins the authority whole (saved in <see cref="WorldMap.Claims"/> or <see cref="WorldMap.Adopted"/>).
 /// </summary>
 public static class WorldAuthority
 {
@@ -597,28 +616,49 @@ public static class WorldAuthority
     public const float ClaimedReach = 0.5f;
 
     /// <summary>
-    /// Why <paramref name="t"/> cannot be claimed, or null: it must be passable land, still wilderness,
-    /// (known: a scout has passed over it, not only seen it) and bordering ground you already hold.
+    /// Why no hex of <paramref name="t"/> can be claimed, or null: it must be passable land (known: a scout has passed
+    /// over it, not only seen it), wilderness or yours de facto (not yet core), with a hex no one holds that borders
+    /// ground you already hold. Claims go one micro hex at a time (<see cref="WhyNotClaimHex"/>); a hex another holder
+    /// holds is never claimed peacefully (<see cref="WorldHoldings.CasusBelliOf"/>).
     /// </summary>
     public static string WhyNotClaim(WorldMap map, WorldTile t)
     {
         if (map == null || t == null) return "Beyond the edge of the world.";
         if (t.water) return "Open water cannot be claimed.";
         if (t.impassable) return "No one can hold this ground.";
-        if (t.authorityId == Player) return "It is already yours.";
-        if (t.authorityId != Wilderness) return "Another authority holds this ground.";
+        if (IsPlayers(t.authorityId) && !WorldHoldings.Fillable(t, t.authorityId)) return "It is already yours.";
+        if (t.authorityId != Wilderness && !IsPlayers(t.authorityId)) return "Another authority holds this ground.";
         if (map.Claiming.Contains(t.index)) return "Your people are already settling it, hex by hex.";
         if (!t.known) return "A scout must pass over it first.";
-        if (!map.NeighboursOf(t).Any(n => n.authorityId == Player)) return "It must border your authority.";
+        if (WorldTerritory.NextHex(map, t, Player) < 0)
+            return WorldHoldings.FreeMask(map, t) == 0 ? "Every hex of it is held: what others hold is only taken by force." : "No hex of it borders land you hold.";
         return null;
     }
 
-    /// <summary>Cells that could be claimed now (cost aside).</summary>
-    public static IEnumerable<WorldTile> Claimable(WorldMap map) =>
-        map == null ? Enumerable.Empty<WorldTile>() : map.Tiles.Where(t => t.authorityId == Wilderness && t.known && WhyNotClaim(map, t) == null);
+    /// <summary>
+    /// Why the micro hex <paramref name="id"/> (<see cref="MicroNavigation"/>) cannot be claimed, or null: its cell
+    /// must allow claims (<see cref="WhyNotClaim"/>), and the hex must be open ground no one holds, touching a hex you hold.
+    /// </summary>
+    public static string WhyNotClaimHex(WorldMap map, int id)
+    {
+        if (map == null || id < 0 || id >= map.Count * MicroNavigation.PerCell) return "Beyond the edge of the world.";
+        var t = map[id / MicroNavigation.PerCell];
+        int bit = 1 << (id % MicroNavigation.PerCell);
+        if ((t.microBlockedMask & bit) != 0) return "Crags no one can hold.";
+        string holder = WorldHoldings.HexHolder(map, id);
+        if (holder != null) return IsPlayers(holder) ? "This hex is already yours." : "Another holds this hex: it is only taken by force.";
+        string why = WhyNotClaim(map, t);
+        if (why != null) return why;
+        if (WorldTerritory.Touching(map, id, Player) == 0) return "It must border a hex you hold.";
+        return null;
+    }
 
-    /// <summary>What the next claim costs: the base cost raised by <paramref name="growth"/> for each cell already claimed.</summary>
-    public static float ClaimScale(int claimed, float growth) => 1f + Math.Max(0f, growth) * Math.Max(0, claimed);
+    /// <summary>Cells with a hex that could be claimed now (cost aside).</summary>
+    public static IEnumerable<WorldTile> Claimable(WorldMap map) =>
+        map == null ? Enumerable.Empty<WorldTile>() : map.Tiles.Where(t => t.known && WorldHoldings.Fillable(t, Player) && WhyNotClaim(map, t) == null);
+
+    /// <summary>What the next claim costs: the base cost raised by <paramref name="growth"/> for each cell's worth already claimed.</summary>
+    public static float ClaimScale(float claimedCells, float growth) => 1f + Math.Max(0f, growth) * Math.Max(0f, claimedCells);
 
     public static void Establish(WorldMap map, WorldGenSettings settings)
     {
@@ -627,26 +667,27 @@ public static class WorldAuthority
             t.impassable = !t.water && settings.Terrain(t.terrain)?.passable == false;
             t.authorityId = Wilderness;
             t.administrativeAuthority = 0f;
+            t.whole = false;
+            t.hold = HoldStatus.None;
+        }
+        // Land held hex by hex (claimed, adopted, taken) answers to whoever holds most of it, once they hold enough
+        // (WorldHoldings.Ruler: de facto from 4 of 7 hexes, core with all). It comes first: no one's reach overrides it.
+        // A whole-cell claim or adoption of an older save held every hex.
+        foreach (int cell in map.Claims.Concat(map.Adopted))
+        {
+            if (cell < 0 || cell >= map.Count) continue;
+            var t = map[cell];
+            if (t.microHeldMask == 0 && WorldHoldings.At(map, cell).Count == 0) t.microHeldMask = WorldHoldings.OpenMask(t);
+        }
+        foreach (var t in map.Tiles)
+        {
+            if (t.water || t.impassable || (t.microHeldMask == 0 && WorldHoldings.At(map, t.index).Count == 0)) continue;
+            string ruler = WorldHoldings.Ruler(map, t);
+            if (ruler == null) continue;
+            t.authorityId = ruler;
+            t.administrativeAuthority = Math.Max(t.administrativeAuthority, ClaimedReach);
         }
         Project(map, map.Capital, Player, settings.capitalAuthorityRadius);
-        // Claimed wilderness is held like the Capital's own ground (claims are paid for, so they come before other claimants).
-        foreach (int cell in map.Claims)
-        {
-            if (cell < 0 || cell >= map.Count) continue;
-            var t = map[cell];
-            if (t.water || t.impassable || t.authorityId != Wilderness) continue;
-            t.authorityId = Player;
-            t.administrativeAuthority = Math.Max(t.administrativeAuthority, ClaimedReach);
-        }
-        // Land adopted by territorial pull, the same way (an Outpost's pocket is told apart once the pull is known).
-        foreach (int cell in map.Adopted)
-        {
-            if (cell < 0 || cell >= map.Count) continue;
-            var t = map[cell];
-            if (t.water || t.impassable || t.authorityId != Wilderness) continue;
-            t.authorityId = Player;
-            t.administrativeAuthority = Math.Max(t.administrativeAuthority, ClaimedReach);
-        }
         foreach (var enclave in map.Enclaves.OrderBy(e => e.index))
         {
             var t = map.Get(enclave.coord);
@@ -664,8 +705,13 @@ public static class WorldAuthority
         foreach (var s in map.Settlements.Where(s => s.detached).OrderBy(s => s.id))
         {
             var t = map.Get(s.coord);
-            if (t != null && t.authorityId == Wilderness) t.authorityId = Outpost;
+            if (t == null || t.authorityId != Wilderness) continue;
+            t.authorityId = Outpost;
+            t.whole = true;
         }
+        // How firmly each holder holds its cells: de facto or core.
+        foreach (var t in map.Tiles)
+            if (!t.water && t.authorityId != Wilderness) t.hold = WorldHoldings.Status(map, t, t.authorityId);
     }
 
     public static void Project(WorldMap map, HexCoord center, string owner, int radius)
@@ -682,6 +728,8 @@ public static class WorldAuthority
             var t = map[item.cell];
             if (t.authorityId != Wilderness && t.authorityId != owner) continue;
             t.authorityId = owner;
+            // Given whole: every hex no one else holds is the owner's.
+            t.whole = true;
             t.administrativeAuthority = Math.Max(t.administrativeAuthority, 1f - item.distance / (float)(radius + 1));
             if (item.distance == radius) continue;
             foreach (var next in map.NeighboursOf(t))

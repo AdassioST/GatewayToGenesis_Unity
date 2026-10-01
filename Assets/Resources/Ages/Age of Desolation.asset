@@ -18,7 +18,7 @@ MonoBehaviour:
   epigraph: Golden ashes forsaken by the Gods.
   actSevenths: 3f0000003f0000003f000000
   actOfFateStories:
-  - desolation_golden_orchard
+  - desolation_echoes_of_hunger, desolation_golden_orchard
   - desolation_peach_sickness
   openingStory: 
   actTechnologies:
@@ -32,27 +32,28 @@ MonoBehaviour:
   crisisTitle: The Inescapable Hunger
   crisisStages:
   - name: A Brown Auric Peach?
-    startsAt: 0.334
-    technology: Echoes of Hunger
+    startsAt: 0.7
+    technology: 
     story: desolation_brown_peach
     declared: 0
   - name: The First Regional Failure
-    startsAt: 0.72
+    startsAt: 0.78
     story: desolation_regional_failure
     declared: 1
   - name: The Ash-Bread Winter
-    startsAt: 0.82
+    startsAt: 0.86
     story: desolation_ash_bread
     declared: 1
   - name: The Choosing of Seeds
-    startsAt: 0.93
+    startsAt: 0.94
     story: desolation_choosing_of_seeds
     declared: 1
   preparationTechnologies:
-  - Agricultural Renewal
-  - Efficient Rations
-  - Rites of Harvest
-  - Resource Preservation
+  - Root-Digging
+  - Earth-Bean Rows
+  - Harvest Hymns
+  - Wild Honey Keeping
+  - Salt and Smoke
   preparationScore: famine_preparation
   preparationLabel: Diverse crops and stores
   reliefScore: ash_ledger

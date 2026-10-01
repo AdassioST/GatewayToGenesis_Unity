@@ -8,7 +8,8 @@ using UnityEngine.UI;
 /// <summary>
 /// Game calendar: 21 sevenths per phase, 3 phases per echo, 4 echoes per cycle.
 /// The 21st seventh of each phase is the Ritual Seventh.
-/// While an event is pending, time runs slower by <see cref="slowMotionFactor"/>.
+/// While an event is pending, time runs slower by <see cref="slowMotionFactor"/>. The player can pause it all with
+/// Space (<see cref="PlayerPaused"/>); <see cref="TimeFlowHud"/> shows how time flows.
 /// </summary>
 public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
 {
@@ -78,10 +79,44 @@ public class TimeSystemLogic : SingletonBehaviour<TimeSystemLogic>
         UpdateUI();
     }
 
+    // ===== THE PLAYER'S PAUSE =====
+
+    /// <summary>
+    /// The player stopped time (Space, or the time indicator): everything that stops while a story is told stops too
+    /// (the calendar, production, the pantry, the people, units on the map, research). Kept apart from
+    /// <see cref="isTimePaused"/>, which stories, open tabs and cards set and clear on their own, so neither undoes the other.
+    /// Not saved: a world always loads running.
+    /// </summary>
+    public bool PlayerPaused { get; private set; }
+
+    /// <summary>The calendar stands still: the player paused, or a story, tab or card holds it.</summary>
+    public bool IsStopped => PlayerPaused || isTimePaused || WorldSystem.Instance?.PendingEncounter != null;
+
+    /// <summary>
+    /// The simulation stands still: the player paused or a story is being told. Production, the pantry, the people, the
+    /// crowd and units on the map check this.
+    /// </summary>
+    public static bool SimulationHeld =>
+        (Instance != null && Instance.PlayerPaused) || (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive());
+
+    public void SetPlayerPaused(bool paused)
+    {
+        if (PlayerPaused == paused) return;
+        PlayerPaused = paused;
+        GameLog.Event(paused ? "Paused by the player" : "Resumed by the player", Log);
+    }
+
+    public void TogglePlayerPause() => SetPlayerPaused(!PlayerPaused);
+
+    /// <summary>The calendar's box on the HUD while it shows (null before Horology or while hidden).</summary>
+    public RectTransform CalendarRect => expandible != null && expandible.activeInHierarchy && HUD != null && HUD.activeInHierarchy
+        ? expandible.transform as RectTransform : null;
+
     private void Update()
     {
         if (SaveMenu.BlocksGameplay) return;
-        if (!isTimePaused && canTrackTime)
+        if (KeyBindings.PausePressed) TogglePlayerPause();
+        if (!IsStopped && canTrackTime)
         {
             timeSinceLastSeventh += Time.deltaTime / (isSlowMotionActive ? Mathf.Max(1f, slowMotionFactor) : 1f);
         }

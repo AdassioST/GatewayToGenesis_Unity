@@ -98,7 +98,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
     private const string FoundingChannel = "founding";
     public float DailyRations => GrowthRules.RationsPerDay(Growth, demandModifier);
     private float SecondsPerSeventh => TimeSystemLogic.Instance != null ? Mathf.Max(0.01f, TimeSystemLogic.Instance.GetEffectiveSecondsPerSeventh()) : 180f;
-    private bool CalendarRunning => TimeSystemLogic.Instance != null && TimeSystemLogic.Instance.canTrackTime && !TimeSystemLogic.Instance.isTimePaused;
+    private bool CalendarRunning => TimeSystemLogic.Instance != null && TimeSystemLogic.Instance.canTrackTime && !TimeSystemLogic.Instance.IsStopped;
     public int SupportedPeople
     {
         get
@@ -160,7 +160,7 @@ public class PopGrowthLogic : SingletonBehaviour<PopGrowthLogic>
         RefreshHUD();
     }
 
-    private static bool IsPaused() => EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive();
+    private static bool IsPaused() => TimeSystemLogic.SimulationHeld;
 
     // ===== FOOD & GROWTH =====
 

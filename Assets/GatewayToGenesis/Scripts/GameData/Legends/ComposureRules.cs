@@ -16,6 +16,8 @@ public enum ComposureState { Pristine, Clouded, Fractured, Spiraling, Surrender 
 [Serializable]
 public class ComposureTuning
 {
+    public ComposureTuning Clone() => (ComposureTuning)MemberwiseClone();
+
     [Header("Where each state begins (strain)")]
     [Tooltip("Below this a Soul Leitmotif is Pristine: moments of joy (vault: \"Momentarily, a Soul Leitmotif can become pristine on intense moments of joy\").")]
     public float cloudedAt = 10f;
@@ -94,6 +96,13 @@ public struct ComposureContext
 /// </summary>
 public static class ComposureRules
 {
+    /// <summary>Ordinary battle trauma can deepen Spiraling; only explicit parasitic pressure can cross Surrender.</summary>
+    public static float BattleStrain(float current, float total, float parasitic, ComposureTuning tuning)
+    {
+        float extraordinary = Math.Max(0f, parasitic);
+        float ordinary = Math.Max(0f, total - extraordinary);
+        return Math.Min(ordinary, Math.Max(0f, tuning.surrenderAt - .01f - current)) + extraordinary;
+    }
     public static ComposureState StateOf(float strain, ComposureTuning t)
     {
         if (strain >= t.surrenderAt) return ComposureState.Surrender;

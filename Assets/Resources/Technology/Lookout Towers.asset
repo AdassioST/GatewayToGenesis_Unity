@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Lookout Towers
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: d6fa321a5b721a54b90cc59e693bf4c9, type: 2}
+  isEventTech: 0
+  tier: 4
+  satisfactionPoints: 0
+  techRequirements:
+  - Ash-Cellars
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 2250
+  enlightenedConditions:
+  - type: 1
+    trigger: 'Decaying Hut'
+    requiredAmount: 10
+    description: 'Build 10 Decaying Hut'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 2ed189d4865af2b42859ae7723b3c6e0, type: 2}
+  - {fileID: 11400000, guid: 9a82033a657e13e52806974b57ca7067, type: 2}
+  - {fileID: 11400000, guid: bb35321155b6e0950a360918186c725e, type: 2}

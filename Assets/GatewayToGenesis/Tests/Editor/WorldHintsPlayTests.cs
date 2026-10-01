@@ -8,10 +8,10 @@ using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 /// <summary>
-/// The hints in the real scene (<see cref="Tutorials"/> and the hints in WorldHints.cs): after the founding, a world
-/// newly open says how to get there, then (on the map) how to look about, then how to send the selected party; each is
-/// spoken by the Auric Aria at a pause, under the Age banner, one at a time, remembered once heard out or done, and a
-/// test never writes the player's PlayerPrefs. Static helpers read the scene afresh after every wait.
+/// The hints in the real scene (<see cref="Tutorials"/> and the hints in WorldHints.cs): after the founders' homecoming and
+/// the map opening (both announced at once), the map says how to look about, then how to send the selected party; each
+/// is spoken by the Auric Aria at a pause as a line low on the screen, one at a time, remembered once heard out or done,
+/// and a test never writes the player's PlayerPrefs. Static helpers read the scene afresh after every wait.
 /// </summary>
 public class WorldHintsPlayTests
 {
@@ -29,26 +29,28 @@ public class WorldHintsPlayTests
         for (int i = 0; i < 300 && PopGrowthLogic.Instance.FoundersWaiting == 0; i++) yield return null;
         yield return new WaitForSecondsRealtime(0.5f); // the lesson sees them waiting
         BringTheFoundersHome();
-        // The founding's farewell has the screen first; no hint shows under a lesson.
+        // The founders' homecoming is announced at once; no hint speaks over it.
         yield return new WaitForSecondsRealtime(1f);
-        Assert.AreEqual("founding", Tutorials.ShowingId);
+        Assert.AreEqual("founding.home", Tutorials.ShowingId);
         Assert.IsFalse(Tutorials.Seen("world-opens"), "the map is still locked");
-        yield return new WaitForSecondsRealtime(8.5f);
+        for (float t = 0f; t < 14f && Tutorials.ShowingId == "founding.home"; t += 0.1f) yield return new WaitForSecondsRealtime(0.1f);
 
+        // The map opening is announced at once too; the hint only reminds, later.
         OpenTheMapTechnology();
-        yield return new WaitForSecondsRealtime(1.2f);
-        CheckAHintAtTheTop("world-opens");
+        yield return new WaitForSecondsRealtime(0.6f);
+        Assert.AreEqual("moment.world-opens", Tutorials.ShowingId, "announced the moment it is researched");
 
         WorldView.ShowWorld();
         for (int i = 0; i < 600 && WorldView.Current != WorldView.Mode.World; i++) yield return null;
         yield return new WaitForSecondsRealtime(1.2f);
         Assert.IsTrue(Tutorials.Seen("world-opens"), "learnt by doing: the world was opened");
-        CheckAHintAtTheTop("world-look");
+        for (float t = 0f; t < 14f && Tutorials.ShowingId != "world-look"; t += 0.1f) yield return new WaitForSecondsRealtime(0.1f);
+        CheckAHintAtTheBottom("world-look");
 
         // Skip ahead: the selected party waits for orders.
         Tutorials.MarkSeen("world-look");
         yield return new WaitForSecondsRealtime(1.2f);
-        CheckAHintAtTheTop("send-party");
+        CheckAHintAtTheBottom("send-party");
         SendTheParty();
         yield return new WaitForSecondsRealtime(0.6f);
         Assert.IsTrue(Tutorials.Seen("send-party"), "learnt by doing: the party was sent");
@@ -87,14 +89,14 @@ public class WorldHintsPlayTests
         Assert.IsTrue(world.MapUnlocked);
     }
 
-    private static void CheckAHintAtTheTop(string id)
+    private static void CheckAHintAtTheBottom(string id)
     {
         var host = Object.FindAnyObjectByType<Tutorials>();
         Assert.AreEqual(id, Tutorials.ShowingId, $"story {EventSystemLogic.Instance?.isEventActive}, map {WorldView.Current}, save menu {SaveMenu.BlocksGameplay}, host {(host != null && host.enabled)}");
-        var plate = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Exclude).FirstOrDefault(r => r.name == "Hint" && r.parent != null && r.parent.name == "Tutorials");
+        var plate = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Exclude).FirstOrDefault(r => r.name == "Line" && r.parent != null && r.parent.name == "Tutorials");
         Assert.IsNotNull(plate, "the hint's words are up");
-        Assert.AreEqual(1f, plate.anchorMin.y, "at the top of the screen, out of the way");
-        Assert.LessOrEqual(plate.sizeDelta.x, 521f, "one short line");
+        Assert.AreEqual(0f, plate.anchorMin.y, "low on the screen, a subtitle");
+        Assert.LessOrEqual(plate.sizeDelta.x, 901f, "one short line");
         Assert.IsFalse(plate.GetComponentsInChildren<UnityEngine.UI.Graphic>().Any(g => g.raycastTarget), "it never catches clicks");
     }
 

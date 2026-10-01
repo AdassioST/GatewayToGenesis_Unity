@@ -317,7 +317,9 @@ public class AgeProgression : SingletonBehaviour<AgeProgression>
         {
             case AgeBeatKind.ActOfFate:
                 GameLog.Event($"{Current.title}: {Current.ActLabel(beat.index)} begins with an Act of Fate", Log);
-                if (beat.index - 1 < Current.actOfFateStories.Count) Enqueue(Current.actOfFateStories[beat.index - 1]);
+                // An entry may queue several stories in order ("desolation_echoes_of_hunger, desolation_golden_orchard").
+                if (beat.index - 1 < Current.actOfFateStories.Count)
+                    foreach (var knot in (Current.actOfFateStories[beat.index - 1] ?? string.Empty).Split(',')) Enqueue(knot);
                 if (LegendProgress.Instance != null)
                 {
                     LegendProgress.Instance.HonourCouncil(LegendLore.FragmentTuning.actOfFate, $"Stood through an Act of Fate in the {Current.title}");

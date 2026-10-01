@@ -154,7 +154,7 @@ Example from `hollow_caravan_chorus_1` in `StarterVolume.ink`:
 ```
 
 Parsing rules (no redundancy, supports multi-item groups):
-- **requirements:** Accumulates multiple entries across the same `&C` block. Supports multi-word targets and comparisons, e.g. `technology:Efficient Rations == 1`, `population:population >= 5`.
+- **requirements:** Accumulates multiple entries across the same `&C` block. Supports multi-word targets and comparisons, e.g. `technology:Shared Embers == 1`, `population:population >= 5`.
 - **requirements:cost:** Accumulates multiple entries for costs.
 - **success/failure/crit_success/crit_failure/rare_event:**
   - `:consequences:` sections capture multiple semicolon-separated items.
@@ -724,7 +724,7 @@ Implementation details:
 - Keep choice prefix `* ChoiceType. Title` to map Idealism/Realism/Pragmatism consistently.
 
 Requirements and costs (new):
-- `requirements:` block gates availability. The choice is only pickable if all entries evaluate to true using the same format supported by event `#conditions` (e.g., `resource:Food >= 40`, `technology:Efficient Rations == 1`, `score:caravan_encountered >= 1`).
+- `requirements:` block gates availability. The choice is only pickable if all entries evaluate to true using the same format supported by event `#conditions` (e.g., `resource:Food >= 40`, `technology:Shared Embers == 1`, `score:caravan_encountered >= 1`).
 - `requirements:cost:` block declares resources to consume when the story concludes, applied with other cumulative consequences at Outro. Only the following are consumed:
   - `resource:{Name} {amount}` (positive amounts are removed)
   - `population:population {amount}` (removes people; tracked as deaths)
@@ -739,7 +739,7 @@ Example:
     success: idealism_success; failure: idealism_failure
 
 * Realism. Seize &D Survival first. &C pillar:regalia;strength:20;
-    requirements: technology:Efficient Rations == 1; score:caravan_encountered >= 1;
+    requirements: technology:Shared Embers == 1; score:caravan_encountered >= 1;
     success: realism_success; failure: realism_failure
 
 * Pragmatism. Turn Away &D No action needed. &C consequences: score:caution +1
@@ -785,7 +785,7 @@ Require specific technological advancements:
 ```ink
 === advanced_event ===
 # title: Technological Breakthrough
-# conditions: technology:Rites of Harvest; population:population >= 20
+# conditions: technology:Harvest Hymns; population:population >= 20
 # consequences: score:tech_progress +10; resource:Aetherlight +50
 ```
 
@@ -817,7 +817,7 @@ Create dynamic events based on player economy:
 === hollow_caravan ===
 # title: Hollow Caravan
 # description: Dark forces approach the settlement
-# conditions: score:weeping_princess_completed >= 1; technology:Rites of Harvest; resource:Food > 4
+# conditions: score:weeping_princess_completed >= 1; technology:Harvest Hymns; resource:Food > 4
 # consequences: population:population -12; vagrants:vagrants +20; resource:Aetherlight +30
 # screen_flow: splash,bridge,chorus,verse,verse,verse,bridge,verse,outro
 # event_type:Crisis

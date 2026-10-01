@@ -291,13 +291,14 @@ public static class WorldLenses
         if (t == null || map == null) return null;
         if (t.water || t.impassable) return "No one can live here: no pull holds it";
         var seat = map.territory?.Seat(t.pullSeat);
-        string pulled = seat != null ? $"pulled by {seat.name} ({seat.held}/{seat.maxCells} cells held)" : "no seat of yours reaches it";
-        if (WorldAuthority.IsPlayers(t.authorityId)) return $"Yours: pull {t.pull:0.00}, {pulled}";
+        string pulled = seat != null ? $"pulled by {seat.name} ({seat.held:0.#}/{seat.maxCells} cells held)" : "no seat of yours reaches it";
+        if (WorldAuthority.IsPlayers(t.authorityId) && !WorldHoldings.Fillable(t, t.authorityId)) return $"Yours: pull {t.pull:0.00}, {pulled}";
         if (t.authorityId != WorldAuthority.Wilderness) return t.rivalPull > 0f ? $"Held by another authority (its pull {t.rivalPull:0.00})" : "Held by another authority";
         if (seat == null) return t.rivalPull > 0f ? $"Wilderness under a rival's pull ({t.rivalPull:0.00})" : "Wilderness beyond every pull";
         string why = WorldTerritory.WhyNotAdopt(map, settings, t, seat);
         float priority = WorldTerritory.Priority(map, settings, WorldTerritory.RulesOf(map), t, seat);
-        return $"Pull {t.pull:0.00}, {pulled}; adoption priority {priority:0.00}. {why ?? "Society will adopt it in its turn."}";
+        string part = t.microHeldMask != 0 ? $" {WorldMap.SettledHexes(t)}/{WorldMap.OpenHexes(t)} hexes yours{(WorldAuthority.IsPlayers(t.authorityId) ? " (de facto)" : string.Empty)}." : string.Empty;
+        return $"Pull {t.pull:0.00}, {pulled}; adoption priority {priority:0.00}.{part} {why ?? "Society will adopt it hex by hex in its turn."}";
     }
 
     /// <summary>The culture's reading of a cell: how deeply its ways have taken root, and whether they grow or fade here.</summary>

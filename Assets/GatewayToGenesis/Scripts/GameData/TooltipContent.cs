@@ -378,6 +378,45 @@ public static class TooltipContent
                 d.effects = !string.IsNullOrEmpty(unlockable.effects) ? unlockable.effects : $"Unlocks a special unit: {unit?.name}";
                 break;
 
+            case TechUnlockableType.GrimoireSeat:
+                int seats = Mathf.Max(1, Mathf.RoundToInt(unlockable.resourceModifier));
+                d.title = unlockable.seat == GrimoireSeat.Ceremony ? "A Ceremony" : "A Symphony Seat";
+                d.type = "Grimoire";
+                d.description = unlockable.description;
+                d.effects = !string.IsNullOrEmpty(unlockable.effects) ? unlockable.effects
+                    : unlockable.seat == GrimoireSeat.Ceremony ? $"{seats * Grimoire.VoicesPerCeremony} voice seats: Resonance, Flux and Strand, one Unison each."
+                    : $"{seats} Symphony seat{(seats == 1 ? string.Empty : "s")} in the deck, for battle and the field.";
+                break;
+
+            case TechUnlockableType.SymphonyCard:
+                var card = unlockable.symphonyCard;
+                d.title = card != null ? card.DisplayName : unlockable.name;
+                d.type = card != null ? $"Symphony Card: {card.Form}" : "Symphony Card";
+                d.description = card != null && !string.IsNullOrEmpty(card.description) ? card.description : unlockable.description;
+                d.effects = card == null ? unlockable.effects : string.Join("\n", new[]
+                {
+                    string.IsNullOrEmpty(card.fieldEffect) ? null : $"Field: {card.fieldEffect}",
+                    string.IsNullOrEmpty(card.battleEffect) ? null : $"Battle: {card.battleEffect}",
+                    Grimoire.VoiceOf(card.binding) != CeremonyVoice.None ? $"Sings the {Grimoire.VoiceOf(card.binding)} of a Ceremony." : null,
+                    $"Flickers {Mathf.RoundToInt(card.flickerChance * 100f)}% of the time in this Age.",
+                }.Where(s => s != null));
+                break;
+
+            case TechUnlockableType.SpellWildcard:
+                int blanks = Mathf.Max(1, Mathf.RoundToInt(unlockable.resourceModifier));
+                d.title = blanks == 1 ? "A Wildcard" : $"{blanks} Wildcards";
+                d.type = "Spell Maker";
+                d.description = unlockable.description;
+                d.effects = !string.IsNullOrEmpty(unlockable.effects) ? unlockable.effects : "A blank card to compose: a binding your people have heard, Minor or Major, and what it is for.";
+                break;
+
+            case TechUnlockableType.ScoreChange:
+                d.title = unit != null ? unit.name : unlockable.name;
+                d.type = "Consequence";
+                d.description = unlockable.description;
+                d.effects = unlockable.effects;
+                break;
+
             default:
                 d.type = "Unknown";
                 d.description = "Unknown unlockable type.";

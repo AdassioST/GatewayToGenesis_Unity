@@ -57,7 +57,7 @@ one Behemoth Meat like five.
 - **A reserve.** Whenever Food is falling, the stores feed in the shortfall, the most perishable kinds first, until
   they run out. Only then do people starve.
 - **They spoil.** Each kind loses a share of itself every [[Seventh]]: meat quickly, peaches and roots slowly, grain
-  hardly at all, ash-bread never. [[Resource Storage]] and [[Resource Preservation]] slow it and add room.
+  hardly at all, ash-bread never. [[Ash-Cellars]] and [[Salt and Smoke]] slow it and add room.
 - **They pay for land.** Claiming a cell of wilderness costs food value from the stores, of any kind.
 - **Where they come from.** The survivors start with cellars of dried peaches. Held, surveyed land grows its crop, an
   expedition can forage the ground once each Age, and sites and stories give more.
@@ -247,7 +247,7 @@ category: Game Rule
 also: Council, Head of State
 
 Legends govern with you: a Head of State and up to six positions on the council. At first only the Head of State
-governs; [[The Rekindling]] and [[Edicts of Stone and Bone]] each open a position, so the council holds three by the
+governs; [[The Rekindling]] and [[Call and Response]] each open a position, so the council holds three by the
 end of the first Act of Fate. Civics in force add positions of their own.
 
 - Each position is a seat, such as the [[High Arbiter]] or the [[Oracle]], that legends of several classes can hold:
@@ -264,7 +264,7 @@ category: Game Rule
 also: Edict, Stance, Stances, Laws, Council Accord, Decree
 
 The realm's laws and decrees, set from the **Edicts** section of the Government tab. They are established once the
-council holds three seats, counting the Head of State ([[Edicts of Stone and Bone]] usually opens the third); until
+council holds three seats, counting the Head of State ([[Call and Response]] usually opens the third); until
 then the realm keeps its customs.
 
 - **Stances** are the standing laws: one option is always in force for each. *The Roofless* (who may enter without a
@@ -332,7 +332,7 @@ shelf: The World
 category: Game Rule
 also: World Map
 
-Before [[Pathfinder Training]] only the capital is known. Researching it opens the world map and sends your first
+Before [[Lookout Towers]] only the capital is known. Researching it opens the world map and sends your first
 expedition out of the capital, directed by a legend. Then scroll out past the capital's widest view, press M, or
 click The World on the Age banner, and the view pulls back from your capital into the world beyond the walls: the
 ground you have explored in full colour, known ground dimmed, and the fog, which begins right beside the capital.
@@ -370,10 +370,14 @@ view.
   retreating or walking back for rations only interrupt it. Any other order sets the survey aside with its progress
   kept: choose *Resume survey*, or send the party back into the cell. *Survey by itself* has a party survey cell after
   cell, resting and resupplying as it needs.
-- Your authority begins at the capital's own cell; everything around it is wilderness. Once an expedition has passed
-  over a cell (not only seen it from afar), click it and claim it for stored food and Elderwood if it borders your
-  authority. It joins your authority at once, all seven of its hexes. Each claim costs a little more than the last.
-  See [[Territory and Administration]] for how your land also grows by itself.
+- Your authority begins at the capital's own cell; everything around it is wilderness. Land is held one small hex at
+  a time. Once an expedition has passed over a cell (not only seen it from afar), click it and claim a hex of it that
+  borders land you hold, for stored food and Elderwood; zoom all the way in and click a hex to claim that very one.
+  The hex is yours at once: your border wraps around it, and it yields its share of the cell. With four of a cell's
+  seven hexes (more than anyone else) the cell answers to you **de facto**: it is inside your authority, though it
+  still yields only for the hexes you hold. With all seven it is **core territory**. A hex costs a seventh of what a whole cell would, and every
+  seven hexes claimed make the next claims a little dearer. See [[Territory and Administration]] for how your land
+  also grows by itself.
 - Held, explored ground yields resources every second, and what stands on it pays once when it is reached: ruins,
   orchards, hamlets where a legend waits to be met, spires whose songs become ballads.
 - Every new Age turns the Grand Thread Rings: the leylines move, rivers they cross run silver, and new things appear
@@ -433,8 +437,14 @@ Outposts. Pull fades over hard ground: open plains
 carry it far, forests and marshes less, highlands and cliffs little; roads and river valleys carry it farther.
 
 - **Your society adopts land by itself**, one small hex at a time, from what borders your land and is known to your
-  people; a cell joins your land once all seven of its hexes are settled, and your people finish a cell before
-  starting the next. It needs people: nothing moves until the capital has 25 citizens, and the more it has, the likelier
+  people. Each hex is yours as soon as it is settled (inside your border, yielding its share and weighing on the
+  administration); four of a cell's hexes make it yours de facto, all seven make it core territory, and your people
+  finish a cell before starting the next.
+- **Disputed land**: a cell can be shared between holders. Whoever holds four or more of its hexes, and more than
+  anyone else, rules it; the others' people live under that rule, a grievance of theirs, while the ruler has a casus
+  belli to take the rest and make it core. A core that another holds any hex of (occupied, in part or whole) stays a
+  core of its first holder: a casus belli to recover it. Hexes another holds are never claimed peacefully. The land
+  card and the hover say who holds what, and the Realm panel counts your disputes. It needs people: nothing moves until the capital has 25 citizens, and the more it has, the likelier
   each [[Seventh]] brings in a new hex. The map shows what comes next: the hexes each settlement will bring in glow in
   your border's colour, the next one pulsing, with about how many Sevenths until each joins (up close) or until the
   whole cell is yours (farther out). It takes the best land first: fertile, watered, coherent and beautiful ground, grandfields and sites;
@@ -449,7 +459,7 @@ carry it far, forests and marshes less, highlands and cliffs little; roads and r
   what you hold pays more. Over capacity your people stop adopting land, and far past it the weakest-held land slips
   back into the wilderness. The Realm panel on the world map shows where you stand and where each threshold lies.
 - **Border policy** (Realm panel): *Expand* keeps adopting until the administration is full; *Measured* stops where
-  more land stops paying; *Hold the borders* adopts nothing. Claims still go ahead, at once. Once the council
+  more land stops paying; *Hold the borders* adopts nothing. Claims still go ahead, hex by hex. Once the council
   issues [[Edicts]], the policy is the stance *The Borders*: changing it is a decree, and it then stands a Phase.
 - **Beauty**: some places are fair, some hideous: rolling meadows, groves and lakes in view, Sacred ground and the
   lights of leylines against ash, ruins, scars, dissonance and danger. People settle and work beautiful land first;

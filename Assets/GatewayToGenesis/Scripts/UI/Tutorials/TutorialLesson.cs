@@ -1,40 +1,21 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// What the Auric Aria says this moment, in three layers: a small <see cref="whisper"/> on top (her aside), the large
-/// <see cref="title"/> (what matters now) and a small <see cref="body"/> under it (what to do). The title names the
-/// utterance: a new title is a new utterance. A lesson's utterance can be spoken only for so long
-/// (<see cref="retireAfter"/>, real seconds heard in all; 0 = as long as it applies).
-/// </summary>
-public struct TutorialCard
-{
-    public string whisper, title, body;
-    public float retireAfter;
-
-    public TutorialCard(string whisper, string title, string body, float retireAfter = 0f)
-    {
-        this.whisper = whisper;
-        this.title = title;
-        this.body = body;
-        this.retireAfter = retireAfter;
-    }
-}
-
 /// <summary>Where a lesson can be shown.</summary>
 public enum TutorialPlace { Capital, World, Anywhere }
 
 /// <summary>
-/// One mini tutorial (<see cref="Tutorials"/> shows them), spoken by the Auric Aria as floating golden words
-/// (<see cref="AuricVoice"/>). She speaks only when the player has been idle a few seconds
-/// (<see cref="Tutorials.IdleSeconds"/>) and falls silent the moment they act; she comes back at the next pause while
-/// the lesson still applies. Two kinds:
-/// - a <b>lesson</b> (<see cref="IsHint"/> false: the founding): larger words in the middle of the screen, spoken at
-///   every pause for as long as the game state calls for it;
-/// - a <b>hint</b> (the rest): smaller words under the Age banner (or above its spot on the world map), spoken at pauses
-///   until learnt: once the player does the thing (<see cref="Done"/>), presses its glowing control or ringed spot, or
-///   has heard it for <see cref="Seconds"/> in all. Learnt hints are remembered across playthroughs; one hint at a time,
-///   with a short pause after each is learnt.
+/// One mini tutorial (<see cref="Tutorials"/> shows them), spoken by the Auric Aria (<see cref="AuricWords"/>). She
+/// teaches only when the player has been idle a few seconds (<see cref="Tutorials.IdleSeconds"/>) and falls silent the
+/// moment they act; she comes back at the next pause while the lesson still applies. Two kinds:
+/// - a <b>lesson</b> (<see cref="IsHint"/> false: the founding): an announcement in the middle of the screen, at every
+///   pause for as long as the game state calls for it;
+/// - a <b>hint</b> (the rest): one line of hers low on the screen, a subtitle, at pauses until learnt: once the player
+///   does the thing (<see cref="Done"/>), presses its glowing control or ringed spot, or has heard it for
+///   <see cref="Seconds"/> in all. Learnt hints are remembered across playthroughs; one at a time, with a short pause
+///   after each is learnt.
+/// What happens in the moment (a completion, a loss) is not taught but said at once: <see cref="Watch"/> may call
+/// <see cref="AuricAria.Announce"/> or <see cref="AuricAria.Say"/>.
 /// A lesson reads the game's own state to know when it applies. Add one by deriving from this and listing it in
 /// <see cref="Tutorials.Lessons"/>.
 /// </summary>
@@ -43,8 +24,11 @@ public abstract class TutorialLesson
     /// <summary>A stable name: the key under which a hint is remembered as learnt.</summary>
     public abstract string Id { get; }
 
-    /// <summary>The words to speak now, or false when the lesson has nothing to say.</summary>
-    public abstract bool Speak(out TutorialCard card);
+    /// <summary>The words to teach now (their id names the utterance and its recorded voice), or false when there is nothing to say.</summary>
+    public abstract bool Speak(out AuricWords words);
+
+    /// <summary>Looked at every few frames during play, spoken or not: the place to notice a moment and say it at once.</summary>
+    public virtual void Watch() { }
 
     /// <summary>The control to ring with gold while she speaks (its art is traced, so an odd shape glows as it is drawn), or null.</summary>
     public virtual Graphic Target() => null;
@@ -56,7 +40,7 @@ public abstract class TutorialLesson
         return false;
     }
 
-    /// <summary>A hint (true) or a centred lesson (false).</summary>
+    /// <summary>A hint (true) or a lesson (false).</summary>
     public virtual bool IsHint => true;
 
     public virtual TutorialPlace Place => TutorialPlace.Anywhere;

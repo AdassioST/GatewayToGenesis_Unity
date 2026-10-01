@@ -8,7 +8,7 @@ using UnityEngine.TestTools;
 /// <summary>
 /// The food stores and the council's growth in the real scene: the survivors start with a cellar of dried peaches;
 /// when Food falls the stores feed the shortfall (so no one starves while they last); the council opens only the Head of
-/// State, and The Rekindling and Edicts of Stone and Bone each open one more position.
+/// State, and The Rekindling and Call and Response each open one more position.
 /// </summary>
 public class PantryPlayTests
 {
@@ -48,7 +48,7 @@ public class PantryPlayTests
         // The council: the Head of State alone, then one position per chokepoint technology.
         var government = GovernmentLogic.Instance;
         Assert.AreEqual(0, government.GetUnlockedSeatCount(), "only the Head of State at the start");
-        foreach (var technology in new[] { "The Rekindling", "Edicts of Stone and Bone" })
+        foreach (var technology in new[] { "The Rekindling", "Call and Response" })
         {
             var slot = GameUnitsLogic.Instance.GetTechnologySlot(technology);
             Assert.IsNotNull(slot, technology + " is in the tree");

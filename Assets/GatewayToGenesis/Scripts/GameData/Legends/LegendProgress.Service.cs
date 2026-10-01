@@ -46,8 +46,18 @@ public partial class LegendProgress
     // ===== IN BATTLE =====
 
     /// <summary>The legend as it fights (null when not met, lost, or missing in action).</summary>
-    public BattleLegend BattleLegendOf(string legendName) =>
-        !IsRecruited(legendName) || IsMissing(legendName) ? null : BattleLegend.Of(legendName, Soul(legendName), Bindings(legendName), Greats(legendName), Tuning);
+    public BattleLegend BattleLegendOf(string legendName)
+    {
+        if (!IsRecruited(legendName) || IsMissing(legendName)) return null;
+        var legend = BattleLegend.Of(legendName, Soul(legendName), Bindings(legendName), Greats(legendName), Tuning);
+        // It brings its personal grimoire into battle (SymphonyDecks).
+        legend.grimoire = PersonalGrimoire(legendName).ToList();
+        legend.conditions = Conditions(legendName).Select(c => c.id).ToList();
+        legend.deckEvolution = (_recruited[legendName].battleDeck ?? new BattleDeckEvolution()).Clone();
+        legend.memories = Deeds(legendName).Concat(Relationships(legendName).SelectMany(r => r.memories)).Distinct().TakeLast(12).ToList();
+        legend.piety = Math.Max(0, GameCatalog.Legends.All.FirstOrDefault(l => l.legendName == legendName)?.piety ?? 0);
+        return legend;
+    }
 
     /// <summary>
     /// What a battle did to a legend (<see cref="BattleReport.legends"/>): its fragments, its conditions, and its strain,
@@ -56,11 +66,21 @@ public partial class LegendProgress
     public void ApplyBattleFate(LegendBattleFate fate)
     {
         if (fate == null || !IsRecruited(fate.name)) return;
+        if (fate.deckEvolution != null) _recruited[fate.name].battleDeck = fate.deckEvolution.Clone();
+        if (fate.dead)
+        {
+            var record = _recruited[fate.name]; record.lost = record.battleDeath = true;
+            record.deeds.Add("Died in battle after a failed Deathblow Check");
+            var government = GovernmentLogic.Instance; var seat = government != null ? government.GetSeatWithLegend(fate.name) : null;
+            if (seat != null) government.RemoveLegendFromSeat(seat.seatIndex, bypassCooldown: true);
+            if (WorldSystem.Instance != null && WorldSystem.Instance.Map != null) WorldSystem.Instance.OnLegendLost(fate.name);
+            Lost?.Invoke(fate.name); NotifyRosterChanged(); return;
+        }
         if (fate.fragments.Count > 0) Award(fate.name, fate.fragments, fate.deed);
         else if (!string.IsNullOrEmpty(fate.deed) && _recruited.TryGetValue(fate.name, out var r)) r.deeds.Add(fate.deed);
         foreach (var c in fate.conditions) AddCondition(fate.name, c.id, c.sevenths, c.source);
-        if (fate.missing) GoMissing(fate.name, fate.missingSevenths, fate.strain, fate.section);
-        else Strain(fate.name, fate.strain, fate.won ? "the weight of battle" : "a lost battle");
+        if (fate.missing) GoMissing(fate.name, fate.missingSevenths, fate.strain, fate.section, fate.parasiticStrain);
+        else Strain(fate.name, ComposureRules.BattleStrain(Soul(fate.name).strain, fate.strain, fate.parasiticStrain, Tuning), fate.won ? "the weight of battle" : "a lost battle");
     }
 
     // ===== CONDITIONS =====
@@ -99,6 +119,25 @@ public partial class LegendProgress
 
     /// <summary>Held captive by an Atonalis (<see cref="TakeCaptive"/>): off the roster and off the map until freed.</summary>
     public bool IsCaptive(string legendName) => legendName != null && _recruited.TryGetValue(legendName, out var record) && !record.lost && record.heldBy != null;
+    public bool DiedInBattle(string legendName) => legendName != null && _recruited.TryGetValue(legendName, out var record) && record.battleDeath;
+    public IReadOnlyList<BattleDeckAlteration> FieldAlterations(string name) => IsRecruited(name) ? (_recruited[name].battleDeck ?? new BattleDeckEvolution()).alterations : (IReadOnlyList<BattleDeckAlteration>)Array.Empty<BattleDeckAlteration>();
+    public string IntegrateBattleDeckAtHome(string name, IEnumerable<string> selected)
+    {
+        if (!IsRecruited(name) || IsMissing(name)) return "Only an available Legend can integrate their experiences.";
+        var journey = WorldSystem.Instance?.ExpeditionOf(name);
+        if (journey != null)
+        {
+            var tile = WorldSystem.Instance.Map?.Get(journey.coord);
+            if (tile == null || !tile.whole || !WorldAuthority.IsPlayers(tile.authorityId) || tile.settlement < 0)
+                return "Legend Opus integration requires genuine rest at home in civilization's core territory.";
+        }
+        var record = _recruited[name]; record.battleDeck = record.battleDeck ?? new BattleDeckEvolution();
+        string why = record.battleDeck.IntegrateHome(selected); if (why != null) return why;
+        foreach (var card in record.battleDeck.alterations) record.deeds.Add("Integrated " + card.name + " into Legend Opus");
+        if (record.soul != null) record.soul.strain = Tuning.baseline;
+        if (journey != null) { journey.attrition = 0; journey.nerveLost = 0; }
+        NotifyRosterChanged(); return null;
+    }
 
     /// <summary>Who holds the legend (the captor's key), or null.</summary>
     public string CaptorOf(string legendName) => legendName != null && _recruited.TryGetValue(legendName, out var record) && !record.lost ? record.heldBy : null;
@@ -150,11 +189,12 @@ public partial class LegendProgress
     /// A legend left a doomed battle alone and is missing in action: it leaves its seat, and turns up in a settlement
     /// after <paramref name="sevenths"/> Sevenths carrying <paramref name="strainOnReturn"/>.
     /// </summary>
-    public void GoMissing(string legendName, int sevenths, float strainOnReturn, string from)
+    public void GoMissing(string legendName, int sevenths, float strainOnReturn, string from, float parasiticStrain = 0)
     {
         if (legendName == null || !_recruited.TryGetValue(legendName, out var record) || record.lost) return;
         record.missingSevenths = Math.Max(1, Math.Max(record.missingSevenths, sevenths));
         record.missingStrain += Math.Max(0f, strainOnReturn);
+        record.missingParasiticStrain += Math.Max(0f, parasiticStrain);
         record.missingFrom = from;
         record.deeds.Add($"Missing in action after {(string.IsNullOrEmpty(from) ? "a lost battle" : from)}");
         var government = GovernmentLogic.Instance;
@@ -171,7 +211,9 @@ public partial class LegendProgress
     {
         record.missingSevenths = 0;
         float strain = record.missingStrain;
+        float parasitic = record.missingParasiticStrain;
         record.missingStrain = 0f;
+        record.missingParasiticStrain = 0f;
         var world = WorldSystem.Instance != null && WorldSystem.Instance.Map != null ? WorldSystem.Instance.Map : null;
         string where = world != null ? WorldCivilization.Capital(world)?.name : null;
         where = string.IsNullOrEmpty(where) ? "one of your settlements" : where;
@@ -181,7 +223,7 @@ public partial class LegendProgress
             NotificationFeed.Topic.Council, key: "returned:" + legendName);
         Returned?.Invoke(legendName, where);
         NotifyRosterChanged();
-        Strain(legendName, strain, "came home from missing in action");
+        Strain(legendName, ComposureRules.BattleStrain(Soul(legendName).strain, strain, parasitic, Tuning), "came home from missing in action");
     }
 
     /// <summary>Once a Seventh: conditions count down, and legends missing in action come closer to home.</summary>

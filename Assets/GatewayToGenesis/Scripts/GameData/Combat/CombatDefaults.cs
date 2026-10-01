@@ -98,7 +98,7 @@ public static class CombatDefaults
         new CombatSectionSpec
         {
             id = "pathfinders", name = "Pathfinders", row = FormationRow.Support, kind = SectionKind.Support, minAge = 0,
-            technology = "Pathfinder Training",
+            technology = "Lookout Towers",
             description = "Scouts who read the ground: they win the first measure and see through ambushes.",
             integrity = 30f, composure = 30f, defense = 2f, breakthrough = 2f, speed = 5f, recon = 2f,
         },

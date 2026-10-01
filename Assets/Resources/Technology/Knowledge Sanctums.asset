@@ -14,19 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 60a1ce56aa7d614f79c7bdd47c718f8c, type: 2}
   isEventTech: 0
-  tier: 5
+  tier: 7
   satisfactionPoints: 0
   techRequirements:
   - The Rekindling
+  - Ostinato
   resourceRequirements:
   - Research
   resourceAmount:
-  - 80
+  - 3600
   enlightenedConditions:
   - type: 6
     trigger: technologies
-    requiredAmount: 10
-    description: Unlock 10 Technologies.
+    requiredAmount: 18
+    description: 'Research 18 technologies.'
   - type: 6
     trigger: species_known
     requiredAmount: 2

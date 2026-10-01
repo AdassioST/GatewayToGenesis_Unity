@@ -2,10 +2,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-// The hints of a first playthrough, in the Auric Aria's voice (<see cref="Tutorials"/>): a whisper, a title and what to
-// do, spoken at pauses until learnt, skipped for good when the player already did the thing. Mostly the world map,
-// plus the Era Score sun. Every hint is learnt by a Done, a press on
-// what glows (its control or ringed spot), any act (world-look), or by being heard out. Wording is a proposal.
+// The hints of a first playthrough, in the Auric Aria's voice (<see cref="Tutorials"/>): one line of hers each, low on
+// the screen as a subtitle, useful and in character, spoken at pauses until learnt and skipped for good when the player
+// already did the thing. Mostly the world map, plus the Era Score sun. Every hint is learnt by a Done, a press on what
+// glows (its control or ringed spot), any act (world-look), or by being heard out. Wording is a proposal.
 
 /// <summary>Shared reads for the hints.</summary>
 internal static class HintWorld
@@ -45,18 +45,24 @@ internal static class HintWorld
     public static bool InTheField(WorldUnit unit) => unit != null && (World?.Map.Get(unit.coord)?.settlement ?? 0) < 0;
 }
 
-/// <summary>Pathfinder Training opened the map: how to get there.</summary>
+/// <summary>Lookout Towers opened the map: how to get there (a reminder, after the moment was announced).</summary>
 public class WorldOpensHint : TutorialLesson
 {
+    // Real seconds after the map is first seen open before the reminder: the opening itself is announced at once.
+    private const float After = 20f;
+    private float _openSince = -1f;
+
     public override string Id => "world-opens";
     public override TutorialPlace Place => TutorialPlace.Capital;
     public override float Seconds => 14f;
     public override bool Done() => WorldView.IsOpen;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Beyond the walls, the world holds its breath", "The World Is Open", "Press M, or keep scrolling out, and walk it with me.");
-        return HintWorld.World != null && HintWorld.World.MapUnlocked;
+        words = AuricWords.Line("hint.world-opens", "(eagerly) Press M, or scroll out... and walk the world with me.");
+        if (HintWorld.World == null || !HintWorld.World.MapUnlocked) return false;
+        if (_openSince < 0f) _openSince = Time.unscaledTime;
+        return Time.unscaledTime - _openSince >= After;
     }
 }
 
@@ -68,9 +74,9 @@ public class WorldLookHint : TutorialLesson
     public override float Seconds => 9f;
     public override bool AnsweredByAnyInput => true;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("So much was lost. So much still sings.", "Behold the Land", "Drag to look around and scroll to zoom. Esc brings you home.");
+        words = AuricWords.Line("hint.world-look", "So much was lost... Drag to look, scroll to lean closer. Esc brings you home.");
         return true;
     }
 }
@@ -83,9 +89,9 @@ public class LeadPartyHint : TutorialLesson
     public override string Id => "lead-party";
     public override TutorialPlace Place => TutorialPlace.World;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Someone out there awaits your word", "Your Expedition", "Click its token to lead it.");
+        words = AuricWords.Line("hint.lead-party", "Someone out there waits for your word. Click their token.");
         var world = HintWorld.World;
         _party = world != null && WorldView.SelectedUnit == null && WorldView.SelectedTile == null ? world.ExpeditionUnits.FirstOrDefault(u => !u.Missing) : null;
         return _party != null;
@@ -101,9 +107,9 @@ public class SendPartyHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => HintWorld.World != null && HintWorld.World.ExpeditionUnits.Any(u => u.Moving && !u.autoExplore && !u.returning && !u.surveying);
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Where shall they wander?", "Send Them Onward", "Right-click the land to send them there. Zoomed in, they walk to the very hex.");
+        words = AuricWords.Line("hint.send-party", "Right-click the land, and they will go. Where shall they wander?");
         return WorldUnits.AwaitsOrders(HintWorld.SelectedParty);
     }
 }
@@ -118,9 +124,9 @@ public class RationsHint : TutorialLesson
     public override float Seconds => 14f;
     public override bool Done() => HintWorld.World != null && HintWorld.World.ExpeditionUnits.Any(u => u.returning || (u.Camping && !u.resting));
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Their packs grow light, and the road grows long", "Rations Run Short", "Make camp on fertile ground, or bring them home for rations.");
+        words = AuricWords.Line("hint.rations", "(worried) Their packs grow light... Make camp on fertile ground, or bring them home.");
         var world = HintWorld.World;
         _party = world?.ExpeditionUnits.FirstOrDefault(u =>
         {
@@ -146,9 +152,9 @@ public class SurveyHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => HintWorld.World != null && HintWorld.World.ExpeditionUnits.Any(u => u.surveying);
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Every hex hums a note of its own", "Survey the Land", "Walk every hex of this cell and learn what grows and dwells there.");
+        words = AuricWords.Line("hint.survey", "Every hex hums a note of its own. Survey here, and listen.");
         var party = HintWorld.SelectedParty;
         return party != null && !party.surveying && !party.Moving && HintWorld.InTheField(party) && Target() != null;
     }
@@ -163,9 +169,9 @@ public class HarvestHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => HintWorld.World != null && HintWorld.World.ExpeditionUnits.Any(u => u.task == UnitTask.Harvest);
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("A gift, if you will carry it", "Harvest", "Gather what is found here, then deliver it at a settlement.");
+        words = AuricWords.Line("hint.harvest", "Those hands were made for this. Harvest, then carry it home.");
         return HintWorld.SelectedParty != null && Target() != null;
     }
 
@@ -178,17 +184,17 @@ public class ClaimHint : TutorialLesson
     public override string Id => "claim";
     public override TutorialPlace Place => TutorialPlace.World;
     public override float Seconds => 14f;
-    public override bool Done() => HintWorld.World != null && HintWorld.World.Map.Claims.Count + HintWorld.World.Map.Claiming.Count > 0;
+    public override bool Done() => HintWorld.World != null && WorldTerritory.ClaimedHexes(HintWorld.World.Map) + HintWorld.World.Map.Claiming.Count > 0;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
         var world = HintWorld.World;
         if (Target() != null)
         {
-            card = new TutorialCard("The wild ground is listening", "Claim the Land", "Land bordering yours can be claimed, paid for from your stored food.");
+            words = AuricWords.Line("hint.claim", "The wild ground is listening. Claim it, hex by hex, paid from your stores.");
             return true;
         }
-        card = new TutorialCard("The wild ground is listening", "Claim the Land", "Select the wilderness beside your borders to learn what it asks of you.");
+        words = AuricWords.Line("hint.claim-select", "The wild ground is listening. Select it, beside your borders, to hear what it asks.");
         return world != null && WorldView.SelectedUnit == null && WorldView.SelectedTile == null && world.ClaimableCount() > 0;
     }
 
@@ -203,9 +209,9 @@ public class FormExpeditionHint : TutorialLesson
     public override float Seconds => 14f;
     public override bool Done() => HintWorld.World != null && HintWorld.World.ExpeditionUnits.Count() >= 2;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Another heart is ready to wander", "A New Expedition", "Select the capital to choose who leads it.");
+        words = AuricWords.Line("hint.form-expedition", "Another heart is ready to wander. Select the capital.");
         var world = HintWorld.World;
         return world != null && world.ExpeditionUnits.Any() && world.FreeExpeditionSlots > 0 && world.Candidates().Count > 0;
     }
@@ -229,9 +235,9 @@ public class RuinsHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => HintWorld.World != null && HintWorld.World.Map.Ruins.Any(r => r.investigated);
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("The fallen left their echoes behind", "Ruins", "Send an expedition to investigate what they kept.");
+        words = AuricWords.Line("hint.ruins", "(hushed) The fallen left echoes behind. Send someone to listen.");
         var world = HintWorld.World;
         _ruin = world?.Map.Ruins.FirstOrDefault(r => !r.investigated && (world.Map.Get(r.coord)?.known ?? false));
         return _ruin != null && world.ExpeditionUnits.Any();
@@ -262,9 +268,9 @@ public class LensesHint : TutorialLesson
         return WorldView.OpenPanel == "Map";
     }
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Listen to the land another way", "Map Lenses", "The Map button shows fertility, danger, authority and more.");
+        words = AuricWords.Line("hint.lenses", "Listen to the land another way. The Map button holds its lenses.");
         return _inWorld >= After && Target() != null;
     }
 
@@ -278,9 +284,9 @@ public class PartiesHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => WorldView.OpenPanel == "Units";
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("I keep count of every wanderer", "Your Parties", "Every expedition in the field, listed. The period key finds the next idle one.");
+        words = AuricWords.Line("hint.parties", "I keep count of every wanderer, here. The period key finds the idle ones.");
         return HintWorld.World != null && HintWorld.World.ExpeditionUnits.Count() >= 2 && Target() != null;
     }
 
@@ -294,11 +300,12 @@ public class RealmHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.World;
     public override bool Done() => WorldView.OpenPanel == "Realm";
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("A realm is a song that must be held in tune", "Your Realm", "See how much land your administration can hold before it strains.");
+        words = AuricWords.Line("hint.realm", "A realm is a song held in tune. See how much yours can hold.");
         var world = HintWorld.World;
-        return world != null && world.Map.Claims.Count + world.Map.Adopted.Count > 0 && Target() != null;
+        // Grown by a cell or by a single hex beyond it.
+        return world != null && (world.Map.Claims.Count + world.Map.Adopted.Count > 0 || world.Realm.hexes > 0) && Target() != null;
     }
 
     public override Graphic Target() => WorldView.DockButton("Realm");
@@ -313,9 +320,9 @@ public class EraScoreHint : TutorialLesson
     public override TutorialPlace Place => TutorialPlace.Capital;
     public override bool Done() => EraTimelineWindow.IsOpen;
 
-    public override bool Speak(out TutorialCard card)
+    public override bool Speak(out AuricWords words)
     {
-        card = new TutorialCard("Your deeds are being remembered", "Era Score", "Great deeds earn Era Score. Click the sun to read the Chronicle of them all.");
+        words = AuricWords.Line("hint.era-score", "(pleased) Your deeds are remembered. Click the sun to read them.");
         return AgeProgression.Instance != null && AgeProgression.Instance.EraScore > 0 && Target() != null;
     }
 

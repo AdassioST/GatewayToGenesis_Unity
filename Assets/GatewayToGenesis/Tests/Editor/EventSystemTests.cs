@@ -51,14 +51,14 @@ public class EventSystemTests
         var problems = new List<string>();
         var list = EventScript.ParseConsequences(
             "click_power_percent_section:Old World Remnants +15; population:population -50; population:-10; " +
-            "technology:Rites of Harvest enlightened; weather:Weeping Sky, permanent; weather:clear; unlock_event:weeping_princess.0.c-1", problems);
+            "technology:Harvest Hymns enlightened; weather:Weeping Sky, permanent; weather:clear; unlock_event:weeping_princess.0.c-1", problems);
 
         CollectionAssert.IsEmpty(problems);
         Assert.AreEqual(EventConsequence.ConsequenceType.ClickPowerPercentChangeSection, list[0].type);
         Assert.AreEqual(("Old World Remnants", 15), (list[0].targetName, list[0].value));
         Assert.AreEqual(("population", -50), (list[1].targetName, list[1].value));
         Assert.AreEqual(("population", -10), (list[2].targetName, list[2].value), "population's target is implied");
-        Assert.AreEqual((EventConsequence.ConsequenceType.TechnologyEnlightened, "Rites of Harvest"), (list[3].type, list[3].targetName));
+        Assert.AreEqual((EventConsequence.ConsequenceType.TechnologyEnlightened, "Harvest Hymns"), (list[3].type, list[3].targetName));
         Assert.AreEqual(("Weeping Sky", 1), (list[4].targetName, list[4].value), "permanent weather has value 1");
         Assert.AreEqual(("clear", 0), (list[5].targetName, list[5].value));
         Assert.AreEqual(("weeping_princess", EventConsequence.ConsequenceType.UnlockEvent), (list[6].targetName, list[6].type));
@@ -79,12 +79,12 @@ public class EventSystemTests
     public void Conditions_SupportOperatorsBareNumbersAndYesNo()
     {
         var problems = new List<string>();
-        var list = EventScript.ParseConditions("population:population >= 5; resource:Elderwood 5; technology:Efficient Rations; stat:morale <= 115; no_event_in_sevenths:2", problems);
+        var list = EventScript.ParseConditions("population:population >= 5; resource:Elderwood 5; technology:Shared Embers; stat:morale <= 115; no_event_in_sevenths:2", problems);
 
         CollectionAssert.IsEmpty(problems);
         Assert.AreEqual((EventCondition.ConditionType.PopulationCheck, ComparisonOperator.GreaterThanOrEqual, 5), (list[0].type, list[0].comparison, list[0].requiredValue));
         Assert.AreEqual(("Elderwood", ComparisonOperator.GreaterThanOrEqual, 5), (list[1].targetName, list[1].comparison, list[1].requiredValue), "a bare number means at least");
-        Assert.AreEqual(("Efficient Rations", ComparisonOperator.Equals, 1), (list[2].targetName, list[2].comparison, list[2].requiredValue), "no number means yes");
+        Assert.AreEqual(("Shared Embers", ComparisonOperator.Equals, 1), (list[2].targetName, list[2].comparison, list[2].requiredValue), "no number means yes");
         Assert.AreEqual((ComparisonOperator.LessThanOrEqual, 115), (list[3].comparison, list[3].requiredValue));
         Assert.AreEqual((EventCondition.ConditionType.NoEventInSeventhsCheck, 2), (list[4].type, list[4].requiredValue));
     }

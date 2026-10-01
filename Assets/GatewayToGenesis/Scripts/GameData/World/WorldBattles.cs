@@ -189,7 +189,7 @@ public static class WorldBattles
         var p = Profile(spec);
         float health = Math.Max(0.05f, 1f - Mathf.Clamp01(unit.attrition / 100f));
         float nerve = Math.Max(0.05f, 1f - Mathf.Clamp01(unit.nerveLost));
-        var side = new BattleSide { name = unit.name, takesCaptives = true };
+        var side = new BattleSide { name = unit.name, takesCaptives = true, stance = unit.battleStance, doctrine = unit.battleDoctrine };
         var legends = (members ?? new List<string>()).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToList();
         int parts = Math.Max(1, legends.Count);
         for (int i = 0; i < parts; i++)
@@ -204,10 +204,15 @@ public static class WorldBattles
                 attack = p.attack / parts + (legend != null ? LegendAttack : 0f),
                 defense = p.defense / parts + (legend != null ? LegendDefense : 0f),
                 breakthrough = (p.defense / parts + (legend != null ? LegendDefense : 0f)) * 0.7f,
-                piercing = 4f, speed = 4f, count = legend != null ? 1 : 0,
+                piercing = 4f, speed = 4f, count = legend != null ? 1 : Math.Max(1, spec?.populationCost ?? 1),
                 leader = legend != null ? legendOf?.Invoke(legend) : null,
             };
             sec.Reset();
+            if (sec.leader != null)
+            {
+                sec.primary = sec.leader.leitmotif;
+                sec.eliteRole = i == 0 ? BattleEliteRole.Conductor : BattleEliteRole.Legend;
+            }
             sec.integrity = sec.maxIntegrity * health;
             sec.composure = sec.maxComposure * nerve;
             side.sections.Add(sec);
@@ -224,7 +229,9 @@ public static class WorldBattles
             settlers.composure = settlers.maxComposure * nerve;
             side.sections.Add(settlers);
         }
-        side.conductor = legends.Count > 0 ? legendOf?.Invoke(legends[0]) : null;
+        side.conductor = legends.Count > 0 ? side.sections[0].leader : null;
+        BattleCompositionLogic.SplitEliteScale(side);
+        BattleCompositionLogic.Classify(side);
         return side;
     }
 
@@ -296,6 +303,7 @@ public static class WorldBattles
         field.downhill = Math.Max(0f, atkHeight - defHeight);
 
         var grid = map.microGrid;
+        bool bridge = false;
         if (grid != null)
         {
             int d = MicroNavigation.Index(map, defenderHex), a = MicroNavigation.Index(map, attackerHex);
@@ -303,6 +311,7 @@ public static class WorldBattles
             var defMarks = d >= 0 ? grid.Marks(d) : MicroGrid.Mark.None;
             var atkMarks = a >= 0 ? grid.Marks(a) : MicroGrid.Mark.None;
             bool bridged = (defMarks & MicroGrid.Mark.Road) != 0;
+            bridge = bridged && ((defMarks & fords) != 0 || (atkMarks & fords) != 0);
             field.riverCrossing = !bridged && ((defMarks & fords) != 0 || (atkMarks & fords) != 0);
         }
         else if (atkCell != null && atkCell != defCell)
@@ -310,6 +319,11 @@ public static class WorldBattles
 
         if (atkGround != null && !string.Equals(atkGround.terrain, defGround?.terrain, StringComparison.OrdinalIgnoreCase))
             field.attackerGround = combat.GroundOf(atkGround.terrain).ground;
+        BattleTerrainLogic.Project(field, atkGround, defGround, gen, combat, bridge);
+        var weather = CelestialWeatherSystemLogic.Instance;
+        if (weather != null)
+            foreach (var hex in field.hexes)
+                hex.snow |= weather.WeatherAt((BattleHexLayout.IsNative(hex.hex, true) ? atkCell : defCell)?.coord ?? defCell.coord)?.combatSnow ?? false;
         return field;
     }
 

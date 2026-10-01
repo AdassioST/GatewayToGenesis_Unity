@@ -562,3 +562,20 @@ For the vault (nothing there was changed).
   bullet ends in a stray "[[Formless Masses]]". There is no note for the **Catalytic Abyss of Emotion** (Motif
   Awakening.md and Soul Leitmotif.md define it in passing) or the **Awakened State**, whose "Spell Manifestation" and
   "Collapse and Aftermath" steps are empty.
+- **Act I technology tree and the Grimoire** (Sept 29, 2026; Docs/Planning/TECH_TREE_ACT_I.md): the 40 technology
+  names, costs, Enlightenment goals, the Symphony Card effects and flicker chances, "Grimoire", "Symphony seat" and the
+  Spell Maker's intent table are game proposals; the vault's Symphony Card.md is one sentence and Gateway To
+  Genesis.md names a "Spell Crafting System" with no note. **Ceremonial Arts** follow the owner's rule (three
+  Spellweavers doing different things, united: Resonance, Flux and Strand, one Unison each); The Registers of Magic.md
+  lists the triad but not that rule. **Echoes of Hunger** is the Act I pivot crisis: its lean-season story
+  (`desolation_echoes_of_hunger`) quotes Ages.md's "Famine cults choke the wild plains"; the rest of its prose is
+  placeholder.
+- **The Symphony of War's card layer and battle verdicts** (Sept 29, 2026; Docs/Planning/SYMPHONY_CARDS_AND_VERDICTS.md):
+  Combat System.md says the micro layer's attacks "are dictated by Symphony Cards" and that repeating the melody
+  grows the Chord Layering stack, but names no card, cost, energy or deck rule. Every card (the unit decks, the
+  expedition kits, the commanders' orders, the creatures' instincts), the word **Beat** for a measure's energy, the
+  ostinato/melody split, the personal grimoire's pages, and the seven verdicts with their thresholds are game
+  proposals. The seven leitmotif cards take their names from the Principles of Magic; the Grave Warden and Wasteland
+  Archer cards quote the owner's unit cards. Spell cards of different voices layering into one chord in the same
+  measure extends the Ceremony rule (one note each) to battle; Chord Layering.md describes one Spellweaver's pivot, not
+  an ensemble's. The **Legendary Victory** (won by hand against the forecast) has no vault note.

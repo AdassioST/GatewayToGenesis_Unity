@@ -115,6 +115,7 @@ public static class CreatureCombat
 
         int perSection = Math.Max(1, (int)Math.Ceiling(100f / body.hp));
         int count = Math.Max(1, Math.Min(maxSections, (int)Math.Ceiling(individuals / (float)perSection)));
+        if (individuals <= 10) count = individuals; // Elite encounters retain individual bodies, including small creatures.
         int left = individuals;
         for (int i = 0; i < count; i++)
         {

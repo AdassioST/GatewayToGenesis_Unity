@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Accrues a resource slot's net production once per second. Paused while an event is active,
-/// matching the rest of the simulation.
+/// Accrues a resource slot's net production once per second. Paused while an event is active or the player
+/// paused (<see cref="TimeSystemLogic.SimulationHeld"/>), matching the rest of the simulation.
 /// </summary>
 public class ProductionLogic : MonoBehaviour
 {
@@ -18,7 +18,7 @@ public class ProductionLogic : MonoBehaviour
 
     private void PassiveProduction()
     {
-        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive()) return;
+        if (TimeSystemLogic.SimulationHeld) return;
         if (resourceSlot == null || resourceSlot.productionRate == 0f) return;
         float oldAmount = resourceSlot.amount;
         resourceSlot.ChangeAmount(resourceSlot.productionRate * tickSeconds);

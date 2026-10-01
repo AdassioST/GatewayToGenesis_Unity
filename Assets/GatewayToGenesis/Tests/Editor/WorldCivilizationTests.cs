@@ -437,7 +437,7 @@ public class WorldCivilizationTests
         map.ExploreAround(capital.coord, 3, 4, id => settings.Terrain(id)?.passable != false);
         Assert.IsNull(WorldAuthority.WhyNotClaim(map, near), "explored and bordering the Capital");
         var far = map.Tiles.First(t => t.explored && !t.water && !t.impassable && t.authorityId == WorldAuthority.Wilderness && HexCoord.Distance(t.coord, capital.coord) == 2);
-        Assert.AreEqual("It must border your authority.", WorldAuthority.WhyNotClaim(map, far));
+        Assert.AreEqual("No hex of it borders land you hold.", WorldAuthority.WhyNotClaim(map, far));
 
         map.Claims.Add(near.index);
         WorldCivilization.Rebuild(map, settings);
@@ -445,6 +445,6 @@ public class WorldCivilizationTests
         Assert.AreEqual(WorldAuthority.ClaimedReach, near.administrativeAuthority, 1e-5f);
         Assert.AreEqual("It is already yours.", WorldAuthority.WhyNotClaim(map, near));
         if (map.NeighboursOf(near).Contains(far)) Assert.IsNull(WorldAuthority.WhyNotClaim(map, far), "a claim extends the border");
-        Assert.AreEqual(1.2f, WorldAuthority.ClaimScale(2, 0.1f), 1e-5f, "each claim raises the next one's cost");
+        Assert.AreEqual(1.2f, WorldAuthority.ClaimScale(2, 0.1f), 1e-5f, "each cell's worth claimed raises the next claim's cost");
     }
 }

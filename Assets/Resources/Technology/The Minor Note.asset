@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: The Minor Note
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: bf2589a1c372056b0d4a5eec0c57b7ae, type: 2}
+  isEventTech: 0
+  tier: 4
+  satisfactionPoints: 0
+  techRequirements:
+  - Staccato
+  - Horology
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 2250
+  enlightenedConditions:
+  - type: 6
+    trigger: 'legends_met'
+    requiredAmount: 1
+    description: 'Meet a Legend.'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: df60177d47dc3000627104ace364d169, type: 2}
+  - {fileID: 11400000, guid: 33267c55a103447c8662a5108ba8a32e, type: 2}

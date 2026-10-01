@@ -10,6 +10,15 @@ using UnityEngine.UI;
 /// </summary>
 public static class CodeUI
 {
+    /// <summary>Keep a fixed-design modal inside its canvas, including narrower aspect ratios.</summary>
+    public static void FitModal(RectTransform panel, float margin = 32f)
+    {
+        if (panel == null || !(panel.parent is RectTransform parent)) return;
+        float scale = Mathf.Min(1f, (parent.rect.width - margin) / panel.sizeDelta.x,
+            (parent.rect.height - margin) / panel.sizeDelta.y);
+        panel.localScale = Vector3.one * Mathf.Max(0.1f, scale);
+    }
+
     public static TooltipTheme Theme(string requester) => GameCatalog.UiThemes.Get("TooltipTheme", requester);
 
     /// <summary>An overlay canvas <paramref name="belowTooltips"/> orders under the tooltips' canvas, scaled like it.</summary>
@@ -128,10 +137,11 @@ public static class CodeUI
         colors.normalColor = Color.white;
         colors.highlightedColor = new Color(1f, 0.96f, 0.82f);
         colors.pressedColor = new Color(0.85f, 0.8f, 0.7f);
-        colors.selectedColor = Color.white;
+        colors.selectedColor = new Color(1f, 0.92f, 0.64f);
         colors.disabledColor = new Color(0.55f, 0.52f, 0.5f, 0.8f);
         button.colors = colors;
         button.onClick.AddListener(() => onClick());
+        UiFocus.Ensure(button);
         return label;
     }
 

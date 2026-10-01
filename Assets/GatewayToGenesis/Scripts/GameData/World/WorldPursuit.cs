@@ -190,6 +190,7 @@ public static class WorldPursuit
         }
         var s = Species(gen, u);
         u.identity = IdentityOf(u, s);
+        if (s != null) { u.majorEncounter |= s.majorEncounter; u.boss |= s.boss; u.decisiveEncounter |= s.decisiveEncounter; u.originalEight |= s.originalEight; u.battleObjective = u.battleObjective ?? s.battleObjective; }
         u.intelligence = IntelligenceOf(u.identity, s);
         u.response = s == null ? ThreatResponse.DefendsWhenThreatened : WorldBehavior.Nature(s);
         if (Fearful(u.response) && u.stance == EnemyStance.Wary) u.stance = EnemyStance.Timid;

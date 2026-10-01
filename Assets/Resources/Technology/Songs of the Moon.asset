@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 1ff2995217e4008baa3a1329407b10fe, type: 2}
   isEventTech: 0
-  tier: 8
+  tier: 10
   satisfactionPoints: 0
   techRequirements:
-  - Celestial Astrology
+  - Reading the Vital Winds
   resourceRequirements:
   - Research
   resourceAmount:
-  - 110
+  - 4800
   enlightenedConditions:
   - type: 3
     trigger: Glimmerfern
@@ -34,3 +34,4 @@ MonoBehaviour:
     clueAmount: 3
   techUnlockables:
   - {fileID: 11400000, guid: 525a77e93755d98d50fc695769f73d56, type: 2}
+  - {fileID: 11400000, guid: 539b346d24c25a237d061718a8d6793a, type: 2}

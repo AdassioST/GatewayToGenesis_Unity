@@ -83,22 +83,43 @@ public sealed class SaveMenu : MonoBehaviour
                 if (raycaster.enabled && !raycaster.transform.IsChildOf(transform)) { raycaster.enabled = false; blocked.Add(raycaster); }
         }
         else if (blocked.Count > 0) { foreach (var raycaster in blocked) if (raycaster != null) raycaster.enabled = true; blocked.Clear(); }
-        if (SaveSession.Storage != null && Time.unscaledTime >= nextScan)
+        // Only the menu shows restored copies of a severed world: it reads every file in the Saves folder, so never in play.
+        if (visible && SaveSession.Storage != null && Time.unscaledTime >= nextScan)
         {
             nextScan = Time.unscaledTime + 2;
             try { SaveSession.ScanRetired(); }
             catch (Exception e) { message = "Cosmetic identity check: " + e.Message; }
         }
+        if (autosave != null && autosave.IsCompleted) FinishAutosave();
         if (playable && !visible && !busy)
         {
             SaveSession.Current.playSeconds += Time.unscaledDeltaTime;
             int minutes = GameSettings.AutosaveMinutes;
-            if (minutes > 0 && Time.unscaledTime >= nextAutosave && !(EventSystemLogic.Instance?.IsEventActive() ?? false))
+            if (minutes > 0 && autosave == null && Time.unscaledTime >= nextAutosave && !(EventSystemLogic.Instance?.IsEventActive() ?? false))
             {
                 nextAutosave = Time.unscaledTime + minutes * 60f;
-                Try(Save, quiet: true);
+                // The world is captured this frame; the disk write runs on a worker thread.
+                try { autosave = SaveSession.SaveInBackground(); }
+                catch (Exception e) { Open(); message = e.Message; }
             }
         }
+    }
+
+    // The autosave being written to disk (null: none).
+    private System.Threading.Tasks.Task autosave;
+
+    private void FinishAutosave()
+    {
+        var done = autosave;
+        autosave = null;
+        if (done.IsFaulted)
+        {
+            if (!visible) Open();
+            message = done.Exception?.GetBaseException().Message ?? "The autosave failed.";
+            return;
+        }
+        savedAt = Time.unscaledTime;
+        RememberCurrentSlot();
     }
 
     // ===== ACTIONS (MenuView) =====
@@ -111,6 +132,7 @@ public sealed class SaveMenu : MonoBehaviour
         previousScale = Time.timeScale;
         Time.timeScale = 0;
         message = "";
+        nextScan = 0;
         RefreshSlots();
     }
 
@@ -128,6 +150,7 @@ public sealed class SaveMenu : MonoBehaviour
     {
         SaveSession.Save();
         savedAt = Time.unscaledTime;
+        RememberCurrentSlot();
     }
 
     public void NewUniverse(string name) => Begin(null, string.IsNullOrWhiteSpace(name) ? "Arcanoria" : name.Trim());
@@ -145,6 +168,7 @@ public sealed class SaveMenu : MonoBehaviour
 
     public void Delete(string id) => Try(() =>
     {
+        SaveSession.FinishWriting();
         SaveSession.Storage.Delete(id);
         if (SaveSession.Current?.identity.id == id) { playable = false; SaveSession.Current = null; }
     });
@@ -180,18 +204,37 @@ public sealed class SaveMenu : MonoBehaviour
 
     public void RemoveRetiredCopies() => Try(SaveSession.RemoveRetiredCopies);
 
+    // Each slot as last read, with its file's stamp: a file not written since is not read again.
+    private readonly Dictionary<string, ((long, long) stamp, Slot slot)> slotCache = new Dictionary<string, ((long, long), Slot)>();
+
+    // The world just saved is listed from memory (reading it back would decrypt and parse the whole file).
+    private void RememberCurrentSlot()
+    {
+        var save = SaveSession.Current;
+        if (save == null || SaveSession.Storage == null) return;
+        string id = save.identity.id;
+        try { slotCache[id] = (SaveSession.Storage.Stamp(id), new Slot { id = id, name = save.name, savedUtc = save.savedUtc, anchors = save.rewards.Balance, playSeconds = save.playSeconds }); }
+        catch (Exception) { slotCache.Remove(id); }
+    }
+
     public void RefreshSlots()
     {
         slots.Clear();
         if (SaveSession.Storage == null) return;
+        SaveSession.FinishWriting();
         foreach (string id in SaveSession.Storage.Slots())
         {
+            var stamp = SaveSession.Storage.Stamp(id);
+            if (slotCache.TryGetValue(id, out var cached) && cached.stamp == stamp) { slots.Add(cached.slot); continue; }
+            Slot slot;
             try
             {
-                var save = SaveSession.Read(id);
-                slots.Add(new Slot { id = id, name = save.name, savedUtc = save.savedUtc, anchors = save.rewards.Balance, playSeconds = save.playSeconds });
+                var save = SaveSession.ReadHeader(id);
+                slot = new Slot { id = id, name = save.name, savedUtc = save.savedUtc, anchors = save.rewards.Balance, playSeconds = save.playSeconds };
             }
-            catch (Exception e) { slots.Add(new Slot { id = id, name = id, error = e.Message }); }
+            catch (Exception e) { slot = new Slot { id = id, name = id, error = e.Message }; }
+            slotCache[id] = (stamp, slot);
+            slots.Add(slot);
         }
         // Newest first (saved times are ISO strings).
         slots.Sort((a, b) => string.CompareOrdinal(b.savedUtc ?? "", a.savedUtc ?? ""));
@@ -265,5 +308,5 @@ public sealed class SaveMenu : MonoBehaviour
     }
 
     private void OnApplicationPause(bool pause) { if (pause && playable && !busy) Try(Save, quiet: true); }
-    private void OnApplicationQuit() { if (playable && !busy) Try(Save, quiet: true); }
+    private void OnApplicationQuit() { SaveSession.FinishWriting(); if (playable && !busy) Try(Save, quiet: true); }
 }

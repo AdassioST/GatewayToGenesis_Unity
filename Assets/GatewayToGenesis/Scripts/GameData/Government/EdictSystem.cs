@@ -9,7 +9,7 @@ using UnityEngine;
 /// saved whole (<see cref="_state"/> in GameSnapshot.Schema), shown in the Government tab (<see cref="EdictsSection"/>).
 ///
 /// - Established once the council holds <see cref="EdictTuning.minCouncilSeats"/> seats counting the Head of State (the
-///   third opens with Edicts of Stone and Bone). Until then the realm keeps its customs: nothing here applies.
+///   third opens with Call and Response). Until then the realm keeps its customs: nothing here applies.
 /// - Stances: one option always in force per stance. Each leans a pillar (moving the political compass, so the laws
 ///   shape the government type), gives its effects, and sets levers other systems read (<see cref="Levers"/>:
 ///   arrivals, the roofless, births, caravans, and the Realm's border policy). A changed stance stands a Phase.

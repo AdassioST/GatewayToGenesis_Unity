@@ -6,8 +6,8 @@ using UnityEngine.UI;
 /// The Auric Aria speaking (<see cref="Tutorials"/>): words that float with nothing behind them, as a voice would, and
 /// are themselves made of light. The letters carry the celestial look: each glows with its own soft gold (the font's
 /// distance-field glow, breathing), keeps a faint shadow of its own for legibility, and twinkles on its own rhythm like
-/// a star, now and then flaring toward white. A voice has layered lines (a whisper, a title, the words that teach) plus
-/// ornaments (a gold rule under the title). Each letter condenses out of starlight in turn, line after line: it begins
+/// a star, now and then flaring toward white. A voice has layered lines (an announcement's whisper, title and words, or
+/// a subtitle's one line) plus ornaments (a gold rule under the title or the subtitle). Each letter condenses out of starlight in turn, line after line: it begins
 /// large, faint and a little above its place, and slowly settles. Afterwards a slow wave runs through every line and a
 /// shimmer from pale to deep gold travels with it. Built on the old WobblyText (per-vertex waves on a TMP mesh),
 /// rebuilt for a divine voice. With Reduce Motion the words keep still and only glow. Nothing here catches clicks.
@@ -29,9 +29,12 @@ public class AuricVoice : MonoBehaviour
     // A letter's own twinkle: its slowest and fastest (radians a second), how much it dims between flares, and how
     // sharp and bright a flare is.
     private const float TwinkleSlow = 0.7f, TwinkleFast = 2.1f, TwinkleDepth = 0.18f, FlareSharpness = 14f, FlareWhite = 0.55f;
-    // The words condense out of the air: seconds between two letters, the longest the whole voice takes, seconds for one
-    // letter to settle, how large it begins, and how far above its place (share of the font size).
-    private const float RevealPerLetter = 0.035f, RevealLongest = 3f, SettleSeconds = 1.6f, BeginScale = 1.45f, DescendFrom = 0.3f;
+    // The words condense out of the air: the longest the whole voice takes, seconds for one letter to settle, how large it
+    // begins, and how far above its place (share of the font size).
+    private const float RevealLongest = 3f, SettleSeconds = 1.6f, BeginScale = 1.45f, DescendFrom = 0.3f;
+
+    /// <summary>Seconds between two letters condensing (a subtitle speaks quicker than an announcement).</summary>
+    public float RevealPerLetter { get; set; } = 0.035f;
 
     private TMP_Text[] _lines = new TMP_Text[0];
     private Color[] _tints = new Color[0];
@@ -45,7 +48,7 @@ public class AuricVoice : MonoBehaviour
 
     /// <summary>
     /// Give the voice its lines, in speaking order, each with a tint over its gold (alpha dims a line), and ornaments
-    /// that appear once the line before them (<paramref name="ornamentAfter"/>: index into the lines) is spoken. The
+    /// that appear once the line before them (<paramref name="ornamentAfter"/>: index into the lines, -1 as she begins) is spoken. The
     /// lines share one glowing material.
     /// </summary>
     public void Bind(TMP_Text[] lines, Color[] tints, Graphic[] ornaments = null, int[] ornamentAfter = null)
@@ -138,6 +141,7 @@ public class AuricVoice : MonoBehaviour
         float per = total > 0 ? Mathf.Min(RevealPerLetter, RevealLongest / total) : 0f;
         float light = Mathf.Lerp(LowestLight, 1f, breath);
         int spoken = 0;
+        Unfold(-1, 0, per, now, breath, still);
         for (int l = 0; l < _lines.Length; l++)
         {
             var line = _lines[l];
@@ -146,17 +150,25 @@ public class AuricVoice : MonoBehaviour
                 Animate(line, l, l < _tints.Length ? _tints[l] : Color.white, now, spoken, per, light, still);
                 spoken += line.textInfo.characterCount;
             }
-            // The ornaments after this line unfold as it finishes.
-            for (int o = 0; o < _ornaments.Length; o++)
-            {
-                if (o >= _ornamentAfter.Length || _ornamentAfter[o] != l || _ornaments[o] == null) continue;
-                float settle = still ? 1f : Smooth(Mathf.Clamp01((now - _saidAt - spoken * per) / SettleSeconds));
-                var c = _ornaments[o].color;
-                _ornaments[o].color = new Color(c.r, c.g, c.b, settle * Mathf.Lerp(0.45f, 0.9f, breath));
-                _ornaments[o].rectTransform.localScale = new Vector3(Mathf.Lerp(0.1f, 1f, settle), 1f, 1f);
-            }
+            Unfold(l, spoken, per, now, breath, still);
         }
     }
+
+    // The ornaments after line <paramref name="after"/> unfold as it finishes (-1: as she begins), dimmed by their own tint.
+    private void Unfold(int after, int spoken, float per, float now, float breath, bool still)
+    {
+        for (int o = 0; o < _ornaments.Length; o++)
+        {
+            if (o >= _ornamentAfter.Length || _ornamentAfter[o] != after || _ornaments[o] == null) continue;
+            float settle = still ? 1f : Smooth(Mathf.Clamp01((now - _saidAt - spoken * per) / SettleSeconds));
+            var c = _ornaments[o].color;
+            _ornaments[o].color = new Color(c.r, c.g, c.b, settle * Mathf.Lerp(0.45f, 0.9f, breath) * OrnamentLight);
+            _ornaments[o].rectTransform.localScale = new Vector3(Mathf.Lerp(0.1f, 1f, settle), 1f, 1f);
+        }
+    }
+
+    /// <summary>How bright the ornaments are at the height of a breath (a subtitle's rule is fainter than a title's).</summary>
+    public float OrnamentLight { get; set; } = 1f;
 
     // One line: its letters condensing after the letters before it, then carried on the wave, each twinkling.
     private void Animate(TMP_Text text, int lineIndex, Color tint, float now, int before, float per, float light, bool still)

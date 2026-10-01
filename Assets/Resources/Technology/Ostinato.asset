@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Ostinato
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: f3f9eb2d0bff470a73f1878595289086, type: 2}
+  isEventTech: 1
+  tier: 5
+  satisfactionPoints: 0
+  techRequirements:
+  - The Minor Note
+  - Harvest Hymns
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 2700
+  enlightenedConditions:
+  - type: 0
+    trigger: 'Food'
+    requiredAmount: 1000
+    description: 'Collect 1000 Food from Clicks'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 6e98c665e89fa481b7e13f8f82779961, type: 2}
+  - {fileID: 11400000, guid: dfa234d1058c5b48fb0a49ae2ab3c557, type: 2}
+  - {fileID: 11400000, guid: 680f07ca035b65b1638ac21858fd44ff, type: 2}

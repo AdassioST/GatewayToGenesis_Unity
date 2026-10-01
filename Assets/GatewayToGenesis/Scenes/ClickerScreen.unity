@@ -1107,7 +1107,7 @@ MonoBehaviour:
   foodThreshold: 12
   starvationRecoveryRate: 0.05
   vagrantToPopulationRate: 4
-  researchPerPopulation: 100
+  researchPerPopulation: 0.5
   foodDemandBuffer: -2.5
   demandRateConstant: 0.03
   sustainabilityTier: 1

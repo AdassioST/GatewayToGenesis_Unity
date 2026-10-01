@@ -6,8 +6,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// The keys the player can rebind (Options, Controls): the hotkeys of <c>PlayerControls.inputactions</c> (tabs, Library,
-/// world map), read through <see cref="GameInput"/>, plus the world map's own keys kept in a small action map here
-/// (the next idle party). Escape stays the key that backs out and opens the menu. Overrides are saved in PlayerPrefs
+/// world map), read through <see cref="GameInput"/>, plus keys kept in a small action map here
+/// (the world map's next idle party, Space to pause time). Escape stays the key that backs out and opens the menu. Overrides are saved in PlayerPrefs
 /// and laid over every new <see cref="PlayerControls"/> (one is made with each scene). Rebinding a key already in use
 /// swaps the two.
 /// </summary>
@@ -33,6 +33,7 @@ public static class KeyBindings
         new Entry { id = "library", name = "White-Haven Library", group = "Capital" },
         new Entry { id = "map", name = "World map", group = "World" },
         new Entry { id = "next-idle", name = "Next idle party", group = "World" },
+        new Entry { id = "pause", name = "Pause / resume time", group = "Always" },
         new Entry { id = "cancel", name = "Back / menu", group = "Always", locked = true },
         new Entry { id = "gather", name = "Gather, select", group = "Mouse", locked = true, fixedKeys = "Left click" },
         new Entry { id = "send", name = "Send the selected party", group = "Mouse", locked = true, fixedKeys = "Right click" },
@@ -73,6 +74,7 @@ public static class KeyBindings
             if (_world != null) return _world;
             _world = new InputActionMap("World");
             _world.AddAction("NextIdleParty", InputActionType.Button, "<Keyboard>/period");
+            _world.AddAction("Pause", InputActionType.Button, "<Keyboard>/space");
             try
             {
                 string json = PlayerPrefs.GetString(ExtraKey, string.Empty);
@@ -97,6 +99,7 @@ public static class KeyBindings
             case "map": return _asset?.FindAction("DefaultControls/Map");
             case "cancel": return _asset?.FindAction("DefaultControls/Cancel");
             case "next-idle": return World.FindAction("NextIdleParty");
+            case "pause": return World.FindAction("Pause");
             default: return null;
         }
     }
@@ -122,6 +125,9 @@ public static class KeyBindings
 
     /// <summary>The next-idle-party key went down this frame (not while a menu or a text field has the keyboard).</summary>
     public static bool NextIdlePartyPressed => !SaveMenu.BlocksGameplay && !Busy && !GameInput.IsTyping && World.FindAction("NextIdleParty").WasPressedThisFrame();
+
+    /// <summary>The pause key went down this frame (not while a menu or a text field has the keyboard).</summary>
+    public static bool PausePressed => !SaveMenu.BlocksGameplay && !Busy && !GameInput.IsTyping && World.FindAction("Pause").WasPressedThisFrame();
 
     /// <summary>
     /// Listen for the next key for <paramref name="id"/> (Escape cancels). <paramref name="done"/> gets a line to show:

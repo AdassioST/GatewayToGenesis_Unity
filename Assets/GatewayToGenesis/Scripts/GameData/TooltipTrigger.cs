@@ -9,7 +9,7 @@ using UnityEngine.EventSystems;
 /// is hidden (an invisible technology) shows nothing. <see cref="TooltipSystemLogic"/> keeps an open
 /// tooltip up to date, so sources never push refreshes themselves.
 /// </summary>
-public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
 {
     public bool useCustomTooltip, isBreakdownDisplay, isProductionModifiers;
 
@@ -94,6 +94,9 @@ public class TooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         var system = TooltipSystemLogic.Instance;
         if (system != null) system.Exit(this, eventData.pointerCurrentRaycast.gameObject);
     }
+
+    public void OnSelect(BaseEventData eventData) => TooltipSystemLogic.Instance?.ShowFocused(this);
+    public void OnDeselect(BaseEventData eventData) => TooltipSystemLogic.Instance?.ReleaseFocus(this);
 
     private void OnDisable()
     {

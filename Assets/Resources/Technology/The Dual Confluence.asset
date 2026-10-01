@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: The Dual Confluence
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 5179e63c06361c7349baaf8783707196, type: 2}
+  isEventTech: 0
+  tier: 11
+  satisfactionPoints: 0
+  techRequirements:
+  - Songs of the Moon
+  - Chants of Ash
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 5400
+  enlightenedConditions:
+  - type: 3
+    trigger: 'Lunehymn'
+    requiredAmount: 30
+    description: 'Store 30 Lunehymn'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  - type: 3
+    trigger: 'Aetherlight'
+    requiredAmount: 30
+    description: 'Store 30 Aetherlight'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 6e98c665e89fa481b7e13f8f82779961, type: 2}

@@ -15,16 +15,23 @@ MonoBehaviour:
   gameUnit: {fileID: 11400000, guid: 95ac8110f691179418a16466d35184cc, type: 2}
   isEventTech: 1
   tier: 3
+  satisfactionPoints: 0
   techRequirements:
-  - Rites of Harvest
+  - Harvest Hymns
+  - Staccato
   resourceRequirements:
   - Research
   resourceAmount:
-  - 80
-  eurekaConditions:
-  - type: 1
-    trigger: Ancient Windmill
+  - 2100
+  enlightenedConditions:
+  - type: 6
+    trigger: 'births'
     requiredAmount: 1
-    description: Construct an Ancient Windmill.
+    description: 'Hear the first cry: the first child born to your people.'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
   techUnlockables:
   - {fileID: 11400000, guid: 2bc949d230da6944192882a761c18e72, type: 2}

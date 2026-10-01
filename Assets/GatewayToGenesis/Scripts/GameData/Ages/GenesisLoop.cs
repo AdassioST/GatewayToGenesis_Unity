@@ -22,13 +22,15 @@ public static class GenesisLoop
         _host.AddComponent<EdictSystem>();
         _host.AddComponent<WorldSystem>();
         _host.AddComponent<AgeBanner>();
+        _host.AddComponent<TimeFlowHud>();
         _host.AddComponent<WorldView>();
         _host.AddComponent<EraScoreHud>();
         _host.AddComponent<CultureHud>();
         _host.AddComponent<NotificationFeed>();
         _host.AddComponent<BalladActorsView>();
         _host.AddComponent<BalladJournalView>();
-        _host.AddComponent<BestiaryHud>();
+        _host.AddComponent<QuickActionsHud>();
+        _host.AddComponent<UiNavigation>();
         _host.AddComponent<Tutorials>();
         _host.AddComponent<PopulationHealth>();
         _host.AddComponent<SpeciesLoreKeeper>();

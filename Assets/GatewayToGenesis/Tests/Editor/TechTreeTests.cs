@@ -10,45 +10,81 @@ using NUnit.Framework;
 /// </summary>
 public class TechTreeTests
 {
+    // The Act I tree (Docs/Planning/TECH_TREE_ACT_I.md): 40 technologies in three lanes, Hearth (row 0), Stone (row 1)
+    // and Song (row 2). TheAuthoredTreeIsTheOneTested checks this copy against Resources/Technology.
     private static readonly Dictionary<string, string[]> Needs = new Dictionary<string, string[]>
     {
         { "Reconstruction", new string[0] },
-        { "Woodcraft Mastery", new[] { "Reconstruction" } },
-        { "Efficient Rations", new[] { "Reconstruction" } },
-        { "Rites of Harvest", new[] { "Woodcraft Mastery", "Efficient Rations" } },
-        { "Agricultural Renewal", new[] { "Efficient Rations" } },
-        { "Horology", new[] { "Rites of Harvest" } },
-        { "Pathfinder Training", new[] { "Woodcraft Mastery", "Rites of Harvest" } },
-        { "Resource Storage", new[] { "Agricultural Renewal" } },
-        { "The Rekindling", new[] { "Horology", "Pathfinder Training" } },
-        { "Advanced Woodworking", new[] { "The Rekindling" } },
-        { "Knowledge Sanctums", new[] { "The Rekindling" } },
-        { "Resource Preservation", new[] { "Advanced Woodworking", "Resource Storage" } },
-        { "Edicts of Stone and Bone", new[] { "Advanced Woodworking" } },
-        { "Celestial Astrology", new[] { "Edicts of Stone and Bone" } },
-        { "Vital Winds Mastery", new[] { "Knowledge Sanctums" } },
-        { "Chants of Ash", new[] { "Celestial Astrology" } },
-        { "Songs of the Moon", new[] { "Celestial Astrology" } },
-        { "Fortified Living", new[] { "Vital Winds Mastery", "Celestial Astrology" } },
-        { "Unsustainable Growth", new[] { "Songs of the Moon", "Chants of Ash", "Fortified Living" } },
-        { "Echoes of Hunger", new[] { "Unsustainable Growth" } },
+        { "Shared Embers", new[] { "Reconstruction" } },
+        { "Elderwood Felling", new[] { "Reconstruction" } },
+        { "The Ruin-Song", new[] { "Reconstruction" } },
+        { "Harvest Hymns", new[] { "Shared Embers", "Elderwood Felling" } },
+        { "Colonnade Salvage", new[] { "Elderwood Felling", "The Ruin-Song" } },
+        { "Staccato", new[] { "The Ruin-Song", "Shared Embers" } },
+        { "Root-Digging", new[] { "Harvest Hymns" } },
+        { "Ash-Cellars", new[] { "Colonnade Salvage" } },
+        { "Horology", new[] { "Harvest Hymns", "Staccato" } },
+        { "Earth-Bean Rows", new[] { "Root-Digging" } },
+        { "Lookout Towers", new[] { "Ash-Cellars" } },
+        { "The Minor Note", new[] { "Staccato", "Horology" } },
+        { "Trapper's Patience", new[] { "Earth-Bean Rows", "Lookout Towers" } },
+        { "Peat and Kiln", new[] { "Lookout Towers" } },
+        { "Ostinato", new[] { "The Minor Note", "Harvest Hymns" } },
+        { "Midwives' Lullaby", new[] { "Earth-Bean Rows", "The Minor Note" } },
+        { "The Rekindling", new[] { "Lookout Towers", "Horology" } },
+        { "Unison", new[] { "Ostinato", "The Minor Note" } },
+        { "Wild Honey Keeping", new[] { "Trapper's Patience" } },
+        { "Heartwood Joinery", new[] { "Peat and Kiln", "The Rekindling" } },
+        { "Knowledge Sanctums", new[] { "The Rekindling", "Ostinato" } },
+        { "Salt and Smoke", new[] { "Wild Honey Keeping", "Heartwood Joinery" } },
+        { "Stonebound Walls", new[] { "Heartwood Joinery" } },
+        { "Call and Response", new[] { "Knowledge Sanctums", "The Rekindling" } },
+        { "Reading the Vital Winds", new[] { "Knowledge Sanctums", "Wild Honey Keeping" } },
+        { "Old World Roads", new[] { "Stonebound Walls" } },
+        { "The Seventh Degree", new[] { "Call and Response", "Unison" } },
+        { "Songs of the Moon", new[] { "Reading the Vital Winds" } },
+        { "Chants of Ash", new[] { "Old World Roads" } },
+        { "The Stave of Stars", new[] { "The Seventh Degree", "Call and Response" } },
+        { "Moonlit Vigil", new[] { "Songs of the Moon", "Midwives' Lullaby" } },
+        { "Sky Glass Burials", new[] { "Chants of Ash", "The Stave of Stars" } },
+        { "The Dual Confluence", new[] { "Songs of the Moon", "Chants of Ash" } },
+        { "Golden Orchard Belts", new[] { "Salt and Smoke" } },
+        { "Golden Ash", new[] { "Chants of Ash" } },
+        { "Fermata", new[] { "The Dual Confluence", "The Stave of Stars" } },
+        { "Unsustainable Growth", new[] { "Moonlit Vigil", "Sky Glass Burials", "Salt and Smoke" } },
+        { "Da Capo", new[] { "Fermata" } },
+        { "Echoes of Hunger", new[] { "Unsustainable Growth", "Da Capo" } },
     };
 
-    // (column, row) of each technology in the research tab's grid.
-    private static readonly Dictionary<string, (int column, int row)> Cells = new Dictionary<string, (int, int)>
+    // (column, row) of each technology in AgeTechnology.prefab: column = tier, row = lane; Reconstruction and Echoes of
+    // Hunger stand alone in the middle row.
+    private static readonly Dictionary<string, (int column, int row)> Cells = Needs.Keys.ToDictionary(t => t, t => Tier(t));
+
+    private static (int column, int row) Tier(string technology)
     {
-        { "Reconstruction", (0, 1) },
-        { "Woodcraft Mastery", (1, 1) }, { "Efficient Rations", (1, 2) },
-        { "Rites of Harvest", (2, 0) }, { "Agricultural Renewal", (2, 2) },
-        { "Horology", (3, 0) }, { "Pathfinder Training", (3, 1) }, { "Resource Storage", (3, 2) },
-        { "The Rekindling", (4, 1) },
-        { "Advanced Woodworking", (5, 0) }, { "Knowledge Sanctums", (5, 2) },
-        { "Resource Preservation", (6, 0) }, { "Edicts of Stone and Bone", (6, 1) },
-        { "Celestial Astrology", (7, 1) }, { "Vital Winds Mastery", (7, 2) },
-        { "Chants of Ash", (8, 0) }, { "Songs of the Moon", (8, 1) }, { "Fortified Living", (8, 2) },
-        { "Unsustainable Growth", (9, 1) },
-        { "Echoes of Hunger", (10, 1) },
-    };
+        string[][] columns =
+        {
+            new[] { null, "Reconstruction", null },
+            new[] { "Shared Embers", "Elderwood Felling", "The Ruin-Song" },
+            new[] { "Harvest Hymns", "Colonnade Salvage", "Staccato" },
+            new[] { "Root-Digging", "Ash-Cellars", "Horology" },
+            new[] { "Earth-Bean Rows", "Lookout Towers", "The Minor Note" },
+            new[] { "Trapper's Patience", "Peat and Kiln", "Ostinato" },
+            new[] { "Midwives' Lullaby", "The Rekindling", "Unison" },
+            new[] { "Wild Honey Keeping", "Heartwood Joinery", "Knowledge Sanctums" },
+            new[] { "Salt and Smoke", "Stonebound Walls", "Call and Response" },
+            new[] { "Reading the Vital Winds", "Old World Roads", "The Seventh Degree" },
+            new[] { "Songs of the Moon", "Chants of Ash", "The Stave of Stars" },
+            new[] { "Moonlit Vigil", "Sky Glass Burials", "The Dual Confluence" },
+            new[] { "Golden Orchard Belts", "Golden Ash", "Fermata" },
+            new[] { "Unsustainable Growth", null, "Da Capo" },
+            new[] { null, "Echoes of Hunger", null },
+        };
+        for (int c = 0; c < columns.Length; c++)
+            for (int r = 0; r < 3; r++)
+                if (columns[c][r] == technology) return (c, r);
+        throw new KeyNotFoundException(technology);
+    }
 
     // Like TechnologyTreeLogic.Prerequisites: null for a technology that exists nowhere.
     private static IEnumerable<string> Prerequisites(string technology) => Needs.TryGetValue(technology, out var before) ? before : null;
@@ -65,9 +101,9 @@ public class TechTreeTests
     {
         var researched = new HashSet<string>();
         Assert.AreEqual(TechVisibility.Available, See("Reconstruction", researched));
-        Assert.AreEqual(TechVisibility.Preview, See("Woodcraft Mastery", researched), "one step past what can be researched shows, locked");
-        Assert.AreEqual(TechVisibility.Preview, See("Efficient Rations", researched));
-        Assert.AreEqual(TechVisibility.Hidden, See("Rites of Harvest", researched), "two steps away stays hidden");
+        Assert.AreEqual(TechVisibility.Preview, See("Elderwood Felling", researched), "one step past what can be researched shows, locked");
+        Assert.AreEqual(TechVisibility.Preview, See("Shared Embers", researched));
+        Assert.AreEqual(TechVisibility.Hidden, See("Harvest Hymns", researched), "two steps away stays hidden");
         Assert.AreEqual(TechVisibility.Hidden, See("Echoes of Hunger", researched));
     }
 
@@ -76,13 +112,13 @@ public class TechTreeTests
     {
         var researched = new HashSet<string> { "Reconstruction" };
         Assert.AreEqual(TechVisibility.Researched, See("Reconstruction", researched));
-        Assert.AreEqual(TechVisibility.Available, See("Woodcraft Mastery", researched));
-        Assert.AreEqual(TechVisibility.Preview, See("Rites of Harvest", researched));
-        Assert.AreEqual(TechVisibility.Preview, See("Pathfinder Training", researched), "one of its prerequisites can be researched now");
+        Assert.AreEqual(TechVisibility.Available, See("Elderwood Felling", researched));
+        Assert.AreEqual(TechVisibility.Preview, See("Harvest Hymns", researched));
+        Assert.AreEqual(TechVisibility.Preview, See("Colonnade Salvage", researched), "one of its prerequisites can be researched now");
         Assert.AreEqual(TechVisibility.Hidden, See("Horology", researched), "its only prerequisite is itself locked");
 
-        researched.UnionWith(new[] { "Woodcraft Mastery", "Efficient Rations" });
-        Assert.AreEqual(TechVisibility.Available, See("Rites of Harvest", researched), "every prerequisite researched");
+        researched.UnionWith(new[] { "Elderwood Felling", "Shared Embers" });
+        Assert.AreEqual(TechVisibility.Available, See("Harvest Hymns", researched), "every prerequisite researched");
         Assert.AreEqual(TechVisibility.Preview, See("Horology", researched));
     }
 
@@ -93,7 +129,7 @@ public class TechTreeTests
         Assert.AreEqual(TechVisibility.Preview, See("Echoes of Hunger", researched, new[] { "Echoes of Hunger" }));
         Assert.AreEqual(TechVisibility.Preview, See("Echoes of Hunger", researched, revealed: "Echoes of Hunger"), "the Age waits for it, so it shows");
         Assert.AreEqual(TechVisibility.Hidden, See("Unsustainable Growth", researched, new[] { "Echoes of Hunger" }), "its way stays hidden");
-        Assert.AreEqual(TechVisibility.Available, See("Woodcraft Mastery", researched, new[] { "Woodcraft Mastery" }), "enlightened and researchable reads as researchable");
+        Assert.AreEqual(TechVisibility.Available, See("Shared Embers", researched, new[] { "Shared Embers" }), "enlightened and researchable reads as researchable");
     }
 
     [Test]
@@ -148,23 +184,24 @@ public class TechTreeTests
     public void NeighboursJoinStraightOrWithOneTurnInTheirGap()
     {
         CollectionAssert.AreEqual(new[] { P(GridX.SlotRight, 0, GridY.Row, 1), P(GridX.GapAfter, 0, GridY.Row, 1), P(GridX.SlotLeft, 1, GridY.Row, 1) },
-            Route("Reconstruction", "Woodcraft Mastery"));
+            Route("Reconstruction", "Elderwood Felling"));
         CollectionAssert.AreEqual(new[] { P(GridX.SlotRight, 1, GridY.Row, 1), P(GridX.GapAfter, 1, GridY.Row, 1), P(GridX.GapAfter, 1, GridY.Row, 0), P(GridX.SlotLeft, 2, GridY.Row, 0) },
-            Route("Woodcraft Mastery", "Rites of Harvest"));
+            Route("Elderwood Felling", "Harvest Hymns"));
     }
 
     [Test]
     public void ALongLineTakesAFreeRowOrTheChannelBetweenRows()
     {
-        // Woodcraft Mastery to Pathfinder Training: the cell between them on their row is empty.
+        // Two cells apart on a row whose middle cell is empty: the line runs straight along it.
         CollectionAssert.AreEqual(new[] { P(GridX.SlotRight, 1, GridY.Row, 1), P(GridX.GapAfter, 1, GridY.Row, 1), P(GridX.GapAfter, 2, GridY.Row, 1), P(GridX.SlotLeft, 3, GridY.Row, 1) },
-            Route("Woodcraft Mastery", "Pathfinder Training"));
-        // Resource Storage to Resource Preservation: every row between them holds a technology, so the channel carries it.
+            TechTreeRules.Route(1, 1, 3, 1, (column, row) => !(column == 2 && row == 1), 3));
+        // Salt and Smoke to Unsustainable Growth: every cell between them on the Hearth row holds a technology, so the
+        // channel below the row carries the line.
         CollectionAssert.AreEqual(new[]
         {
-            P(GridX.SlotRight, 3, GridY.Row, 2), P(GridX.GapAfter, 3, GridY.Row, 2), P(GridX.GapAfter, 3, GridY.ChannelBelow, 0),
-            P(GridX.GapAfter, 5, GridY.ChannelBelow, 0), P(GridX.GapAfter, 5, GridY.Row, 0), P(GridX.SlotLeft, 6, GridY.Row, 0)
-        }, Route("Resource Storage", "Resource Preservation"));
+            P(GridX.SlotRight, 8, GridY.Row, 0), P(GridX.GapAfter, 8, GridY.Row, 0), P(GridX.GapAfter, 8, GridY.ChannelBelow, 0),
+            P(GridX.GapAfter, 12, GridY.ChannelBelow, 0), P(GridX.GapAfter, 12, GridY.Row, 0), P(GridX.SlotLeft, 13, GridY.Row, 0)
+        }, Route("Salt and Smoke", "Unsustainable Growth"));
     }
 
     [Test]
@@ -184,7 +221,7 @@ public class TechTreeTests
                     if (a.y != GridY.Row || b.y != GridY.Row || a.row != b.row) continue;
                     // A horizontal run along a row passes over the cells strictly between its two ends.
                     float x1 = Across(a), x2 = Across(b);
-                    for (int column = 0; column <= 10; column++)
+                    for (int column = 0; column <= 14; column++)
                     {
                         if (column <= System.Math.Min(x1, x2) || column >= System.Math.Max(x1, x2)) continue;
                         Assert.IsFalse(Occupied(column, a.row), $"{before} -> {entry.Key} crosses the slot in column {column}, row {a.row}");
@@ -221,8 +258,8 @@ public class TechTreeTests
     public void ALockedTechnologyPlansItsMissingPrerequisitesFirst()
     {
         var researched = new HashSet<string> { "Reconstruction" };
-        var plan = TechTreeRules.PlanTo("Pathfinder Training", Prerequisites, researched.Contains);
-        CollectionAssert.AreEqual(new[] { "Woodcraft Mastery", "Efficient Rations", "Rites of Harvest", "Pathfinder Training" }, plan);
+        var plan = TechTreeRules.PlanTo("Lookout Towers", Prerequisites, researched.Contains);
+        CollectionAssert.AreEqual(new[] { "Elderwood Felling", "The Ruin-Song", "Colonnade Salvage", "Ash-Cellars", "Lookout Towers" }, plan);
         Assert.IsEmpty(TechTreeRules.PlanTo("Reconstruction", Prerequisites, researched.Contains), "nothing to plan once researched");
     }
 
@@ -242,24 +279,24 @@ public class TechTreeTests
     public void ANewTargetReplacesThePlanButResearchUnderWayOnItsWayStaysFirst()
     {
         var researched = new HashSet<string> { "Reconstruction" };
-        var plan = TechTreeRules.PlanTo("Pathfinder Training", Prerequisites, researched.Contains);
+        var plan = TechTreeRules.PlanTo("Lookout Towers", Prerequisites, researched.Contains);
         var path = TechTreeRules.PlanTo("Horology", Prerequisites, researched.Contains);
         bool Available(string t) => TechTreeRules.IsAvailable(t, Prerequisites, researched.Contains);
 
-        var replaced = TechTreeRules.Merge(plan, path, false, "Efficient Rations", Available);
-        CollectionAssert.AreEqual(new[] { "Efficient Rations", "Woodcraft Mastery", "Rites of Harvest", "Horology" }, replaced);
+        var replaced = TechTreeRules.Merge(plan, path, false, "Elderwood Felling", Available);
+        CollectionAssert.AreEqual(new[] { "Elderwood Felling", "Shared Embers", "Harvest Hymns", "The Ruin-Song", "Staccato", "Horology" }, replaced);
         AssertPrerequisitesFirst(replaced, "replaced");
 
-        var appended = TechTreeRules.Merge(plan, TechTreeRules.PlanTo("Resource Storage", Prerequisites, researched.Contains), true);
-        CollectionAssert.AreEqual(new[] { "Woodcraft Mastery", "Efficient Rations", "Rites of Harvest", "Pathfinder Training", "Agricultural Renewal", "Resource Storage" }, appended);
+        var appended = TechTreeRules.Merge(plan, TechTreeRules.PlanTo("Root-Digging", Prerequisites, researched.Contains), true);
+        CollectionAssert.AreEqual(new[] { "Elderwood Felling", "The Ruin-Song", "Colonnade Salvage", "Ash-Cellars", "Lookout Towers", "Shared Embers", "Harvest Hymns", "Root-Digging" }, appended);
         AssertPrerequisitesFirst(appended, "appended");
     }
 
     [Test]
     public void TakingATechnologyOutOfThePlanTakesWhatNeedsItToo()
     {
-        var plan = new List<string> { "Woodcraft Mastery", "Efficient Rations", "Rites of Harvest", "Pathfinder Training", "Horology", "The Rekindling", "Agricultural Renewal" };
-        CollectionAssert.AreEqual(new[] { "Woodcraft Mastery", "Efficient Rations", "Agricultural Renewal" }, TechTreeRules.Without(plan, "Rites of Harvest", Prerequisites));
+        var plan = new List<string> { "Elderwood Felling", "Shared Embers", "Harvest Hymns", "The Ruin-Song", "Staccato", "Horology", "Root-Digging" };
+        CollectionAssert.AreEqual(new[] { "Elderwood Felling", "Shared Embers", "The Ruin-Song", "Staccato" }, TechTreeRules.Without(plan, "Harvest Hymns", Prerequisites));
         CollectionAssert.AreEqual(plan, TechTreeRules.Without(plan, "Knowledge Sanctums", Prerequisites), "a technology not planned changes nothing");
     }
 
@@ -267,10 +304,43 @@ public class TechTreeTests
     public void ThePlansNextResearchIsItsFirstResearchableTechnology()
     {
         var researched = new HashSet<string> { "Reconstruction" };
-        Assert.AreEqual("Woodcraft Mastery", TechTreeRules.NextInPlan(new[] { "Rites of Harvest", "Woodcraft Mastery" }, Prerequisites, researched.Contains));
+        Assert.AreEqual("Elderwood Felling", TechTreeRules.NextInPlan(new[] { "Harvest Hymns", "Elderwood Felling" }, Prerequisites, researched.Contains));
         Assert.IsNull(TechTreeRules.NextInPlan(new[] { "Horology" }, Prerequisites, researched.Contains));
-        Assert.AreEqual(2, TechTreeRules.PlanPosition(new[] { "Woodcraft Mastery", "Horology" }, "horology"), "names match as the catalogs do, ignoring case");
-        Assert.AreEqual(0, TechTreeRules.PlanPosition(new[] { "Woodcraft Mastery" }, "Horology"));
+        Assert.AreEqual(2, TechTreeRules.PlanPosition(new[] { "Elderwood Felling", "Horology" }, "horology"), "names match as the catalogs do, ignoring case");
+        Assert.AreEqual(0, TechTreeRules.PlanPosition(new[] { "Elderwood Felling" }, "Horology"));
+    }
+
+    [Test]
+    public void ActIHasFortyTechnologiesEndingAtEchoesOfHunger()
+    {
+        Assert.AreEqual(40, Needs.Count, "Age 0 has 120 technologies, 40 per Act");
+        var needed = new HashSet<string>(Needs.Values.SelectMany(v => v));
+        var sinks = Needs.Keys.Where(t => !needed.Contains(t)).OrderBy(t => t).ToArray();
+        CollectionAssert.AreEquivalent(new[] { "Echoes of Hunger", "Golden Ash", "Golden Orchard Belts" }, sinks,
+            "every technology leads to Echoes of Hunger except the two optional temptations");
+        var path = AgeRules.PathTo("Echoes of Hunger", Prerequisites);
+        Assert.AreEqual(38, path.Count, "the Act's gate needs everything but the temptations");
+        CollectionAssert.DoesNotContain(path, "Golden Orchard Belts");
+        CollectionAssert.DoesNotContain(path, "Golden Ash");
+    }
+
+    [Test]
+    public void EachLaneHoldsOneTechnologyPerTierAndPrerequisitesComeFromEarlierTiers()
+    {
+        Assert.AreEqual(Cells.Count, Cells.Values.Distinct().Count(), "one technology per cell");
+        foreach (var entry in Needs)
+            foreach (var before in entry.Value)
+                Assert.Less(Cells[before].column, Cells[entry.Key].column, $"{before} comes before {entry.Key}");
+    }
+
+    [Test]
+    public void AnOldNameFindsTheRenamedTechnology()
+    {
+        Assert.AreEqual("Lookout Towers", TechnologyAliases.Resolve("Pathfinder Training"));
+        Assert.AreEqual("Ash-Cellars", TechnologyAliases.Resolve(" resource storage "), "names match as the catalogs do, ignoring case");
+        Assert.AreEqual("Horology", TechnologyAliases.Resolve("Horology"), "a kept name is itself");
+        foreach (var current in TechnologyAliases.Renamed.Values) Assert.IsTrue(Needs.ContainsKey(current), $"{current} is in the tree");
+        foreach (var old in TechnologyAliases.Renamed.Keys) Assert.IsFalse(Needs.ContainsKey(old), $"{old} is no longer a name in the tree");
     }
 
     [Test]

@@ -159,9 +159,10 @@ public class WorldTerritoryTests
             Assert.GreaterOrEqual(c.pull, WorldTerritory.RulesOf(map).adoptThreshold);
         }
 
-        // One hex at a time: the first touches the held land, and the cell stays wilderness until all seven are settled.
+        // One hex at a time: the first touches the held land and is yours at once; the cell stays wilderness until all seven are.
         var progress = new Dictionary<string, float> { [candidates[0].seat.key] = 0.99f };
         float drift = 0f;
+        var before = WorldTerritory.Realm(map, settings, context);
         var result = WorldTerritory.Tick(map, settings, context, 0.02f, progress, ref drift);
         var cell = map[candidates[0].cell];
         Assert.AreEqual(1, result.settled.Count, "one hex settled");
@@ -171,17 +172,37 @@ public class WorldTerritoryTests
         Assert.AreEqual(1, WorldMap.SettledHexes(cell));
         Assert.IsTrue(Enumerable.Range(0, 6).Select(d => MicroNavigation.Neighbour(map, result.settled[0], d)).Any(nb => nb >= 0 && map[nb / MicroNavigation.PerCell].authorityId == WorldAuthority.Player),
             "the first hex touches the land already held");
+        Assert.IsTrue(WorldTerritory.HexHeld(map, result.settled[0], WorldAuthority.Player), "the hex is yours");
+        Assert.AreEqual(1f / WorldMap.OpenHexes(cell), WorldTerritory.HeldShare(map, cell), 1e-5f, "a share of the cell");
+        var after = WorldTerritory.Realm(map, settings, context);
+        Assert.AreEqual(1, after.hexes);
+        Assert.AreEqual(before.land + WorldTerritory.HeldShare(map, cell), after.land, 1e-4f);
+        Assert.Greater(after.load, before.load, "the hex weighs on the administration at once");
         Assert.Less(progress[candidates[0].seat.key], 1f, "the fraction of the next hex carries over");
         Assert.AreEqual(cell.index, WorldTerritory.Candidates(map, settings, 1)[0].cell, "a cell begun is finished first");
 
-        // The Capital settles a hex a Seventh: the rest of the cell in the Sevenths after.
-        int open = WorldMap.OpenHexes(cell);
+        // The Capital settles a hex a Seventh: the rest of the cell in the Sevenths after. The fourth hex makes the cell
+        // yours de facto, the last core.
+        int open = WorldMap.OpenHexes(cell), deFacto = WorldHoldings.DeFactoHexes(map);
+        bool ruled = false;
         for (int i = 1; i < open; i++)
         {
-            Assert.AreEqual(WorldAuthority.Wilderness, cell.authorityId, "not yet whole");
+            Assert.AreNotEqual(HoldStatus.Core, WorldHoldings.Status(map, cell, WorldAuthority.Player), "not yet core");
             result = WorldTerritory.Tick(map, settings, context, 1f, progress, ref drift);
+            int hexes = WorldMap.SettledHexes(cell);
+            if (hexes < deFacto) Assert.AreEqual(WorldAuthority.Wilderness, cell.authorityId, "too few hexes to rule it");
+            else if (hexes < open)
+            {
+                Assert.AreEqual(WorldAuthority.Player, cell.authorityId, "yours de facto");
+                Assert.AreEqual(HoldStatus.DeFacto, cell.hold);
+                Assert.AreEqual((float)hexes / open, WorldTerritory.HeldShare(map, cell), 1e-5f, "de facto still yields by the hexes held");
+                if (hexes == deFacto) CollectionAssert.AreEqual(new[] { cell.index }, result.deFacto, "the fourth hex rules it");
+                ruled = true;
+            }
         }
-        CollectionAssert.AreEqual(new[] { cell.index }, result.adopted, "the last hex adopts the cell");
+        Assert.IsTrue(ruled || open <= deFacto, "a de facto stage on the way");
+        CollectionAssert.AreEqual(new[] { cell.index }, result.adopted, "the last hex adopts the cell as core");
+        Assert.AreEqual(HoldStatus.Core, cell.hold);
         Assert.IsTrue(WorldTerritory.FullySettled(cell));
         Assert.AreEqual(WorldAuthority.Player, cell.authorityId);
         CollectionAssert.Contains(map.Adopted, cell.index);
@@ -198,7 +219,8 @@ public class WorldTerritoryTests
 
         Adopt(map, settings, new RealmContext { policy = BorderPolicy.Expand }, 50f);
         var seat = map.territory.Seats.Single(s => s.kind == SeatKind.Capital);
-        Assert.AreEqual(4, seat.held, "the Capital holds as many cells as it may");
+        Assert.AreEqual(4f, seat.held, 1e-4f, "the Capital holds as many cells as it may");
+        Assert.IsFalse(map.Tiles.Any(t => t.authorityId == WorldAuthority.Wilderness && t.microHeldMask != 0), "no hex held beyond its room");
         Assert.AreEqual(4, map.Tiles.Count(t => t.authorityId == WorldAuthority.Player));
         var outside = map.NeighboursOf(map[map.Adopted[0]]).First(t => t.authorityId == WorldAuthority.Wilderness && !t.water && !t.impassable);
         StringAssert.Contains("holds all it can", WorldTerritory.WhyNotAdopt(map, settings, outside, seat));
@@ -351,7 +373,13 @@ public class WorldTerritoryTests
         rules.baseCapacity = 0.5f;
         rules.perGovernmentCapacity = 0f;
         rules.coherenceCapacity = 0f;
-        var before = map.Adopted.ToList();
+        // A cell held in part may slip away too; a claimed hex never does.
+        var claimed = map.Tiles.First(t => t.authorityId == WorldAuthority.Wilderness && WorldAuthority.WhyNotClaim(map, t) == null);
+        int claimedHex = WorldTerritory.NextHex(map, claimed, WorldAuthority.Player);
+        Assert.IsTrue(WorldTerritory.ClaimHex(map, settings, claimedHex, out _));
+        // Core adopted cells, and cells held in part or de facto (not core).
+        var before = map.Adopted.Concat(map.Tiles.Where(t => t.microHeldMask != 0 && !t.whole && t.hold != HoldStatus.Core
+            && (t.authorityId == WorldAuthority.Wilderness || WorldAuthority.IsPlayers(t.authorityId))).Select(t => t.index)).ToList();
         float drift = 0f;
         var result = WorldTerritory.Tick(map, settings, new RealmContext(), 4f, new Dictionary<string, float>(), ref drift);
         Assert.AreEqual((int)(rules.driftPerSeventh * 4f), result.lost.Count, "the fringe slips away at the drift rate");
@@ -359,8 +387,9 @@ public class WorldTerritoryTests
         {
             CollectionAssert.Contains(before, c);
             Assert.AreEqual(WorldAuthority.Wilderness, map[c].authorityId);
-            Assert.AreEqual(0, map[c].microHeldMask, "its settlers leave with it");
+            Assert.AreEqual(map[c].microClaimMask, map[c].microHeldMask, "its settlers leave with it");
         }
+        Assert.IsTrue(WorldTerritory.HexHeld(map, claimedHex, WorldAuthority.Player), "a claimed hex stays");
         Assert.IsEmpty(result.adopted, "an overextended realm adopts nothing");
     }
 
@@ -416,22 +445,55 @@ public class WorldTerritoryTests
     }
 
     [Test]
-    public void Claims_TakeTheirWholeCellAtOnce()
+    public void Claims_TakeOneHexAtATimeBorderingLandYouHold()
     {
         var settings = Gen();
         var map = Fresh(7, settings);
         Know(map, settings, map.Capital, 3);
-        var near = map.NeighboursOf(map.Get(map.Capital)).First(t => !t.water && !t.impassable && WorldAuthority.WhyNotClaim(map, t) == null);
-        // Society had begun settling it: the claim takes the rest.
-        near.microHeldMask = 1 << (WorldTerritory.NextHex(map, near, WorldAuthority.Player) % MicroNavigation.PerCell);
-        var settled = new List<int>();
-        Assert.IsTrue(WorldTerritory.ClaimNow(map, settings, near.index, settled));
-        Assert.AreEqual(WorldAuthority.Player, near.authorityId, "yours at once");
-        Assert.IsTrue(WorldTerritory.FullySettled(near), "every hex settled");
-        Assert.AreEqual(WorldMap.OpenHexes(near) - 1, settled.Count, "only the hexes not yet settled are counted");
+        var near = map.NeighboursOf(map.Get(map.Capital)).First(t => !t.water && !t.impassable && t.microBlockedMask == 0 && WorldAuthority.WhyNotClaim(map, t) == null);
+        int open = WorldMap.OpenHexes(near);
+        // A hex touching nothing you hold cannot be claimed; the heart of a cell beside yours never touches it.
+        int heart = near.index * MicroNavigation.PerCell;
+        Assert.AreEqual("It must border a hex you hold.", WorldAuthority.WhyNotClaimHex(map, heart));
+
+        int first = WorldTerritory.NextHex(map, near, WorldAuthority.Player);
+        Assert.Greater(WorldTerritory.Touching(map, first, WorldAuthority.Player), 0);
+        Assert.IsTrue(WorldTerritory.ClaimHex(map, settings, first, out var status));
+        Assert.AreEqual(HoldStatus.Partial, status, "one hex is not the cell");
+        Assert.AreEqual(WorldAuthority.Wilderness, near.authorityId, "the rest stays wilderness");
+        Assert.IsTrue(WorldTerritory.HexHeld(map, first, WorldAuthority.Player), "the hex is yours at once");
+        Assert.AreEqual(1, WorldTerritory.ClaimedHexes(map));
+        Assert.AreEqual("This hex is already yours.", WorldAuthority.WhyNotClaimHex(map, first));
+        Assert.IsNull(WorldAuthority.WhyNotClaimHex(map, heart), "the heart touches the claimed hex now");
+        Assert.AreEqual(1f / open, WorldTerritory.HeldShare(map, near), 1e-5f);
+
+        // Claim the rest hex by hex: the fourth makes it yours de facto (still claimable), the last core.
+        for (int i = 1; i < open; i++)
+        {
+            Assert.AreNotEqual(HoldStatus.Core, status, "not yet core");
+            Assert.IsTrue(WorldTerritory.ClaimHex(map, settings, WorldTerritory.NextHex(map, near, WorldAuthority.Player), out status));
+            if (i + 1 >= WorldHoldings.DeFactoHexes(map) && i + 1 < open)
+            {
+                Assert.AreEqual(HoldStatus.DeFacto, status);
+                Assert.AreEqual(WorldAuthority.Player, near.authorityId, "de facto yours: your authority");
+                Assert.IsNull(WorldAuthority.WhyNotClaim(map, near), "its free hexes can still be claimed");
+            }
+        }
+        Assert.AreEqual(HoldStatus.Core, status, "the last hex makes it core");
+        Assert.AreEqual(WorldAuthority.Player, near.authorityId);
         CollectionAssert.Contains(map.Claims, near.index);
-        Assert.IsFalse(WorldTerritory.ClaimNow(map, settings, near.index), "no longer wilderness");
+        Assert.AreEqual(open, WorldTerritory.ClaimedHexes(map));
+        Assert.AreEqual("It is already yours.", WorldAuthority.WhyNotClaim(map, near));
+        Assert.IsFalse(WorldTerritory.ClaimHex(map, settings, first, out _), "nothing left to claim");
         Assert.AreEqual(1, map.Claims.Count(c => c == near.index), "claimed once");
+
+        // A cell society had begun and a claim finished joins the Claims (claimed land never slips away).
+        var other = map.Tiles.First(t => t.authorityId == WorldAuthority.Wilderness && t.microBlockedMask == 0 && WorldAuthority.WhyNotClaim(map, t) == null);
+        while (WorldMap.SettledHexes(other) < WorldMap.OpenHexes(other) - 1 && WorldTerritory.SettleHex(map, other, WorldAuthority.Player) >= 0) { }
+        Assert.IsTrue(WorldTerritory.ClaimHex(map, settings, WorldTerritory.NextHex(map, other, WorldAuthority.Player), out status));
+        Assert.AreEqual(HoldStatus.Core, status);
+        CollectionAssert.Contains(map.Claims, other.index);
+        CollectionAssert.DoesNotContain(map.Adopted, other.index);
     }
 
     [Test]

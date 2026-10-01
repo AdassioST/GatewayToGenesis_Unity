@@ -68,6 +68,8 @@ public static class OrchestralFormations
         var side = new BattleSide
         {
             name = name ?? template?.name ?? "Formation",
+            stance = settings.Doctrine(template?.doctrine)?.stance ?? template?.stance ?? BattleStance.Line,
+            doctrine = template?.doctrine,
             conductor = conductor != null && conductor.State != ComposureState.Surrender ? conductor : null,
             tempo = template != null && AgeMagic.TempoAvailable(template.tempo, age) ? template.tempo : SpellTempo.Staccato,
         };
@@ -80,8 +82,11 @@ public static class OrchestralFormations
             if (!string.IsNullOrEmpty(spec.technology) && hasTechnology != null && !hasTechnology(spec.technology)) continue;
             var harmony = (slot.harmony ?? new List<SpellBinding>()).Where(h => h != SpellBinding.Unattuned && h != slot.binding).Distinct().ToList();
             while (harmony.Count > 0 && !AgeMagic.Playable((ChordTier)Math.Min(3, harmony.Count), age)) harmony.RemoveAt(harmony.Count - 1);
-            side.sections.Add(CombatSection.Raise(spec, slot.binding, harmony));
+            var section = CombatSection.Raise(spec, slot.binding, harmony);
+            section.deployment = slot.deployment;
+            side.sections.Add(section);
         }
+        BattleCompositionLogic.AddEliteCore(side, settings);
         return side;
     }
 

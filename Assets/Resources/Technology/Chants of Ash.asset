@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 6a7d5c9e9fb172600b5e08d3ec013221, type: 2}
   isEventTech: 0
-  tier: 8
+  tier: 10
   satisfactionPoints: 0
   techRequirements:
-  - Celestial Astrology
+  - Old World Roads
   resourceRequirements:
   - Research
   resourceAmount:
-  - 110
+  - 4800
   enlightenedConditions:
   - type: 3
     trigger: Emberwhisper
     requiredAmount: 1
-    description: Acquire Emberwhisper
+    description: 'Acquire Emberwhisper'
     riddle: A red spire sings where the ground remembers fire. Carry a breath of its embers home.
     clue: The spires show from afar once your people come near. An expedition may harvest what it does not claim.
     clueAt: 0.5

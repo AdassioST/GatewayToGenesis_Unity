@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Trapper's Patience
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 2378ce9fbde2261fe6825dbc59dc27eb, type: 2}
+  isEventTech: 0
+  tier: 5
+  satisfactionPoints: 0
+  techRequirements:
+  - Earth-Bean Rows
+  - Lookout Towers
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 2500
+  enlightenedConditions:
+  - type: 6
+    trigger: 'species_known'
+    requiredAmount: 1
+    description: 'Identify a creature.'
+    riddle: 'Something watches from beyond the firelight. Learn what it is before it learns you.'
+    clue: 'A den seen from afar is only a shape. Send someone to stand where it stands.'
+    clueAt: 0.5
+    clueTrigger: 'journeys'
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 567c20d096896dc8cd1ea56876d33940, type: 2}
+  - {fileID: 11400000, guid: 86448c61f425ce14775546f1bc464aa9, type: 2}

@@ -77,6 +77,10 @@ public partial class LegendProgress : SingletonBehaviour<LegendProgress>
         public LegendSoul soul;
         /// <summary>Lost to Dissonance: no longer on the roster, never met again.</summary>
         public bool lost;
+        [SaveOptionalField]
+        public bool battleDeath;
+        [SaveOptionalField]
+        public BattleDeckEvolution battleDeck = new BattleDeckEvolution();
         /// <summary>The count of the dead this legend has already mourned (true deaths and the homeless).</summary>
         public int deathsSeen;
         /// <summary>Lasting conditions (Traumatized, Haunted...: <see cref="LegendConditions"/>).</summary>
@@ -89,12 +93,19 @@ public partial class LegendProgress : SingletonBehaviour<LegendProgress>
         [SaveOptionalField]
         public float missingStrain;
         [SaveOptionalField]
+        public float missingParasiticStrain;
+        [SaveOptionalField]
         public string missingFrom;
         /// <summary>Held captive by an Atonalis band (its key, <see cref="LegendProgress.TakeCaptive"/>; null: free), and the strain it takes each Seventh while held.</summary>
         [SaveOptionalField]
         public string heldBy;
         [SaveOptionalField]
         public float heldFeed;
+        /// <summary>The Symphony Cards it has learned into its personal grimoire (ids), and whether the player ever chose them (until then it learns its own bindings' cards by itself: <see cref="LegendGrimoires.Default"/>).</summary>
+        [SaveOptionalField]
+        public List<string> grimoire = new List<string>();
+        [SaveOptionalField]
+        public bool grimoireChosen;
     }
 
     // Every legend met, the lost included (so a lost legend is never met again).

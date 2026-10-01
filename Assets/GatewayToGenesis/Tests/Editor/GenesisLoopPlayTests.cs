@@ -84,7 +84,8 @@ public class GenesisLoopPlayTests
 
         CollectionAssert.AreEqual(new[]
         {
-            "desolation_golden_orchard", "desolation_brown_peach", "desolation_peach_sickness",
+            "desolation_echoes_of_hunger",
+            "desolation_golden_orchard", "desolation_peach_sickness", "desolation_brown_peach",
             "desolation_regional_failure", "desolation_ash_bread", "desolation_choosing_of_seeds",
         }, told, "every story of the Age, in order, once");
 

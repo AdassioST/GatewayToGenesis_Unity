@@ -9,6 +9,60 @@
 -> DONE
 
 // ===== ACT OF FATE: ACT II BEGINS =====
+// Echoes of Hunger (the technology) closes Act I with its pivot crisis: a minor crisis of an Act of Fate (vault Ages.md,
+// "Famine cults choke the wild plains"), not the Age Crisis. It only foreshadows The Inescapable Hunger, which begins
+// in Act III. The Golden Orchard follows it at once. The prose past the vault's line is placeholder, not canon.
+
+=== desolation_echoes_of_hunger ===
+# title: Echoes of Hunger
+# cast: area:welfare
+# description: Famine cults choke the wild plains.
+# conditions: event_completed:desolation_echoes_of_hunger < 1
+# event_type: Crisis
+# priority: 100
+# locked: true
+
+A lean season comes out of the plains. It is not the Hunger. It is only an echo of it, and no one yet knows what it echoes.
+
+Wanderers arrive at the gates thin and quiet. Out on the wild plains, they say, famine cults have gathered around the last trees that still fruit, singing that hunger is a debt owed to the gods and must be paid in full.
+
+* Meet the wanderers at the gates
+-> desolation_echoes_of_hunger_chorus_1
+
+=== desolation_echoes_of_hunger_chorus_1 ===
+The cellars will not last the season at this rate. The wanderers watch your stores the way the cults watch their trees. What do your people do?
+
+* Idealism. Open the gates and share the stores.&D Feed everyone who comes, and trust the season to turn.&C success:desolation_echoes_of_hunger_verse_1;failure:desolation_echoes_of_hunger_verse_1;consequences:stat:morale +8;production_percent:Food -10;duration:sevenths:14 -> desolation_echoes_of_hunger_verse_1
+
+* Realism. Ration by the ledger, and write the lean season down.&D Every mouthful counted, every empty week recorded, so the next lean season is not a surprise.&C success:desolation_echoes_of_hunger_verse_2;failure:desolation_echoes_of_hunger_verse_2;consequences:stat:morale -6;score:famine_preparation +2 -> desolation_echoes_of_hunger_verse_2
+
+* Pragmatism. Learn what the cults' trees are, and plant them.&D The trees that still fruit are Auric peaches. Plant more of them, faster.&C success:desolation_echoes_of_hunger_verse_3;failure:desolation_echoes_of_hunger_verse_3;consequences:production_percent:Food +10;duration:sevenths:21;score:monocrop +1 -> desolation_echoes_of_hunger_verse_3
+
+=== desolation_echoes_of_hunger_verse_1 ===
+The gates stay open. Strangers eat at your tables and some of them stay. The cellars run low, but no one at your gates starves.
+
+* Share what there is
+-> desolation_echoes_of_hunger_outro
+
+=== desolation_echoes_of_hunger_verse_2 ===
+Scribes count the jars at dawn and at dusk. It is a miserable season, and a remembered one.
+
+* Keep the ledger
+-> desolation_echoes_of_hunger_outro
+
+=== desolation_echoes_of_hunger_verse_3 ===
+Saplings go into every spare field. By the next harvest the new trees are already in fruit, sweet and quick.
+
+* Tend the saplings
+-> desolation_echoes_of_hunger_outro
+
+=== desolation_echoes_of_hunger_outro ===
+The season turns. The rains come back and the cults scatter into the plains they came from. The lean season is over.
+
+But the fruit that returns is a little pinker than it was, and the elders who remember the old harvests do not say what they are thinking.
+
+* Let it pass
+-> DONE
 
 === desolation_golden_orchard ===
 # title: The Golden Orchard
@@ -70,7 +124,7 @@ But no one tracks these things as data. Survivors see only that there is still f
 * Return to the orchards
 -> DONE
 
-// ===== THE AGE CRISIS BEGINS (never announced): HALFWAY THROUGH THE AGE =====
+// ===== THE AGE CRISIS BEGINS (never announced): EARLY IN ACT III =====
 
 === desolation_brown_peach ===
 # title: A Brown Auric Peach?
@@ -95,7 +149,7 @@ One brown basket in a season of pink ones. The soil is damaged. Even if trees st
 
 * Realism. It is one bad basket. Plant more trees.&D Practically, the mainstream reaction is almost always the same: plant more trees.&C success:desolation_brown_peach_verse_3;failure:desolation_brown_peach_verse_3;consequences:score:monocrop +1;production_percent:Food +10 -> desolation_brown_peach_verse_3
 
-* Pragmatism. Dig into the soil and see what the roots see.&D Soil gradually compacts and loses spring underfoot; ash and dust dominate.&C requirements:cost:resource:Research 20;success:desolation_brown_peach_verse_4;failure:desolation_brown_peach_verse_4;consequences:score:famine_preparation +1;technology:Agricultural Renewal enlightened -> desolation_brown_peach_verse_4
+* Pragmatism. Dig into the soil and see what the roots see.&D Soil gradually compacts and loses spring underfoot; ash and dust dominate.&C requirements:cost:resource:Research 20;success:desolation_brown_peach_verse_4;failure:desolation_brown_peach_verse_4;consequences:score:famine_preparation +1;technology:Earth-Bean Rows enlightened -> desolation_brown_peach_verse_4
 
 === desolation_brown_peach_verse_1 ===
 The shares are set aside, and the cellars hold a little more than the season needs.

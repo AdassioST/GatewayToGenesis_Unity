@@ -125,9 +125,16 @@ public class WorldBattleTests
     [Test]
     public void TheAttackerFightsByItsOwnFooting()
     {
-        // Ash Warbands fight worse among trees: coming out of a wood onto open ground, their footing is the wood's.
-        var open = BattleResolver.Resolve(Clash(new Battlefield { age = 1, ground = BattleGround.Open }), Settings);
-        var fromWood = BattleResolver.Resolve(Clash(new Battlefield { age = 1, ground = BattleGround.Open, attackerGround = BattleGround.Forest }), Settings);
+        // Ash Warbands fight worse while still among trees. Movement onto open ground must remove that penalty.
+        BattleReport Holding(BattleGround footing)
+        {
+            var setup = Clash(new Battlefield { age = 1, ground = BattleGround.Open, attackerGround = footing });
+            setup.attacker.manual = setup.defender.manual = true;
+            setup.attacker.sections[0].battleHex = 1; setup.defender.sections[0].battleHex = 2;
+            var run = BattleResolver.Begin(setup, Settings, forecastRuns: 1); run.ResolveMeasure(); return run.Report;
+        }
+        var open = Holding(BattleGround.Open);
+        var fromWood = Holding(BattleGround.Forest);
         Assert.Greater(fromWood.timeline[1].defender.integrity, open.timeline[1].defender.integrity);
     }
 
@@ -184,9 +191,9 @@ public class WorldBattleTests
         var spec = new UnitSpec { id = "expedition", role = UnitRole.Expedition };
         var side = WorldBattles.PartySide(expedition, spec, new List<string> { "Iris", "Kael" }, n => new BattleLegend { name = n });
         Assert.AreEqual("Iris", side.conductor.name, "the Director commands");
-        Assert.AreEqual(3, side.sections.Count, "a section per legend, and the settlers behind");
+        Assert.AreEqual(8, side.sections.Count, "Elite scale retains two legends and six individual settlers");
         Assert.AreEqual("Kael", side.sections[1].leader.name);
-        Assert.AreEqual(6, side.sections.Single(s => s.row == FormationRow.Back).count);
+        Assert.AreEqual(6, side.sections.Where(s => s.row == FormationRow.Back).Sum(s => s.count));
         expedition.attrition = 50f;
         expedition.nerveLost = 0.5f;
         var worn = WorldBattles.PartySide(expedition, spec, new List<string> { "Iris", "Kael" }, n => new BattleLegend { name = n });

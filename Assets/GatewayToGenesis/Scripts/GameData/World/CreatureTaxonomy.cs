@@ -288,6 +288,8 @@ public class DiscoveryReward
 [Serializable]
 public class SpeciesSpec
 {
+    public bool majorEncounter, boss, decisiveEncounter, originalEight;
+    public string battleObjective;
     public string id;
     public string name;
     [UnityEngine.TextArea(1, 3)] public string description;

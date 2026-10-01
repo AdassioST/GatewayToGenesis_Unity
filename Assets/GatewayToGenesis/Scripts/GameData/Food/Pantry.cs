@@ -159,7 +159,7 @@ public class Pantry : SingletonBehaviour<Pantry>
         if (units == null || units.storageTab == null) return;
         if (!_stocked) Stock(units);
         if (SaveMenu.BlocksGameplay || Time.timeScale <= 0f) return;
-        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive()) return;
+        if (TimeSystemLogic.SimulationHeld) return;
         _elapsed += Time.deltaTime;
         if (Time.unscaledTime < _tickAt) return;
         _tickAt = Time.unscaledTime + TickSeconds;

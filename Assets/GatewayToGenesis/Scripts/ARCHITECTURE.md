@@ -122,7 +122,7 @@ to worked numbers in `EconomyRulesTests`; the systems gather the inputs and call
 
 | System | Owns | Listens to | Raises |
 |---|---|---|---|
-| `TimeSystemLogic` | Calendar (seventh/phase/echo/cycle), pause, slow motion | — | `OnSeventhChange`, `OnPhaseChange`, `OnEchoChange`, `OnCycleChange`, `OnRitualSeventh` |
+| `TimeSystemLogic` | Calendar (seventh/phase/echo/cycle), pause, slow motion, the player's own pause (Space, `PlayerPaused`, kept apart from the stories' `isTimePaused`; `SimulationHeld` is what production, the pantry, the people, the crowd and map units check); `TimeFlowHud` shows the flow beside the Age banner (click to pause) with a gold frame while paused | pause key (`KeyBindings`) | `OnSeventhChange`, `OnPhaseChange`, `OnEchoChange`, `OnCycleChange`, `OnRitualSeventh` |
 | `StatManager` | Pillars, substats, derived stats, morale, satisfaction | seventh | `OnStatsChanged`, `OnPillarChanged`, `OnDerivedChanged`, `OnMoraleChanged`, satisfaction events |
 | `GameUnitsLogic` | Storage/production/research tabs, clicking, building, research and the research plan, Enlightenment's gift, unit ledgers | — | `OnProductionUnitBuilt`, `ResearchPlanChanged` |
 | `TechnologyTreeLogic` (one per Age tree) | Its slots, what is uncovered, the lines (`TechTreeConnectors`), the plan's numbers, the Enlightenment goals (rules in `TechTreeRules`) | `Researched`, `Enlightened`, `ResearchPlanChanged`, the Age's waiting gate | — (slots raise `GameTechnologySlot.Researched`, `Enlightened`) |
@@ -139,11 +139,11 @@ to worked numbers in `EconomyRulesTests`; the systems gather the inputs and call
 | `EventScreenManager`, `ChorusScreenManager` | Event screens and the chorus drag-and-roll, as views over the story index | pillars (chorus) | — |
 | `TooltipSystemLogic` | Open tooltips (a root plus nested keyword tooltips): follows the cursor, turns them solid, refreshes (4 Hz) and closes them | — | — |
 | `GameInput` | Every hotkey, as actions of `PlayerControls.inputactions` (tabs, Library, cancel) with the player's own keys laid over them (`KeyBindings`); none while typing or with Ctrl/Alt held. Escape goes to the menu while it is up, else to the open windows, and opens the quick menu when `OpenWindows.Any` was false | — | tab UnityEvents, `LibraryPressed`, `CancelPressed`, `MenuCancelPressed`, `CancelUnclaimed` |
-| `SaveMenu` + `MenuView` | The title screen and the in-game quick menu (Resume, Save, Load, Achievements, Options, Return to title, Quit): `SaveMenu` holds the logic (entering worlds, autosave, `BlocksGameplay`), `MenuView` draws it in code on a canvas over everything | Escape (unclaimed) | — |
+| `SaveMenu` + `MenuView` | The title screen and the in-game quick menu (Resume, Save, Load, Achievements, Options, Return to title, Quit): `SaveMenu` holds the logic (entering worlds, autosave, `BlocksGameplay`); the autosave captures on the main thread and encrypts and writes on a worker (`SaveSession.SaveInBackground`), the slot list reads headers only (`SaveHeader`) and remembers files by their stamp, `MenuView` draws it in code on a canvas over everything | Escape (unclaimed) | — |
 | `GameSettings` (static) + `SettingsApplier` | The player's Options, in PlayerPrefs apart from any save (General, Display, Audio; keys in `KeyBindings`); the applier pushes window, frame rate, listener volume and brightness into Unity; sounds join a channel with `SoundVolume` | — | `Changed(section)` |
 | `GovernmentTab` | The council, civics and the legend / seat pools, as views re-bound in place once per frame | council, civics | — |
 | `Achievements` (static) | The vault's achievements (Resources/Achievements), which are unlocked, the unlock toast; rules in `AchievementTriggers`, awarded only through `AchievementAward.Commit` (world ledger, then profile, then Tracker), renamed ids in `AchievementAliases`, the 100% set in `AchievementCompletion` | reported signals (after the action commits, with `.From(source, subject)` evidence) | `Unlocked` |
-| `SaveSession` (static) | World slots, the lifetime profile, per-world achievement/Anchor ledgers (`WorldRewards`, with award evidence), retirement; state contract in `GameSnapshot.Schema` | save menu, autosave | — |
+| `SaveSession` (static) | World slots, the lifetime profile, per-world achievement/Anchor ledgers (`WorldRewards`, with award evidence), retirement; state contract in `GameSnapshot.Schema`; world tiles are saved one column per field (`SaveDocument.tileColumns`, `GameSnapshot.TileFields`, only scalars and structs of scalars; older saves' per-tile trees still load) | save menu, autosave | — |
 | `AgeProgression` | The Age clock (sevenths into the Age), Acts of Fate, crisis stages, the passage between Ages (rules in `AgeRules`, `CrisisRules`; data in `AgeDefinition`) | seventh | `Changed`, `AgeBegan`, `AgePassed` |
 | `WorldSystem` | The world (`WorldMap`, built by `WorldGenerator` from `WorldSettings`, the stencil and the handmade tiles; see "The world" below), units walking the micro grid and their needs, expeditions of legends (rules in `Expeditions`: slots, the party's unit, hardship, mishaps rolled each Seventh; `HardshipOf` feeds `LegendProgress`; party size in `PartyShapes`: Solo/Duo/Trio/Company numbers, companions answering mishaps, retreat and going missing in action, the moves in `WorldSystem.Parties.cs`), land yields, each Age's magic and new features | seventh, `AgeBegan` | `Changed`, `Notice`, `UnitNotice` |
 | `LegendProgress` | Which legends are met, their Lyrical Fragments by kind (rules in `LyricalFragments`), rank and deeds (rules in `LegendGrowthRules`), and who they are: each legend's `LegendSoul` (Soul Leitmotif, Legend Traits read from the vault note by `LegendTraitNote`, Composure settled each Seventh by `LegendSoulLife`/`ComposureRules`, Motif Awakenings by `LegendSoulRules`; tuning in `Resources/Legends/LegendSettings`); rank and Composure feed `CouncilRules` through `CouncilMultiplier` | seventh | `Changed`, `Recruited`, `RankedUp`, `ComposureChanged`, `Awakened`, `Lost` |
@@ -488,7 +488,8 @@ the wounds at 0-7 and each healthy face at its pair + 8 (`Pair`, `Axis`, `Harmon
   Wonder where Coherence runs high or leylines pass, Devotion on sacred ground; the torn Loom's Doubt.
 - **Blooms eat cocktails and evolve.** `ResourceSiteSpec.flavors` is a bloom's cocktail and `specificity` its niche (0
   Generalist .. 1 Purist; World.asset, 15 blooms, e.g. Vow Orchids Devotion/Love/Pride at 0.8, Glimmerfern
-  Doubt/Tumult/Wonder at 0.2). `EmotionalEvolution.Feed`: food = specificity x servings + (1 - specificity) x loose;
+  Doubt/Tumult/Wonder at 0.2; the Anemoia Lunaria a near-purist healer of the Anemoia compound whose seed pods,
+  `Anemoia Pods`, are an Ornaments luxury and amenity in `CultureLifeTuning`; Lust Berries eat the Lust compound). `EmotionalEvolution.Feed`: food = specificity x servings + (1 - specificity) x loose;
   growth = food/need x (1 - nicheGrowthCost x specificity); potency = superloaded on its exact cocktail. Vigor is the
   palate's growth (never below 3/5 of the residue alone); `Gift` scales by potency; healers drink harder. Each Echo
   `WorldSystem.EvolveBlooms` passes a generation for every lineage (`ResourceSite.lineage`, `Lineage`/`Palate`,
@@ -530,7 +531,10 @@ band keeps its survivors (or leaves the map), and both sides keep a one-Seventh 
 | `CombatModel.cs` | `CombatSection` (two bars; Mind Break; captured; head count; leader; company bonds), `BattleLegend` (a legend in battle: leitmotif, Ornaments, scores, stars in the Greats, real strain), `BattleSide` (commander, `takesCaptives`), `Battlefield.From(tile, from, ...)`, `BattleReport` (per-measure `timeline` of `SideBars`, `captives`, `legends` fates) |
 | `OrchestralFormations` | `Validate`/`Raise` a template for an Age (sections before their Age left out, chords cut to what the Age plays, tempo falls back to Staccato; every cut reported) |
 | `CreatureCombat` | A species as sections: size and stance give steel, threat response gives nerve and when wild groups leave, Structure gives toughness, Pure Light gives magic and spell fragility, the CBT organ shapes it, `primaryBinding` its element, the group's head count (for captives) |
-| `BattleResolver` | `Resolve` (measures: spells, steel, parries, toll, states, captures), `Forecast` (Total War's balance of power: many seeds) |
+| `BattleResolver` | `Resolve` (measures: spells, steel, parries, toll, states, captures), `Forecast` (Total War's balance of power: many seeds), `Begin` → `BattleRun` (the same battle measure by measure for the micro layer: `BeginMeasure`, `Hand`, `Intent`, `Play(side, card, target, rendition)`, `ResolveMeasure`, `Finish`, `Prediction`) |
+| `BattleResolver.Symphony.cs` | The card phase: hands and Beats, the performer's valuation (`Value`), `Execute` (effects through the same steel and `Cast` paths), ensemble chord layering, field conditions, marks (guard, ward, expose, blind, burn) |
+| `Symphony/` | `CombatCard` + `CardEffect` + `DeckCard` + `ExpeditionKit` + `SymphonyTuning`/`SymphonySettings` (`CombatSettings.symphony`), `SymphonyCards` (default library, creature instincts from species), `SymphonyDecks` (a side's deck) + `LegendGrimoires` (personal grimoires), `SymphonyPower` (`Rate`, `Breakdown`, `Odds`) |
+| `BattleVerdicts.cs` | The seven verdicts (`Tier`, `Mirror`, `Legendary`, words, meanings, colours), `BattlePreview` (strengths, Civ VI-style modifiers, balance, advisors' prediction, casualties) |
 | `Conscription.cs` | `ArmyRoster` (companies raised from the population, stacks, posts, `Muster` a stack into a side, `Record` a battle back, attachment, naming, promotion ledger), `ConscriptUnit`, `ArmyStack`, `CompanyBond`, `IConscriptionBank` + `LiveConscriptionBank` (population via `PopGrowthLogic.Enlist/Discharge`, resource slots, technologies, fragments, Era Score, shared battles, the naming notice) |
 
 **Two bars.** Integrity is the body: steel wears it (HOI4: parried attacks hit 0.12, the rest 0.36; armor halves what
@@ -539,7 +543,25 @@ and dread wear it, steel a little, every spell is paid from it. At 0 a section s
 with its attacks, parries, armor and wards cut (`mindBreakAttack`...) and cannot cast, until it steadies (`steadyAt`).
 Each Mind Break and each section lost shakes the rest of its line (`mindBreakShock`, `fallenShock`); the side is
 **beaten** when its line's Integrity falls to `integrityBreak`, then run down by faster pursuers. A battle that runs
-`maxMeasures` is a stalemate: the defender holds.
+`maxMeasures` is a stalemate: the defender holds (and so wins it: `BattleReport.Held`).
+
+**Symphonies (the card layer).** Every side can carry a deck (`BattleSide.deck`, built by `SymphonyDecks`): section
+decks (Grave Warden, Wasteland Archer...), an expedition's kit (`WorldUnit.kit`, changed in a settlement), each legend's
+personal grimoire (its leitmotif as its binding's Principle, its Ornaments from Age III, learned Symphony Cards saved on
+its `LegendProgress` record), the commander's orders (one per Great), an army's war score (`WorldSystem._warScore`), a
+band's instincts (`SymphonyCards.Creature`). With a deck, a side's drilled fighting runs at `ostinato` (0.7) and its
+cards carry the rest: each measure deals Beats and a hand, every card scales with the section that voices it (and by
+`cardScale`, so a voice's share of the Beats plays about `melody` of its output), spell cards go through `Cast`, and
+cards at home on the field (grounds, conditions) land harder or are only playable there. A side with no deck is the
+plain auto-resolve, unchanged. Tested in `SymphonyTests`; the sweep in the design doc calibrates a par deck at about
++10-15% raw strength.
+
+**Verdicts and the battle screen.** Seven verdicts per side (`BattleOutcome`: Decisive, Close, Pyrrhic Victory;
+Close, Valiant, Crushing Defeat; Legendary Victory), read from both sides' losses and mirrored between them; the
+Legendary only when a `manual` side wins by hand what `BattleRun.Prediction` gave at most 30%. `BattlePreview` is the
+pre-battle screen (strengths with Civ VI's modifier list, Lanchester balance, forecast prediction and casualties);
+`WorldSystem.PreviewBattle`/`QuickPreview` build it for two map units, every map battle leaves a `BattleRecord`
+(`BattleRecorded`), and `BattleWindow` shows either. Tested in `BattleVerdictTests`.
 
 **Captives.** A Mind Broken section below `captureBelow` (40%) Integrity is subdued and taken alive by a side that
 takes captives (wild creatures do not), in the battle or in the rout: `BattleReport.captives` (species, individuals) is

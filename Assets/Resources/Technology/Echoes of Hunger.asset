@@ -14,18 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameUnit: {fileID: 11400000, guid: 83510b9d8cd2cf9506b50299bc618289, type: 2}
   isEventTech: 1
-  tier: 10
+  tier: 14
   satisfactionPoints: 0
   techRequirements:
   - Unsustainable Growth
+  - Da Capo
   resourceRequirements:
   - Research
   resourceAmount:
-  - 150
+  - 11000
   enlightenedConditions:
   - type: 6
-    trigger: population
-    requiredAmount: 1001
-    description: Population Surpasses 1000.
+    trigger: 'population'
+    requiredAmount: 75
+    description: 'Reach 75 people: more than the land has fed since the fall.'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
   techUnlockables:
   - {fileID: 11400000, guid: 521d0305d0d36541c50f103f387b3a5b, type: 2}

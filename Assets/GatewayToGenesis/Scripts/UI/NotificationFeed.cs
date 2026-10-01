@@ -378,7 +378,7 @@ public class NotificationFeed : MonoBehaviour
                     Topic.Units, () => WorldView.ShowUnit(first), starving.Count);
             }
             int claimable = world.ClaimableCount();
-            if (claimable > 0) Add("claim", "Land can be claimed", $"{claimable} known cell{(claimable == 1 ? "" : "s")} border your authority ({world.ClaimCostText} each).", Topic.Land, WorldView.ShowWorld, claimable);
+            if (claimable > 0) Add("claim", "Land can be claimed", $"{claimable} known cell{(claimable == 1 ? " has hexes" : "s have hexes")} bordering your land, claimed hex by hex ({world.ClaimCostText} a hex).", Topic.Land, WorldView.ShowWorld, claimable);
             // An administration past its capacity: yields fall, society stops adopting land, past collapse the fringe slips away.
             var realm = world.Realm;
             if (realm.favoured == Expansion.Overextended)

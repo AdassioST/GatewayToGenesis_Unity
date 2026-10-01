@@ -39,7 +39,7 @@ The villagers gather around, their faces a mixture of hope and fear. Some see sa
 
 * Idealism. It's Hope. Welcome the Caravan!&D We all deserve a second chance at life, don't we? We have to share the world with the survivors left.&C pillar:waltz;strength:15;requirements:population:population >= 5;requirements: stat:morale >= 95;requirements:cost:resource:Elderwood 5;success:hollow_caravan_verse_2;failure:hollow_caravan_verse_3;crit_success:hollow_caravan_verse_12;crit_failure:hollow_caravan_verse_13;rare_event:hollow_caravan_verse_14;rare_event_percent:3 -> hollow_caravan_verse_2
 
-* Realism. It's Ruin. Intercept and Seize their Wares.&D Despite how cruel it may be, the city must survive. Whomever is innocent enough to believe otherwise will not stand the test of time.&C pillar:regalia;strength:20;requirements:technology:Efficient Rations == 1;requirements: stat:morale <= 115;score:caravan_encountered >= 1;success:hollow_caravan_verse_4;failure:hollow_caravan_verse_5;crit_success:hollow_caravan_verse_15;crit_failure:hollow_caravan_verse_16;rare_event:hollow_caravan_verse_17;rare_event_percent:3 -> hollow_caravan_verse_4
+* Realism. It's Ruin. Intercept and Seize their Wares.&D Despite how cruel it may be, the city must survive. Whomever is innocent enough to believe otherwise will not stand the test of time.&C pillar:regalia;strength:20;requirements:technology:Shared Embers == 1;requirements: stat:morale <= 115;score:caravan_encountered >= 1;success:hollow_caravan_verse_4;failure:hollow_caravan_verse_5;crit_success:hollow_caravan_verse_15;crit_failure:hollow_caravan_verse_16;rare_event:hollow_caravan_verse_17;rare_event_percent:3 -> hollow_caravan_verse_4
 
 * Pragmatism. None to Us. Close off the Gate. Turn them away.&D Our people come first, only by the means of our nation we will grow or we will perish. No outsider will change this truth.&C success:hollow_caravan_verse_6;failure:hollow_caravan_verse_6;rare_event:hollow_caravan_verse_18;rare_event_percent:3 -> hollow_caravan_verse_6
 
@@ -50,7 +50,7 @@ The caravan's gifts prove genuine—books that contain forgotten wisdom, fruits 
 
 Seraphina smiles, and this time her teeth don't seem quite so sharp. "Knowledge is meant to be shared," she says. "But remember, friends—what you gain, you must also protect. The Desolation taught us that lesson well."
 
-* Accept the gifts&C consequences: resource:Aetherlight +225; production_percent:Food +10; duration:sevenths:6; score:knowledge_gained +1; stat:morale +10; technology:Rites of Harvest enlightened
+* Accept the gifts&C consequences: resource:Aetherlight +225; production_percent:Food +10; duration:sevenths:6; score:knowledge_gained +1; stat:morale +10; technology:Harvest Hymns enlightened
 -> hollow_caravan_outro
 
 === hollow_caravan_verse_3 ===
@@ -238,7 +238,7 @@ The hush around you deepens, drawing in even the far-off tolling of bells until 
 === weeping_princess_verse_2 ===
 Your courage and hope have opened new possibilities that you never imagined. The golden light of your convictions illuminates the way forward, revealing hidden wonders that only the pure of heart can see. The Weeping Princess's tears begin to sparkle with hope rather than sorrow.
 
-* Embrace the dream realm&C consequences: resource:Aetherlight +150; production_percent:Food +15; duration:sevenths:4; score:idealism_triumph +1; stat:morale +8; technology:Rites of Harvest enlightened
+* Embrace the dream realm&C consequences: resource:Aetherlight +150; production_percent:Food +15; duration:sevenths:4; score:idealism_triumph +1; stat:morale +8; technology:Harvest Hymns enlightened
 -> weeping_princess_outro
 
 === weeping_princess_verse_3 ===
@@ -280,7 +280,7 @@ CRITICAL FAILURE! The weight of your ideals proves too heavy to bear. The shadow
 === weeping_princess_verse_14 ===
 RARE EVENT! A forgotten shrine hidden in the willow's roots reveals itself, offering ancient knowledge and precious materials that have been waiting for the right moment to emerge.
 
-* Accept the boon&C consequences: resource:Duskstone +120; score:ancient_boon +1; stat:morale +6; technology:Rites of Harvest enlightened
+* Accept the boon&C consequences: resource:Duskstone +120; score:ancient_boon +1; stat:morale +6; technology:Harvest Hymns enlightened
 -> weeping_princess_outro
 
 === weeping_princess_verse_15 ===

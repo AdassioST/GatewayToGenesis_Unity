@@ -9,6 +9,33 @@ using NUnit.Framework;
 /// </summary>
 public class ConscriptionTests
 {
+    [Test]
+    public void PremonitionPreparationValidatesEveryCostBeforeSpending()
+    {
+        var bank = new Bank(); var ledger = new BattlePremonitions();
+        var tuning = new BattlePreparationTuning { divinationTechnology = "The Rekindling", divinationCost = new List<ResourceAmount> {
+            new ResourceAmount { resource = "Elderwood", amount = 100 }, new ResourceAmount { resource = "Faith", amount = 10 } } };
+        Assert.IsNotNull(tuning.Prepare(ledger, BattlePremonitionKind.Divination, bank, true));
+        Assert.AreEqual(1000, bank.Amount("Elderwood")); Assert.AreEqual(0, ledger.Remaining);
+        bank.stores["Faith"] = 30;
+        Assert.IsNotNull(tuning.Prepare(ledger, BattlePremonitionKind.Divination, bank, false)); Assert.AreEqual(30, bank.Amount("Faith"));
+        for (int i = 0; i < 2; i++) Assert.IsNull(tuning.Prepare(ledger, BattlePremonitionKind.Divination, bank, true));
+        Assert.AreEqual(800, bank.Amount("Elderwood")); Assert.AreEqual(10, bank.Amount("Faith")); Assert.AreEqual(2, ledger.Remaining);
+        Assert.IsNotNull(tuning.Prepare(ledger, BattlePremonitionKind.Divination, bank, true));
+        Assert.AreEqual(800, bank.Amount("Elderwood")); Assert.AreEqual(10, bank.Amount("Faith"), "full slots cannot spend more resources");
+    }
+    [Test]
+    public void PopulationAftermathRecordsOnlyDeathsInTheDeathLedger()
+    {
+        var bank = new Bank(); var roster = new ArmyRoster(); roster.units.Add(new ConscriptUnit { id = "company", name = "Company", specId = "grave-warden", people = 100, raisedPeople = 100 });
+        roster.stacks.Add(new ArmyStack { id = "stack", units = { "company" } });
+        var side = new BattleSide { sections = { new CombatSection { name = "Company", unitId = "company", count = 100, maxIntegrity = 100, integrity = 50 } } };
+        var report = new BattleReport { winner = 1, population = { new BattlePopulationFate { attacker = true, unitId = "company", original = 100,
+            healthy = 50, dead = 10, wounded = 20, recoverable = 5, missing = 5, captured = 10 } } };
+        roster.Record("stack", side, report, true, bank, Settings); Assert.AreEqual(10, bank.fallen); Assert.AreEqual(75, roster.Unit("company").people);
+        Assert.AreEqual(100, roster.casualties.Single().Accounted); Assert.AreEqual(20, roster.Unit("company").woundedPeople);
+        var restored = (ArmyRoster)SaveStateCodec.Read(SaveStateCodec.Write(roster, typeof(ArmyRoster)), typeof(ArmyRoster)); Assert.AreEqual(10, restored.casualties.Single().captured);
+    }
     private sealed class Bank : IConscriptionBank
     {
         public int people = 20, age = 1;
@@ -119,11 +146,12 @@ public class ConscriptionTests
         var side = roster.Muster(stack.id, Settings, n => Legend(n));
         Assert.AreEqual("Host", side.name);
         Assert.AreEqual("Aldric", side.conductor.name);
-        Assert.AreEqual(2, side.sections.Count);
-        Assert.AreEqual(50f, side.sections[0].integrity);
+        Assert.AreEqual(2, side.sections.Where(s => !string.IsNullOrEmpty(s.unitId)).Select(s => s.unitId).Distinct().Count());
+        Assert.AreEqual(2, side.sections.Count(s => s.eliteRole != BattleEliteRole.None), "commander and leader deploy as individual elite pieces");
+        Assert.AreEqual(50f, side.sections.Where(s => s.unitId == a.id).Sum(s => s.integrity));
         Assert.AreEqual("Mira", side.sections[0].leader.name);
         Assert.AreEqual(a.id, side.sections[0].unitId);
-        Assert.AreEqual(2, side.sections[0].count);
+        Assert.AreEqual(2, side.sections.Where(s => s.unitId == a.id).Sum(s => s.count));
     }
 
     private static (ArmyRoster roster, ArmyStack stack, Bank bank) Host(params string[] specs)
@@ -215,6 +243,8 @@ public class ConscriptionTests
         {
             var side = OrchestralFormations.Raise(Settings.Template("hearth-guard"), Settings, 1, Legend("Aldric"));
             if (attached) foreach (var s in side.sections) s.bonds = new Dictionary<string, int> { ["Aldric"] = 3 };
+            // The company loses its nerve after the first Measure, so the rout (not the Skirmishes before it) decides who is lost.
+            side.withdrawAt = .99f;
             return BattleResolver.Resolve(new BattleSetup
             {
                 attacker = side,

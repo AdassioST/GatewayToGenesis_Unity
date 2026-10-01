@@ -6,28 +6,33 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// The Tutorial Voice (built in code, <see cref="CodeUI"/>): the Auric Aria guiding a first playthrough. No cards, only
-/// golden words that float and breathe over the game (<see cref="AuricVoice"/>) in three layers: a small whisper, a
-/// large title and a small line saying what to do (<see cref="TutorialCard"/>).
-/// She waits for a pause: nothing is said until the player has been idle <see cref="IdleSeconds"/> (no click, key,
-/// scroll or drag, and the pointer at rest), and she falls silent the moment they act, returning at the next pause while
-/// her lesson still applies. Two kinds (<see cref="TutorialLesson"/>):
-/// - a <b>lesson</b> (the founding): larger words a little above the middle of the screen and its control ringed in
-///   breathing gold (<see cref="TutorialGlow"/>), at every pause while the game state calls for it;
-/// - <b>hints</b>: smaller words under the Age banner (or floating just above a gold ring on the world map), a softer
-///   glow on the control, one at a time, spoken at pauses until learnt (done, answered by pressing what glows, or heard
-///   long enough) and remembered in PlayerPrefs, so a second playthrough is left alone.
-/// Nothing here catches clicks. Everything hides while a story is told, a window covers the view or the save menu is up;
-/// each lesson says whether it belongs to the capital, the world map or either. Created by <see cref="GenesisLoop"/>.
-/// The whole voice can be turned off in Options (General, "Tutorial Voice").
-/// To add one: derive from <see cref="TutorialLesson"/> and list it in <see cref="Lessons"/>, most urgent first.
+/// The Tutorial Voice (built in code, <see cref="CodeUI"/>): the Auric Aria, a god speaking in whispers. No cards, only
+/// golden words that float and breathe over the game (<see cref="AuricVoice"/>), in two forms (<see cref="AuricForm"/>):
+/// - an <b>announcement</b>, a little above the middle of the screen: a small whisper, a large title, a small line under
+///   it, for what begins or is completed (the founding);
+/// - a <b>line</b>, low on the screen like a subtitle: one or two sentences of hers, "(sob)" directions drawn fainter.
+/// She says one thing at a time, from two sources:
+/// - what happens in the moment (<see cref="AuricAria.Announce"/>, <see cref="AuricAria.Say"/>: the founders home, the
+///   world opening, a first death) is said <b>at once</b>, held until read, and not hushed by the player's clicks;
+/// - teaching waits for a pause: nothing is taught until the player has been idle <see cref="IdleSeconds"/> (no click,
+///   key, scroll or drag, and the pointer at rest), and she falls silent the moment they act, returning at the next
+///   pause while it still applies. A <b>lesson</b> (the founding) is an announcement with its control ringed in
+///   breathing gold (<see cref="TutorialGlow"/>); <b>hints</b> are lines with a softer glow (or a gold ring on the world
+///   map), one at a time, until learnt (done, answered by pressing what glows, or heard long enough) and remembered in
+///   PlayerPrefs, so a second playthrough is left alone.
+/// Her voice-over hooks are <see cref="AuricAria.Began"/> and <see cref="AuricAria.Ended"/> (<see cref="AuricVoiceOver"/>
+/// plays recorded clips). Nothing here catches clicks. Everything waits while a story is told, a window covers the view
+/// or the save menu is up; each lesson says whether it belongs to the capital, the world map or either. Created by
+/// <see cref="GenesisLoop"/>. The whole voice can be turned off in Options (General, "Tutorial Voice").
+/// To add a lesson: derive from <see cref="TutorialLesson"/> and list it in <see cref="Lessons"/>, most urgent first.
+/// To answer a moment: call <see cref="AuricAria"/> (from a lesson's Watch, or <see cref="AuricMoments"/>).
 /// </summary>
 public class Tutorials : MonoBehaviour
 {
     /// <summary>Every lesson and hint, in order of priority: the first with something to say is spoken.</summary>
     public static readonly List<TutorialLesson> Lessons = Defaults();
 
-    // Fresh lessons for every play session (their own state, such as the founders' farewell, must not leak between
+    // Fresh lessons for every play session (their own state, such as the founders' homecoming, must not leak between
     // sessions when the Editor keeps statics).
     private static List<TutorialLesson> Defaults() => new List<TutorialLesson>
     {
@@ -49,16 +54,21 @@ public class Tutorials : MonoBehaviour
     };
 
     private const string SeenKey = "g2g.tutorials.seen", OffKey = "g2g.tutorials.off";
-    // She comes in slowly, eased like dawn light (the letters condense on their own clock, AuricVoice), and leaves
-    // quicker when the player acts; changing words fade out faster still.
+    // Teaching comes in slowly, eased like dawn light (the letters condense on their own clock, AuricVoice), and leaves
+    // quicker when the player acts; changing words fade out faster still. Words said at once answer a moment: they come
+    // sooner and leave slowly, like a breath let out.
     private const float RefreshSeconds = 0.15f, FadeInSeconds = 2.4f, FadeOutSeconds = 0.6f, SwapSeconds = 0.35f;
-    private const float LessonWidth = 860f, BodyWidth = 640f, LessonRise = 70f, HintMaxWidth = 520f, HintGlow = 0.55f;
+    private const float SaidFadeIn = 1.2f, SaidFadeOut = 1.6f;
+    private const float AnnouncementWidth = 860f, BodyWidth = 640f, AnnouncementRise = 70f, HintGlow = 0.55f;
+    // A subtitle: its widest, how far above the bottom (share of the screen's height, never under the floor: clear of
+    // the world's dock, or over the capital just above the ornament of its HUD along the bottom), and how faint its rule is.
+    private const float LineWidth = 900f, LineHeight = 0.14f, LineFloor = 128f, CapitalLineFloor = 360f, LineRule = 0.5f, LineReveal = 0.022f;
     // A press this near a ringed spot of the map (canvas units) answers it. The pointer moving more than MovePixels in a
     // frame is not idle; once she speaks, it must wander WanderPixels before she falls silent (a hand resting on the
     // mouse does not hush her). A held button moved further than DragPixels is a drag.
     private const float SpotReach = 56f, MovePixels = 2f, WanderPixels = 90f, DragPixels = 3f;
 
-    /// <summary>Real seconds of stillness before she speaks (tests shorten it).</summary>
+    /// <summary>Real seconds of stillness before she teaches (tests shorten it).</summary>
     public static float IdleSeconds = 3f;
 
     /// <summary>Real seconds after a hint is learnt before the next may be spoken (tests shorten it).</summary>
@@ -70,7 +80,8 @@ public class Tutorials : MonoBehaviour
     private static HashSet<string> _seen;
     private static bool _stirred;
 
-    // One place she speaks from: three lines, a rule under the title, and what they say now.
+    // One place she speaks from: its lines (an announcement's whisper, title and body; a subtitle's body alone), a rule
+    // of light, and what they say now.
     private class Voice
     {
         public RectTransform rect;
@@ -78,9 +89,10 @@ public class Tutorials : MonoBehaviour
         public TextMeshProUGUI whisper, title, body;
         public Image rule;
         public AuricVoice speech;
-        public string key, words;
+        public string key, text;
         public TutorialLesson speaker;
-        public float widest;
+        // Said at once (not taught): it fades on the slower clock.
+        public bool said;
         // How far the voice has come in (0 silent, 1 fully there), eased into its alpha.
         public float fade;
     }
@@ -88,21 +100,31 @@ public class Tutorials : MonoBehaviour
     private TooltipTheme _theme;
     private Canvas _canvas;
     private RectTransform _canvasRect, _ring;
-    private Voice _lessonVoice, _hintVoice;
+    private Voice _announcement, _line;
     private Image _ringImage;
     private TutorialGlow _glow;
+    private AuricMoments _moments;
     private float _refreshAt, _nextHintAt, _idle, _wander;
+    // Teaching: the lesson or hint that would speak at a pause, its words and their key.
     private TutorialLesson _speaker, _spoke;
-    private TutorialCard _card;
+    private AuricWords _teach;
     private string _key;
-    // Seconds each utterance has been heard (lesson id and title), and the lesson utterances heard out.
+    // Said at once: the words, their key, how long they have been up and how long they hold.
+    private AuricWords _said;
+    private string _saidKey;
+    private bool _saying;
+    private float _saidHeld, _saidHold;
+    private int _saidCount;
+    // What her voice-over is saying (Began raised, Ended not yet).
+    private AuricWords _voiced;
+    private string _voicedKey;
+    // Seconds each teaching utterance has been heard (lesson id and words id).
     private readonly Dictionary<string, float> _heard = new Dictionary<string, float>(StringComparer.Ordinal);
-    private readonly HashSet<string> _retired = new HashSet<string>(StringComparer.Ordinal);
 
-    /// <summary>The lesson or hint she is speaking now (null: she is silent).</summary>
+    /// <summary>What she is saying now: a lesson or hint's id, or the id of words said at once (null: she is silent).</summary>
     public static string ShowingId { get; private set; }
 
-    /// <summary>The player did something (tests, or input the voice cannot see): she falls silent and waits for the next pause.</summary>
+    /// <summary>The player did something (tests, or input the voice cannot see): she stops teaching and waits for the next pause.</summary>
     public static void Stir() => _stirred = true;
 
     // ===== WHAT HAS BEEN LEARNT =====
@@ -148,8 +170,8 @@ public class Tutorials : MonoBehaviour
     public static void ResetSeenMemory() => _seen = null;
 
     /// <summary>
-    /// The Tutorial Voice on (the default) or off, remembered on this machine (Options, General). Off silences every
-    /// lesson and hint. Only the Options menu sets it, so it may be set from the title screen, before any world.
+    /// The Tutorial Voice on (the default) or off, remembered on this machine (Options, General). Off silences all she
+    /// says: lessons, hints and moments. Only the Options menu sets it, so it may be set from the title screen.
     /// </summary>
     public static bool VoiceOn
     {
@@ -163,6 +185,7 @@ public class Tutorials : MonoBehaviour
     {
         Lessons.Clear();
         Lessons.AddRange(Defaults());
+        AuricAria.Clear();
         _stirred = false;
         _theme = CodeUI.Theme(nameof(Tutorials));
         if (_theme == null) { enabled = false; return; }
@@ -172,11 +195,22 @@ public class Tutorials : MonoBehaviour
         root.blocksRaycasts = root.interactable = false;
 
         float b = _theme.bodySize;
-        // The lesson: her words a little above the middle of the screen, the title large.
-        _lessonVoice = Build("Lesson", new Vector2(0.5f, 0.5f), b + 2f, b + 22f, b + 3f, LessonWidth);
-        _lessonVoice.rect.anchoredPosition = new Vector2(0f, LessonRise);
-        // A hint: smaller, under the Age banner (or over its spot on the map).
-        _hintVoice = Build("Hint", new Vector2(0.5f, 1f), b - 1f, b + 8f, b, HintMaxWidth);
+        // Announcements: a little above the middle of the screen, the title large.
+        _announcement = Build("Announcement", new Vector2(0.5f, 0.5f));
+        _announcement.whisper = Line(_announcement.rect, "Whisper", b + 2f, FontStyles.Italic, 3f);
+        _announcement.title = Line(_announcement.rect, "Title", b + 22f, FontStyles.Normal, 1f);
+        _announcement.rule = Rule(_announcement.rect);
+        _announcement.body = Line(_announcement.rect, "Body", b + 3f, FontStyles.Normal, 0f);
+        Bind(_announcement, new TMP_Text[] { _announcement.whisper, _announcement.title, _announcement.body },
+            new[] { new Color(1f, 1f, 1f, 0.72f), Color.white, new Color(1f, 0.98f, 0.93f, 0.9f) }, 1);
+        _announcement.rect.anchoredPosition = new Vector2(0f, AnnouncementRise);
+        // Lines: a subtitle low on the screen, a faint rule of light unfolding under it as she begins.
+        _line = Build("Line", new Vector2(0.5f, 0f));
+        _line.body = Line(_line.rect, "Subtitle", b + 4f, FontStyles.Normal, 1f);
+        _line.rule = Rule(_line.rect);
+        Bind(_line, new TMP_Text[] { _line.body }, new[] { new Color(1f, 0.98f, 0.93f, 0.95f) }, -1);
+        _line.speech.OrnamentLight = LineRule;
+        _line.speech.RevealPerLetter = LineReveal;
 
         // The ring on a spot of the world map.
         _ringImage = CodeUI.Solid(_canvas.transform, "World Ring", TutorialGlow.Gold);
@@ -187,30 +221,43 @@ public class Tutorials : MonoBehaviour
         _ring.gameObject.SetActive(false);
 
         _glow = gameObject.AddComponent<TutorialGlow>();
+        gameObject.AddComponent<AuricVoiceOver>();
+        _moments = new AuricMoments();
     }
 
-    // Floating words: no plate and nothing behind them, three lines of light and a rule of light under the title.
-    private Voice Build(string name, Vector2 anchor, float whisperSize, float titleSize, float bodySize, float widest)
+    private void OnDestroy()
     {
-        var voice = new Voice { widest = widest };
+        _moments?.Dispose();
+        Voiced(null, default);
+    }
+
+    // Floating words: no plate and nothing behind them.
+    private Voice Build(string name, Vector2 anchor)
+    {
+        var voice = new Voice();
         voice.rect = CodeUI.Panel(_canvas.transform, name, anchor, anchor);
         voice.rect.pivot = anchor;
-        voice.whisper = Line(voice.rect, "Whisper", whisperSize, FontStyles.Italic, 3f);
-        voice.title = Line(voice.rect, "Title", titleSize, FontStyles.Normal, 1f);
-        voice.rule = CodeUI.Solid(voice.rect, "Rule", AuricVoice.DeepGold);
-        voice.rule.sprite = AuricVoice.RuleSprite();
-        voice.rule.rectTransform.anchorMin = voice.rule.rectTransform.anchorMax = voice.rule.rectTransform.pivot = new Vector2(0.5f, 1f);
-        voice.body = Line(voice.rect, "Body", bodySize, FontStyles.Normal, 0f);
+        return voice;
+    }
+
+    // Its lines share one glowing material; the rule unfolds after line <paramref name="ruleAfter"/> (-1: as she begins).
+    private static void Bind(Voice voice, TMP_Text[] lines, Color[] tints, int ruleAfter)
+    {
         voice.speech = voice.rect.gameObject.AddComponent<AuricVoice>();
-        voice.speech.Bind(new TMP_Text[] { voice.whisper, voice.title, voice.body },
-            new[] { new Color(1f, 1f, 1f, 0.72f), Color.white, new Color(1f, 0.98f, 0.93f, 0.9f) },
-            new Graphic[] { voice.rule }, new[] { 1 });
+        voice.speech.Bind(lines, tints, new Graphic[] { voice.rule }, new[] { ruleAfter });
         foreach (var g in voice.rect.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
         voice.group = voice.rect.gameObject.AddComponent<CanvasGroup>();
         voice.group.alpha = 0f;
         voice.group.blocksRaycasts = voice.group.interactable = false;
         voice.rect.gameObject.SetActive(false);
-        return voice;
+    }
+
+    private static Image Rule(RectTransform parent)
+    {
+        var rule = CodeUI.Solid(parent, "Rule", AuricVoice.DeepGold);
+        rule.sprite = AuricVoice.RuleSprite();
+        rule.rectTransform.anchorMin = rule.rectTransform.anchorMax = rule.rectTransform.pivot = new Vector2(0.5f, 1f);
+        return rule;
     }
 
     private TextMeshProUGUI Line(RectTransform parent, string name, float size, FontStyles style, float spacing)
@@ -219,6 +266,7 @@ public class Tutorials : MonoBehaviour
         label.alignment = TextAlignmentOptions.Center;
         label.lineSpacing = TooltipText.LineSpacing;
         label.characterSpacing = spacing;
+        label.richText = true;
         var rect = label.rectTransform;
         rect.anchorMin = new Vector2(0f, 1f);
         rect.anchorMax = new Vector2(1f, 1f);
@@ -251,15 +299,16 @@ public class Tutorials : MonoBehaviour
 
     private void Update()
     {
-        if (_lessonVoice == null) return;
+        if (_announcement == null) return;
         float now = Time.unscaledTime, dt = Time.unscaledDeltaTime;
         if (now >= _refreshAt)
         {
             _refreshAt = now + RefreshSeconds;
+            Watch();
             Pick();
         }
 
-        // The pause: any act resets it and silences her; a still pointer lets it grow.
+        // The pause: any act resets it and stops her teaching; a still pointer lets it grow.
         bool acted = Acted(out bool press, out float moved);
         if (acted)
         {
@@ -274,18 +323,78 @@ public class Tutorials : MonoBehaviour
         else _idle += dt;
 
         bool quiet = (EventSystemLogic.Instance != null && EventSystemLogic.Instance.isEventActive) || SaveMenu.BlocksGameplay || OpenWindows.OverTheView;
-        bool speak = _speaker != null && !quiet && _idle >= IdleSeconds && Here(_speaker);
-        var voice = speak ? (_speaker.IsHint ? _hintVoice : _lessonVoice) : null;
-        Drive(_lessonVoice, voice == _lessonVoice && voice != null);
-        Drive(_hintVoice, voice == _hintVoice && voice != null);
-        bool heard = voice != null && voice.key == _key && voice.fade > 0.5f;
-        _spoke = heard ? _speaker : null;
-        if (heard) Listen(dt);
-        if (_hintVoice.rect.gameObject.activeSelf && _hintVoice.speaker != null && _hintVoice.key == _key) PlaceHint(_hintVoice);
+        TakeSaid(quiet);
 
-        _glow.Follow(heard ? _speaker.Target() : null, heard && _speaker.IsHint ? HintGlow : 1f);
-        PlaceRing(heard ? _speaker : null);
-        ShowingId = speak ? _speaker.Id : null;
+        // What she says now: words said at once first; else the lesson or hint, at a pause.
+        TutorialLesson speaker = null;
+        AuricWords words = default;
+        string key = null;
+        if (_saying)
+        {
+            words = _said;
+            key = _saidKey;
+        }
+        else if (_speaker != null && !quiet && _idle >= IdleSeconds && Here(_speaker))
+        {
+            speaker = _speaker;
+            words = _teach;
+            key = _key;
+        }
+        var voice = key == null ? null : words.form == AuricForm.Announcement ? _announcement : _line;
+        Drive(_announcement, voice == _announcement, key, words, speaker);
+        Drive(_line, voice == _line, key, words, speaker);
+        bool shown = voice != null && voice.key == key && voice.fade > 0f;
+        // Said at once: held until read, then let go (it fades while the next is taken).
+        if (_saying && shown && (_saidHeld += dt) >= _saidHold) _saying = false;
+        bool heard = shown && voice.fade > 0.5f;
+        _spoke = heard ? speaker : null;
+        if (_spoke != null) Listen(dt);
+        Voiced(shown ? key : null, words);
+        if (_line.rect.gameObject.activeSelf) PlaceLine();
+
+        _glow.Follow(_spoke != null ? _spoke.Target() : null, _spoke != null && _spoke.IsHint ? HintGlow : 1f);
+        PlaceRing(_spoke);
+        ShowingId = key == null ? null : speaker != null ? speaker.Id : words.id;
+    }
+
+    // Lessons and moments look at the game while it is played (not under the save menu or while a save is restored).
+    private void Watch()
+    {
+        if (SaveMenu.BlocksGameplay || SaveSession.Restoring) return;
+        _moments?.Watch();
+        foreach (var lesson in Lessons) lesson?.Watch();
+    }
+
+    // Words said at once are taken in turn whenever she may speak. A story or a window cuts them short: they are said
+    // again afterwards unless most of them was heard. With the voice off nothing waits.
+    private void TakeSaid(bool quiet)
+    {
+        if (!VoiceOn)
+        {
+            AuricAria.Clear();
+            _saying = false;
+            return;
+        }
+        if (_saying && quiet)
+        {
+            if (_saidHeld < _saidHold * 0.5f) AuricAria.Resume(_said);
+            _saying = false;
+        }
+        if (_saying || quiet || !Here(null) || !AuricAria.TryNext(out _said)) return;
+        _saying = true;
+        _saidHeld = 0f;
+        _saidHold = AuricAria.HoldSeconds(_said);
+        _saidKey = "said#" + (++_saidCount) + "|" + _said.id;
+    }
+
+    // Her voice-over follows what is shown: Began when new words appear, Ended when they go.
+    private void Voiced(string key, AuricWords words)
+    {
+        if (key == _voicedKey) return;
+        if (_voicedKey != null) AuricAria.RaiseEnded(_voiced);
+        _voicedKey = key;
+        _voiced = words;
+        if (key != null) AuricAria.RaiseBegan(words);
     }
 
     private void Hush()
@@ -294,17 +403,12 @@ public class Tutorials : MonoBehaviour
         _wander = 0f;
     }
 
-    // The words she is speaking are heard a little longer: a hint heard long enough is learnt, a lesson's utterance with
-    // a limit is retired.
+    // The hint she is teaching is heard a little longer: heard long enough, it is learnt.
     private void Listen(float dt)
     {
         _heard.TryGetValue(_key, out float heard);
         _heard[_key] = heard += dt;
-        if (_speaker.IsHint)
-        {
-            if (heard >= _speaker.Seconds) Learnt(_speaker.Id);
-        }
-        else if (_card.retireAfter > 0f && heard >= _card.retireAfter) _retired.Add(_key);
+        if (_speaker.IsHint && heard >= _speaker.Seconds) Learnt(_speaker.Id);
     }
 
     // A press while she spoke: on the glowing control or the ringed spot (or anywhere, for a hint about any action)
@@ -347,15 +451,15 @@ public class Tutorials : MonoBehaviour
 
     // A voice fades in when it is the one speaking and already holds these words. Otherwise it fades out (quickly when
     // it is about to take other words), and takes the new words once silent.
-    private void Drive(Voice voice, bool mine)
+    private void Drive(Voice voice, bool mine, string key, AuricWords words, TutorialLesson speaker)
     {
-        if (mine && voice.key != _key && voice.fade <= 0f) Show(voice);
-        bool up = mine && voice.key == _key;
+        if (mine && voice.key != key && voice.fade <= 0f) Show(voice, key, words, speaker);
+        bool up = mine && voice.key == key;
         // Back after a pause: the words are drawn out of the air again. The same utterance with other words (a hint's
         // line changes as the player moves): laid out anew.
         if (up && voice.fade <= 0f) voice.speech.Say();
-        else if (up && voice.words != Words) Show(voice);
-        float seconds = up ? FadeInSeconds : mine ? SwapSeconds : FadeOutSeconds;
+        else if (up && voice.text != words.Transcript) Show(voice, key, words, speaker);
+        float seconds = up ? (voice.said ? SaidFadeIn : FadeInSeconds) : mine ? SwapSeconds : voice.said ? SaidFadeOut : FadeOutSeconds;
         voice.fade = Mathf.MoveTowards(voice.fade, up ? 1f : 0f, Time.unscaledDeltaTime / seconds);
         // Eased both ways: she arrives like light gathering, not a switch.
         float t = voice.fade;
@@ -364,10 +468,10 @@ public class Tutorials : MonoBehaviour
         if (voice.rect.gameObject.activeSelf != visible) voice.rect.gameObject.SetActive(visible);
     }
 
+    // Where a lesson may speak (null: words said at once, over the capital or the map alike).
     private static bool Here(TutorialLesson lesson)
     {
-        if (lesson == null) return false;
-        switch (lesson.Place)
+        switch (lesson != null ? lesson.Place : TutorialPlace.Anywhere)
         {
             case TutorialPlace.Capital: return !WorldView.IsOpen;
             case TutorialPlace.World: return WorldView.Current == WorldView.Mode.World;
@@ -397,22 +501,11 @@ public class Tutorials : MonoBehaviour
         _ringImage.color = new Color(TutorialGlow.Gold.r, TutorialGlow.Gold.g, TutorialGlow.Gold.b, Mathf.Lerp(0.25f, 0.85f, breath));
     }
 
-    // A hint with a spot on the map floats just above its ring, as if spoken there; any other sits under the Age banner.
-    private void PlaceHint(Voice voice)
+    // A subtitle sits low in the middle of the screen, above the HUD along the bottom.
+    private void PlaceLine()
     {
-        var canvas = _canvasRect.rect;
-        var size = voice.rect.sizeDelta;
-        if (RingSpot(voice.speaker, out var screen) && RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, screen, null, out var local))
-        {
-            voice.rect.anchorMin = voice.rect.anchorMax = new Vector2(0.5f, 0.5f);
-            voice.rect.pivot = new Vector2(0.5f, 0f);
-            float halfWidth = canvas.width / 2f - size.x / 2f - 16f;
-            float top = canvas.height / 2f - AgeBanner.ReservedHeight - size.y - 8f;
-            voice.rect.anchoredPosition = new Vector2(Mathf.Clamp(local.x, -halfWidth, halfWidth), Mathf.Min(local.y + _ring.sizeDelta.y * 0.6f, top));
-            return;
-        }
-        voice.rect.anchorMin = voice.rect.anchorMax = voice.rect.pivot = new Vector2(0.5f, 1f);
-        voice.rect.anchoredPosition = new Vector2(0f, -(AgeBanner.ReservedHeight + 18f));
+        float floor = WorldView.Current == WorldView.Mode.World ? LineFloor : CapitalLineFloor;
+        _line.rect.anchoredPosition = new Vector2(0f, Mathf.Max(floor, _canvasRect.rect.height * LineHeight));
     }
 
     // ===== CHOOSING =====
@@ -429,52 +522,59 @@ public class Tutorials : MonoBehaviour
         // The lesson: the first that speaks, while the game calls for it.
         foreach (var lesson in Lessons)
         {
-            if (lesson == null || lesson.IsHint || !Here(lesson) || !Speaks(lesson, out var card, out string key) || _retired.Contains(key)) continue;
-            Choose(lesson, card, key);
+            if (lesson == null || lesson.IsHint || !Here(lesson) || !Speaks(lesson, out var words, out string key)) continue;
+            Choose(lesson, words, key);
             return;
         }
         if (Time.unscaledTime < _nextHintAt) return;
         foreach (var hint in Lessons)
         {
-            if (hint == null || !hint.IsHint || Seen(hint.Id) || !Here(hint) || !Speaks(hint, out var card, out string key)) continue;
-            Choose(hint, card, key);
+            if (hint == null || !hint.IsHint || Seen(hint.Id) || !Here(hint) || !Speaks(hint, out var words, out string key)) continue;
+            Choose(hint, words, key);
             return;
         }
     }
 
-    private static bool Speaks(TutorialLesson lesson, out TutorialCard card, out string key)
+    private static bool Speaks(TutorialLesson lesson, out AuricWords words, out string key)
     {
         key = null;
-        if (!lesson.Speak(out card) || string.IsNullOrEmpty(card.title)) return false;
-        key = lesson.Id + "|" + card.title;
+        if (!lesson.Speak(out words) || words.IsEmpty) return false;
+        key = lesson.Id + "|" + words.id;
         return true;
     }
 
-    private void Choose(TutorialLesson speaker, TutorialCard card, string key)
+    private void Choose(TutorialLesson speaker, AuricWords words, string key)
     {
         _speaker = speaker;
-        _card = card;
+        _teach = words;
         _key = key;
     }
 
-    private string Words => _card.whisper + "\n" + _card.title + "\n" + _card.body;
-
-    // The voice takes its new words: each line laid out under the one before, the rule under the title.
-    private void Show(Voice voice)
+    // The voice takes its new words and lays them out, then speaks them.
+    private void Show(Voice voice, string key, AuricWords words, TutorialLesson speaker)
     {
-        voice.key = _key;
-        voice.words = Words;
-        voice.speaker = _speaker;
+        voice.key = key;
+        voice.text = words.Transcript;
+        voice.speaker = speaker;
+        voice.said = speaker == null;
         voice.rect.gameObject.SetActive(true);
-        voice.whisper.text = _card.whisper ?? string.Empty;
-        voice.title.text = _card.title ?? string.Empty;
-        voice.body.text = _card.body ?? string.Empty;
+        if (voice == _announcement) LayOutAnnouncement(voice, words);
+        else LayOutLine(voice, words);
+        voice.speech.Say();
+    }
+
+    // Each line under the one before, the rule under the title.
+    private void LayOutAnnouncement(Voice voice, AuricWords words)
+    {
+        voice.whisper.text = AuricWords.Styled(words.whisper);
+        voice.title.text = words.title ?? string.Empty;
+        voice.body.text = AuricWords.Styled(words.text);
         // As wide as the whisper and the title need; the line under them wraps rather than stretch the voice past BodyWidth.
         float width = 0f;
         foreach (var line in new[] { voice.whisper, voice.title })
             if (line.text.Length > 0) width = Mathf.Max(width, line.GetPreferredValues(line.text).x + 8f);
         if (voice.body.text.Length > 0) width = Mathf.Max(width, Mathf.Min(BodyWidth, voice.body.GetPreferredValues(voice.body.text).x + 8f));
-        width = Mathf.Min(voice.widest, width);
+        width = Mathf.Min(AnnouncementWidth, width);
 
         float y = 0f;
         y = Place(voice.whisper, width, y, 4f);
@@ -485,8 +585,20 @@ public class Tutorials : MonoBehaviour
         y += 12f + 6f;
         y = Place(voice.body, width, y, 0f);
         voice.rect.sizeDelta = new Vector2(width, y);
-        if (voice == _hintVoice) PlaceHint(voice);
-        voice.speech.Say();
+    }
+
+    // The subtitle, wrapping onto a second line rather than running wide, and a short faint rule under it.
+    private void LayOutLine(Voice voice, AuricWords words)
+    {
+        voice.body.text = AuricWords.Styled(words.text);
+        float widest = Mathf.Min(LineWidth, _canvasRect.rect.width - 64f);
+        float width = Mathf.Min(widest, voice.body.GetPreferredValues(voice.body.text).x + 8f);
+        float y = Place(voice.body, width, 0f, 6f);
+        var rule = voice.rule.rectTransform;
+        rule.sizeDelta = new Vector2(Mathf.Min(width * 0.45f, 260f), 10f);
+        rule.anchoredPosition = new Vector2(0f, -y);
+        voice.rect.sizeDelta = new Vector2(width, y + 10f);
+        PlaceLine();
     }
 
     // One line at <paramref name="y"/> from the top, as tall as its words wrap; returns where the next begins.

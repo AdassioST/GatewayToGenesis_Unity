@@ -67,7 +67,13 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
 
     public GameProductionSlot GetProductionSlot(string name) => productionTab != null ? productionTab.GetSlot<GameProductionSlot>(name) : null;
 
-    public GameTechnologySlot GetTechnologySlot(string name) => researchTab != null ? researchTab.GetSlot<GameTechnologySlot>(name) : null;
+    /// <summary>A technology by name; an old name of a renamed technology finds it too (<see cref="TechnologyAliases"/>).</summary>
+    public GameTechnologySlot GetTechnologySlot(string name)
+    {
+        if (researchTab == null) return null;
+        var slot = researchTab.GetSlot<GameTechnologySlot>(name);
+        return slot != null || !TechnologyAliases.IsOldName(name) ? slot : researchTab.GetSlot<GameTechnologySlot>(TechnologyAliases.Resolve(name));
+    }
 
     public int GetResourceAmount(string resourceName) => Mathf.RoundToInt(GetResourceAmountExact(resourceName));
 
@@ -456,7 +462,7 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
     /// <summary>The plan read from a save. Nothing starts here: loading never replays anything (<see cref="ResumeResearch"/> does).</summary>
     public void RestoreResearchPlan(IEnumerable<string> plan)
     {
-        _researchPlan = plan != null ? plan.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n.Trim()).ToList() : new List<string>();
+        _researchPlan = plan != null ? plan.Where(n => !string.IsNullOrWhiteSpace(n)).Select(TechnologyAliases.Resolve).ToList() : new List<string>();
         ResearchPlanChanged?.Invoke();
     }
 
@@ -564,7 +570,7 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
 
         while (!technologySlot.isUnlocked)
         {
-            if (TimeSystemLogic.Instance != null && TimeSystemLogic.Instance.isTimePaused)
+            if (TimeSystemLogic.Instance != null && TimeSystemLogic.Instance.IsStopped)
             {
                 yield return null;
                 continue;
@@ -713,6 +719,19 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
                 HandleSpecialUnlockable(unlockable);
                 break;
 
+            // The Grimoire reads researched technologies itself (Grimoire.Current), so a load needs nothing here.
+            case TechUnlockableType.GrimoireSeat:
+            case TechUnlockableType.SymphonyCard:
+            case TechUnlockableType.SpellWildcard:
+                GameLog.Event($"Grimoire: {unlockable.name} ({techName}). {unlockable.effects}", Log);
+                break;
+
+            // Once, when researched: a load never replays it (restoration grants nothing).
+            case TechUnlockableType.ScoreChange:
+                if (!string.IsNullOrWhiteSpace(unlockable.score) && EventSystemLogic.Instance != null)
+                    EventSystemLogic.Instance.ModifyEventScore(unlockable.score.Trim(), Mathf.RoundToInt(unlockable.resourceModifier));
+                break;
+
             default:
                 GameLog.Error($"Unhandled unlockable type {unlockable.unlockableType} on '{unlockable.name}'.", Log);
                 break;
@@ -736,8 +755,9 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
             case "Expeditions":
             case "Builders":
             case "Settlers":
-            // The Great Hunger: the Age of Desolation's crisis gate (AgeDefinition.gateTechnologies) does the work.
-            case "The Great Hunger":
+            // The First Lean Season: Echoes of Hunger, the Act I pivot crisis (a tease of the Hunger, not the Age Crisis).
+            // The Age asset does the work: it opens Act II, whose Act of Fate story tells it.
+            case "The First Lean Season":
                 GameLog.Event($"{unlockable.name}: {unlockable.effects}", Log);
                 break;
             // Placeholder effects from the Act I tree sheet (Sept 27, 2026): their systems do not exist yet.
@@ -747,6 +767,18 @@ public class GameUnitsLogic : SingletonBehaviour<GameUnitsLogic>
             case "Keynote Relics":
             case "Vital Winds":
             case "Resource Capacity":
+            // Placeholders from the Act I rework (Docs/Planning/TECH_TREE_ACT_I.md): their systems do not exist yet.
+            case "Bitter Roots Foraging":
+            case "Earth-Beans Planting":
+            case "Trapping Lines":
+            case "Midwives":
+            case "Wild Honey Stores":
+            case "Old Roads Reclaimed":
+            case "Moonlit Vigil Civic":
+            case "Sky Glass Burials Civic":
+            case "The Rhythm Ritual":
+            case "Awakened Major Unison":
+            case "Flow State":
                 GameLog.Event($"{unlockable.name} (placeholder, no effect yet): {unlockable.effects}", Log);
                 break;
             case "Building Material Button":

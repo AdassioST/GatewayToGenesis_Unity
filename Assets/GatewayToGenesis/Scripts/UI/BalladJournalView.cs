@@ -14,10 +14,10 @@ public sealed class BalladJournalView : MonoBehaviour
     private static BalladJournalView _current;
     /// <summary>The journal is open (Escape closes it: <see cref="OpenWindows"/>).</summary>
     public static bool IsOpen => _current != null && _current._root != null && _current._root.gameObject.activeSelf;
+    public static void ToggleJournal() => _current?.Toggle();
 
     private TooltipTheme _theme;
     private RectTransform _root, _body;
-    private TextMeshProUGUI _launcher;
     private ScrollRect _scroll;
     private bool _relationships;
     private string _signature, _confirm;
@@ -28,18 +28,6 @@ public sealed class BalladJournalView : MonoBehaviour
         _current = this;
         _theme = CodeUI.Theme(nameof(BalladJournalView));
         var canvas = CodeUI.Canvas(transform, "Ballads and Bonds", 5, out var scaler);
-        var launcherPlate = CodeUI.Panel(canvas.transform, "Journal Button", new Vector2(0f, 1f), new Vector2(0f, 1f));
-        launcherPlate.pivot = new Vector2(0f, 1f);
-        launcherPlate.anchoredPosition = new Vector2(24f, -246f);
-        launcherPlate.sizeDelta = new Vector2(264f, 48f);
-        CodeUI.Plate(launcherPlate, _theme, scaler);
-        _launcher = CodeUI.TextButton(launcherPlate, "Ballads & Bonds", Toggle, _theme, _theme.bodySize);
-        var launchRect = (RectTransform)_launcher.transform;
-        launchRect.anchorMin = Vector2.zero;
-        launchRect.anchorMax = Vector2.one;
-        launchRect.offsetMin = new Vector2(18f, 5f);
-        launchRect.offsetMax = new Vector2(-18f, -5f);
-
         _root = CodeUI.Panel(canvas.transform, "Journal", new Vector2(0.14f, 0.13f), new Vector2(0.86f, 0.88f));
         CodeUI.Plate(_root, _theme, scaler);
         // The plate's art is decorative; this surface prevents clicks reaching the world underneath.
@@ -92,7 +80,6 @@ public sealed class BalladJournalView : MonoBehaviour
     {
         if (_root == null) return;
         bool telling = EventSystemLogic.Instance != null && EventSystemLogic.Instance.isEventActive;
-        _launcher.transform.parent.gameObject.SetActive(!telling && !_root.gameObject.activeSelf);
         if (telling) Close();
         if (!_root.gameObject.activeSelf || Time.unscaledTime < _refreshAt) return;
         _refreshAt = Time.unscaledTime + 0.5f;

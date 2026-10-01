@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Reading the Vital Winds
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: cf4aad9d8fcd89c8428ab4c968831897, type: 2}
+  isEventTech: 0
+  tier: 9
+  satisfactionPoints: 0
+  techRequirements:
+  - Knowledge Sanctums
+  - Wild Honey Keeping
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 4650
+  enlightenedConditions:
+  - type: 6
+    trigger: 'species_deduced'
+    requiredAmount: 1
+    description: 'Work out everything about one creature.'
+    riddle: 'Every creature keeps a small book of answers: what it eats, where it sleeps, how it brings young into the world. Read one to its last page.'
+    clue: 'The Bestiary keeps your guesses. Test them by watching, and the answers come.'
+    clueAt: 0.5
+    clueTrigger: 'species_known'
+    clueAmount: 2
+  techUnlockables:
+  - {fileID: 11400000, guid: 8e1c92df49ff9dd80252d00ae1987fe7, type: 2}
+  - {fileID: 11400000, guid: f4d7535e091cafde64db2fe3bfb6e99d, type: 2}

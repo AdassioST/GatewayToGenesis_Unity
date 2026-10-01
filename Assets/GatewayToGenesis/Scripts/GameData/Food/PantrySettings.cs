@@ -56,7 +56,7 @@ public class PantrySettings : ScriptableObject
 
     [Header("Surplus into the stores")]
     [Tooltip("Once the founders are all in and this technology is known, Food gathered beyond keepInHand goes into the stores.")]
-    public string bankTechnology = "Resource Storage";
+    public string bankTechnology = "Ash-Cellars";
     [Tooltip("The kind of stored food the surplus Food becomes (at its food value: one Food makes 1 / foodValue of it).")]
     public string bankedKind = "Dried Auric Peaches";
     [Tooltip("Food kept in hand (the rest is stored): enough to let one survivor in at the gates.")]

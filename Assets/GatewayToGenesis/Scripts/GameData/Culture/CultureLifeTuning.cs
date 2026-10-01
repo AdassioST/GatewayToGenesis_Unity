@@ -182,7 +182,7 @@ public class CultureLifeTuning
         new CultureActivitySpec
         {
             id = "remembrance", name = "Rite of Remembrance", family = "Esoteric", cost = { Res("Faith", 5f) }, unity = 9f, morale = 2, moraleSevenths = 2, joy = 0.1f, cooldownSevenths = 14,
-            technology = "Rites of Harvest",
+            technology = "Harvest Hymns",
             description = "The names of those the Hunger took are spoken aloud, one by one, so that no one is ground into the dust unremembered.",
         },
         new CultureActivitySpec
@@ -271,28 +271,28 @@ public class CultureLifeTuning
         new RecipeSpec { id = "riverfish-rice", dish = "Riverfish Rice", inputs = { Res("River Fish", 1f), Res("Highland Rice", 1f) }, output = 2f,
             description = "Fish steamed over highland rice." },
         new RecipeSpec { id = "hunters-stew", dish = "Hunter's Stew", inputs = { Res("Game Meat", 1f), Res("Bitter Roots", 2f), Res("Glimmerfern", 0.5f) }, output = 3f,
-            technology = "Efficient Rations", description = "Game stretched with bitter roots and lifted with a pinch of Glimmerfern: it keeps far longer than meat." },
+            technology = "Shared Embers", description = "Game stretched with bitter roots and lifted with a pinch of Glimmerfern: it keeps far longer than meat." },
         new RecipeSpec { id = "honeyed-porridge", dish = "Honeyed Grain Porridge", inputs = { Res("Deep-Rooted Grain", 2f), Res("Wild Honey", 1f) }, output = 3f,
-            technology = "Rites of Harvest", description = "Grain sweetened with wild honey: the first sweet many children taste." },
+            technology = "Harvest Hymns", description = "Grain sweetened with wild honey: the first sweet many children taste." },
         new RecipeSpec { id = "ash-loaf", dish = "Ash-Loaf", inputs = { Res("Ash-Bread", 4f), Res("Earth-Beans", 1f) }, output = 2f, unity = 1f,
             technology = "Echoes of Hunger", description = "Peachless bread baked for those who starved in the Hunger: food as memorial and refusal (The Inescapable Hunger)." },
         new RecipeSpec { id = "feast-roast", dish = "Behemoth Feast Roast", inputs = { Res("Behemoth Meat", 1f), Res("Bitter Roots", 2f), Res("Glimmerfern", 1f) }, output = 4f,
             technology = "The Rekindling", description = "A behemoth roasted whole for a settlement's table." },
         new RecipeSpec { id = "saffron-pilaf", dish = "Saffron Riverfish Pilaf", inputs = { Res("River Fish", 2f), Res("Highland Rice", 2f), Res("Auric Saffron", 0.5f), Res("Silver Salt", 0.25f) }, output = 3f,
-            technology = "Rites of Harvest", description = "River fish and fragrant rice finished with saffron from flourishing land and salt from coherent shores." },
+            technology = "Harvest Hymns", description = "River fish and fragrant rice finished with saffron from flourishing land and salt from coherent shores." },
         new RecipeSpec { id = "peach-tart", dish = "Honeyed Peach Tart", inputs = { Res("Dried Auric Peaches", 2f), Res("Deep-Rooted Grain", 1f), Res("Wild Honey", 1f), Res("Glimmerfern", 0.25f) }, output = 3f,
-            technology = "Efficient Rations", description = "A layered peach tart with honey and a bright Glimmerfern finish, made to share on days of plenty." },
+            technology = "Shared Embers", description = "A layered peach tart with honey and a bright Glimmerfern finish, made to share on days of plenty." },
 
         // The cellar: beverages fermented from grain, honey, rice and peaches, then distilled from what was fermented.
         // Never from an Eleos Bloom (a bloom steeped or distilled is a tea). Names and numbers are proposals.
         new RecipeSpec { id = "rootgrain-ale", dish = "Rootgrain Ale", method = KitchenMethod.Ferment, inputs = { Res("Deep-Rooted Grain", 2f) }, output = 3f,
             description = "Deep-rooted grain malted, mashed and left to work: the everyday drink of those who dig and haul. It sours within the Phase." },
         new RecipeSpec { id = "honey-mead", dish = "Wild Honey Mead", method = KitchenMethod.Ferment, inputs = { Res("Wild Honey", 2f) }, output = 3f,
-            technology = "Rites of Harvest", description = "Wild honey thinned with water and left to sing in the crock: the oldest drink of harvest nights." },
+            technology = "Wild Honey Keeping", description = "Wild honey thinned with water and left to sing in the crock: the oldest drink of harvest nights." },
         new RecipeSpec { id = "rice-wine", dish = "Highland Rice Wine", method = KitchenMethod.Ferment, inputs = { Res("Highland Rice", 2f) }, output = 2f,
-            technology = "Resource Preservation", description = "Highland rice steamed and fermented into a clear, keeping wine." },
+            technology = "Salt and Smoke", description = "Highland rice steamed and fermented into a clear, keeping wine." },
         new RecipeSpec { id = "peach-wine", dish = "Auric Peach Wine", method = KitchenMethod.Ferment, inputs = { Res("Dried Auric Peaches", 3f) }, output = 2f,
-            technology = "Resource Preservation", description = "Dried Auric peaches pressed and fermented into a golden wine. Sweet on the tongue; still the peach." },
+            technology = "Salt and Smoke", description = "Dried Auric peaches pressed and fermented into a golden wine. Sweet on the tongue; still the peach." },
         new RecipeSpec { id = "bitterroot-spirit", dish = "Bitterroot Spirit", method = KitchenMethod.Distill, inputs = { Res("Rootgrain Ale", 3f), Res("Bitter Roots", 1f) }, output = 1f,
             technology = "Chants of Ash", description = "Ale run through the fire's still over bitter roots: a harsh, clear spirit that never spoils." },
         new RecipeSpec { id = "peach-brandy", dish = "Auric Peach Brandy", method = KitchenMethod.Distill, inputs = { Res("Auric Peach Wine", 3f), Res("Peach Pits", 1f) }, output = 1f,
@@ -329,12 +329,14 @@ public class CultureLifeTuning
         new LuxurySpec { category = "Wines & Spirits", resources = { "Rootgrain Ale", "Wild Honey Mead", "Highland Rice Wine", "Auric Peach Wine", "Bitterroot Spirit", "Auric Peach Brandy" }, perHundred = 1f },
         new LuxurySpec { category = "Spices", resources = { "Auric Saffron", "Silver Salt", "Glimmerfern" }, perHundred = 0.3f },
         new LuxurySpec { category = "Fine Cloth", resources = { "Lumenwool", "Silverreed" }, perHundred = 0.5f },
-        new LuxurySpec { category = "Ornaments", resources = { "Sky Glass" }, perHundred = 0.3f },
+        new LuxurySpec { category = "Ornaments", resources = { "Sky Glass", "Anemoia Pods" }, perHundred = 0.3f },
         new LuxurySpec { category = "Living Gardens", perHundred = 1f },
     };
     public List<CulturalGoodSpec> goods = new List<CulturalGoodSpec>
     {
         new CulturalGoodSpec { resource = "Sky Glass", amenity = true, faithPerUnit = 0.4f },
+        // The Anemoia Lunaria's moon-disc seed pods: kept, never used up, and faintly holy to those who long.
+        new CulturalGoodSpec { resource = "Anemoia Pods", amenity = true, faithPerUnit = 0.15f },
         new CulturalGoodSpec { resource = "Eleos Tea", faithPerUnit = 0.25f },
         new CulturalGoodSpec { resource = "Candlevein Grief Tea", faithPerUnit = 0.4f },
         new CulturalGoodSpec { resource = "Lullroot Tea", faithPerUnit = 0.2f },

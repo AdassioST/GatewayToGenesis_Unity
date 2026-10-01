@@ -113,8 +113,8 @@ public class EdictTests
     public void SomeOptionsNeedATechnology()
     {
         var state = Established();
-        StringAssert.Contains("Efficient Rations", EdictRules.WhyNotChange(state, "roofless", "almshouses", t => false));
-        Assert.IsNull(EdictRules.WhyNotChange(state, "roofless", "almshouses", t => t == "Efficient Rations"));
+        StringAssert.Contains("Shared Embers", EdictRules.WhyNotChange(state, "roofless", "almshouses", t => false));
+        Assert.IsNull(EdictRules.WhyNotChange(state, "roofless", "almshouses", t => t == "Shared Embers"));
     }
 
     [Test]

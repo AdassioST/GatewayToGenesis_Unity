@@ -348,9 +348,9 @@ public class EdictsSection : MonoBehaviour
         var text = new StringBuilder();
         text.AppendLine(TooltipText.Heading("Not yet established"));
         int need = edicts.SeatsNeeded;
-        text.AppendLine($"The government issues edicts once the council holds {edicts.Tuning.minCouncilSeats} seats, counting the Head of State: {need} more to open. The Rekindling and Edicts of Stone and Bone each open a seat.");
+        text.AppendLine($"The government issues edicts once the council holds {edicts.Tuning.minCouncilSeats} seats, counting the Head of State: {need} more to open. The Rekindling and Call and Response each open a seat.");
         text.AppendLine();
-        text.AppendLine(TooltipText.Muted("Until then the realm keeps its customs: the roofless are let in once Efficient Rations allows it, strangers are received like any survivor, the people grow at nature's pace, and the borders follow the Realm's policy."));
+        text.AppendLine(TooltipText.Muted("Until then the realm keeps its customs: the roofless are let in once Shared Embers allows it, strangers are received like any survivor, the people grow at nature's pace, and the borders follow the Realm's policy."));
         text.AppendLine();
         text.AppendLine(TooltipText.Heading("What the Edicts will decide"));
         foreach (var stance in EdictCatalog.Stances) text.AppendLine(TooltipText.Bullet($"{TooltipText.Value(stance.title)}: {stance.question}"));

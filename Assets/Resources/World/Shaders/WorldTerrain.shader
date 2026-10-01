@@ -23,7 +23,7 @@ Shader "Hidden/GatewayToGenesis/WorldTerrain"
         _OverlayTex ("Overlay (by meso cell)", 2D) = "black" {}
         _StateTex ("Selection, frontier, expeditions (by meso cell)", 2D) = "black" {}
         _ReliefTex ("Escarpments, basin mist, auric grass", 2D) = "black" {}
-        _OwnerTex ("Holder colour (alpha: holder code) by meso cell", 2D) = "black" {}
+        _OwnerTex ("Holder colour (alpha: holder code) by micro hex", 2D) = "black" {}
     }
     SubShader
     {
@@ -324,7 +324,8 @@ Shader "Hidden/GatewayToGenesis/WorldTerrain"
 
                 // Borders: where one holder's land meets another's or the wilderness, an outline in the holder's
                 // colour on its own side, a crisp line with a faint glow inward (a few pixels at every zoom).
-                float4 owner = Cell(_OwnerTex, meso, _MesoInfo);
+                // Land is held micro hex by micro hex, so the outline follows the hexes.
+                float4 owner = Cell(_OwnerTex, micro, _MicroInfo);
                 if (owner.a > 0.001 && knowledge >= 0.25)
                 {
                     float border = 0;
@@ -332,8 +333,8 @@ Shader "Hidden/GatewayToGenesis/WorldTerrain"
                     {
                         float ang = b * 1.0471976 + 0.5235988;
                         float2 dir = float2(cos(ang), sin(ang));
-                        float inner = Cell(_OwnerTex, Parent(MicroAt(p + dir * _WorldPerPixel * 1.6)), _MesoInfo).a;
-                        float outer = Cell(_OwnerTex, Parent(MicroAt(p + dir * _WorldPerPixel * 4.0)), _MesoInfo).a;
+                        float inner = Cell(_OwnerTex, MicroAt(p + dir * _WorldPerPixel * 1.6), _MicroInfo).a;
+                        float outer = Cell(_OwnerTex, MicroAt(p + dir * _WorldPerPixel * 4.0), _MicroInfo).a;
                         if (abs(inner - owner.a) > 0.001) border = 1.0;
                         else if (abs(outer - owner.a) > 0.001) border = max(border, 0.4);
                     }

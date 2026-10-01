@@ -526,7 +526,15 @@ public static class ContentValidator
             foreach (var unlockable in tech.techUnlockables)
             {
                 if (unlockable == null) problems.Add($"{owner} has an empty unlockable entry");
-                else if (unlockable.gameUnit == null && unlockable.unlockableType != TechUnlockableType.Special && unlockable.unlockableType != TechUnlockableType.DemandModifier && unlockable.unlockableType != TechUnlockableType.CouncilSeat)
+                else if (unlockable.unlockableType == TechUnlockableType.SymphonyCard && unlockable.symphonyCard == null)
+                    problems.Add($"{owner} unlockable '{unlockable.name}' grants a Symphony Card but names none");
+                else if (unlockable.unlockableType == TechUnlockableType.SymphonyCard && unlockable.symphonyCard.chord > Grimoire.SeatChordLimit)
+                    problems.Add($"{owner} card '{unlockable.symphonyCard.DisplayName}' is a {unlockable.symphonyCard.chord}; seats take {Grimoire.SeatChordLimit}s only");
+                else if (unlockable.unlockableType == TechUnlockableType.ScoreChange && string.IsNullOrWhiteSpace(unlockable.score))
+                    problems.Add($"{owner} unlockable '{unlockable.name}' changes a score but names none");
+                else if (unlockable.gameUnit == null && unlockable.unlockableType != TechUnlockableType.Special && unlockable.unlockableType != TechUnlockableType.DemandModifier && unlockable.unlockableType != TechUnlockableType.CouncilSeat
+                    && unlockable.unlockableType != TechUnlockableType.GrimoireSeat && unlockable.unlockableType != TechUnlockableType.SymphonyCard
+                    && unlockable.unlockableType != TechUnlockableType.SpellWildcard && unlockable.unlockableType != TechUnlockableType.ScoreChange)
                 {
                     problems.Add($"{owner} unlockable '{unlockable.name}' ({unlockable.unlockableType}) has no GameUnit");
                 }
@@ -1275,7 +1283,8 @@ public static class ContentValidator
         {
             string owner = $"Age '{age.title}'";
             Check(owner, age.openingStory);
-            foreach (var knot in age.actOfFateStories ?? new List<string>()) Check(owner, knot);
+            foreach (var entry in age.actOfFateStories ?? new List<string>())
+                foreach (var knot in (entry ?? string.Empty).Split(',')) Check(owner, knot);
             foreach (var stage in age.crisisStages ?? new List<CrisisStageSpec>()) if (stage != null) Check($"{owner} stage '{stage.name}'", stage.story);
         }
         foreach (var world in GameCatalog.World.All)

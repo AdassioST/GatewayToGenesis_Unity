@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>World slots, lifetime unlocks and permanent local retirement records.</summary>
@@ -17,7 +18,7 @@ public static class SaveSession
     private static string retirementPath;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void Reset() { Current = null; Profile = null; Storage = null; Error = null; Restoring = false; ForbiddenCopies = Array.Empty<string>(); }
+    private static void Reset() { writing = null; Current = null; Profile = null; Storage = null; Error = null; Restoring = false; ForbiddenCopies = Array.Empty<string>(); }
     public static void Initialize()
     {
         if (Storage != null) return;
@@ -75,25 +76,77 @@ public static class SaveSession
     public static SaveDocument Read(string id, bool backup = false)
     {
         Initialize();
+        FinishWriting();
         var save = JsonUtility.FromJson<SaveDocument>(Storage.Read(id, backup));
-        if (save == null || save.version != 3 || save.identity == null) throw new InvalidDataException("Unsupported save version.");
-        save.identity.Validate(Storage); save.rewards.Validate();
-        if (save.identity.id != id) throw new InvalidDataException("Slot identity mismatch.");
-        // Achievements renamed since this save carry their unlocks, Anchors and evidence over (never paying twice).
-        if (AchievementAliases.Migrate(save.rewards)) save.rewards.Validate();
-
-        if (save.identity.generator != WorldGenerator.Version || save.identity.catalog != Catalog())
-            throw new InvalidOperationException("This save requires its original world catalog and generator version.");
+        Check(id, save?.version ?? 0, save?.identity, save?.rewards);
         return save;
     }
-    public static void Save()
+
+    /// <summary>What a save's slot shows (its name, time, Anchors, play time), read and checked like <see cref="Read"/>
+    /// without building the world's state.</summary>
+    public static SaveHeader ReadHeader(string id)
     {
-        if (Current == null || Restoring) return;
+        Initialize();
+        FinishWriting();
+        var header = JsonUtility.FromJson<SaveHeader>(Storage.Read(id));
+        Check(id, header?.version ?? 0, header?.identity, header?.rewards);
+        return header;
+    }
+
+    private static void Check(string id, int version, WorldIdentity identity, WorldRewards rewards)
+    {
+        if (version != 3 || identity == null || rewards == null) throw new InvalidDataException("Unsupported save version.");
+        identity.Validate(Storage); rewards.Validate();
+        if (identity.id != id) throw new InvalidDataException("Slot identity mismatch.");
+        // Achievements renamed since this save carry their unlocks, Anchors and evidence over (never paying twice).
+        if (AchievementAliases.Migrate(rewards)) rewards.Validate();
+
+        if (identity.generator != WorldGenerator.Version || identity.catalog != Catalog())
+            throw new InvalidOperationException("This save requires its original world catalog and generator version.");
+    }
+
+    // The autosave's write to disk, running on a worker thread (null: none).
+    private static Task writing;
+
+    /// <summary>Save the world now: captured, written and on disk when this returns.</summary>
+    public static void Save() => Prepare()?.Invoke();
+
+    /// <summary>
+    /// Save the world without holding the frame on the disk (the autosave): the state is captured now, then encrypted and
+    /// written on a worker thread. The task faults if the write fails. Any save or read waits for it first.
+    /// </summary>
+    public static Task SaveInBackground()
+    {
+        var write = Prepare();
+        if (write == null) return Task.CompletedTask;
+        return writing = Task.Run(write);
+    }
+
+    /// <summary>Wait for a background write still running (its failure is the autosave's to report).</summary>
+    public static void FinishWriting()
+    {
+        var pending = writing;
+        writing = null;
+        try { pending?.Wait(); } catch (AggregateException) { }
+    }
+
+    // Capture the world on this thread (it must not change under the capture). What is returned turns the capture into
+    // text and writes it, touching only a copy of the document, so it may run on a worker thread.
+    private static Action Prepare()
+    {
+        if (Current == null || Restoring) return null;
 
         if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive()) throw new InvalidOperationException("Finish the current story before saving.");
-        GameSnapshot.Capture(Current);
+        FinishWriting();
+        var tiles = GameSnapshot.Begin(Current);
         Profile.Merge(Current.rewards.unlocked); Profile.lastWorld = Current.identity.id; WriteProfile();
-        Storage.Write(Current.identity.id, JsonUtility.ToJson(Current));
+        var copy = Current.ForWriting();
+        var storage = Storage;
+        return () =>
+        {
+            copy.tileColumns = tiles();
+            storage.Write(copy.identity.id, JsonUtility.ToJson(copy));
+        };
     }
     /// <summary>Award an achievement to this world and the lifetime profile (<see cref="AchievementAward.Commit"/>).
     /// True when it is newly unlocked in this session: announce it then. Throws when the profile cannot be written.</summary>
@@ -115,7 +168,7 @@ public static class SaveSession
     private static bool RetiredJson(string json)
     {
         if (!json.TrimStart().StartsWith("{", StringComparison.Ordinal)) return false;
-        var save = JsonUtility.FromJson<SaveDocument>(json);
+        var save = JsonUtility.FromJson<SaveHeader>(json);
         if (save?.identity == null) return false;
         save.identity.Validate(Storage);
         return Profile.retiredWorlds.Contains(save.identity.id);
@@ -126,11 +179,12 @@ public static class SaveSession
         ForbiddenCopies = Profile.retiredWorlds.Count == 0 ? Array.Empty<string>() : Storage.FindCopies(RetiredJson);
         Profile.restoredRetiredWorld = ForbiddenCopies.Length > 0;
     }
-    public static void RemoveRetiredCopies() { Storage.RemoveCopies(RetiredJson); ScanRetired(); }
+    public static void RemoveRetiredCopies() { FinishWriting(); Storage.RemoveCopies(RetiredJson); ScanRetired(); }
     /// <summary>Called only by the explicit final-choice action; no ordinary delete invokes sacrifice.</summary>
     public static void Sacrifice()
     {
         if (Current == null) throw new InvalidOperationException("No active world.");
+        FinishWriting();
         string id = Current.identity.id;
         if (!Profile.retiredWorlds.Contains(id)) Profile.retiredWorlds.Add(id);
         Profile.Merge(Current.rewards.unlocked);

@@ -16,6 +16,15 @@ public static class AgeCapabilities
     public const string LegendOrnament = "legend-ornament";
     /// <summary>Ornamental Magic in Symphony of War and other symphonic cards.</summary>
     public const string OrnamentalMagic = "ornamental-magic";
+    /// <summary>Minor Unisons anyone can cast by instinct (Age 0: "Mostly Minor Note magic").</summary>
+    public const string UnisonMinor = "unison-minor";
+    /// <summary>A Major Unison sounded by an Awakened Legend, unreliably (Age 0: only strong Motif Awakenings manifest magic).</summary>
+    public const string UnisonMajorAwakened = "unison-major-awakened";
+    /// <summary>
+    /// Ceremonial Arts as three casters, one Unison each (the owner's rule, Sept 29, 2026). Available from Age 0 because
+    /// no single caster holds more than one note; it never opens <see cref="OrnamentalMagic"/> to one caster.
+    /// </summary>
+    public const string CeremonialTriad = "ceremonial-triad";
 
     /// <summary>The first Age number where each capability is available. Unknown capabilities are never available.</summary>
     public static readonly IReadOnlyDictionary<string, int> FirstAge = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
@@ -24,6 +33,9 @@ public static class AgeCapabilities
         // Ages.md, Age III: "Starting point of proper Ornamental Magic"; Age 0 calls it largely unavailable. Ages I-II
         // say nothing either way, so it stays locked until III. D10 owns the per-card schedule (and any exceptions).
         [OrnamentalMagic] = 3,
+        [UnisonMinor] = 0,
+        [UnisonMajorAwakened] = 0,
+        [CeremonialTriad] = 0,
     };
 
     public static bool IsKnown(string capability) => capability != null && FirstAge.ContainsKey(capability);

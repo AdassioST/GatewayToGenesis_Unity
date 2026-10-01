@@ -313,7 +313,7 @@ public static class Expeditions
 
     /// <summary>Everything it carries: rations and cargo.</summary>
     public static float Load(WorldUnit unit, ExpeditionSettings x) =>
-        unit == null || x == null ? 0f : Math.Max(0f, unit.supplies) * Math.Max(0f, x.rationWeight) + CargoWeight(unit, x);
+        unit == null || x == null ? 0f : Math.Max(0f, unit.supplies) * Math.Max(0f, x.rationWeight) + CargoWeight(unit, x) + Math.Max(0f, unit.kitWeight);
 
     /// <summary>What the party carries at ease: <see cref="ExpeditionSettings.loadPerLegend"/> per legend, settlers carrying their own share.</summary>
     public static float LoadAtEase(WorldUnit unit, ExpeditionSettings x)

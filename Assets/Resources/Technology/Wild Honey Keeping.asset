@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Wild Honey Keeping
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 4b0045f0ef14014bba713ac406f06cf6, type: 2}
+  isEventTech: 0
+  tier: 7
+  satisfactionPoints: 0
+  techRequirements:
+  - Trapper's Patience
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 3500
+  enlightenedConditions:
+  - type: 6
+    trigger: species_known:wild-bee
+    requiredAmount: 2
+    description: Identify the Wild Bee, whose honey never spoils.
+    riddle: Somewhere a small winged people keep a sweetness that no Seventh can spoil. Learn their name.
+    clue: Their dens hum among the flowers. A den is only a shape until someone walks to it and looks.
+    clueAt: 0.5
+    clueTrigger: 
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 8c13f239645af33da5305a72a4be9fb9, type: 2}

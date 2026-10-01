@@ -68,14 +68,17 @@ public class TerritoryPlayTests
         Call(world, "TerritoryTick", 1f);
         for (int i = 0; i < 60 && map[first.cell].microHeldMask == 0; i++) Call(world, "TerritoryTick", 1f);
         Assert.Greater(WorldMap.SettledHexes(map[first.cell]), 0, "a hex of the best candidate is settled");
+        // Yours de facto from four hexes, core with all seven.
         for (int i = 0; i < 120 && map[first.cell].authorityId != WorldAuthority.Player; i++) Call(world, "TerritoryTick", 1f);
+        Assert.AreEqual(WorldAuthority.Player, map[first.cell].authorityId, "the best candidate first");
+        Assert.GreaterOrEqual(WorldMap.SettledHexes(map[first.cell]), WorldHoldings.DeFactoHexes(map), "de facto from four hexes");
+        for (int i = 0; i < 120 && map[first.cell].hold != HoldStatus.Core; i++) Call(world, "TerritoryTick", 1f);
         people.population = citizens;
         int after = map.Tiles.Count(t => t.authorityId == WorldAuthority.Player);
         Assert.Greater(after, before, "society adopts land by itself");
-        Assert.AreEqual(WorldAuthority.Player, map[first.cell].authorityId, "the best candidate first");
-        Assert.IsTrue(WorldTerritory.FullySettled(map[first.cell]), "every hex of it settled");
+        Assert.IsTrue(WorldTerritory.FullySettled(map[first.cell]), "every hex of it settled: core");
         var realm = world.Realm;
-        Assert.AreEqual(after, realm.cells);
+        Assert.AreEqual(map.Tiles.Count(t => t.authorityId == WorldAuthority.Player && t.hold != HoldStatus.DeFacto), realm.cells, "the Realm counts core cells");
         Assert.Greater(realm.capacity, 0f);
         Assert.IsTrue(GameValues.TryGet("admin_strain", "", out float strain) && Mathf.Abs(strain - realm.strain * 100f) < 0.5f);
         Assert.IsTrue(GameValues.TryGet("expansion", realm.favoured.ToString().ToLowerInvariant(), out float favoured) && favoured == 1f);

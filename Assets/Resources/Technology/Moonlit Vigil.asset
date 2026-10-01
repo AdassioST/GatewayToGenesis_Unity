@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Moonlit Vigil
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 618e2c3c9edfe254a3bbd49097c1b7e2, type: 2}
+  isEventTech: 0
+  tier: 11
+  satisfactionPoints: 0
+  techRequirements:
+  - Songs of the Moon
+  - Midwives' Lullaby
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 5400
+  enlightenedConditions:
+  - type: 1
+    trigger: 'Moonlit Grove'
+    requiredAmount: 2
+    description: 'Build 2 Moonlit Grove'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: 56ef0521a2f75948c73550997dd432d1, type: 2}

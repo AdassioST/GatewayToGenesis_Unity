@@ -59,6 +59,10 @@ public class CombatSectionSpec
     public int minAge;
     [Tooltip("A technology it needs (empty: none).")]
     public string technology;
+    [Tooltip("Production unit that manufactures this company's standard equipment; empty: no factory requirement.")]
+    public string productionUnit;
+    public int productionTier = 1;
+    public List<string> trainingCards = new List<string>();
 
     [Header("The two bars")]
     [Tooltip("Integrity: the physical bar, bodies, blood and armor. Steel and the body-harm of spells wear it down; at 0 the section is cut down.")]
@@ -130,6 +134,7 @@ public class CombatSectionSpec
 public class FormationSlot
 {
     public string section;
+    public BattleDeploymentSlot deployment;
     [Tooltip("Casters: the binding their chords are rooted in, their primary binding (and so their weakness).")]
     public SpellBinding binding;
     [Tooltip("Casters: Minor Notes layered over the root (0-3: Unison, Dyad, Triad, Tetrad). The Age decides which chords can be played.")]
@@ -144,6 +149,8 @@ public class FormationSlot
 [Serializable]
 public class FormationTemplate
 {
+    public BattleStance stance = BattleStance.Line;
+    public string doctrine;
     public string id;
     public string name;
     [TextArea(1, 3)] public string description;
@@ -191,11 +198,11 @@ public class CombatTuning
 {
     public static readonly CombatTuning Default = new CombatTuning();
 
-    [Header("The Elemental Harmonic Circle (canon order; proposal multipliers)")]
+    [Header("The Elemental Harmonic Circle (Combat System.md multipliers)")]
     public float overcomes = 1.5f;
-    public float resisted = 0.67f;
+    public float resisted = 0.5f;
     [Tooltip("Luminance against Void and Void against Luminance: each effective against the other.")]
-    public float dance = 1.35f;
+    public float dance = 1.5f;
     [Tooltip("A spell rooted in a secondary binding (an Ornament, a creature's other attunement) against one in the primary.")]
     public float secondaryPotency = 0.75f;
     [Tooltip("Spells rooted in the element the land sings (TerrainElement).")]
@@ -323,6 +330,8 @@ public class CombatTuning
     [Header("Capture")]
     [Tooltip("A Mind Broken section below this share of its Integrity is subdued and taken alive by a side that takes captives, instead of cut down: the way to bring animals home.")]
     [Range(0f, 1f)] public float captureBelow = 0.4f;
+    [Tooltip("Mass surrender: a Mind Broken ordinary section held in contact (an enemy in its hex) gives up below this share of its Integrity (the reference's example: 60% Integrity and no effective Composure). Proposal.")]
+    [Range(0f, 1f)] public float surrenderBelow = 0.6f;
 
     [Header("Legends in battle (commander and section leaders)")]
     [Tooltip("Per star in a Great, what a commander lends the whole stack: attack (Vanguard), parry (Architect), potency (Concertist), dread (Justiciar), Composure harm turned aside and Signal Loss (Sovereign), fewer misfires (Seer), wounded saved and rally (Chronicler).")]
@@ -375,6 +384,26 @@ public class CombatTuning
 [Serializable]
 public class CombatSettings
 {
+    public BattlePreparationTuning preparation = new BattlePreparationTuning();
+    public BattlePreparationTuning Preparation => preparation ?? (preparation = new BattlePreparationTuning());
+    public BattleSurvivalTuning survival = new BattleSurvivalTuning();
+    public BattleSurvivalTuning Survival => survival ?? (survival = new BattleSurvivalTuning());
+    public BattleRhythmTuning rhythm = new BattleRhythmTuning();
+    public BattleRhythmTuning Rhythm => rhythm ?? (rhythm = new BattleRhythmTuning());
+    public BattleSpatialTuning spatial = new BattleSpatialTuning();
+    public BattleSpatialTuning Spatial => spatial ?? (spatial = new BattleSpatialTuning());
+    public BattleMeasureTuning measure = new BattleMeasureTuning();
+    public BattleMeasureTuning Measure => measure ?? (measure = new BattleMeasureTuning());
+    public BattleChordTuning chords = new BattleChordTuning();
+    public BattleChordTuning Chords => chords ?? (chords = new BattleChordTuning());
+    public BattleCrisisTuning crisis = new BattleCrisisTuning();
+    public BattleCrisisTuning Crisis => crisis ?? (crisis = new BattleCrisisTuning());
+    public List<BattleDoctrineSpec> doctrines = new List<BattleDoctrineSpec>();
+    public List<BattleEquipmentSpec> equipment = new List<BattleEquipmentSpec>();
+    public List<BattleCivicDeck> civicDecks = new List<BattleCivicDeck>();
+    public BattleDoctrineSpec Doctrine(string id) => string.IsNullOrEmpty(id) ? null :
+        (doctrines ?? new List<BattleDoctrineSpec>()).Concat(BattleDeploymentLogic.Defaults).FirstOrDefault(d => d != null && string.Equals(d.id, id, StringComparison.OrdinalIgnoreCase));
+    public BattleEquipmentSpec Equipment(string id) => (equipment ?? new List<BattleEquipmentSpec>()).FirstOrDefault(e => e != null && e.id == id);
     public CombatTuning tuning = new CombatTuning();
     [Tooltip("Conscripted companies: merit toward promotion (ArmyRoster).")]
     public ConscriptionTuning conscription = new ConscriptionTuning();
@@ -386,6 +415,10 @@ public class CombatSettings
     public List<GroundSpec> grounds = new List<GroundSpec>();
     [Tooltip("Terrains whose land sings an element (empty: CombatDefaults.Elements).")]
     public List<TerrainElement> elements = new List<TerrainElement>();
+    [Tooltip("The card layer: each side's Symphony, the section decks, expedition kits (empty lists: SymphonyCards).")]
+    public SymphonySettings symphony = new SymphonySettings();
+
+    public SymphonySettings Symphony => symphony ?? (symphony = new SymphonySettings());
 
     public IReadOnlyList<CombatSectionSpec> Sections => sections != null && sections.Count > 0 ? sections : CombatDefaults.Sections;
     public IReadOnlyList<FormationTemplate> Templates => templates != null && templates.Count > 0 ? templates : CombatDefaults.Templates;

@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// The capital HUD's Bestiary button (built in code, <see cref="CodeUI"/>, below Ballads &amp; Bonds): hidden until a
 /// researched technology carries the <see cref="SpeciesKnowledge.BestiaryUnlock"/> Special unlockable (the way Horology
-/// unlocks time-keeping and Pathfinder Training the map), then opens the <see cref="BestiaryWindow"/>. Hidden while a
+/// unlocks time-keeping and Lookout Towers the map), then opens the <see cref="BestiaryWindow"/>. Hidden while a
 /// story is told and while the world map is open. Created by <see cref="GenesisLoop"/>.
 /// </summary>
 public class BestiaryHud : MonoBehaviour

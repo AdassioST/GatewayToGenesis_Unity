@@ -52,6 +52,9 @@ public class ConscriptUnit
     /// <summary>Named by the player (a legend's attachment asks for it), and by whose attachment.</summary>
     public bool named;
     public string namedFor;
+    [SaveOptionalField] public string equipment;
+    [SaveOptionalField] public int equipmentTier;
+    [SaveOptionalField] public int woundedPeople, recoverablePeople;
 
     public CompanyBond Bond(string legend) => bonds.FirstOrDefault(b => b != null && b.legend == legend);
     public int Stars(string legend) => Bond(legend)?.stars ?? 0;
@@ -61,6 +64,9 @@ public class ConscriptUnit
 [Serializable]
 public class ArmyStack
 {
+    [SaveOptionalField] public BattleStance stance;
+    [SaveOptionalField] public string doctrine;
+    [SaveOptionalField] public List<ArmyCoreMember> core = new List<ArmyCoreMember>();
     public string id;
     public string name;
     public string commander;
@@ -115,6 +121,7 @@ public sealed class PromotionCandidate
 [Serializable]
 public class ArmyRoster
 {
+    [SaveOptionalField] public List<BattlePopulationFate> casualties = new List<BattlePopulationFate>();
     public List<ConscriptUnit> units = new List<ConscriptUnit>();
     public List<ArmyStack> stacks = new List<ArmyStack>();
     public int nextId = 1;
@@ -189,12 +196,14 @@ public class ArmyRoster
         var stack = stacks.FirstOrDefault(s => s.commander == legend);
         if (stack != null) return "commands " + stack.name;
         var unit = units.FirstOrDefault(u => u.leader == legend);
-        return unit != null ? "leads " + unit.name : null;
+        if (unit != null) return "leads " + unit.name;
+        var core = stacks.FirstOrDefault(s => s.core != null && s.core.Any(m => m.legend == legend));
+        return core == null ? null : "serves in " + core.name;
     }
 
     /// <summary>Every legend holding a post in the army.</summary>
     public IEnumerable<string> LegendsInService =>
-        stacks.Select(s => s.commander).Concat(units.Select(u => u.leader)).Where(n => !string.IsNullOrEmpty(n)).Distinct();
+        stacks.Select(s => s.commander).Concat(units.Select(u => u.leader)).Concat(stacks.SelectMany(s => s.core ?? new List<ArmyCoreMember>()).Select(m => m.legend)).Where(n => !string.IsNullOrEmpty(n)).Distinct();
 
     /// <summary>A legend takes command of a company (empty or null: it goes unled). A legend holds one post at a time.</summary>
     public bool Lead(string unitId, string legend)
@@ -207,10 +216,10 @@ public class ArmyRoster
     }
 
     /// <summary>Forms a stack of companies (each leaves any stack it marched in) under a commander (may be empty).</summary>
-    public ArmyStack FormStack(string name, string commander, IEnumerable<string> unitIds, SpellTempo tempo = SpellTempo.Staccato)
+    public ArmyStack FormStack(string name, string commander, IEnumerable<string> unitIds, SpellTempo tempo = SpellTempo.Staccato, BattleStance stance = BattleStance.Line)
     {
         if (!string.IsNullOrEmpty(commander) && PostOf(commander) != null) return null;
-        var stack = new ArmyStack { id = "stack-" + nextId++, name = string.IsNullOrEmpty(name) ? $"{Ordinal(stacks.Count + 1)} Host" : name, commander = commander, tempo = tempo };
+        var stack = new ArmyStack { id = "stack-" + nextId++, name = string.IsNullOrEmpty(name) ? $"{Ordinal(stacks.Count + 1)} Host" : name, commander = commander, tempo = tempo, stance = stance };
         stacks.Add(stack);
         foreach (var id in unitIds ?? Enumerable.Empty<string>()) Assign(id, stack.id);
         return stack;
@@ -225,6 +234,28 @@ public class ArmyRoster
         stack.commander = string.IsNullOrEmpty(legend) ? null : legend;
         return true;
     }
+
+    public bool SetDoctrine(string stackId, BattleDoctrineSpec doctrine)
+    {
+        var stack = Stack(stackId);
+        if (stack == null || doctrine == null) return false;
+        stack.doctrine = doctrine.id; stack.stance = doctrine.stance;
+        return true;
+    }
+
+    public bool AssignCore(string stackId, string legend, BattleEliteRole role, string section = null)
+    {
+        var stack = Stack(stackId);
+        if (stack == null || string.IsNullOrEmpty(legend) || role == BattleEliteRole.None || role == BattleEliteRole.Conductor) return false;
+        stack.core = stack.core ?? new List<ArmyCoreMember>();
+        var member = stack.core.FirstOrDefault(m => m.legend == legend);
+        if (member == null && PostOf(legend) != null) return false;
+        if (member == null) stack.core.Add(member = new ArmyCoreMember { legend = legend });
+        member.role = role; member.section = section;
+        return true;
+    }
+
+    public bool ReleaseCore(string stackId, string legend) => Stack(stackId)?.core?.RemoveAll(m => m.legend == legend) > 0;
 
     /// <summary>Moves a company into a stack (null: out of every stack).</summary>
     public bool Assign(string unitId, string stackId)
@@ -249,7 +280,7 @@ public class ArmyRoster
         if (stack == null) return null;
         var side = new BattleSide
         {
-            name = stack.name, tempo = stack.tempo,
+            name = stack.name, tempo = stack.tempo, stance = stack.stance, doctrine = stack.doctrine,
             conductor = string.IsNullOrEmpty(stack.commander) ? null : legendOf?.Invoke(stack.commander),
         };
         foreach (var unit in stack.units.Select(Unit).Where(u => u != null && u.people > 0))
@@ -263,8 +294,10 @@ public class ArmyRoster
             sec.integrity = Mathf.Clamp(unit.integrity, 0f, sec.maxIntegrity);
             sec.leader = string.IsNullOrEmpty(unit.leader) ? null : legendOf?.Invoke(unit.leader);
             sec.bonds = unit.bonds.Where(b => b != null && b.stars > 0).ToDictionary(b => b.legend, b => b.stars);
+            BattleEquipmentLogic.Apply(sec, settings.Equipment(unit.equipment), unit.equipmentTier);
             side.sections.Add(sec);
         }
+        BattleCompositionLogic.AddEliteCore(side, settings, stack.core, legendOf);
         return side;
     }
 
@@ -282,12 +315,25 @@ public class ArmyRoster
         if (stack == null || side == null || report == null) return lines;
         bool won = attacker ? report.winner > 0 : report.winner < 0;
         bool lost = attacker ? report.winner <= 0 : report.winner > 0;
-        foreach (var sec in side.sections.Where(s => !string.IsNullOrEmpty(s.unitId)))
+        foreach (var group in side.sections.Where(s => !string.IsNullOrEmpty(s.unitId)).GroupBy(s => s.unitId))
         {
+            var sec = BattleCompositionLogic.CompanyResult(group);
             var unit = Unit(sec.unitId);
             if (unit == null) continue;
             unit.battles++;
-            if (sec.destroyed || sec.captured)
+            var population = report.population.Where(f => f.attacker == attacker && f.unitId == unit.id).ToList();
+            if (population.Count > 0)
+            {
+                casualties = casualties ?? new List<BattlePopulationFate>(); casualties.AddRange(population);
+                int dead = population.Sum(f => f.dead), missing = population.Sum(f => f.missing), capturedPeople = population.Sum(f => f.captured);
+                unit.woundedPeople = population.Sum(f => f.wounded); unit.recoverablePeople = population.Sum(f => f.recoverable);
+                unit.people = population.Sum(f => f.healthy + f.wounded + f.recoverable);
+                if (dead > 0) bank?.Fallen(dead, $"battle ({unit.name})");
+                unit.integrity = sec.maxIntegrity * unit.people / Math.Max(1f, unit.raisedPeople);
+                lines.Add($"{unit.name}: {dead} dead, {unit.woundedPeople} wounded, {unit.recoverablePeople} recoverable, {missing} missing, {capturedPeople} captured.");
+                if (unit.people <= 0) { Remove(unit); continue; }
+            }
+            else if (sec.destroyed || sec.captured)
             {
                 int gone = sec.captured ? Math.Max(0, unit.people - sec.Alive) : unit.people;
                 if (gone > 0) bank?.Fallen(gone, $"battle ({unit.name})");
@@ -296,11 +342,15 @@ public class ArmyRoster
                 continue;
             }
             // Wounds heal back into the company; the dead do not come back.
-            unit.integrity = Mathf.Clamp(Math.Max(0f, sec.integrity) + sec.wounded, 0f, sec.maxIntegrity);
-            int alive = Math.Max(1, (int)Math.Round(unit.raisedPeople * unit.integrity / Math.Max(1f, sec.maxIntegrity)));
-            int fallen = Math.Max(0, unit.people - alive);
-            unit.people = Math.Min(unit.people, alive);
-            if (fallen > 0) { bank?.Fallen(fallen, $"battle ({unit.name})"); lines.Add($"{unit.name} lost {fallen} of its own."); }
+            if (population.Count == 0)
+            {
+                unit.integrity = Mathf.Clamp(Math.Max(0f, sec.integrity) + sec.wounded, 0f, sec.maxIntegrity);
+                int alive = Math.Max(1, (int)Math.Round(unit.raisedPeople * unit.integrity / Math.Max(1f, sec.maxIntegrity)));
+                int captured = group.Where(s => s.captured).Sum(s => s.Alive);
+                int fallen = Math.Max(0, unit.people - alive - captured);
+                unit.people = Math.Min(unit.people, alive);
+                if (fallen > 0) { bank?.Fallen(fallen, $"battle ({unit.name})"); lines.Add($"{unit.name} lost {fallen} of its own."); }
+            }
             unit.merit += tuning.meritPerBattle + (won ? tuning.meritPerVictory : 0f) + (lost ? tuning.meritPerDefeatSurvived : 0f) +
                           (sec.timesMindBroken > 0 ? tuning.meritPerMindBreakEndured : 0f);
             if (won) unit.victories++;
@@ -312,11 +362,12 @@ public class ArmyRoster
         var together = side.Legends.Select(l => l.name).Distinct().ToList();
         if (together.Count > 1) bank?.ShareBattle(together, $"battle:{stack.id}:{report.seed}:{report.measures}", $"Fought side by side in {stack.name} against {(attacker ? report.defender.name : report.attacker.name)}", lost);
         // Legends who left a doomed field lose their posts until they walk home.
-        foreach (var fate in report.legends.Where(f => f.attacker == attacker && f.missing))
+        foreach (var fate in report.legends.Where(f => f.attacker == attacker && (f.missing || f.dead || f.captured)))
         {
             if (stack.commander == fate.name) stack.commander = null;
+            stack.core?.RemoveAll(m => m.legend == fate.name);
             foreach (var u in units.Where(u => u.leader == fate.name)) u.leader = null;
-            lines.Add($"{fate.name} is missing in action and gives up the post.");
+            lines.Add(fate.dead ? $"{fate.name} died and leaves the post vacant." : fate.captured ? $"{fate.name} was captured and leaves the post vacant." : $"{fate.name} is missing in action and gives up the post.");
         }
         return lines;
     }

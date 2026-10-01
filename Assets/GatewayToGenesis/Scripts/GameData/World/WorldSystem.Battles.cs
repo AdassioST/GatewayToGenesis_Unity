@@ -217,10 +217,12 @@ public partial class WorldSystem
     // Wary bands provoked first and predators catch their prey; then every hostile pair in contact fights once this moment.
     private bool FightClashes(List<string> notice)
     {
+        if (_pendingEncounter != null) return false;
         bool changed = Provoke(notice);
         if (Predation(notice)) changed = true;
         var clashes = WorldBattles.Clashes(Map.Units);
-        foreach (var (attacker, defender) in clashes) Fight(attacker, defender, notice);
+        foreach (var (attacker, defender) in clashes)
+        { Fight(attacker, defender, notice); if (_pendingEncounter != null) break; }
         return changed || clashes.Count > 0;
     }
 
@@ -229,13 +231,15 @@ public partial class WorldSystem
     {
         if (unit == null) return null;
         BattleLegend LegendOf(string n) => LegendProgress.Instance != null ? LegendProgress.Instance.BattleLegendOf(n) : null;
-        if (!string.IsNullOrEmpty(unit.armyStack)) return Army.Muster(unit.armyStack, Combat, LegendOf);
-        if (WorldBattles.IsPlayers(unit)) return WorldBattles.PartySide(unit, SpecOf(unit), Expeditions.Members(unit).ToList(), LegendOf);
+        // Every side plays its Symphony (WorldSystem.Symphony): an army its companies, legends, orders and war score; a
+        // party its kit and its legends' grimoires; a band its creatures' instincts.
+        if (!string.IsNullOrEmpty(unit.armyStack)) return Scored(unit, Army.Muster(unit.armyStack, Combat, LegendOf));
+        if (WorldBattles.IsPlayers(unit)) return Scored(unit, WorldBattles.PartySide(unit, SpecOf(unit), Expeditions.Members(unit).ToList(), LegendOf));
         var species = WorldPursuit.Species(Settings.generation, unit);
         if (species == null || unit.creatures <= 0) return null;
         var side = CreatureCombat.Side(species, unit.creatures);
         side.name = unit.name;
-        return side;
+        return Scored(unit, side, species);
     }
 
     private void Fight(WorldUnit attackerUnit, WorldUnit defenderUnit, List<string> notice)
@@ -256,7 +260,27 @@ public partial class WorldSystem
         var atHex = WorldUnits.MicroPosition(defenderUnit);
         var field = WorldBattles.Field(Map, Settings.generation, Combat, WorldUnits.MicroPosition(attackerUnit), atHex, GameAge.Number, time != null ? time.CurrentEcho : 0);
         int seed = unchecked(Map.seed * 31 + attackerUnit.id * 7919 + defenderUnit.id * 104729 + ++_battlesFought * 15485863);
-        var report = BattleResolver.Resolve(new BattleSetup { attacker = attacker, defender = defender, field = field, seed = seed }, Combat);
+        var setup = new BattleSetup { attacker = attacker, defender = defender, field = field, seed = seed,
+            majorEncounter = attackerUnit.majorEncounter || defenderUnit.majorEncounter, boss = attackerUnit.boss || defenderUnit.boss,
+            decisive = attackerUnit.decisiveEncounter || defenderUnit.decisiveEncounter, originalEight = attackerUnit.originalEight || defenderUnit.originalEight,
+            objective = defenderUnit.battleObjective ?? attackerUnit.battleObjective };
+        ComposeBattleInputs(setup, attackerUnit, defenderUnit);
+        if (WorldBattles.IsPlayers(attackerUnit) || WorldBattles.IsPlayers(defenderUnit))
+        { PrepareEncounter(setup, attackerUnit, defenderUnit); notice.Add("Battle prepared: choose automatic resolution or conduct the Symphony."); return; }
+        if (setup.RequiresManual) return;
+        // The strengths and what made them, before a blow is struck (the battle screen's two columns).
+        var record = Record(setup, attackerUnit, defenderUnit, Place(Map.Get(HexHierarchy.Parent(atHex))));
+        var report = BattleResolver.Resolve(setup, Combat);
+        ApplyEncounterResult(attackerUnit, defenderUnit, setup, record, report, notice);
+    }
+
+    private void ApplyEncounterResult(WorldUnit attackerUnit, WorldUnit defenderUnit, BattleSetup setup, BattleRecord record, BattleReport report, List<string> notice)
+    {
+        var attacker = setup.attacker; var defender = setup.defender;
+        var atHex = WorldUnits.MicroPosition(defenderUnit);
+        var wildUnit = !WorldBattles.IsPlayers(attackerUnit) ? attackerUnit : !WorldBattles.IsPlayers(defenderUnit) ? defenderUnit : null;
+        int wildBefore = wildUnit?.creatures ?? 0;
+        record.report = report;
         LastBattle = report;
 
         WorldUnits.Stop(attackerUnit);
@@ -274,14 +298,15 @@ public partial class WorldSystem
             var foe = fate.attacker ? defenderUnit : attackerUnit;
             var foeSide = fate.attacker ? defender : attacker;
             if (progress == null || !WorldBattles.IsPlayers(own)) continue;
+            if (fate.dead) { progress.ApplyBattleFate(fate); lines.Add($"{fate.name} died in battle."); continue; }
             bool captor = foe.identity == BandIdentity.Atonalis && AtonalPaths.Of(foe.atonalPath).captures && foeSide.sections.Any(s => s.Standing && s.Alive > 0);
-            if (captor && (fate.missing || fate.mindBroken && !fate.won))
+            if (fate.captured || captor && (fate.missing || fate.mindBroken && !fate.won))
             {
                 float strain = fate.strain;
                 fate.strain = 0f;
                 fate.missing = false;
                 progress.ApplyBattleFate(fate);
-                progress.TakeCaptive(fate.name, CaptorKey(foe), AtonalPaths.Of(foe.atonalPath).feedOnCaptive, strain, foe.name);
+                progress.TakeCaptive(fate.name, CaptorKey(foe), foe.identity == BandIdentity.Atonalis ? AtonalPaths.Of(foe.atonalPath).feedOnCaptive : 0f, strain, foe.name);
                 (foe.captives = foe.captives ?? new List<string>()).Add(fate.name);
                 lines.Add($"{fate.name} is dragged away by {foe.name}.");
                 continue;
@@ -323,12 +348,20 @@ public partial class WorldSystem
         }
 
         string where = Place(battleCell);
-        string summary = $"{BattleReport.Words(report.outcome)} for {attacker.name} against {defender.name} at {where}.";
+        // Told from your side when one of the two is yours: "Decisive Victory at the Ash Plains".
+        bool? yours = record.yours;
+        var verdict = report.OutcomeFor(yours ?? true);
+        string summary = yours != null
+            ? $"{BattleReport.Words(verdict)} at {where}: {(yours.Value ? attacker.name : defender.name)} against {(yours.Value ? defender.name : attacker.name)} ({record.preview.Side(yours.Value).Strength} against {record.preview.Side(!yours.Value).Strength})."
+            : $"{BattleReport.Words(report.outcome)} for {attacker.name} against {defender.name} at {where}.";
         notice.Add(summary);
-        NotificationFeed.Push($"Battle at {where}", summary + (lines.Count > 0 ? "\n" + string.Join("\n", lines) : string.Empty),
+        NotificationFeed.Push($"{BattleReport.Words(verdict)} at {where}", summary + $"\n{BattleVerdicts.Meaning(verdict)}" + (lines.Count > 0 ? "\n" + string.Join("\n", lines) : string.Empty),
             NotificationFeed.Topic.World, key: $"battle:{_battlesFought}");
         GameLog.Event($"Battle {_battlesFought} at {where}: {string.Join(" ", report.log.Skip(Math.Max(0, report.log.Count - 3)))}", Log);
+        record.aftermath = lines;
+        LastBattleRecord = record;
         BattleFought?.Invoke(report, attackerUnit, defenderUnit);
+        BattleRecorded?.Invoke(record);
     }
 
     // The key a captive legend's record holds for the band that took it.
@@ -381,7 +414,7 @@ public partial class WorldSystem
         }
         if (WorldBattles.IsPlayers(unit))
         {
-            PartyAftermath(unit, side, beaten, lines);
+            PartyAftermath(unit, side, beaten, lines, report.population.Where(f => f.attacker == attacker).ToList());
             return;
         }
         // An enemy band keeps its survivors; slain Atonalis leave a Rose Seed behind, a slain Formless Mass nothing at all.
@@ -425,13 +458,22 @@ public partial class WorldSystem
 
     // A party of yours that is not an army: beaten, it scatters (its legends are already missing; surviving settlers walk
     // home, the fallen are counted); otherwise it carries its wounds (attrition) and lost nerve into its next battle.
-    private void PartyAftermath(WorldUnit unit, BattleSide side, bool beaten, List<string> lines)
+    private void PartyAftermath(WorldUnit unit, BattleSide side, bool beaten, List<string> lines, List<BattlePopulationFate> population)
     {
-        var settlers = side.sections.FirstOrDefault(s => s.kind == SectionKind.Support && s.count > 0 && s.name.StartsWith("Settlers"));
+        var settlers = side.sections.Where(s => s.kind == SectionKind.Support && s.count > 0 && s.name.StartsWith("Settlers")).ToList();
+        int settlersHome = settlers.Where(s => !s.captured).Sum(s => s.Alive);
+        int settlersHeld = settlers.Where(s => s.captured).Sum(s => s.Alive);
+        var settlerFates = population.Where(f => settlers.Any(s => s.name == f.section)).ToList();
+        int recordedDead = settlerFates.Sum(f => f.dead);
+        if (settlerFates.Count > 0)
+        {
+            settlersHome = settlerFates.Sum(f => f.healthy + f.wounded + f.recoverable); settlersHeld = settlerFates.Sum(f => f.captured);
+            lines.Add($"Settlers: {recordedDead} dead, {settlerFates.Sum(f => f.wounded)} wounded, {settlerFates.Sum(f => f.recoverable)} recoverable, {settlerFates.Sum(f => f.missing)} missing, {settlersHeld} captured.");
+        }
         if (beaten)
         {
-            int home = settlers != null && !settlers.captured ? settlers.Alive : 0;
-            int fallen = unit.settlers - home - (settlers != null && settlers.captured ? settlers.Alive : 0);
+            int home = settlersHome;
+            int fallen = settlerFates.Count > 0 ? recordedDead : unit.settlers - home - settlersHeld;
             if (home > 0 && PopGrowthLogic.Instance != null) PopGrowthLogic.Instance.Discharge(home, unit.name);
             if (fallen > 0 && PopGrowthLogic.Instance != null) PopGrowthLogic.Instance.ReviseDeathRecords(fallen);
             lines.Add($"{unit.name} is scattered{(home > 0 ? $"; {home} settler{(home == 1 ? "" : "s")} find their way home" : string.Empty)}.");
@@ -448,8 +490,8 @@ public partial class WorldSystem
         var progress = LegendProgress.Instance;
         if (progress != null)
         {
-            unit.companions?.RemoveAll(progress.IsMissing);
-            if (unit.leader != null && progress.IsMissing(unit.leader))
+            unit.companions?.RemoveAll(name => progress.IsMissing(name) || progress.IsLost(name));
+            if (unit.leader != null && (progress.IsMissing(unit.leader) || progress.IsLost(unit.leader)))
             {
                 unit.leader = unit.companions != null && unit.companions.Count > 0 ? unit.companions[0] : null;
                 if (unit.leader != null) unit.companions.RemoveAt(0);
@@ -459,10 +501,10 @@ public partial class WorldSystem
         float maxNerve = side.sections.Sum(s => s.maxComposure), nerve = side.sections.Sum(s => Math.Max(0f, s.composure));
         if (max > 0f) unit.attrition = Math.Max(unit.attrition, Math.Min(100f, 100f * (1f - left / max)));
         if (maxNerve > 0f) unit.nerveLost = Math.Max(0f, Math.Min(1f, 1f - nerve / maxNerve));
-        if (settlers != null && unit.settlers > settlers.Alive)
+        if (settlers.Count > 0 && unit.settlers > settlersHome)
         {
-            int fallen = unit.settlers - settlers.Alive;
-            unit.settlers = settlers.Alive;
+            int fallen = settlerFates.Count > 0 ? recordedDead : Math.Max(0, unit.settlers - settlersHome - settlersHeld);
+            unit.settlers = settlersHome;
             if (PopGrowthLogic.Instance != null) PopGrowthLogic.Instance.ReviseDeathRecords(fallen);
             lines.Add($"{unit.name} lost {fallen} settler{(fallen == 1 ? "" : "s")}.");
         }

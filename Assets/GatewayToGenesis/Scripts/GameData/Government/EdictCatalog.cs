@@ -33,11 +33,11 @@ public static class EdictCatalog
         new StanceOption("homes_first", "Homes First", "Only those with a roof waiting are let in; the rest wait at the gates until a home frees up.",
             "regalia", Areas("security", "governance"), Areas("welfare"), Pillar("regalia", PillarLean), Substat("authority", 1f))
         { levers = new EdictLevers { births = 1f, caravans = 1f, arrivalRations = 1f, vagrantsHoused = 1f, turnAwayRoofless = true } },
-        new StanceOption("open_gates", "Open Gates", "Anyone fed at the gates is let in, housed or not, once Efficient Rations lets the roofless in: they wait in the streets for a home.",
+        new StanceOption("open_gates", "Open Gates", "Anyone fed at the gates is let in, housed or not, once Shared Embers lets the roofless in: they wait in the streets for a home.",
             null, Areas("welfare"), Areas("security")),
         new StanceOption("almshouses", "Almshouse Charter", "The roofless are let in and housed first whenever homes free up; the granaries feed the almshouses.",
             "waltz", Areas("welfare", "faith"), Areas("economy"), Pillar("waltz", PillarLean), Substat("euphony", 1f), Output("Food", -5f))
-        { requiresTechnology = "Efficient Rations", levers = new EdictLevers { births = 1f, caravans = 1f, arrivalRations = 1f, vagrantsHoused = 2f } });
+        { requiresTechnology = "Shared Embers", levers = new EdictLevers { births = 1f, caravans = 1f, arrivalRations = 1f, vagrantsHoused = 2f } });
 
     public static readonly StanceDefinition Strangers = new StanceDefinition("strangers", "Strangers at the Gates", "How are those who come from beyond our lands received?", "measured_welcome",
         new StanceOption("welcome", "Welcome the Wanderers", "Word goes out that the gates are open: caravans come half again as often, and those who share the road need fewer rations to be let in.",

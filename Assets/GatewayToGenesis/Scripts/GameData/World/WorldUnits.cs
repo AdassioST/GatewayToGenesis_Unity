@@ -16,6 +16,8 @@ public enum UnitWarning { None = 0, LowRations = 1, Starving = 2, Worn = 4, Fail
 [Serializable]
 public class WorldUnit
 {
+    [SaveOptionalField] public bool majorEncounter, boss, decisiveEncounter, originalEight;
+    [SaveOptionalField] public string battleObjective;
     public int id;
     public string spec;
     public string name;
@@ -99,6 +101,8 @@ public class WorldUnit
     [SaveOptionalField] public string faction;
     /// <summary>An army on the map: the stack of conscripted companies it carries (<see cref="ArmyRoster"/>).</summary>
     [SaveOptionalField] public string armyStack;
+    [SaveOptionalField] public BattleStance battleStance;
+    [SaveOptionalField] public string battleDoctrine;
     /// <summary>A creature band: its species and how many of them.</summary>
     [SaveOptionalField] public string species;
     [SaveOptionalField] public int creatures;
@@ -159,6 +163,9 @@ public class WorldUnit
     /// <summary>A band's home hex (where it rose: beside its den, in its den's water, at its nest); unset: its home cell's centre.</summary>
     [SaveOptionalField] public HexCoord homeHex;
     [SaveOptionalField] public bool homeHexSet;
+    /// <summary>The kit an expedition carries into a fight (<see cref="ExpeditionKit"/> id; empty: the Wayfarer's Kit), and its carried weight.</summary>
+    [SaveOptionalField] public string kit;
+    [SaveOptionalField] public float kitWeight;
 
     public bool Moving => path != null && path.Count > 0;
     public bool Missing => missingSevenths > 0f;
@@ -214,7 +221,9 @@ public struct UnitSurroundings
         if (t == null) return new UnitSurroundings { weather = 1f, silverRiverSteps = WorldResources.FarFromSilver, silverLakeSteps = WorldResources.FarFromSilver };
         return new UnitSurroundings
         {
-            held = WorldAuthority.IsPlayers(t.authorityId) || t.settlement >= 0,
+            // On a hex your people hold (land is held hex by hex: a cell yours de facto may still have others), or in a settlement.
+            held = t.settlement >= 0 || (WorldAuthority.IsPlayers(t.authorityId) && t.hold != HoldStatus.DeFacto)
+                || WorldTerritory.HexHeld(map, MicroNavigation.Index(map, WorldUnits.MicroPosition(unit)), WorldAuthority.Player),
             settlement = t.settlement >= 0,
             weather = t.weatherTravelMultiplier,
             // Standing hazards, and fresh signs of something hunting here (the risk of an ambush is real).
@@ -285,6 +294,7 @@ public static class WorldUnits
     /// <summary>A new unit stands on its cell's centre hex with full rations.</summary>
     public static void Initialize(WorldUnit unit, UnitSpec spec)
     {
+        if (spec != null) { unit.majorEncounter |= spec.majorEncounter; unit.boss |= spec.boss; unit.decisiveEncounter |= spec.decisiveEncounter; unit.originalEight |= spec.originalEight; unit.battleObjective = unit.battleObjective ?? spec.battleObjective; }
         if (!unit.microInitialized) Place(unit, MicroNavigation.Center(unit.coord));
         if (!unit.provisionsInitialized && spec != null)
         {
@@ -814,20 +824,22 @@ public static class WorldUnits
             float scale = 1f + bonus * t.improvement;
             // People work fair land more willingly than hideous land (WorldBeauty).
             float work = Math.Max(0f, 1f + (rules?.territory?.beautyWork ?? 0f) * t.beauty);
-            if (t.authorityId == WorldAuthority.Player)
+            // Land is held hex by hex: a core cell yields whole, one ruled de facto or held in part its share (WorldTerritory.HeldShare).
+            float share = WorldTerritory.HeldShare(map, t);
+            if (share > 0f && t.authorityId != WorldAuthority.Outpost)
             {
                 var terrain = settings.Terrain(t.terrain);
-                if (terrain != null) foreach (var y in terrain.yields) if (y != null) Add($"Land: {terrain.name}", y.resource, y.amount * scale * work);
+                if (terrain != null) foreach (var y in terrain.yields) if (y != null) Add($"Land: {terrain.name}", y.resource, y.amount * scale * work * share);
             }
-            // An identified resource site yields while its cell is yours (or your Outpost's).
-            if (WorldAuthority.IsPlayers(t.authorityId) && t.resourceSite >= 0)
+            // An identified resource site yields while its cell is yours (or your Outpost's), in part while you hold it in part.
+            if (share > 0f && t.resourceSite >= 0)
             {
                 var site = WorldResources.SiteAt(map, t);
-                foreach (var y in WorldResources.YieldsAt(map, settings, t)) Add($"Resource: {settings.ResourceSite(site.spec)?.name ?? site.name}", y.resource, y.amount * scale * work);
+                foreach (var y in WorldResources.YieldsAt(map, settings, t)) Add($"Resource: {settings.ResourceSite(site.spec)?.name ?? site.name}", y.resource, y.amount * scale * work * share);
             }
             // Cover you hold is worked too: timber and game from the forest, peat from the fen.
-            if (WorldAuthority.IsPlayers(t.authorityId) && t.cover != null)
-                foreach (var y in WorldCover.YieldsOf(settings, t)) Add($"Cover: {settings.Cover(t.cover)?.name ?? t.cover}", y.resource, y.amount * scale * work);
+            if (share > 0f && t.cover != null)
+                foreach (var y in WorldCover.YieldsOf(settings, t)) Add($"Cover: {settings.Cover(t.cover)?.name ?? t.cover}", y.resource, y.amount * scale * work * share);
             if (t.HasFeature)
             {
                 var feature = settings.Feature(t.feature);

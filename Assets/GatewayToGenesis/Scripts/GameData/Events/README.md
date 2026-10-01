@@ -43,7 +43,7 @@ This document provides comprehensive technical documentation for the Gateway to 
 
 ### **🎯 Usage in Ink Files**
 ```ink
-# conditions: population:population >= 10; housing:housing >= 15; true_deaths:true_deaths > 100; technology:Rites of Harvest
+# conditions: population:population >= 10; housing:housing >= 15; true_deaths:true_deaths > 100; technology:Harvest Hymns
 # consequences: population:population -3; vagrants:vagrants +45; death_records_revision:deaths -10
 ```
 

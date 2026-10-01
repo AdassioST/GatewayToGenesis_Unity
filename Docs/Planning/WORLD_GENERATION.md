@@ -1160,7 +1160,7 @@ society will add by itself and how long that takes.
   the land or knowledge changed).
 - **Survey time halved**: `UnitSpec.mesoSurveySevenths` 2.5 -> 1.25 (World.asset and the code default), so each hex
   takes about 0.18 Sevenths before cover and party size.
-- **Claims at once**: `WorldTerritory.ClaimNow` settles every open hex of the cell, adds it to `Claims` and rebuilds;
+- **Claims at once** (superseded the same day: claims now take one micro hex, see the next section): `WorldTerritory.ClaimNow` settles every open hex of the cell, adds it to `Claims` and rebuilds;
   `WorldSystem.Claim` calls it. `TerritoryRules.claimSeventhsPerHex` and `WorldSystem.ClaimSevenths` are gone;
   `AdvanceClaims(map, settings)` only finishes claims an older save left half settled. `_claimProgress` stays in the
   save schema, unused (the codec looks fields up by name).
@@ -1176,3 +1176,86 @@ society will add by itself and how long that takes.
   `Forecast_NamesTheHexesSocietySettlesNextInOrderAndWhen`; `WorldUnitTests.ASurveyTourWalksTheCellsHexesInTheOrderThatWalksLeast`
   checks the whole order. Pure tests green (WorldTerritory 17, WorldUnit 20, WorldCivilization 15, Expedition 49).
 - Proposals: the badge spacing thresholds (34 / 52 px), the forecast being an average (each Seventh is a roll).
+
+## Land held micro hex by micro hex: claims and adoption, September 29, 2026 (latest)
+
+The owner asked that claiming land give you the micro hex, not the whole meso cell, claiming small hex by small hex,
+and that the land society adopts by itself through administrative pull go the same way.
+
+- **A hex is yours at once.** `WorldTile.microHeldMask` (saved, optional) now means hexes of a wilderness cell you
+  hold, adopted or claimed; the new `microClaimMask` (saved, optional; `GameSnapshot.TileFields`) marks the claimed
+  ones. `WorldTerritory.HexHeld(map, id, authority)` (any hex of a cell you or an Outpost hold, or a held hex of a
+  wilderness cell), `Touching`, `HeldShare(t)` (1 inside your authority, held/open hexes of a wilderness cell) and
+  `ClaimedHexes(map)` (an older save's whole-cell claims count every open hex). The cell's `authorityId` still flips
+  only when every open hex is held (`WorldTerritory.Complete`: into `Claims` if any hex of it was claimed, else
+  `Adopted`, then a rebuild), so settlements, roads, improvements and enclaves keep reading whole cells.
+- **What a held hex gives**: `WorldUnits.LandYields` and `WorldSystem.CellYields` pay a wilderness cell's ground,
+  resource site and cover yields times `HeldShare`; `WorldTerritory.Realm` weighs its load, Coherence and beauty by
+  the share (`RealmReport.hexes`, `land` = cells' worth; averageLoad and the wide/tall comparisons use `land`);
+  `Compute` counts the share toward the pulling seat's `held` (now a float), and `Tick`/`ClaimHex` add 1/open hexes
+  as they go; a party standing on a held hex draws rations as inside your authority (`UnitSurroundings.held`).
+- **Borders follow the hexes**: `WorldRenderer` builds the owner texture at micro resolution (held hexes of wilderness
+  cells coded as yours) and `WorldTerrain.shader` samples `_OwnerTex` by micro hex (`MicroAt`, `_MicroInfo`), so the
+  outline wraps each held hex. The old settled-hex dots are gone (the border shows them); an older save's pending
+  whole-cell claim keeps its gold ring.
+- **Claims, one hex at a time**: `WorldAuthority.WhyNotClaimHex(map, id)` (open, not a crag, not yet yours, touching a
+  hex you hold, its cell claimable); `WhyNotClaim(map, t)` now asks for a hex of the cell touching held land ("No hex
+  of it borders land you hold."); `WorldTerritory.ClaimHex(map, settings, id, out whole)`. `WorldSystem.Claim(tile,
+  hex?)` takes the clicked hex or the one touching your land most (`ClaimTarget` = `NextHex`); a hex costs a seventh of
+  `claimFoodValue`/`claimCost` (they still price a whole cell's worth), raised by `claimCostGrowth` per 7 hexes
+  claimed (`WorldAuthority.ClaimScale` takes cells' worth as a float). `ClaimNow` remains for older saves' `Claiming`.
+- **Adoption, one hex at a time**: `NextHex` returns only hexes touching held ground (-1 otherwise) and reads other
+  cells' held hexes; `WhyNotAdopt` uses it instead of cell adjacency, so society grows from a claimed or settled hex
+  too. Each settled hex is yours immediately (the Realm is recomputed after each, so strain stops adoption at the right
+  hex). Past collapse, `Weakest` also considers wilderness cells held in part: their adopted hexes slip away, claimed
+  hexes never do.
+- **UI**: clicking at the micro reading also picks the hex (`WorldView._selectedHex`); the land card offers *Claim this
+  hex* and *Claim the next hex / a bordering hex*, shows "You, N/7 hexes (k claimed)", and the hover at the micro
+  reading says whether the hex under the cursor is yours or can be claimed. Realm panel: whole cells plus hexes held in
+  part. Notice, Claim tutorial (done once any hex is claimed) and Realm tutorial updated. GameWiki World Map and
+  Territory entries rewritten.
+- Tests: `WorldTerritoryTests.Claims_TakeOneHexAtATimeBorderingLandYouHold` (new), the adoption test checks a single
+  hex is yours with its share of land and load, the drift test covers a partly held cell and a claimed hex that stays;
+  `WorldCivilizationTests` claim reason updated. Pure run 1101/1101; batchmode (Unity closed) TerritoryPlayTests,
+  WorldViewPlayTests, GenesisLoopPlayTests and WorldTerritoryTests 31/31, shader compiled clean.
+- Proposals: the per-hex price (a seventh of a cell), growth per 7 hexes claimed, and a partly held cell yielding and
+  weighing by its share. Not seen by eye in the Editor yet (the border outline at the region and atlas readings may
+  look busier with micro-hex edges).
+
+## De facto and core land, disputes and occupied cores, September 29, 2026 (latest)
+
+The owner changed the rule that a cell joins your authority only once all its hexes are held: with 4 of 7 hexes a
+cell becomes de facto yours, with all 7 it is core territory, so a cell shared 4/3 is a territorial dispute (a
+grievance for the minority, a casus belli for the ruler to integrate it as core); left as an API for occupied
+territory later, above all for recovering lost cores.
+
+- **`WorldHoldings`** (new, pure; `WorldHoldingsTests`): who holds each micro hex (`HexHolder`: yours in
+  `WorldTile.microHeldMask`, other holders' in the new saved `WorldMap.HexHoldings` list of `HexHolding {cell, holder,
+  mask, core}` (WorldSystem `_hexHoldings`, optional), and a cell given whole (`WorldTile.whole`, derived: Capital,
+  settlement, enclave and feature reach, Outposts) holds every hex no one else does). `MaskOf/Hexes/Shares/FreeMask`,
+  `Status` -> `HoldStatus` None/Partial/DeFacto/Core, `Ruler` (at least `TerritoryRules.deFactoHexes` = 4 hexes and
+  strictly the most; a tie rules no one), `Fillable` (wilderness, or a cell the holder rules de facto: its free hexes
+  can still be settled or claimed), `CoresOf` (you: `Claims`/`Adopted`; others: `HexHolding.core`, kept with no hexes
+  left; a cell given whole: its authority), `MarkCore`, `TakeHex(map, id, holder)` (moves one hex, returns the
+  previous holder; rebuild after), `Disputes/Dispute` -> `TerritoryDispute {cell, ruler, shares, cores, open,
+  Grievance(holder)}`, `CasusBelliOf` -> `CasusBelli` None/Integrate/Recover, `Grievances`, `CasusBelliFor`, `Occupied`.
+- **Establish**: hex-held land is ruled first (before any reach, so no settlement overrides it): the ruler becomes the
+  cell's authority; older saves' whole-cell Claims/Adopted with no mask get every hex. `Project` marks cells whole.
+  `WorldTile.hold` (derived) is the authority's status. Compute: an Outpost's pull turns any non-whole, unclaimed
+  Player cell into its pocket (was: only Adopted).
+- **Territory**: `WorldTerritory.AfterHex` (the 4th hex rebuilds: de facto; the last calls `Complete`: core into
+  Claims/Adopted), `ClaimHex(..., out HoldStatus)`, `TickResult.deFacto`; `NextHex`/`WhyNotAdopt`/`Candidates`/
+  claims work in `Fillable` cells; `HeldShare(map, t)` is 1 for core (or hand-set cells with no hold worked out),
+  held/open otherwise, so a de facto cell yields and weighs by its hexes; `RealmReport.cells` counts core cells,
+  `deFacto` the cells ruled de facto; drift can take the adopted hexes of de facto cells. Units draw rations on any
+  hex they hold. Claims refuse hexes another holds ("only taken by force").
+- **UI**: borders drawn per hex holder (a shared cell shows each side's hexes); land card and hover show a *Hold* row
+  (core / de facto N/7 / others' shares / dispute: recover, integrate or grievance) and the hovered hex's holder; the
+  Realm panel counts core cells, de facto cells and disputes. GameWiki World Map + Territory (Disputed land) updated.
+- Tests: `WorldHoldingsTests` (7: thresholds, 4/3 both ways, tie, occupied core recovered, another's core claim
+  outliving its hexes, a hex taken from a whole cell), WorldTerritory adoption/claim/drift updated, TerritoryPlayTests
+  waits for core. Pure 1108/1108; batchmode 46/46 (play tests included).
+- Proposals / open: 4 of 7 (`deFactoHexes`), de facto yielding by hexes rather than whole, holders other than you only
+  arise through the API today (no rival civilization yet; an enclave appearing over your partial hexes is the one
+  live case), no war or diplomacy consumes the casus belli yet, and taking a whole cell by force does not mark it core
+  for you (only settling/claiming its last hex does).

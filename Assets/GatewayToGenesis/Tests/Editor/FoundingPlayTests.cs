@@ -12,8 +12,9 @@ using Object = UnityEngine.Object;
 /// first lesson (<see cref="FoundingLesson"/>) is spoken by the Auric Aria at a pause, as layered floating words in the
 /// middle of the screen (whisper, large title, what to do; no card) with the Food button ringed in gold
 /// (<see cref="TutorialGlow"/>, just behind the button); she falls silent when the player acts and returns at the next
-/// pause; the last founder home brings a farewell; once all are in, the founders eat nothing from the daily food,
-/// and with Resource Storage known the Food beyond a hand's worth goes into the stores.
+/// pause; the last founder home is announced at once, even while the player acts; the first death gets a line of hers,
+/// low on the screen as a subtitle; once all are in, the founders eat nothing from the daily food,
+/// and with Ash-Cellars known the Food beyond a hand's worth goes into the stores.
 /// Each step is a static helper that reads the scene afresh (nothing is held across frames in play mode).
 /// </summary>
 public class FoundingPlayTests
@@ -42,8 +43,17 @@ public class FoundingPlayTests
         Assert.AreEqual("founding", Tutorials.ShowingId, "she returns at the next pause while founders still wait");
         GatherForTheFounders();
         BringEveryoneHome();
-        yield return new WaitForSecondsRealtime(1.2f);
-        CheckTheFarewell();
+        yield return new WaitForSecondsRealtime(0.5f);
+        Tutorials.Stir();
+        yield return null;
+        yield return null;
+        CheckTheHomecoming();
+        GriefForTheFirstDeath();
+        yield return new WaitForSecondsRealtime(0.4f);
+        Assert.AreEqual("moment.first-death", AuricAria.Waiting.FirstOrDefault().id, "her line waits for the announcement to be read");
+        for (float t = 0f; t < 14f && Tutorials.ShowingId != "moment.first-death"; t += 0.1f) yield return new WaitForSecondsRealtime(0.1f);
+        yield return new WaitForSecondsRealtime(0.5f);
+        CheckTheSubtitle();
         if (UnlockStorage())
         {
             yield return new WaitForSecondsRealtime(1.3f);
@@ -86,7 +96,7 @@ public class FoundingPlayTests
     {
         var host = Object.FindAnyObjectByType<Tutorials>();
         Assert.AreEqual("founding", Tutorials.ShowingId, $"host {(host != null ? (host.enabled ? "on" : "off") : "missing")}, story {EventSystemLogic.Instance?.isEventActive}, map {WorldView.IsOpen}, save menu {SaveMenu.BlocksGameplay}, speaks {Tutorials.Lessons[0].Speak(out _)}");
-        var lesson = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include).FirstOrDefault(r => r.name == "Lesson" && r.parent != null && r.parent.name == "Tutorials");
+        var lesson = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include).FirstOrDefault(r => r.name == "Announcement" && r.parent != null && r.parent.name == "Tutorials");
         Assert.IsNotNull(lesson);
         Assert.AreEqual(new Vector2(0.5f, 0.5f), lesson.anchorMin, "in the middle of the screen");
         Assert.IsNotNull(lesson.GetComponent<AuricVoice>(), "spoken by the Auric Aria");
@@ -122,17 +132,37 @@ public class FoundingPlayTests
         Assert.AreEqual(0, GrowthRules.Eating(21, pop.Growth), "the founders eat nothing from the daily food");
     }
 
-    private static void CheckTheFarewell()
+    private static void CheckTheHomecoming()
     {
-        Assert.AreEqual("founding", Tutorials.ShowingId, "a farewell once the last founder is in");
-        var lesson = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include).First(r => r.name == "Lesson" && r.parent != null && r.parent.name == "Tutorials");
-        Assert.AreEqual("Your 21 Founders Are Home", Line(lesson, "Title"));
+        Assert.AreEqual("founding.home", Tutorials.ShowingId, "announced the moment the last founder is in, not hushed by the player's acts");
+        var announcement = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include).First(r => r.name == "Announcement" && r.parent != null && r.parent.name == "Tutorials");
+        Assert.IsTrue(announcement.gameObject.activeSelf);
+        Assert.AreEqual("Your 21 Founders Are Home", Line(announcement, "Title"));
         Assert.IsNull(Glow(), "nothing left to click for");
+    }
+
+    private static void GriefForTheFirstDeath()
+    {
+        Assert.AreEqual(0, PopGrowthLogic.Instance.trueDeaths, "no one has died yet");
+        PopGrowthLogic.Instance.ProcessEventDeaths(1, "a test");
+    }
+
+    private static void CheckTheSubtitle()
+    {
+        Assert.AreEqual("moment.first-death", Tutorials.ShowingId);
+        var line = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include).First(r => r.name == "Line" && r.parent != null && r.parent.name == "Tutorials");
+        Assert.IsTrue(line.gameObject.activeSelf);
+        Assert.AreEqual(0f, line.anchorMin.y, "low on the screen, like a subtitle");
+        Assert.IsNotNull(line.GetComponent<AuricVoice>(), "spoken by the Auric Aria");
+        string text = Line(line, "Subtitle");
+        StringAssert.StartsWith("<i>", text, "the stage direction is set apart");
+        StringAssert.Contains("It's okay, sometimes things die", text);
+        Assert.IsFalse(line.GetComponentsInChildren<UnityEngine.UI.Graphic>(true).Any(g => g.raycastTarget), "the words never catch clicks");
     }
 
     private static bool UnlockStorage()
     {
-        var storage = GameUnitsLogic.Instance.GetTechnologySlot("Resource Storage");
+        var storage = GameUnitsLogic.Instance.GetTechnologySlot("Ash-Cellars");
         if (storage == null) return false;
         storage.isUnlocked = true;
         Assert.IsTrue(Pantry.Instance.Banking);

@@ -19,6 +19,9 @@ public class AgeBanner : MonoBehaviour
 {
     private const float Width = 780f, Height = 92f, Margin = 6f, RefreshSeconds = 0.25f;
 
+    /// <summary>The banner's width, centred at the top of the screen (the time indicator sits beside it).</summary>
+    public const float BannerWidth = Width;
+
     private static AgeBanner _instance;
 
     /// <summary>Screen height the banner holds at the top (0 before it is built), so toasts can sit below it.</summary>

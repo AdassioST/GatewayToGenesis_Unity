@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f57c27735a8bced48bb10b5272b5ef52, type: 3}
+  m_Name: Staccato
+  m_EditorClassIdentifier: 
+  gameUnit: {fileID: 11400000, guid: 117eea3477ca323df194e94a73172230, type: 2}
+  isEventTech: 0
+  tier: 2
+  satisfactionPoints: 0
+  techRequirements:
+  - The Ruin-Song
+  - Shared Embers
+  resourceRequirements:
+  - Research
+  resourceAmount:
+  - 1400
+  enlightenedConditions:
+  - type: 1
+    trigger: 'Field Kitchen'
+    requiredAmount: 2
+    description: 'Build 2 Field Kitchen'
+    riddle: ''
+    clue: ''
+    clueAt: 0.5
+    clueTrigger: ''
+    clueAmount: 1
+  techUnlockables:
+  - {fileID: 11400000, guid: df60177d47dc3000627104ace364d169, type: 2}
+  - {fileID: 11400000, guid: ecae7b4333bd9224abc3b562b6870ec6, type: 2}

@@ -168,7 +168,7 @@ public struct LegendOpinion
 [Serializable]
 public class EdictTuning
 {
-    [UnityEngine.Tooltip("Council seats, counting the Head of State, before the government can issue edicts (the third opens with Edicts of Stone and Bone).")]
+    [UnityEngine.Tooltip("Council seats, counting the Head of State, before the government can issue edicts (the third opens with Call and Response).")]
     public int minCouncilSeats = 3;
     [UnityEngine.Tooltip("Edict slots: council seats (counting the Head of State) minus this. Three seats hold one edict, a full council of seven holds five.")]
     public int seatsBeforeFirstSlot = 2;

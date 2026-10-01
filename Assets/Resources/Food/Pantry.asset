@@ -221,10 +221,10 @@ MonoBehaviour:
     keepsOwnRoom: 0
   capacity: 200
   preservation:
-  - technology: Resource Storage
+  - technology: Ash-Cellars
     spoilMultiplier: 0.8
     capacityBonus: 150
-  - technology: Resource Preservation
+  - technology: Salt and Smoke
     spoilMultiplier: 0.5
     capacityBonus: 100
   startingStores:
@@ -232,6 +232,6 @@ MonoBehaviour:
     amount: 40
   maxCoverPerSecond: 5
   varietyMinimumValue: 5
-  bankTechnology: Resource Storage
+  bankTechnology: Ash-Cellars
   bankedKind: Dried Auric Peaches
   keepInHand: 12

@@ -67,17 +67,17 @@ MonoBehaviour:
       capacity: 0
       fullAt: 2
     - kind: 0
-      name: Agricultural Renewal
+      name: Earth-Bean Rows
       ease: 0.25
       capacity: 0
       fullAt: 1
     - kind: 0
-      name: Rites of Harvest
+      name: Harvest Hymns
       ease: 0.15
       capacity: 0
       fullAt: 1
     - kind: 0
-      name: Efficient Rations
+      name: Shared Embers
       ease: 0.1
       capacity: 0
       fullAt: 1
@@ -148,7 +148,7 @@ MonoBehaviour:
       capacity: 0
       fullAt: 1
     - kind: 0
-      name: Fortified Living
+      name: Stonebound Walls
       ease: 0.15
       capacity: 0
       fullAt: 1
@@ -181,12 +181,12 @@ MonoBehaviour:
       capacity: 0
       fullAt: 5
     - kind: 0
-      name: Fortified Living
+      name: Stonebound Walls
       ease: 0.25
       capacity: 0
       fullAt: 1
     - kind: 0
-      name: Woodcraft Mastery
+      name: Elderwood Felling
       ease: 0.15
       capacity: 0
       fullAt: 1

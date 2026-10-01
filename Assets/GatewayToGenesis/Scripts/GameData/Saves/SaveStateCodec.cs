@@ -134,5 +134,108 @@ public static class SaveStateCodec
         }
         return result;
     }
-    private static FieldInfo[] DataFields(Type type) => type.GetFields(Flags).Where(f => !f.IsStatic && !typeof(Delegate).IsAssignableFrom(f.FieldType)).OrderBy(f => f.Name, StringComparer.Ordinal).ToArray();
+    private static readonly Dictionary<Type, FieldInfo[]> dataFields = new Dictionary<Type, FieldInfo[]>();
+    private static FieldInfo[] DataFields(Type type)
+    {
+        // Locked: a background save formats its columns while the main thread may capture.
+        lock (dataFields)
+        {
+            if (!dataFields.TryGetValue(type, out var fields))
+                dataFields[type] = fields = type.GetFields(Flags).Where(f => !f.IsStatic && !typeof(Delegate).IsAssignableFrom(f.FieldType)).OrderBy(f => f.Name, StringComparer.Ordinal).ToArray();
+            return fields;
+        }
+    }
+
+    // ===== COLUMNS =====
+    // Many objects of one type (the world's tiles) saved field by field: each field one list of strings, one per object.
+    // A column holds scalars, or small structs of scalars (a HexCoord) written as their fields joined by commas.
+
+    /// <summary>The field, checked to be one a column can hold (throws otherwise).</summary>
+    public static FieldInfo ColumnField(Type type, string name)
+    {
+        var field = Field(type, name);
+        if (!Scalar(field.FieldType) && !ScalarStruct(field.FieldType))
+            throw new InvalidOperationException(type.Name + "." + name + " cannot be saved in a column (scalars and structs of scalars only).");
+        return field;
+    }
+
+    private static bool ScalarStruct(Type t) => t.IsValueType && !t.IsPrimitive && !t.IsEnum &&
+        DataFields(t).Length > 0 && DataFields(t).All(f => Scalar(f.FieldType) && f.FieldType != typeof(string));
+
+    /// <summary>The targets' fields as columns of text. Touches nothing but the targets (a worker thread may run it on
+    /// copies of them).</summary>
+    public static List<SavedColumn> PackColumns<T>(IReadOnlyList<T> targets, string[] fields) where T : class
+    {
+        var columns = new List<SavedColumn>(fields.Length);
+        foreach (string name in fields)
+        {
+            var field = ColumnField(typeof(T), name);
+            var parts = Scalar(field.FieldType) ? null : DataFields(field.FieldType);
+            var column = new SavedColumn { field = name, values = new List<string>(targets.Count) };
+            for (int i = 0; i < targets.Count; i++)
+            {
+                object value = field.GetValue(targets[i]);
+                if (value == null) { column.nulls.Add(i); column.values.Add(""); }
+                else if (parts == null) column.values.Add(Convert.ToString(value, CultureInfo.InvariantCulture));
+                else
+                {
+                    var text = new string[parts.Length];
+                    for (int p = 0; p < parts.Length; p++) text[p] = Convert.ToString(parts[p].GetValue(value), CultureInfo.InvariantCulture);
+                    column.values.Add(string.Join(",", text));
+                }
+            }
+            columns.Add(column);
+        }
+        return columns;
+    }
+
+    /// <summary>Set each target's fields from the columns. A missing column is allowed only for a [SaveOptionalField] (the
+    /// targets keep their value).</summary>
+    public static void RestoreColumns<T>(IReadOnlyList<T> targets, List<SavedColumn> columns, string[] fields) where T : class
+    {
+        if (columns == null || columns.Select(c => c.field).Distinct().Count() != columns.Count || columns.Any(c => !fields.Contains(c.field)) ||
+            columns.Any(c => c.values == null || c.values.Count != targets.Count)) throw new InvalidOperationException("Incomplete state record.");
+        foreach (string name in fields)
+        {
+            var field = ColumnField(typeof(T), name);
+            var column = columns.FirstOrDefault(c => c.field == name);
+            if (column == null)
+            {
+                if (!field.IsDefined(typeof(SaveOptionalFieldAttribute), false)) throw new InvalidOperationException("Incomplete state record.");
+                continue;
+            }
+            var nulls = new HashSet<int>(column.nulls ?? new List<int>());
+            var parts = Scalar(field.FieldType) ? null : DataFields(field.FieldType);
+            for (int i = 0; i < targets.Count; i++)
+            {
+                object value;
+                if (nulls.Contains(i)) value = null;
+                else if (parts == null) value = ParseScalar(column.values[i], field.FieldType);
+                else
+                {
+                    var text = column.values[i].Split(',');
+                    if (text.Length != parts.Length) throw new InvalidOperationException("Wrong shape: " + name);
+                    value = Activator.CreateInstance(field.FieldType);
+                    for (int p = 0; p < parts.Length; p++) parts[p].SetValue(value, ParseScalar(text[p], parts[p].FieldType));
+                }
+                if (value == null && field.FieldType.IsValueType) throw new InvalidOperationException("Missing state value.");
+                field.SetValue(targets[i], value);
+            }
+        }
+    }
+
+    private static object ParseScalar(string text, Type type)
+    {
+        object value;
+        if (type == typeof(string)) return text;
+        if (type == typeof(int)) value = int.Parse(text, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        else if (type == typeof(bool)) value = bool.Parse(text);
+        else if (type == typeof(float)) value = float.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
+        else if (type == typeof(long)) value = long.Parse(text, NumberStyles.Integer, CultureInfo.InvariantCulture);
+        else if (type.IsEnum) value = Enum.Parse(type, text);
+        else value = Convert.ChangeType(text, type, CultureInfo.InvariantCulture);
+        if (value is float f && (float.IsNaN(f) || float.IsInfinity(f)) || value is double d && (double.IsNaN(d) || double.IsInfinity(d)))
+            throw new InvalidOperationException("Non-finite save value.");
+        return value;
+    }
 }

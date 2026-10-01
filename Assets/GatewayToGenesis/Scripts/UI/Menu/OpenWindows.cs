@@ -10,6 +10,10 @@ public static class OpenWindows
     public static bool OverTheView =>
         LibraryWindow.IsOpen
         || RumoursWindow.IsOpen
+        || BattleWindow.IsOpen
+        || BattleEncounterWindow.IsOpen
+        || BattleRecoveryWindow.IsOpen
+        || SymphonyWindow.IsOpen
         || BestiaryWindow.IsOpen
         || EraTimelineWindow.IsOpen
         || CultureWindow.IsOpen

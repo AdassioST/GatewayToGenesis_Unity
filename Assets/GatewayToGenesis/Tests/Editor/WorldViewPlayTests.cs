@@ -131,7 +131,7 @@ public class WorldViewPlayTests
         _mouse.MakeCurrent();
         try
         {
-            // Before Pathfinder Training only the capital is known.
+            // Before Lookout Towers only the capital is known.
             var capitalCamera = CameraMovement.Instance;
             if (capitalCamera != null) capitalCamera.ZoomToWidest();
             Scroll(-1f);

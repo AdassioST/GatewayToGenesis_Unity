@@ -27,7 +27,7 @@ using UnityEngine.InputSystem;
 ///   your stores inside your authority and gathered from the land in camp; they tire, rest in camp and wear down with
 ///   hunger, strain, harsh weather, danger and dissonance. Exhausted, they make camp by themselves; worn out, they are
 ///   lost. Warnings reach the notices once each (<see cref="UnitNotice"/>).
-/// - The map opens with <see cref="WorldSettings.mapTechnology"/> (Pathfinder Training), which also sends out the first
+/// - The map opens with <see cref="WorldSettings.mapTechnology"/> (Lookout Towers), which also sends out the first
 ///   expedition free (<see cref="ExpeditionSettings.firstFree"/>). Authority begins at the Capital's own cell; explored
 ///   wilderness bordering it is claimed cell by cell for resources (<see cref="Claim"/>).
 /// - Land (<see cref="WorldUnits.LandYields"/>): the ground of held, explored cells and every explored feature yield
@@ -85,6 +85,8 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
     // older saves carry any), the time those claims kept toward their next hex (retired, kept so older saves load), and
     // the territory rolls made so far (seeds the next, so a save replays the same fortune).
     [SaveOptionalField] private List<int> _claiming = new List<int>();
+    // Hexes held by holders other than you, and their core claims (WorldHoldings).
+    [SaveOptionalField] private List<HexHolding> _hexHoldings = new List<HexHolding>();
 #pragma warning disable CS0169, CS0414, CS0649
     [SaveOptionalField] private float _claimProgress;
 #pragma warning restore CS0169, CS0414, CS0649
@@ -134,6 +136,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         _claims = Map.Claims;
         _adopted = Map.Adopted;
         _claiming = Map.Claiming;
+        _hexHoldings = Map.HexHoldings;
         _plantings = Map.Plantings;
         _resourceSites = Map.ResourceSites;
         _populations = Map.Populations;
@@ -260,8 +263,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         var time = TimeSystemLogic.Instance;
         if (time == null || SaveMenu.BlocksGameplay || Time.timeScale <= 0f) return 0f;
         if (time.canTrackTime && time.isTimePaused) return 0f;
-        var events = EventSystemLogic.Instance;
-        if (events != null && events.IsEventActive()) return 0f;
+        if (TimeSystemLogic.SimulationHeld) return 0f;
         float perSeventh = time.canTrackTime ? time.GetEffectiveSecondsPerSeventh() : time.BaseSecondsPerSeventh;
         return perSeventh > 0f ? seconds / perSeventh : 0f;
     }
@@ -676,7 +678,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         var legends = LegendProgress.Instance;
         if (legends == null || Map == null) return new List<string>();
         var government = GovernmentLogic.Instance;
-        return legends.RecruitedNames.Where(n => ExpeditionOf(n) == null && !legends.IsMissing(n))
+        return legends.RecruitedNames.Where(n => ExpeditionOf(n) == null && Army.PostOf(n) == null && !legends.IsMissing(n))
             .OrderBy(n => government != null && government.GetSeatWithLegend(n) != null ? 1 : 0).ThenBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
@@ -697,6 +699,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         if (legends.IsLost(legend)) return $"{legend} is lost to Dissonance.";
         if (!legends.IsRecruited(legend)) return $"{legend} has not been met yet.";
         if (legends.IsMissing(legend)) return $"{legend} is missing in action.";
+        if (Army.PostOf(legend) != null) return $"{legend} already {Army.PostOf(legend)}.";
         var with = ExpeditionOf(legend);
         if (with != null) return $"{legend} already walks with {with.name}.";
         var seat = GovernmentLogic.Instance != null ? GovernmentLogic.Instance.GetSeatWithLegend(legend) : null;
@@ -812,6 +815,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
 
     private void StepUnits(float sevenths)
     {
+        if (_pendingEncounter != null) return;
         // The threats send their bands out (red and orange enemies), whether or not any of your units walk the map.
         bool changed = TickThreats(sevenths);
         // Known dens send a band out now and then (it heads home after a while).
@@ -1948,7 +1952,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         }
     }
 
-    // Settlers need what settlers always needed: the map's technology (Pathfinder Training teaches both).
+    // Settlers need what settlers always needed: the map's technology (Lookout Towers teaches both).
     private string SettlersTechnology => Settings.mapTechnology;
 
     /// <summary>Take on settlers (citizens and their cost): the party slows, and can found one settlement.</summary>
@@ -2092,6 +2096,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
 
     private void OnSeventh(int _)
     {
+        if (_pendingEncounter != null) return;
         SyncCalendar();
         // Settlements grow toward their City Development potential (slower when the administration is overstretched);
         // yields follow whole points.
@@ -2262,7 +2267,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         return totals;
     }
 
-    /// <summary>What one cell yields per second now (its ground if held, its feature, its improvement), for the hover card.</summary>
+    /// <summary>What one cell yields per second now (its ground if held, in part by the hexes held, its feature, its improvement), for the hover card.</summary>
     public List<ResourceAmount> CellYields(WorldTile t)
     {
         var result = new Dictionary<string, float>(StringComparer.OrdinalIgnoreCase);
@@ -2270,13 +2275,15 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         // As the ledger counts it: raised by improvements, by the beauty people work willingly, lowered by an overstretched administration.
         float scale = (1f + Rules.improvementBonus * t.improvement) * Realm.efficiency * CapitalOutput;
         float work = Math.Max(0f, 1f + Rules.territory.beautyWork * t.beauty);
+        // A cell yours de facto or in part yields for the hexes you hold (WorldUnits.LandYields).
+        float share = WorldTerritory.HeldShare(Map, t);
         var gen = Settings.generation;
-        if (t.authorityId == WorldAuthority.Player)
-            foreach (var y in gen.Terrain(t.terrain)?.yields ?? new List<ResourceAmount>()) if (y != null) result[y.resource] = (result.TryGetValue(y.resource, out var a) ? a : 0f) + y.amount * scale * work;
+        if (share > 0f && t.authorityId != WorldAuthority.Outpost)
+            foreach (var y in gen.Terrain(t.terrain)?.yields ?? new List<ResourceAmount>()) if (y != null) result[y.resource] = (result.TryGetValue(y.resource, out var a) ? a : 0f) + y.amount * scale * work * share;
         if (t.HasFeature)
             foreach (var y in gen.Feature(t.feature)?.yields ?? new List<ResourceAmount>()) if (y != null) result[y.resource] = (result.TryGetValue(y.resource, out var a) ? a : 0f) + y.amount * scale;
-        if (WorldAuthority.IsPlayers(t.authorityId))
-            foreach (var y in WorldResources.YieldsAt(Map, gen, t).Concat(WorldCover.YieldsOf(gen, t))) result[y.resource] = (result.TryGetValue(y.resource, out var a) ? a : 0f) + y.amount * scale * work;
+        if (share > 0f)
+            foreach (var y in WorldResources.YieldsAt(Map, gen, t).Concat(WorldCover.YieldsOf(gen, t))) result[y.resource] = (result.TryGetValue(y.resource, out var a) ? a : 0f) + y.amount * scale * work * share;
         return result.Where(p => p.Value != 0f).Select(p => new ResourceAmount { resource = p.Key, amount = p.Value }).ToList();
     }
 
@@ -2373,7 +2380,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
     }
 
     // Food in a cost is paid from the Food in hand, then from the stores' food value (surplus Food is banked there once
-    // Resource Storage is known, so the counter itself rarely holds much).
+    // Ash-Cellars is known, so the counter itself rarely holds much).
     private static bool IsFood(string resource) => string.Equals(resource, GameCatalog.ResourceNameFor(ResourceRole.Food), StringComparison.OrdinalIgnoreCase);
 
     private static float Held(GameUnitsLogic units, string resource) =>
@@ -2589,8 +2596,12 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
 
     // ===== CLAIMING LAND =====
 
-    /// <summary>What claiming one more cell costs now (it grows with every cell claimed).</summary>
-    public float ClaimScale => WorldAuthority.ClaimScale(Map != null ? Map.Claims.Count + Map.Claiming.Count : 0, Rules.claimCostGrowth);
+    /// <summary>
+    /// What claiming one more hex costs now: a seventh of a cell's claim (<see cref="SettlementRules.claimFoodValue"/>,
+    /// <see cref="SettlementRules.claimCost"/> price a whole cell's worth), raised for every cell's worth already claimed.
+    /// </summary>
+    public float ClaimScale => WorldAuthority.ClaimScale(Map != null ? (WorldTerritory.ClaimedHexes(Map) + Map.Claiming.Count * MicroNavigation.PerCell) / (float)MicroNavigation.PerCell : 0f, Rules.claimCostGrowth)
+        / MicroNavigation.PerCell;
 
     /// <summary>Food value the next claim takes from the stores.</summary>
     public float ClaimFoodValue => Rules.claimFoodValue * ClaimScale;
@@ -2606,31 +2617,49 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
     }
 
     /// <summary>
-    /// Known wilderness bordering your authority that could be claimed right now: the land allows it and the stores and
-    /// the cost can be paid (every claim costs the same now, so one check covers them all). 0 when none can.
+    /// Known wilderness cells with a hex bordering land you hold that could be claimed right now: the land allows it and
+    /// the stores and the cost can be paid (every claim costs the same now, so one check covers them all). 0 when none can.
     /// </summary>
     public int ClaimableCount() => MapUnlocked && CanPayForClaim() ? WorldAuthority.Claimable(Map).Count() : 0;
 
     // Whether the next claim could be paid for now (and claiming is open at all).
     private bool CanPayForClaim() => Locked() == null && Pantry.WhyNotAfford(ClaimFoodValue) == null && Unaffordable(Rules.claimCost, ClaimScale) == null;
 
-    /// <summary>Why <paramref name="tile"/> cannot be claimed now, or null.</summary>
-    public string WhyNotClaim(WorldTile tile) => Locked() ?? WorldAuthority.WhyNotClaim(Map, tile) ?? Pantry.WhyNotAfford(ClaimFoodValue) ?? Unaffordable(Rules.claimCost, ClaimScale);
+    /// <summary>The hex a claim on <paramref name="tile"/> takes: <paramref name="hex"/> when given (a hex of that cell), else the one bordering your land best (-1 when none can be).</summary>
+    public int ClaimTarget(WorldTile tile, HexCoord? hex = null)
+    {
+        if (Map == null || tile == null) return -1;
+        if (hex.HasValue) return HexHierarchy.Parent(hex.Value) == tile.coord ? MicroNavigation.Index(Map, hex.Value) : -1;
+        return WorldTerritory.NextHex(Map, tile, WorldAuthority.Player);
+    }
+
+    /// <summary>Why <paramref name="hex"/> (when given), or any hex of <paramref name="tile"/>, cannot be claimed now, or null.</summary>
+    public string WhyNotClaim(WorldTile tile, HexCoord? hex = null) =>
+        Locked() ?? (hex.HasValue ? WorldAuthority.WhyNotClaimHex(Map, ClaimTarget(tile, hex)) : WorldAuthority.WhyNotClaim(Map, tile))
+        ?? Pantry.WhyNotAfford(ClaimFoodValue) ?? Unaffordable(Rules.claimCost, ClaimScale);
 
     /// <summary>
-    /// Claim a known wilderness cell bordering your authority, paid in stored food (any kind, the most perishable
-    /// first): it joins your authority at once, every hex of it (<see cref="WorldTerritory.ClaimNow"/>).
+    /// Claim one micro hex of a known wilderness cell, bordering land you hold, paid in stored food (any kind, the most
+    /// perishable first): <paramref name="hex"/> when given, else the hex of the cell bordering your land best
+    /// (<see cref="ClaimTarget"/>). It is yours at once; the last hex of a cell brings the whole cell into your
+    /// authority (<see cref="WorldTerritory.ClaimHex"/>).
     /// </summary>
-    public bool Claim(WorldTile tile)
+    public bool Claim(WorldTile tile, HexCoord? hex = null)
     {
-        string why = WhyNotClaim(tile);
+        string why = WhyNotClaim(tile, hex);
         if (why != null) { Say(why); return false; }
+        int id = ClaimTarget(tile, hex);
         if (!Pantry.TrySpend(ClaimFoodValue)) { Say(Pantry.WhyNotAfford(ClaimFoodValue)); return false; }
         Pay(Rules.claimCost, ClaimScale);
-        WorldTerritory.ClaimNow(Map, Settings.generation, tile.index);
+        var was = tile.authorityId;
+        WorldTerritory.ClaimHex(Map, Settings.generation, id, out var status);
         _realmVersion = -1;
+        _forecast = null;
         Map.CivilizationVersion++;
-        AfterCivilizationChange($"{Place(tile)} is claimed: all of it answers to your authority now.");
+        string share = $"{WorldHoldings.Hexes(Map, tile, WorldAuthority.Player)}/{WorldMap.OpenHexes(tile)}";
+        AfterCivilizationChange(status == HoldStatus.Core ? $"The last hex of {Place(tile)} is claimed: it is core territory of yours now."
+            : tile.authorityId != was ? $"A hex of {Place(tile)} is claimed: with {share} of its hexes it answers to you de facto. Hold them all to make it core."
+            : $"A hex of {Place(tile)} is claimed ({share} of it yours).");
         return true;
     }
 
@@ -2722,7 +2751,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
     private float _forecastAt;
 
     // A Seventh of territorial life: claims an older save left half settled are finished; society settles land hex by
-    // hex by the seats' pull while the administration and the Capital's citizens allow (a roll per seat, from the world's seed); past
+    // hex (each yours at once) by the seats' pull while the administration and the Capital's citizens allow (a roll per seat, from the world's seed); past
     // collapse the weakest-held land slips away. Starts with the map (people need somewhere known to go).
     private void TerritoryTick(float sevenths)
     {
@@ -2734,18 +2763,20 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
             () => WorldNoise.Hash01(stream, _adoptionRolls++, 0));
         if (!claims.Any && !result.Any) return;
         _realmVersion = -1;
-        // A single hex settled changes nothing but the map's look.
+        // A single hex settled is yours at once: the border, the ledger and the load move with it.
         Map.CivilizationVersion++;
-        if (claims.claimed.Count > 0)
-            Say($"{string.Join(", ", claims.claimed.Select(c => Place(Map[c])))} {(claims.claimed.Count == 1 ? "is" : "are")} claimed: all of it answers to your authority now.");
-        if (result.adopted.Count > 0)
+        var whole = claims.claimed.Concat(result.claimed).Concat(result.adopted).ToList();
+        if (whole.Count > 0)
         {
-            var names = result.adopted.Select(c => Map[c]).Select(t => $"{Place(t)}{(Map.territory?.Seat(t.pullSeat) is TerritorySeat s ? $" (drawn by {s.name})" : string.Empty)}");
-            Say($"Your society settles new land: {string.Join(", ", names)}.");
+            var names = whole.Select(c => Map[c]).Select(t => $"{Place(t)}{(Map.territory?.Seat(t.pullSeat) is TerritorySeat s ? $" (drawn by {s.name})" : string.Empty)}");
+            Say($"Your society has settled every hex of {string.Join(", ", names)}: {(whole.Count == 1 ? "it is" : "they are")} core territory now.");
         }
+        if (result.deFacto.Count > 0)
+            Say($"{string.Join(", ", result.deFacto.Select(c => Place(Map[c])))} {(result.deFacto.Count == 1 ? "answers" : "answer")} to you de facto: your people hold most of {(result.deFacto.Count == 1 ? "its" : "their")} hexes.");
         if (result.lost.Count > 0)
             Say($"Your administration cannot hold {string.Join(", ", result.lost.Select(c => Place(Map[c])))}: it slips back into the wilderness. Develop and connect what you hold.");
-        if (claims.Changed || result.Changed) RecomputeYields();
+        // Every hex held is yours at once: its share of the cell's yields changes the ledger.
+        RecomputeYields();
         Changed?.Invoke();
     }
 
@@ -2778,6 +2809,8 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         Map.Claims = _claims ?? new List<int>();
         Map.Adopted = _adopted = _adopted ?? new List<int>();
         Map.Claiming = _claiming = _claiming ?? new List<int>();
+        Map.HexHoldings = _hexHoldings = _hexHoldings ?? new List<HexHolding>();
+        WorldHoldings.Invalidate(Map);
         Map.Plantings = _plantings = _plantings ?? new List<Planting>();
         Map.Ruins = _ruins = _ruins ?? new List<Ruin>();
         Map.Populations = _populations = _populations ?? new List<Population>();
@@ -2820,6 +2853,7 @@ public partial class WorldSystem : SingletonBehaviour<WorldSystem>
         // Districts that keep watch ward the danger around them again.
         WorldSites.RecomputeDanger(Map);
         RecomputeYields();
+        RestoreEncounter();
         Changed?.Invoke();
     }
 }

@@ -438,7 +438,7 @@ public class TooltipView : MonoBehaviour
         _ring.fillAmount = solid ? 1f : 0f;
         DOTween.Kill(_ringRoot);
         _ringRoot.localScale = Vector3.one;
-        if (solid) _ringRoot.DOPunchScale(Vector3.one * 0.35f, 0.3f, 6, 0.6f).SetUpdate(true).SetLink(gameObject);
+        if (solid && !GameSettings.ReduceMotion) _ringRoot.DOPunchScale(Vector3.one * 0.35f, 0.3f, 6, 0.6f).SetUpdate(true).SetLink(gameObject);
         if (!solid) SetHoveredLink(null);
     }
 
@@ -448,6 +448,7 @@ public class TooltipView : MonoBehaviour
         transform.SetAsLastSibling();
         DOTween.Kill(_group);
         DOTween.Kill(transform);
+        if (GameSettings.ReduceMotion) { _group.alpha = 1f; transform.localScale = Vector3.one; return; }
         _group.alpha = 0f;
         transform.localScale = Vector3.one * 0.97f;
         _group.DOFade(1f, _theme.fadeIn).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(gameObject);
@@ -458,6 +459,7 @@ public class TooltipView : MonoBehaviour
     {
         DOTween.Kill(_group);
         _group.blocksRaycasts = false;
+        if (GameSettings.ReduceMotion) { HideNow(); done?.Invoke(); return; }
         _group.DOFade(0f, _theme.fadeOut).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(gameObject)
             .OnComplete(() =>
             {

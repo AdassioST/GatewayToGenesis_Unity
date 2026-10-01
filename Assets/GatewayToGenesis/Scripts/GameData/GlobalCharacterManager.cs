@@ -138,7 +138,7 @@ public class GlobalCharacterManager : SingletonBehaviour<GlobalCharacterManager>
         if (spawnArea == null || characterPrefab == null) return;
         if (SaveMenu.BlocksGameplay || Time.timeScale <= 0f) return;
         if (!populationParent.gameObject.activeInHierarchy) return;
-        if (EventSystemLogic.Instance != null && EventSystemLogic.Instance.IsEventActive()) return;
+        if (TimeSystemLogic.SimulationHeld) return;
         var people = PopGrowthLogic.Instance;
         int citizens = people != null ? Mathf.Max(0, people.population) : 0, vagrants = people != null ? Mathf.Max(0, people.vagrants) : 0;
         Reconcile(citizens, vagrants, Time.deltaTime);

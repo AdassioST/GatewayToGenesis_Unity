@@ -23,7 +23,14 @@ public sealed class SaveStorage
             Atomic(keyPath, SaveKeyProtection.Protect(key));
         }
         if (key.Length != 64) throw new IOException("The identity key is damaged.");
+        cipherKey = key.Take(32).ToArray();
+        macKey = key.Skip(32).ToArray();
     }
+
+    // The two halves of the key: encryption, then authentication.
+    private readonly byte[] cipherKey, macKey;
+    // Background saves write while the main thread may write the profile: one write at a time.
+    private readonly object writing = new object();
 
     public static byte[] RandomBytes(int count)
     {
@@ -34,16 +41,21 @@ public sealed class SaveStorage
 
     public string Seal(string text)
     {
+        // "ARC1" + IV (16) + cipher + HMAC (32). Plain array copies: LINQ over a large save's bytes took seconds.
         using (var aes = Aes.Create())
         {
-            aes.Key = key.Take(32).ToArray();
+            aes.Key = cipherKey;
             aes.GenerateIV();
             byte[] plain = Encoding.UTF8.GetBytes(text);
             byte[] cipher;
             using (var enc = aes.CreateEncryptor()) cipher = enc.TransformFinalBlock(plain, 0, plain.Length);
-            byte[] body = Encoding.ASCII.GetBytes("ARC1").Concat(aes.IV).Concat(cipher).ToArray();
-            using (var mac = new HMACSHA256(key.Skip(32).ToArray()))
-                return Convert.ToBase64String(body.Concat(mac.ComputeHash(body)).ToArray());
+            var sealedBytes = new byte[20 + cipher.Length + 32];
+            Encoding.ASCII.GetBytes("ARC1", 0, 4, sealedBytes, 0);
+            Buffer.BlockCopy(aes.IV, 0, sealedBytes, 4, 16);
+            Buffer.BlockCopy(cipher, 0, sealedBytes, 20, cipher.Length);
+            using (var mac = new HMACSHA256(macKey))
+                Buffer.BlockCopy(mac.ComputeHash(sealedBytes, 0, 20 + cipher.Length), 0, sealedBytes, 20 + cipher.Length, 32);
+            return Convert.ToBase64String(sealedBytes);
         }
     }
 
@@ -52,7 +64,7 @@ public sealed class SaveStorage
         var data = Convert.FromBase64String(encrypted);
         if (data.Length < 68 || data.Length > 128 * 1024 * 1024) throw new InvalidDataException("Invalid save size.");
         int length = data.Length - 32;
-        using (var mac = new HMACSHA256(key.Skip(32).ToArray()))
+        using (var mac = new HMACSHA256(macKey))
         {
             var expected = mac.ComputeHash(data, 0, length);
             int difference = 0;
@@ -62,7 +74,9 @@ public sealed class SaveStorage
         if (Encoding.ASCII.GetString(data, 0, 4) != "ARC1") throw new InvalidDataException("Unsupported save envelope.");
         using (var aes = Aes.Create())
         {
-            aes.Key = key.Take(32).ToArray(); aes.IV = data.Skip(4).Take(16).ToArray();
+            var iv = new byte[16];
+            Buffer.BlockCopy(data, 4, iv, 0, 16);
+            aes.Key = cipherKey; aes.IV = iv;
             using (var dec = aes.CreateDecryptor()) return Encoding.UTF8.GetString(dec.TransformFinalBlock(data, 20, length - 20));
         }
     }
@@ -75,7 +89,17 @@ public sealed class SaveStorage
     public bool Exists(string id) => File.Exists(PathFor(id));
     public string[] Slots() => Directory.GetFiles(root, "*.arc").Select(Path.GetFileNameWithoutExtension)
         .Where(id => Guid.TryParseExact(id, "N", out _)).OrderBy(id => id, StringComparer.Ordinal).ToArray();
-    public void Write(string id, string json) => Atomic(PathFor(id), Encoding.UTF8.GetBytes(Seal(json)));
+    public void Write(string id, string json)
+    {
+        var bytes = Encoding.UTF8.GetBytes(Seal(json));
+        lock (writing) Atomic(PathFor(id), bytes);
+    }
+    /// <summary>The slot file's size and last write time (changes whenever it is written); (-1, 0) when it is missing.</summary>
+    public (long length, long ticks) Stamp(string id)
+    {
+        var file = new FileInfo(PathFor(id));
+        return file.Exists ? (file.Length, file.LastWriteTimeUtc.Ticks) : (-1, 0);
+    }
     public string Read(string id, bool backup = false)
     {
         string path = PathFor(id) + (backup ? ".bak" : "");

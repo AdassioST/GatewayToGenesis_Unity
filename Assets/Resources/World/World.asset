@@ -3323,12 +3323,14 @@ MonoBehaviour:
       plantedFertility: 0
       niche: 2
       flavors:
-      - feeling: 7
-        weight: 35
       - feeling: 12
-        weight: 35
-      - feeling: 9
+        weight: 40
+      - feeling: 7
         weight: 30
+      - feeling: 6
+        weight: 15
+      - feeling: 9
+        weight: 15
       specificity: 0.6
       residueNeed: 0.35
       dissonanceAura: 0.04
@@ -3464,6 +3466,71 @@ MonoBehaviour:
       drawnBy: 1
       districts: [trading]
       volunteerWeight: 1
+      expeditionStories: []
+    - id: anemoia-lunaria
+      name: Anemoia Lunaria
+      kind: 6
+      description: Pale moon-blooms that grow only where longing, wonder and estrangement mingle in just the right measure. Their flowers wither into translucent, coin-round seed pods; held up to the moon, a pod shows the faint shape of a life no one there has lived.
+      color: {r: 0.82, g: 0.84, b: 1, a: 1}
+      resource: Anemoia Pods
+      minAge: 0
+      count: 2
+      size: 1
+      spacing: 12
+      minDistance: 6
+      terrains: [moonlit-grove, violet-glade, ruin-field, skeletal-orchard, fallow-steppe, plains]
+      macroBiomes: []
+      covers: []
+      nearTerrains: []
+      nearReach: 2
+      minElevation: 0
+      maxElevation: 1
+      minMoisture: 0
+      minimumFertility: 0
+      minimumCoherence: 0.3
+      maximumCoherence: 1
+      minimumDissonance: 0
+      requiresFreshwater: 0
+      requiresSilverOrLeyline: 0
+      visibleFromAfar: 0
+      landValue: 3
+      yields:
+      - resource: Anemoia Pods
+        amount: 0.004
+      beauty: 0.5
+      beautyAura: 0.2
+      coherenceAura: 0
+      fertilityAura: 0
+      auraRadius: 1
+      harvest:
+      - resource: Anemoia Pods
+        amount: 3
+      seeds: 1
+      grievance: 10
+      untouchable: 
+      plantFertility: 0.2
+      plantCoherence: 0.3
+      plantedShare: 0.5
+      plantedFertility: 0
+      niche: 1
+      flavors:
+      - feeling: 7
+        weight: 40
+      - feeling: 11
+        weight: 30
+      - feeling: 5
+        weight: 20
+      - feeling: 15
+        weight: 10
+      specificity: 0.85
+      residueNeed: 0.3
+      dissonanceAura: -0.03
+      dangerAura: 0
+      soothe: 1
+      driftPerEcho: 0.05
+      drawnBy: 0
+      districts: []
+      volunteerWeight: 0.5
       expeditionStories: []
     - id: vow-orchids
       name: Vow Orchids
@@ -6640,7 +6707,7 @@ MonoBehaviour:
     mesoSurveySevenths: 1.25
     cost: []
     populationCost: 0
-    unlockTechnology: Pathfinder Training
+    unlockTechnology: Lookout Towers
     abilities: 243
     knowRadius: 1
     surveySevenths: 1
@@ -6686,7 +6753,7 @@ MonoBehaviour:
     settlerFoodValue: 0
     settlerWeight: 0.3
     settlerPace: 0.5
-    improveTechnology: Woodcraft Mastery
+    improveTechnology: Elderwood Felling
     improveCost:
     - resource: Elderwood
       amount: 10
@@ -6927,6 +6994,6 @@ MonoBehaviour:
     missingSlowness: 1.5
     reappearAttrition: 40
     reappearFatigue: 60
-  mapTechnology: Pathfinder Training
+  mapTechnology: Lookout Towers
   unlockTechnology: Reconstruction
   startingUnits: []

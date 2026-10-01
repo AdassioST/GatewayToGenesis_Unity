@@ -7,7 +7,7 @@ using UnityEngine;
 public enum WindowMode { Fullscreen, Borderless, Windowed }
 
 /// <summary>A family of sounds with its own volume (<see cref="SoundVolume"/> puts an AudioSource in one).</summary>
-public enum SoundChannel { Music, Effects, Ambience, Interface }
+public enum SoundChannel { Music, Effects, Ambience, Interface, Voice }
 
 /// <summary>
 /// The player's settings (the Options menu, <see cref="MenuView"/>), kept in PlayerPrefs on this machine, apart from any
@@ -41,6 +41,9 @@ public static class GameSettings
     /// <summary>How long the pointer holds still before a tooltip turns solid, times the theme's own (0.5 to 2).</summary>
     public static float TooltipHold { get => Float("tooltipHold", 1f); set => SetFloat("tooltipHold", Mathf.Clamp(value, 0.5f, 2f), "general"); }
     public static readonly float[] TooltipHoldChoices = { 0.5f, 1f, 1.5f, 2f };
+
+    public static bool ActionLabels { get => Bool("actionLabels", false); set => SetBool("actionLabels", value, "general"); }
+    public static float ActionSize { get => Float("actionSize", 1f); set => SetFloat("actionSize", Mathf.Clamp(value, 1f, 1.5f), "general"); }
 
     // ===== DISPLAY =====
 
@@ -76,6 +79,11 @@ public static class GameSettings
     /// <summary>Silence while the window is in the background.</summary>
     public static bool MuteInBackground { get => Bool("muteBackground", true); set => SetBool("muteBackground", value, "audio"); }
 
+    public static float RhythmLatency { get => Float("rhythmLatency", 0f); set => SetFloat("rhythmLatency", Mathf.Clamp(value, -250f, 250f), "audio"); }
+    public static float RhythmWindow { get => Float("rhythmWindow", 1f); set => SetFloat("rhythmWindow", Mathf.Clamp(value, .5f, 2f), "audio"); }
+    public static bool RhythmAssist { get => Bool("rhythmAssist", false); set => SetBool("rhythmAssist", value, "audio"); }
+    public static BattleRhythmOptions RhythmOptions => new BattleRhythmOptions { latencyMilliseconds = RhythmLatency, windowScale = RhythmWindow, assist = RhythmAssist };
+
     // ===== RESOLUTIONS =====
 
     /// <summary>The screen's resolutions, largest last, each size once.</summary>
@@ -92,9 +100,9 @@ public static class GameSettings
 
     private static readonly Dictionary<string, string[]> Sections = new Dictionary<string, string[]>
     {
-        { "general", new[] { "autosave", "pauseBackground", "edgeScroll", "pan", "zoom", "tooltipHold" } },
+        { "general", new[] { "autosave", "pauseBackground", "edgeScroll", "pan", "zoom", "tooltipHold", "actionLabels", "actionSize" } },
         { "display", new[] { "window", "width", "height", "vsync", "fps", "brightness", "reduceMotion" } },
-        { "audio", new[] { "volume.master", "volume.Music", "volume.Effects", "volume.Ambience", "volume.Interface", "muteBackground" } },
+        { "audio", new[] { "volume.master", "volume.Music", "volume.Effects", "volume.Ambience", "volume.Interface", "volume.Voice", "muteBackground", "rhythmLatency", "rhythmWindow", "rhythmAssist" } },
     };
 
     /// <summary>Put one section ("general", "display", "audio") back to its defaults.</summary>

@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56fa04d4184ec8340a3828b6259f319b, type: 3}
   m_Name: Horology
   m_EditorClassIdentifier: 
-  name: Horology
+  name: 'Horology'
   type: Event
   section: Age of Desolation
-  description: '"Track the unrelesting passage of time and seasons."'
+  description: '"Track the unrelenting passage of time and seasons."'
   icon: {fileID: 21300000, guid: e23cd5ed33c78bc41b3cbfcafdfc316c, type: 3}
+  role: 0

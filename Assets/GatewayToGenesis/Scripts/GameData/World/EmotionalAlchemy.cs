@@ -119,6 +119,8 @@ public static class EmotionalAlchemy
         C("defiance", "Defiance", "pride that stands in its wounds", W(Feeling.Courage, 40), W(Feeling.Pride, 40), W(Feeling.Pain, 20)),
         C("triumph", "Triumph", "the joy of a will that held", W(Feeling.Pride, 50), W(Feeling.Joy, 30), W(Feeling.Courage, 20)),
         C("euphoria", "Euphoria", "joy flooding the body", W(Feeling.Joy, 60), W(Feeling.Vitality, 40)),
+        C("ecstasy", "Ecstasy", "joy so great it carries the self beyond itself", W(Feeling.Joy, 45), W(Feeling.Wonder, 25), W(Feeling.Vitality, 20), W(Feeling.Love, 10)),
+        C("lust", "Lust", "the body's hunger for another, with a thrill of the forbidden (what the Lust Berries ripen on)", W(Feeling.Vitality, 40), W(Feeling.Longing, 30), W(Feeling.Shame, 15), W(Feeling.Joy, 15)),
         C("desire", "Desire", "the body reaching for another (the pleasure parasites' lure)", W(Feeling.Longing, 50), W(Feeling.Vitality, 50)),
         C("tenderness", "Tenderness", "love held gently in a living body", W(Feeling.Love, 60), W(Feeling.Vitality, 20), W(Feeling.Belonging, 20)),
         C("serenity", "Serenity", "a whole self at rest in a wondrous world", W(Feeling.Belonging, 40), W(Feeling.Wonder, 30), W(Feeling.Vitality, 30)),

@@ -46,6 +46,8 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
     private float _pendingSince;
     private float _childAwaySince = -1f;
     private int _lastLevel = -1;
+    private TooltipTrigger _focusedTrigger;
+    private readonly Vector3[] _focusCorners = new Vector3[4];
 
     public bool isTooltipActive => _layers.Count > 0;
 
@@ -76,6 +78,7 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
     /// <summary>Show <paramref name="trigger"/>'s tooltip at the pointer, replacing any other.</summary>
     public void Show(TooltipTrigger trigger)
     {
+        _focusedTrigger = null;
         if (trigger == null) return;
         if (_layers.Count > 0 && _layers[0].trigger == trigger)
         {
@@ -95,6 +98,7 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
     /// <summary>The pointer left <paramref name="trigger"/>: hand over to the next trigger, or close unless the tooltip is solid.</summary>
     public void Exit(TooltipTrigger trigger, GameObject nowHovered)
     {
+        if (_focusedTrigger == trigger) _focusedTrigger = null;
         if (_layers.Count == 0 || trigger != _layers[0].trigger) return;
         _triggerHovered = false;
         if (nowHovered != null && nowHovered.GetComponentInParent<TooltipView>() != null) return;
@@ -117,10 +121,35 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
 
     public void HideTooltip()
     {
+        _focusedTrigger = null;
         CloseAbove(-1, instant: false);
         _triggerHovered = false;
         _outsideSince = -1f;
         _pendingLink = null;
+    }
+
+    /// <summary>Keyboard tooltips stay next to the focused control, independent of the pointer.</summary>
+    public void ShowFocused(TooltipTrigger trigger)
+    {
+        Show(trigger);
+        if (Current != trigger || trigger == null) return;
+        _focusedTrigger = trigger;
+        PlaceFocused();
+    }
+
+    public void ReleaseFocus(TooltipTrigger trigger)
+    {
+        if (_focusedTrigger == trigger) HideTooltip();
+    }
+
+    private void PlaceFocused()
+    {
+        if (!(_focusedTrigger.transform is RectTransform rect)) return;
+        rect.GetWorldCorners(_focusCorners);
+        var canvas = rect.GetComponentInParent<Canvas>();
+        var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+        var screen = RectTransformUtility.WorldToScreenPoint(camera, _focusCorners[2]);
+        _layers[0].view.PlaceAt(screen);
     }
 
     /// <summary>Game state changed: rebuild the open tooltips now.</summary>
@@ -149,6 +178,12 @@ public class TooltipSystemLogic : SingletonBehaviour<TooltipSystemLogic>
 
         var theme = Theme;
         float now = Time.unscaledTime;
+        if (_focusedTrigger != null)
+        {
+            PlaceFocused();
+            if (now >= _nextRefresh) Rebuild();
+            return;
+        }
         Vector2 pointer = InputUtils.MousePosition;
         // Still = within a few pixels of where the pointer came to rest (hand jitter and slow drift both reset it).
         if ((pointer - _lastPointer).sqrMagnitude > theme.stillTolerance * theme.stillTolerance)

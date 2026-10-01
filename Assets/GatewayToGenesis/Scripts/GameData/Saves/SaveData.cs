@@ -113,7 +113,19 @@ using System.Linq;
     }
 }
 [Serializable] public sealed class SavedSystem { public string type, key; public StateNode state; }
+/// <summary>One saved field of many objects (every world tile), one value per object in order
+/// (<see cref="SaveStateCodec.PackColumns{T}"/>); <see cref="nulls"/> lists the objects whose value is null.</summary>
+[Serializable] public sealed class SavedColumn { public string field; public List<string> values = new List<string>(); public List<int> nulls = new List<int>(); }
 [Serializable] public sealed class SavedText { public string key, value; }
+/// <summary>The part of a <see cref="SaveDocument"/> a save slot shows, read without the world's state (<see cref="SaveSession.ReadHeader"/>).</summary>
+[Serializable] public sealed class SaveHeader
+{
+    public int version;
+    public WorldIdentity identity;
+    public string name, savedUtc;
+    public double playSeconds;
+    public WorldRewards rewards;
+}
 [Serializable] public sealed class SaveDocument
 {
     public int version = 3; // 2: state trees written flat (StateNode.tree); 3: known cells, forage, claims, stores
@@ -123,6 +135,9 @@ using System.Linq;
     public double playSeconds;
     public WorldRewards rewards = new WorldRewards();
     public List<SavedSystem> systems = new List<SavedSystem>();
+    // The world's tiles, one column per saved field (a node tree per tile made the file ten times larger and took seconds
+    // to write). Saves written before the columns hold one tree per tile in worldTiles instead; both load.
+    public List<SavedColumn> tileColumns = new List<SavedColumn>();
     public List<StateNode> worldTiles = new List<StateNode>();
     public List<SavedText> ink = new List<SavedText>();
     public List<SavedText> storyLocks = new List<SavedText>();
@@ -131,4 +146,21 @@ using System.Linq;
     public List<string> researchPlan = new List<string>();
     // Resources made during play (the people's invented dishes and drinks, RuntimeUnits), made again before the slots load.
     public List<RuntimeUnitRecord> runtimeUnits = new List<RuntimeUnitRecord>();
+
+    /// <summary>A copy to write while play goes on (<see cref="SaveSession.SaveInBackground"/>): its own lists and its own
+    /// rewards (an achievement earned meanwhile changes only the original); the captured state it shares is never
+    /// changed again.</summary>
+    public SaveDocument ForWriting()
+    {
+        var copy = (SaveDocument)MemberwiseClone();
+        copy.rewards = UnityEngine.JsonUtility.FromJson<WorldRewards>(UnityEngine.JsonUtility.ToJson(rewards));
+        copy.systems = new List<SavedSystem>(systems);
+        copy.tileColumns = new List<SavedColumn>(tileColumns);
+        copy.worldTiles = new List<StateNode>(worldTiles);
+        copy.ink = new List<SavedText>(ink);
+        copy.storyLocks = new List<SavedText>(storyLocks);
+        copy.researchPlan = new List<string>(researchPlan);
+        copy.runtimeUnits = new List<RuntimeUnitRecord>(runtimeUnits);
+        return copy;
+    }
 }

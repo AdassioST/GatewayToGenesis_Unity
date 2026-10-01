@@ -19,8 +19,8 @@ public class TerritorySeat
     public string authorityId;
     public float strength, reach, adoptPerSeventh, capacity;
     public int maxCells;
-    /// <summary>Held cells where this seat pulls strongest (its core included).</summary>
-    public int held;
+    /// <summary>Held cells where this seat pulls strongest (its core included), a cell held in part counting its share of hexes.</summary>
+    public float held;
     /// <summary>Governance travel from the seat to every cell within its reach.</summary>
     public Dictionary<int, float> travel = new Dictionary<int, float>();
 
@@ -83,8 +83,12 @@ public class RealmContext
 public class RealmReport
 {
     public float capacity, load, strain, efficiency = 1f;
-    /// <summary>Cells you hold (your authority and Outpost pockets), and how many of them were adopted and claimed.</summary>
+    /// <summary>Core cells you hold (your authority and Outpost pockets), and how many of them were adopted and claimed.</summary>
     public int cells, adopted, claimed;
+    /// <summary>Hexes you hold of cells not yet core, of which cells you rule de facto; all your land in cells' worth
+    /// (core cells plus those hexes' shares).</summary>
+    public int hexes, deFacto;
+    public float land;
     /// <summary>Average load of one held cell (what one more cell like them would cost).</summary>
     public float averageLoad = 1f;
     /// <summary>Cells at which strain reaches comfort: horizontal is favoured below.</summary>
@@ -157,15 +161,20 @@ public class RealmReport
 /// never), cheaper along roads and river valleys, dearer over cliffs, dissonance and danger. Enclaves pull for
 /// themselves, a rival pull your society will not adopt against. Pull only crosses wilderness and its own authority.
 ///
+/// Land is held one micro hex at a time (<see cref="WorldTile.microHeldMask"/>, <see cref="WorldHoldings"/>): a hex
+/// your people hold is yours at once (inside your border, with its share of the cell's yields and load,
+/// <see cref="HeldShare"/>); holding <see cref="TerritoryRules.deFactoHexes"/> of a cell's hexes makes the cell yours
+/// de facto (your authority), holding all of them makes it core territory.
+///
 /// Passive adoption (<see cref="Tick"/>): while the administration has capacity to spare, society brings in the
-/// wilderness bordering what it holds, one micro hex at a time (<see cref="WorldTile.microHeldMask"/>), from the side
-/// touching held land inward; a cell is adopted once all seven of its hexes are settled, and a seat finishes the cell
-/// it began before starting another. It chooses cells by pull x priority (<see cref="Priority"/>): fertile, watered,
-/// coherent, beautiful land, grandfields and sites first; dangerous, dissonant and hard ground last. People do the
-/// settling: nothing moves until the Capital has <see cref="TerritoryRules.adoptionMinPopulation"/> citizens, and each
-/// seat's chance of settling a hex in a Seventh rises with them (<see cref="PopulationShare"/>). Each seat holds at
-/// most <see cref="SeatSpec.maxCells"/> cells by its own pull: to hold more you need more seats. A paid claim
-/// takes its whole cell into your sphere at once (<see cref="ClaimNow"/>).
+/// wilderness bordering what it holds hex by hex, each new hex touching one already held, so the border creeps
+/// outward; a seat finishes the cell it began before starting another. It chooses cells by pull x priority
+/// (<see cref="Priority"/>): fertile, watered, coherent, beautiful land, grandfields and sites first; dangerous,
+/// dissonant and hard ground last. People do the settling: nothing moves until the Capital has
+/// <see cref="TerritoryRules.adoptionMinPopulation"/> citizens, and each seat's chance of settling a hex in a Seventh
+/// rises with them (<see cref="PopulationShare"/>). Each seat holds at most <see cref="SeatSpec.maxCells"/> cells'
+/// worth of hexes by its own pull: to hold more you need more seats. A paid claim takes one hex bordering your land
+/// (<see cref="ClaimHex"/>).
 ///
 /// Administrative Capacity against load (<see cref="Realm"/>): every held cell weighs on the Capital's bureaucracy by
 /// its difficulty and its distance from the nearest seat, eased by Coherence and beauty; capacity comes from the
@@ -294,19 +303,19 @@ public static class WorldTerritory
             float best = state.Seats[t.pullSeat].PullAt(t.index);
             t.pull = best + rules.overlapShare * (sum[t.index] - best);
         }
-        // An Outpost's pocket: adopted land held by a detached seat's pull stays outside Administrative Authority.
-        foreach (int c in map.Adopted)
+        // An Outpost's pocket: land settled hex by hex (not claimed) under a detached seat's pull stays outside Administrative Authority.
+        foreach (var t in map.Tiles)
         {
-            if (c < 0 || c >= n) continue;
-            var t = map[c];
+            if (t.whole || t.authorityId != WorldAuthority.Player || map.Claims.Contains(t.index)) continue;
             var seat = state.Seat(t.pullSeat);
-            if (t.authorityId == WorldAuthority.Player && seat != null && seat.authorityId == WorldAuthority.Outpost) t.authorityId = WorldAuthority.Outpost;
+            if (seat != null && seat.authorityId == WorldAuthority.Outpost) t.authorityId = WorldAuthority.Outpost;
         }
         foreach (var t in map.Tiles)
         {
-            if (!WorldAuthority.IsPlayers(t.authorityId)) continue;
+            float share = HeldShare(map, t);
+            if (share <= 0f) continue;
             var seat = state.Seat(t.pullSeat);
-            if (seat != null) seat.held++;
+            if (seat != null) seat.held += share;
         }
         map.territory = state;
         return state;
@@ -400,15 +409,20 @@ public static class WorldTerritory
 
     /// <summary>
     /// Why your society will not adopt <paramref name="t"/> for <paramref name="seat"/>, or null. It must be passable
-    /// wilderness, known (or next to a settlement), bordering the seat's authority, pulled strongly enough and not
-    /// pulled harder by a rival; the seat must have room.
+    /// wilderness, known (or next to a settlement), with a hex not yet held touching held land, pulled strongly enough
+    /// and not pulled harder by a rival; the seat must have room.
     /// </summary>
     public static string WhyNotAdopt(WorldMap map, WorldGenSettings settings, WorldTile t, TerritorySeat seat)
     {
         var rules = RulesOf(map);
         if (t == null) return "Beyond the edge of the world.";
         if (t.water || t.impassable) return "No one can live here.";
-        if (t.authorityId != WorldAuthority.Wilderness) return WorldAuthority.IsPlayers(t.authorityId) ? "Already yours." : "Another authority holds it.";
+        if (t.authorityId != WorldAuthority.Wilderness)
+        {
+            if (!WorldAuthority.IsPlayers(t.authorityId)) return "Another authority holds it.";
+            // Yours de facto: society goes on settling its free hexes until it is core.
+            if (!WorldHoldings.Fillable(t, t.authorityId)) return "Already yours.";
+        }
         if (map.Claiming.Contains(t.index)) return "It is being claimed.";
         if (seat == null || !seat.IsPlayers) return "None of your seats pulls it.";
         if (!seat.HasRoom) return $"{seat.name} holds all it can ({seat.maxCells} cells): found or grow another seat nearby.";
@@ -416,7 +430,7 @@ public static class WorldTerritory
         float pull = seat.PullAt(t.index);
         if (pull < rules.adoptThreshold) return $"The pull is too weak here ({pull:0.00} of {rules.adoptThreshold:0.00}).";
         if (t.rivalPull > t.pull) return "A rival pulls harder here.";
-        if (!map.NeighboursOf(t).Any(nb => nb.authorityId == seat.authorityId)) return "It does not border the land this seat holds.";
+        if (NextHex(map, t, seat.authorityId) < 0) return WorldHoldings.FreeMask(map, t) == 0 ? "Every hex of it is already held." : "It does not border the land this seat holds.";
         return null;
     }
 
@@ -437,7 +451,7 @@ public static class WorldTerritory
             foreach (int c in seat.travel.Keys)
             {
                 var t = map[c];
-                if (t.authorityId != WorldAuthority.Wilderness || WhyNotAdopt(map, settings, t, seat) != null) continue;
+                if (!WorldHoldings.Fillable(t, seat.authorityId) || WhyNotAdopt(map, settings, t, seat) != null) continue;
                 float pull = seat.PullAt(c) + rules.overlapShare * Math.Max(0f, t.pull - seat.PullAt(c));
                 float priority = Priority(map, settings, rules, t, seat);
                 float score = pull * priority;
@@ -465,31 +479,67 @@ public static class WorldTerritory
         return least + (1f - least) * t;
     }
 
-    /// <summary>Every hex of the cell a unit can stand on is settled (crags come with them).</summary>
+    // ===== HOLDING HEX BY HEX =====
+
+    /// <summary>Every hex of the cell a unit can stand on is held (crags come with them).</summary>
     public static bool FullySettled(WorldTile t) => t != null && ((t.microHeldMask | t.microBlockedMask) & 127) == 127;
 
     /// <summary>
-    /// The micro hex of <paramref name="t"/> to settle next for <paramref name="authority"/>, or -1 when none is left:
-    /// the unsettled hex touching the most held ground (the authority's cells and the cell's settled hexes), so land
-    /// fills in from the border inward; crags are never settled by hand.
+    /// Whether micro hex <paramref name="id"/> is held by <paramref name="authority"/> (yours and your Outposts' count as
+    /// one; <see cref="WorldHoldings.HexHolder"/>).
+    /// </summary>
+    public static bool HexHeld(WorldMap map, int id, string authority) => WorldHoldings.Same(WorldHoldings.HexHolder(map, id), authority);
+
+    /// <summary>How many of the six hexes around <paramref name="id"/> are held for <paramref name="authority"/> (<see cref="HexHeld"/>).</summary>
+    public static int Touching(WorldMap map, int id, string authority)
+    {
+        int touch = 0;
+        for (int d = 0; d < 6; d++)
+            if (HexHeld(map, MicroNavigation.Neighbour(map, id, d), authority)) touch++;
+        return touch;
+    }
+
+    /// <summary>
+    /// The share of a cell that is yours, by its hexes (<see cref="WorldHoldings.MaskOf"/>): all of a core cell, the
+    /// hexes you hold of one you rule de facto or hold in part (out of its open hexes), none otherwise. Yields and load
+    /// follow it.
+    /// </summary>
+    public static float HeldShare(WorldMap map, WorldTile t)
+    {
+        if (t == null || t.water) return 0f;
+        // Core (or given by hand, with no hold worked out): all of it.
+        if (WorldAuthority.IsPlayers(t.authorityId) && t.hold != HoldStatus.DeFacto) return 1f;
+        if (t.microHeldMask == 0 && !t.whole) return 0f;
+        int open = MicroNavigation.Crags(WorldHoldings.OpenMask(t));
+        return open <= 0 ? 0f : Math.Min(1f, WorldHoldings.Hexes(map, t, WorldAuthority.Player) / (float)open);
+    }
+
+    /// <summary>Hexes you have paid claims for (an older save's whole-cell claims count every open hex).</summary>
+    public static int ClaimedHexes(WorldMap map)
+    {
+        if (map == null) return 0;
+        int n = 0;
+        foreach (var t in map.Tiles) n += MicroNavigation.Crags(t.microClaimMask);
+        foreach (int c in map.Claims)
+            if (c >= 0 && c < map.Count && map[c].microClaimMask == 0) n += WorldMap.OpenHexes(map[c]);
+        return n;
+    }
+
+    /// <summary>
+    /// The micro hex of <paramref name="t"/> to settle next for <paramref name="authority"/>, or -1 when none can be:
+    /// of the hexes no one holds (<see cref="WorldHoldings.FreeMask"/>) that touch ground it holds (<see cref="HexHeld"/>,
+    /// this cell's included), the one touching the most, so land fills in from the border inward; crags are never
+    /// settled by hand. Only wilderness and cells it rules de facto have hexes to settle.
     /// </summary>
     public static int NextHex(WorldMap map, WorldTile t, string authority)
     {
-        if (map == null || t == null) return -1;
-        int open = 127 & ~t.microBlockedMask & ~t.microHeldMask;
-        int best = -1, bestTouch = -1;
+        if (map == null || !WorldHoldings.Fillable(t, authority)) return -1;
+        int open = WorldHoldings.FreeMask(map, t);
+        int best = -1, bestTouch = 0;
         for (int k = 0; k < MicroNavigation.PerCell; k++)
         {
             if ((open & (1 << k)) == 0) continue;
-            int id = t.index * MicroNavigation.PerCell + k, touch = 0;
-            for (int d = 0; d < 6; d++)
-            {
-                int nb = MicroNavigation.Neighbour(map, id, d);
-                if (nb < 0) continue;
-                var cell = map[nb / MicroNavigation.PerCell];
-                if (cell == t) { if ((t.microHeldMask & (1 << (nb % MicroNavigation.PerCell))) != 0) touch++; }
-                else if (cell.authorityId == authority || (WorldAuthority.IsPlayers(authority) && WorldAuthority.IsPlayers(cell.authorityId))) touch++;
-            }
+            int id = t.index * MicroNavigation.PerCell + k, touch = Touching(map, id, authority);
             if (touch > bestTouch) { best = id; bestTouch = touch; }
         }
         return best;
@@ -504,8 +554,58 @@ public static class WorldTerritory
     }
 
     /// <summary>
-    /// A paid claim takes its cell into your sphere at once: every hex of it is settled (those society had already
-    /// settled included), it joins <see cref="WorldMap.Claims"/> and the civilization is rebuilt. False (and nothing
+    /// A cell whose every hex you hold becomes core territory: into <see cref="WorldMap.Claims"/> when any hex of it was
+    /// claimed (claimed land never slips away), else <see cref="WorldMap.Adopted"/>, and the civilization is rebuilt.
+    /// False (nothing changes) while a hex is still open or held by another, or when it is core already.
+    /// </summary>
+    public static bool Complete(WorldMap map, WorldGenSettings settings, WorldTile t)
+    {
+        if (map == null || t == null || t.whole || !FullySettled(t)) return false;
+        if (t.authorityId != WorldAuthority.Wilderness && !WorldAuthority.IsPlayers(t.authorityId)) return false;
+        if (map.Claims.Contains(t.index) || map.Adopted.Contains(t.index)) return false;
+        (t.microClaimMask != 0 ? map.Claims : map.Adopted).Add(t.index);
+        WorldCivilization.Rebuild(map, settings);
+        return true;
+    }
+
+    /// <summary>
+    /// After a hex of <paramref name="t"/> became yours: the last one makes the cell core (<see cref="Complete"/>); the
+    /// one that gives you <see cref="TerritoryRules.deFactoHexes"/> of them (more than anyone else) makes it yours de
+    /// facto (the civilization is rebuilt). Returns your hold on the cell now.
+    /// </summary>
+    public static HoldStatus AfterHex(WorldMap map, WorldGenSettings settings, WorldTile t)
+    {
+        if (Complete(map, settings, t)) return HoldStatus.Core;
+        var status = WorldHoldings.Status(map, t, WorldAuthority.Player);
+        if (status == HoldStatus.DeFacto && t.authorityId == WorldAuthority.Wilderness) WorldCivilization.Rebuild(map, settings);
+        return status;
+    }
+
+    /// <summary>
+    /// A paid claim takes one micro hex (<paramref name="id"/>) into your sphere at once: it must be claimable
+    /// (<see cref="WorldAuthority.WhyNotClaimHex"/>, cost aside). It is held and marked claimed; the fourth makes the
+    /// cell yours de facto, the last core (<see cref="AfterHex"/>). Returns whether the hex was taken;
+    /// <paramref name="status"/> is your hold on the cell after it.
+    /// </summary>
+    public static bool ClaimHex(WorldMap map, WorldGenSettings settings, int id, out HoldStatus status)
+    {
+        status = HoldStatus.None;
+        if (WorldAuthority.WhyNotClaimHex(map, id) != null) return false;
+        var t = map[id / MicroNavigation.PerCell];
+        var before = t.authorityId;
+        int bit = 1 << (id % MicroNavigation.PerCell);
+        t.microHeldMask |= bit;
+        t.microClaimMask |= bit;
+        status = AfterHex(map, settings, t);
+        // Counted toward the seat pulling it hardest, as Compute counts it (a rebuild counted it already).
+        if (t.authorityId == before && status != HoldStatus.Core && map.territory?.Seat(t.pullSeat) is TerritorySeat seat)
+            seat.held += 1f / Math.Max(1, WorldMap.OpenHexes(t));
+        return true;
+    }
+
+    /// <summary>
+    /// Takes a whole cell at once (claims made before they went hex by hex, in older saves): every hex of it is held
+    /// and claimed, it joins <see cref="WorldMap.Claims"/> and the civilization is rebuilt. False (and nothing
     /// changes) when the cell is no longer wilderness land. The micro hexes it settled are added to
     /// <paramref name="settled"/> when given.
     /// </summary>
@@ -518,14 +618,15 @@ public static class WorldTerritory
         for (int k = 0; k < MicroNavigation.PerCell; k++)
             if ((open & (1 << k)) != 0) settled?.Add(cell * MicroNavigation.PerCell + k);
         t.microHeldMask |= open;
+        t.microClaimMask |= open;
         if (!map.Claims.Contains(cell)) map.Claims.Add(cell);
         WorldCivilization.Rebuild(map, settings);
         return true;
     }
 
     /// <summary>
-    /// Claims still being settled hex by hex (made before claims took their land at once, in older saves) are settled
-    /// now (<see cref="ClaimNow"/>); a claimed cell another authority or settlement took first is dropped.
+    /// Whole-cell claims an older save left being settled are finished now (<see cref="ClaimNow"/>); a claimed cell
+    /// another authority or settlement took first is dropped.
     /// </summary>
     public static TickResult AdvanceClaims(WorldMap map, WorldGenSettings settings)
     {
@@ -645,16 +746,19 @@ public static class WorldTerritory
     /// <summary>What one Seventh (or several) of territorial life did.</summary>
     public class TickResult
     {
-        /// <summary>Cells adopted (every hex settled).</summary>
+        /// <summary>Cells adopted as core (every hex settled).</summary>
         public readonly List<int> adopted = new List<int>();
-        /// <summary>Claimed cells whose every hex is now settled (<see cref="AdvanceClaims"/>).</summary>
+        /// <summary>Cells that became yours de facto (<see cref="TerritoryRules.deFactoHexes"/> hexes held), not yet core.</summary>
+        public readonly List<int> deFacto = new List<int>();
+        /// <summary>Cells whose every hex is now held with a hex of them claimed (completed by society, or an older save's claims, <see cref="AdvanceClaims"/>).</summary>
         public readonly List<int> claimed = new List<int>();
-        /// <summary>Micro hexes settled (ids), whether or not they completed a cell.</summary>
+        /// <summary>Micro hexes settled (ids), whether or not they completed a cell: each is yours at once.</summary>
         public readonly List<int> settled = new List<int>();
+        /// <summary>Cells slipped back into the wilderness, whole or their adopted hexes (claimed hexes stay).</summary>
         public readonly List<int> lost = new List<int>();
         /// <summary>Authority changed (a cell adopted, claimed or lost).</summary>
-        public bool Changed => adopted.Count > 0 || claimed.Count > 0 || lost.Count > 0;
-        /// <summary>Anything changed on the map, a single hex included.</summary>
+        public bool Changed => adopted.Count > 0 || claimed.Count > 0 || deFacto.Count > 0 || lost.Count > 0;
+        /// <summary>Anything changed on the map, a single hex included (each hex held is land, yields and load).</summary>
         public bool Any => Changed || settled.Count > 0;
     }
 
@@ -687,8 +791,9 @@ public static class WorldTerritory
                 drift -= 1f;
                 int lose = Weakest(map, settings);
                 if (lose < 0) { drift = 0f; break; }
+                // Its adopted hexes go (a core adopted cell, or the fringe of one held de facto or in part); claimed hexes stay.
                 map.Adopted.Remove(lose);
-                map[lose].microHeldMask = 0;
+                map[lose].microHeldMask &= map[lose].microClaimMask;
                 result.lost.Add(lose);
                 WorldCivilization.Rebuild(map, settings);
                 realm = Realm(map, settings, context);
@@ -731,16 +836,21 @@ public static class WorldTerritory
                 if (next.Count == 0) break;
                 var t = map[next[0].cell];
                 int id = SettleHex(map, t, seat.authorityId);
-                if (id >= 0) result.settled.Add(id);
-                if (!FullySettled(t)) continue;
-                map.Adopted.Add(t.index);
-                result.adopted.Add(t.index);
-                WorldCivilization.Rebuild(map, settings);
+                if (id < 0) break;
+                result.settled.Add(id);
+                var was = t.authorityId;
+                var status = AfterHex(map, settings, t);
+                bool rebuilt = status == HoldStatus.Core || t.authorityId != was;
+                if (status == HoldStatus.Core) (map.Claims.Contains(t.index) ? result.claimed : result.adopted).Add(t.index);
+                else if (t.authorityId != was) result.deFacto.Add(t.index);
+                // The hex is yours at once, and weighs on the administration like the rest.
                 realm = Realm(map, settings, context);
                 pace = Pace(rules, realm.strain, policy) * people;
                 if (pace <= 0f) { progress.Clear(); return result; }
-                // The rebuild made new seat objects: follow this one by its key.
-                seat = map.territory.Seats.FirstOrDefault(s => s.key == key);
+                // It counts toward the room of the seat pulling it hardest (as Compute counts it); a rebuild (the cell de
+                // facto or core now) made new seat objects: follow this one by its key.
+                if (rebuilt) seat = map.territory.Seats.FirstOrDefault(s => s.key == key);
+                else (map.territory.Seat(t.pullSeat) ?? seat).held += 1f / Math.Max(1, WorldMap.OpenHexes(t));
                 if (seat == null || !seat.HasRoom) { have = 0f; break; }
             }
             if (have > 0f) progress[key] = have;
@@ -749,15 +859,17 @@ public static class WorldTerritory
         return result;
     }
 
-    // The adopted cell held most weakly: least pull x priority, farthest from any seat first on a tie. Land a district
-    // keeps watch over (a Militant District) never slips away.
+    // The adopted land held most weakly (a core adopted cell, or a cell not yet core with adopted hexes): least pull x
+    // priority, farthest from any seat first on a tie. Land a district keeps watch over (a Militant District) never slips away.
     private static int Weakest(WorldMap map, WorldGenSettings settings)
     {
         var rules = RulesOf(map);
         var heldFast = WorldTributaries.HeldFast(map);
         int worst = -1;
         float score = float.MaxValue, far = -1f;
-        foreach (int c in map.Adopted)
+        var fringe = map.Tiles.Where(t => !t.whole && (t.microHeldMask & ~t.microClaimMask) != 0 && !map.Adopted.Contains(t.index) && !map.Claims.Contains(t.index)
+            && (t.authorityId == WorldAuthority.Wilderness || WorldAuthority.IsPlayers(t.authorityId))).Select(t => t.index);
+        foreach (int c in map.Adopted.Concat(fringe))
         {
             if (c < 0 || c >= map.Count || heldFast.Contains(c)) continue;
             var t = map[c];
@@ -829,22 +941,30 @@ public static class WorldTerritory
         float coherence = 0f, beauty = 0f, hardLoad = 0f, farLoad = 0f;
         foreach (var t in map.Tiles)
         {
-            if (!WorldAuthority.IsPlayers(t.authorityId) || t.water) continue;
-            report.cells++;
-            float load = CellLoad(map, settings, t);
+            // A cell held de facto or in part weighs by its share of hexes.
+            float share = HeldShare(map, t);
+            if (share <= 0f) continue;
+            if (WorldAuthority.IsPlayers(t.authorityId) && t.hold != HoldStatus.DeFacto) report.cells++;
+            else
+            {
+                report.hexes += WorldHoldings.Hexes(map, t, WorldAuthority.Player);
+                if (WorldAuthority.IsPlayers(t.authorityId)) report.deFacto++;
+            }
+            report.land += share;
+            float load = CellLoad(map, settings, t) * share;
             report.load += load;
-            coherence += t.coherence;
-            beauty += t.beauty;
+            coherence += t.coherence * share;
+            beauty += t.beauty * share;
             float difficulty = Difficulty(settings, t);
             if (!float.IsPositiveInfinity(difficulty) && difficulty > 1.4f && t.settlement < 0) hardLoad += load;
             if (t.settlement < 0 && state.nearest[t.index] > 4f) farLoad += load;
         }
         foreach (int c in map.Adopted) if (c >= 0 && c < map.Count && WorldAuthority.IsPlayers(map[c].authorityId)) report.adopted++;
         foreach (int c in map.Claims) if (c >= 0 && c < map.Count && WorldAuthority.IsPlayers(map[c].authorityId)) report.claimed++;
-        if (report.cells > 0)
+        if (report.land > 0f)
         {
-            report.averageCoherence = coherence / report.cells;
-            report.averageBeauty = beauty / report.cells;
+            report.averageCoherence = coherence / report.land;
+            report.averageBeauty = beauty / report.land;
             Capacity("Coherence of the held land", rules.coherenceCapacity * (report.averageCoherence - 0.4f));
         }
         foreach (var (source, amount) in context.extra) Capacity(source, amount);
@@ -852,20 +972,20 @@ public static class WorldTerritory
         report.averageDevelopment = settlements > 0 ? developed / settlements : 0f;
         report.developmentLever = lever;
 
-        report.loadSources.Add(($"{report.cells} held cells", report.load));
+        report.loadSources.Add(($"{report.cells} held cells{(report.hexes > 0 ? $" and {report.hexes} hexes of others" : string.Empty)}", report.load));
         if (hardLoad > 0f) report.loadSources.Add(("of which hard ground", hardLoad));
         if (farLoad > 0f) report.loadSources.Add(("of which far from any seat", farLoad));
 
         report.strain = report.load / report.capacity;
         report.efficiency = Efficiency(rules, report.strain);
-        report.averageLoad = report.cells > 0 ? Math.Max(0.05f, report.load / report.cells) : 1f;
+        report.averageLoad = report.land > 0f ? Math.Max(0.05f, report.load / report.land) : 1f;
         // Where the strain reaches comfort, where one more cell adds nothing (d/dN of N x efficiency = 0), and where adoption stops.
         report.comfortCells = rules.comfortStrain * report.capacity / report.averageLoad;
         report.breakEvenCells = BreakEvenStrain(rules) * report.capacity / report.averageLoad;
         report.stopCells = rules.overStrain * report.capacity / report.averageLoad;
         report.favoured = report.strain >= rules.overStrain ? Expansion.Overextended
-            : report.cells < report.comfortCells ? Expansion.Horizontal
-            : report.cells < report.breakEvenCells ? Expansion.Balanced : Expansion.Vertical;
+            : report.land < report.comfortCells ? Expansion.Horizontal
+            : report.land < report.breakEvenCells ? Expansion.Balanced : Expansion.Vertical;
         report.population = context.population;
         report.populationShare = PopulationShare(rules, context.population);
         report.adoptionRate = AdoptionRate(map, report.strain, context.policy, report.populationShare);

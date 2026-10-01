@@ -6,6 +6,7 @@ using UnityEngine;
 public class ProductionUnitData : ScriptableObject
 {
     public GameUnit gameUnit;
+    [Min(1)] public int productionTier = 1;
 
     public bool isUnique;
 

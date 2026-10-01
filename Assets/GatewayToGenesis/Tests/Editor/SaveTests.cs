@@ -123,4 +123,42 @@ public class SaveTests
         var copy = (System.Collections.Generic.Queue<AgeBeat>)SaveStateCodec.Read(SaveStateCodec.Write(beats, beats.GetType()), beats.GetType());
         Assert.AreEqual(42, copy.Dequeue().at);
     }
+    [Test] public void TileColumnsRoundTripEveryValueAndKeepOptionalFieldsAnOlderSaveLacks()
+    {
+        // The world's tiles are saved one column per field (a node tree per tile made a 34k-tile save 50 MB).
+        var tiles = new[]
+        {
+            new WorldTile { coord = new HexCoord(-3, 7), feature = null, revealed = true, authorityId = "wilderness", administrativeAuthority = 0.125f, microKnownMask = 127, microClaimMask = 5 },
+            new WorldTile { coord = new HexCoord(12, -40), feature = "grove, old", featureAge = 2, explored = true, authorityId = "", coherence = -0.75f, leylineInfluence = 1e-5f, harvestedAge = 3 },
+        };
+        var saved = new SaveDocument { tileColumns = SaveStateCodec.PackColumns(tiles, GameSnapshot.TileFields) };
+        var columns = UnityEngine.JsonUtility.FromJson<SaveDocument>(UnityEngine.JsonUtility.ToJson(saved)).tileColumns;
+        var fresh = new[] { new WorldTile(), new WorldTile { feature = "stale" } };
+        SaveStateCodec.RestoreColumns(fresh, columns, GameSnapshot.TileFields);
+        for (int i = 0; i < tiles.Length; i++)
+            foreach (string field in GameSnapshot.TileFields)
+            {
+                var info = SaveStateCodec.Field(typeof(WorldTile), field);
+                Assert.AreEqual(info.GetValue(tiles[i]), info.GetValue(fresh[i]), $"tile {i}: {field}");
+            }
+        Assert.IsNull(fresh[0].feature, "a null string stays null (not empty)");
+        Assert.AreEqual("", fresh[1].authorityId, "an empty string stays empty");
+
+        // An older save without an optional column: the tiles keep theirs. Without a required one, it is refused.
+        var withoutClaims = columns.FindAll(c => c.field != "microClaimMask");
+        var kept = new[] { new WorldTile { microClaimMask = 9 }, new WorldTile { microClaimMask = 9 } };
+        SaveStateCodec.RestoreColumns(kept, withoutClaims, GameSnapshot.TileFields);
+        Assert.AreEqual(9, kept[0].microClaimMask);
+        Assert.Throws<InvalidOperationException>(() => SaveStateCodec.RestoreColumns(kept, columns.FindAll(c => c.field != "known"), GameSnapshot.TileFields));
+        Assert.Throws<InvalidOperationException>(() => SaveStateCodec.RestoreColumns(new[] { new WorldTile() }, columns, GameSnapshot.TileFields), "a column per tile, no more, no less");
+    }
+    [Test] public void TheCopyABackgroundSaveWritesKeepsItsOwnRewards()
+    {
+        var save = new SaveDocument { name = "w" };
+        save.rewards.Earn("first", 10);
+        var copy = save.ForWriting();
+        save.rewards.Earn("second", 10);
+        Assert.AreEqual(1, copy.rewards.unlocked.Count, "an achievement earned while the autosave writes changes only the live world");
+        Assert.AreEqual("w", copy.name);
+    }
 }

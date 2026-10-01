@@ -363,16 +363,17 @@ public partial class WorldRenderer
         _stateTex = Texture(_mesoSize, "World State");
         _stateTex.SetPixels32(_state);
         _stateTex.Apply(false, false);
-        _owners = new Color32[_mesoSize * _mesoSize];
-        _ownerTex = Texture(_mesoSize, "World Owners", true);
+        _owners = new Color32[_microSize * _microSize];
+        _ownerTex = Texture(_microSize, "World Owners", true);
         _ownerTex.SetPixels32(_owners);
         _ownerTex.Apply(false, false);
     }
 
     /// <summary>
-    /// Who holds each cell, for the border outlines drawn at every lens: the colour of its holder (your civilization's
-    /// <see cref="SettlementRules.borderColor"/>, an enclave's own colour, an independent claim's amber) and, in alpha, a
-    /// code for the holder so the shader outlines where one holder's land meets another's or the wilderness.
+    /// Who holds each micro hex, for the border outlines drawn at every lens: the colour of its holder (your
+    /// civilization's <see cref="SettlementRules.borderColor"/>, an enclave's own colour, an independent claim's amber)
+    /// and, in alpha, a code for the holder so the shader outlines where one holder's land meets another's or the
+    /// wilderness. Land is held hex by hex (<see cref="WorldHoldings.HexHolder"/>): a shared cell shows each side's hexes.
     /// </summary>
     public void RefreshOwners()
     {
@@ -381,16 +382,25 @@ public partial class WorldRenderer
         var codes = new Dictionary<string, byte>(StringComparer.Ordinal);
         foreach (var t in _map.Tiles)
         {
-            if (t.water || t.authorityId == WorldAuthority.Wilderness || string.IsNullOrEmpty(t.authorityId)) continue;
-            bool yours = WorldAuthority.IsPlayers(t.authorityId);
-            string key = yours ? WorldAuthority.Player : t.authorityId;
-            if (!codes.TryGetValue(key, out byte code))
+            if (t.water || (t.authorityId == WorldAuthority.Wilderness && t.microHeldMask == 0 && WorldHoldings.At(_map, t.index).Count == 0)) continue;
+            var center = HexHierarchy.ChildCenter(t.coord);
+            for (int k = 0; k < MicroNavigation.PerCell; k++)
             {
-                // Yours 255; every other holder its own code in the order met (spread apart so the shader tells them apart).
-                code = yours ? (byte)255 : (byte)(1 + (codes.Count(c => c.Value != 255) * 3) % 250);
-                codes[key] = code;
+                // Each hex its own holder (WorldHoldings): a cell can be shared, and one ruled de facto has free hexes.
+                string holder = WorldHoldings.HexHolder(_map, t.index * MicroNavigation.PerCell + k);
+                if (string.IsNullOrEmpty(holder) || holder == WorldAuthority.Wilderness) continue;
+                bool yours = WorldAuthority.IsPlayers(holder);
+                string key = yours ? WorldAuthority.Player : holder;
+                if (!codes.TryGetValue(key, out byte code))
+                {
+                    // Yours 255; every other holder its own code in the order met (spread apart so the shader tells them apart).
+                    code = yours ? (byte)255 : (byte)(1 + (codes.Count(c => c.Value != 255) * 3) % 250);
+                    codes[key] = code;
+                }
+                var hex = center + HexHierarchy.ChildOffsets[k];
+                int mi = (hex.r + _microOffset) * _microSize + (hex.q + _microOffset);
+                if (mi >= 0 && mi < _owners.Length) _owners[mi] = WithCode(OwnerColor(holder), code);
             }
-            _owners[MesoIndex(t.coord)] = WithCode(OwnerColor(t.authorityId), code);
         }
         _ownerTex.SetPixels32(_owners);
         _ownerTex.Apply(false, false);
@@ -1185,25 +1195,11 @@ public partial class WorldRenderer
         // Improved hotspots: a copper mark that grows with each level of work.
         foreach (var t in _map.Tiles.Where(t => t.improvement > 0 && t.explored))
             Marker(b, t, t.improvement >= 3 ? 4f : 2f, new Color(0.95f, 0.6f, 0.3f, 1f), 1.2f + 0.35f * t.improvement, 6f + 2f * t.improvement, new Vector2(-1f, 1.8f), 1f);
-        // Land being settled hex by hex before it joins your authority: a dot on each settled hex in your border's colour
-        // (gold for a paid claim), and a ring on a claimed cell at the wider readings.
-        var border = _rules.borderColor;
-        border.a = 0.95f;
-        foreach (var t in _map.Tiles)
-        {
-            if (t.water || t.authorityId != WorldAuthority.Wilderness) continue;
-            bool claim = _map.Claiming.Contains(t.index);
-            if (t.microHeldMask == 0 && !claim) continue;
-            var color = claim ? ClaimColor : border;
-            var center = HexHierarchy.ChildCenter(t.coord);
-            for (int k = 0; k < MicroNavigation.PerCell; k++)
-            {
-                if ((t.microHeldMask & (1 << k)) == 0) continue;
-                (center + HexHierarchy.ChildOffsets[k]).ToPixel(1f, out float x, out float y);
-                Marker(b, new Vector2(x, y), 1f, color, 0.7f, 4f, new Vector2(-1f, 0.6f), 1f);
-            }
-            if (claim) Marker(b, new Vector2(t.x, t.y), 2f, ClaimColor, 1.8f, 9f, new Vector2(0.4f, 3f), 1f);
-        }
+        // Hexes held of a wilderness cell sit inside your border (RefreshOwners). A whole-cell claim an older save left
+        // being settled: a ring at the wider readings until the next Seventh finishes it.
+        foreach (int c in _map.Claiming)
+            if (c >= 0 && c < _map.Count && _map[c].authorityId == WorldAuthority.Wilderness)
+                Marker(b, new Vector2(_map[c].x, _map[c].y), 2f, ClaimColor, 1.8f, 9f, new Vector2(0.4f, 3f), 1f);
         // Gifted geography and threats, once seen; Trade Nodes on the roads.
         bool trade = _lens == WorldLens.Trade;
         foreach (int site in _map.NexusSites)

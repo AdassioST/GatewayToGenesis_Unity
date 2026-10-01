@@ -30,16 +30,20 @@ using System.Linq;
 /// its measures is a stalemate: the defender holds (Total War's timer). Deterministic for a seed. Every number is a
 /// proposal (<see cref="CombatTuning"/>).
 /// </summary>
-public static class BattleResolver
+public static partial class BattleResolver
 {
     private sealed class Hit
     {
-        public float integrity, composure, attacks, pierce, dread;
+        public bool friendlyFire;
+        public float integrity, direct, composure, attacks, pierce, dread, armorBypass, guardBypass;
+        /// <summary>Attacks that are not parried (a Sure card's missiles).</summary>
+        public float sure;
     }
 
     /// <summary>What a legend lends: multipliers on attack, parry, potency, dread; Composure harm divided by nerve.</summary>
     private sealed class Boost
     {
+        public Boost Clone() => (Boost)MemberwiseClone();
         public float atk = 1f, def = 1f, potency = 1f, dread = 1f, nerve = 1f, interference = 1f, channel = 1f, wounded, rally, recon;
 
         public static Boost Of(BattleLegend legend, float perStar)
@@ -69,27 +73,56 @@ public static class BattleResolver
         public BattleSide side;
         public bool attacker;
         public Side enemy;
+        public BattleSpatialRules rules;
+        public Action<Side, CombatSection, BattleSpatialCause, string> spatialEvent;
+        public Func<int> beat;
         public Boost stack = None;
         public readonly Dictionary<CombatSection, Boost> leaders = new Dictionary<CombatSection, Boost>();
         /// <summary>The ground its own sections stand on, when not the field's (an attacker coming from its own hex).</summary>
         public BattleGround? footing;
-        public float recon, catalyst, rally, mending, woundedShare, entrench;
+        public float recon, rally, woundedShare, entrench;
+        public float spiralingBelow;
+        public BattleCommandCulture commandCulture;
         public bool initiative;
         public int misfiresLogged;
         public readonly Dictionary<CombatSection, float> startIntegrity = new Dictionary<CombatSection, float>();
         public float startComposure;
 
+        // The Symphony (BattleResolver.Symphony.cs): its deck in play, the share of its fighting that goes on without
+        // cards, what its cards did this measure, and the marks cards leave on sections of either side (shared).
+        public Performance perf;
+        public float ostinato = 1f;
+        public float surge, crescendo, entrenched;
+        public bool sure;
+        public Dictionary<CombatSection, CardMarks> marks;
+
+        public CardMarks Marks(CombatSection sec) => marks != null && sec != null && marks.TryGetValue(sec, out var k) ? k : null;
+        /// <summary>The strongest Ward standing on a section now for steel (false) or magic (true), before growth and the Circle.</summary>
+        public float WardOf(CombatSection sec, bool magical) => Marks(sec)?.wards
+            .Where(g => g.raised <= beat() && g.expires >= beat() && (magical ? g.magical : g.physical) && g.source.Standing && !g.source.mindBroken && rules.Support(g.source, sec, g.range))
+            .Select(g => g.amount).DefaultIfEmpty(0f).Max() ?? 0f;
+        public float SupportOf(CombatSection sec, Func<CombatSection, float> amount) => side.Standing
+            .Where(x => x.row == FormationRow.Support && !x.mindBroken && rules.Support(x, sec)).Sum(amount);
+        public float BlindOf(CombatSection sec) { var k = Marks(sec); return k != null && k.blindLeft > 0 ? k.blind : 0f; }
+        public float ExposeOf(CombatSection sec) { var k = Marks(sec); return k != null && k.exposeLeft > 0 ? k.expose : 0f; }
+
         // The commander's battle Composure (its own bar, not its real Composure).
         public BattleLegend conductor;
         public float bar, barMax;
         public bool conductorBroken;
+        /// <summary>The Conductor was cut down, taken or evacuated (not a Mind Break): no maladaptive inheritance, only the loss.</summary>
+        public bool conductorFallen;
+        /// <summary>What the army inherits from a Mind Broken Conductor, and the line Composure at which a fearful one abandons the fight.</summary>
+        public BattleConductorMaladaptation maladaptation;
+        public float withdrawFloor;
         /// <summary>Section leaders who left the field when their section was cut down or taken (measure).</summary>
         public readonly Dictionary<BattleLegend, int> leftField = new Dictionary<BattleLegend, int>();
 
         public bool Conducted => conductor != null && !conductorBroken;
-        public float Withdraw(CombatTuning t) => side.withdrawAt >= 0f ? side.withdrawAt : t.withdrawAt;
+        public float Withdraw(CombatTuning t) => Math.Max(withdrawFloor, side.withdrawAt >= 0f ? side.withdrawAt : t.withdrawAt);
         public IEnumerable<CombatSection> Line => side.sections.Where(s => s.Standing && s.row != FormationRow.Support);
-        public Boost Of(CombatSection sec) => sec != null && leaders.TryGetValue(sec, out var b) ? b : None;
+        public Boost Of(CombatSection sec) => sec != null && leaders.TryGetValue(sec, out var b) &&
+            !(sec.leader != null && side.sections.Any(x => x.leader == sec.leader && x.eliteRole != BattleEliteRole.None && !x.Standing)) ? b : None;
 
         /// <summary>The whole stack's multiplier from its commander's battle Composure this measure.</summary>
         public float Nerve(CombatTuning t)
@@ -106,127 +139,35 @@ public static class BattleResolver
     /// <summary>
     /// Plays the battle. The sides' sections end in the battle's state (Integrity, Composure, Mind Broken, cut down, fled,
     /// captured), so a formation can carry its wounds into the next; clone the setup to keep it (<see cref="BattleSetup.Clone"/>).
+    /// A side with a Symphony (<see cref="BattleSide.deck"/>) has its cards played for it by the resolver's performer, even
+    /// one marked <see cref="BattleSide.manual"/> (use <see cref="Begin"/> to play it by hand).
     /// </summary>
     public static BattleReport Resolve(BattleSetup setup, CombatSettings settings = null)
     {
-        settings = settings ?? new CombatSettings();
-        var t = settings.Tuning;
-        var field = setup.field ?? new Battlefield();
-        var ground = settings.Ground(field.ground);
-        var rng = new CombatRandom(setup.seed);
-        var report = new BattleReport { seed = setup.seed };
-
-        var a = new Side { side = setup.attacker, attacker = true, footing = field.attackerGround };
-        var d = new Side { side = setup.defender, attacker = false };
-        a.enemy = d; d.enemy = a;
-        var ownerOf = new Dictionary<CombatSection, Side>();
-        foreach (var sec in a.side.sections) ownerOf[sec] = a;
-        foreach (var sec in d.side.sections) ownerOf[sec] = d;
-        foreach (var s in new[] { a, d })
-        {
-            foreach (var sec in s.side.sections)
-            {
-                sec.committed = false;
-                sec.fled = false;
-                sec.captured = false;
-                sec.destroyed = sec.integrity <= 0f;
-                sec.mindBroken = !sec.destroyed && sec.composure <= 0f;
-                sec.lost = sec.dead = sec.wounded = 0f;
-                sec.casts = sec.misfires = sec.timesMindBroken = 0;
-                s.startIntegrity[sec] = Math.Max(0f, sec.integrity);
-            }
-            s.startComposure = s.side.LineComposure;
-            Prepare(s, t);
-        }
-
-        float width = Math.Max(1f, ground.width - (field.concealed ? t.coverWidth : 0f));
-        float entrenchLevels = Math.Min(t.maxEntrench, setup.defender.entrenchment + d.entrench);
-        float defenderDefense = ground.defense * (1f + entrenchLevels * t.entrenchDefense) * (field.settlement ? t.settlementDefense : 1f) *
-                                (1f + Math.Min(t.heightCap, field.height / 0.1f * t.heightDefense));
-        // Coming downhill carries the attacker as higher ground holds the defender.
-        float assault = ground.assault * (field.riverCrossing ? t.riverCrossing : 1f) * (1f + Math.Min(t.heightCap, field.downhill / 0.1f * t.heightDefense));
-
-        Opening(report, a, d, field, ground, width, entrenchLevels);
-
-        // The Overture: who reads the ground first.
-        float reconA = a.recon, reconD = d.recon + (field.concealed ? 1f : 0f);
-        if (reconA > reconD) a.initiative = true;
-        else if (reconD > reconA) d.initiative = true;
-        if (a.initiative) report.log.Add($"Overture: {a.side.name} read the ground first and strike before the enemy is ready.");
-        if (d.initiative)
-        {
-            if (field.concealed)
-            {
-                foreach (var s in a.side.Standing) s.composure -= t.ambushShock * s.maxComposure;
-                report.log.Add($"Overture: {a.side.name} walk into an ambush under the {(string.IsNullOrEmpty(field.cover) ? "cover" : field.cover.Replace('-', ' '))}; the line wavers before a blow is struck.");
-            }
-            else report.log.Add($"Overture: {d.side.name} saw them coming and strike first.");
-        }
-        report.timeline.Add(new BattleMeasure { measure = 0, attacker = Bars(a), defender = Bars(d) });
-
-        int end = 0; // 1 attacker won, -1 defender won
-        bool aLeft = false, dLeft = false;
-        int m = 1;
-        for (; m <= t.maxMeasures; m++)
-        {
-            Commit(a, width, m, report);
-            Commit(d, width, m, report);
-            var hits = new Dictionary<CombatSection, Hit>();
-
-            Spells(a, m, field, t, rng, hits, report);
-            Spells(d, m, field, t, rng, hits, report);
-            Steel(a, m, field, ground, assault, t, rng, hits);
-            Steel(d, m, field, ground, 1f, t, rng, hits);
-
-            foreach (var pair in hits) Parry(pair.Key, pair.Value, ownerOf[pair.Key], ground, defenderDefense, t);
-            foreach (var pair in hits)
-            {
-                var sec = pair.Key;
-                var owner = ownerOf[sec];
-                float before = Math.Max(0f, sec.integrity);
-                float loss = Math.Min(before, pair.Value.integrity);
-                sec.integrity -= pair.Value.integrity;
-                sec.lost += loss;
-                float fear = pair.Value.composure / (owner.stack.nerve * owner.Of(sec).nerve);
-                sec.composure -= fear;
-                if (owner.Conducted) owner.bar -= fear * t.conductorExposure;
-                if (owner.mending > 0f && sec.integrity > 0f)
-                {
-                    float mended = Math.Min(sec.maxIntegrity - sec.integrity, loss * owner.mending);
-                    sec.integrity += mended;
-                    sec.lost -= mended;
-                }
-            }
-
-            Toll(a, m, field, t);
-            Toll(d, m, field, t);
-            States(a, m, t, report);
-            States(d, m, t, report);
-            Conductor(a, m, t, report);
-            Conductor(d, m, t, report);
-            report.timeline.Add(new BattleMeasure { measure = m, attacker = Bars(a), defender = Bars(d) });
-
-            bool aDone = Done(a, t, out aLeft), dDone = Done(d, t, out dLeft);
-            if (aDone && dDone)
-            {
-                // Both give out together: the one with more of its line left holds.
-                if (LineShare(a) > LineShare(d)) aDone = false; else dDone = false;
-            }
-            if (aDone) { end = -1; Beaten(a, aLeft, report.attacker, m, t, report); break; }
-            if (dDone) { end = 1; Beaten(d, dLeft, report.defender, m, t, report); break; }
-        }
-        report.measures = Math.Min(m, t.maxMeasures);
-        if (end == 0) report.log.Add($"After {t.maxMeasures} measures neither line has given way: {d.side.name} hold the field and {a.side.name} draw off.");
-
-        report.winner = end;
-        Tally(a, report.attacker, t, lost: end <= 0);
-        Tally(d, report.defender, t, lost: end > 0);
-        Fates(a, report, won: end > 0, doomed: end < 0 && !aLeft, t);
-        Fates(d, report, won: end < 0, doomed: end > 0 && !dLeft, t);
-        report.outcome = Grade(report, end);
-        report.log.Add($"{BattleReport.Words(report.outcome)} for {a.side.name}. {Losses(report.attacker)}; {Losses(report.defender)}.");
-        return report;
+        if (setup.RequiresManual) throw new InvalidOperationException("This major, boss, decisive or Original Eight encounter must be performed manually.");
+        var run = Begin(setup, settings, auto: true);
+        return run.Finish();
     }
+
+    /// <summary>
+    /// Starts a battle to be played measure by measure (the micro layer): <see cref="BattleRun.BeginMeasure"/> draws each
+    /// side's hand, the player plays cards for a <see cref="BattleSide.manual"/> side (<see cref="BattleRun.Play"/>), and
+    /// <see cref="BattleRun.ResolveMeasure"/> plays the measure; <see cref="BattleRun.Finish"/> plays whatever is left and
+    /// returns the report. The same rules as <see cref="Resolve"/>, so a battle played by hand and one resolved on its
+    /// own weigh the same Symphony the same way.
+    /// A battle with a <see cref="BattleSide.manual"/> side is forecast first (<paramref name="forecastRuns"/> auto-resolved
+    /// copies; or pass a preview's with <see cref="BattleRun.Prediction"/>): if the player wins by hand what the forecast
+    /// said would be lost, it is a Legendary Victory (<see cref="BattleVerdicts.Legendary"/>).
+    /// </summary>
+    public static BattleRun Begin(BattleSetup setup, CombatSettings settings = null, int forecastRuns = 20)
+    {
+        var prediction = setup.attacker.manual || setup.defender.manual ? Forecast(setup, settings, forecastRuns) : null;
+        var run = Begin(setup, settings, auto: false);
+        run.Prediction = prediction;
+        return run;
+    }
+
+    private static BattleRun Begin(BattleSetup setup, CombatSettings settings, bool auto) => new BattleRun(setup, settings, auto);
 
     // ---------------------------------------------------------------------------------------------------------------
     // Preparation
@@ -236,9 +177,6 @@ public static class BattleResolver
         foreach (var sec in s.side.sections.Where(x => x.Standing && x.row == FormationRow.Support))
         {
             s.recon += sec.recon;
-            s.catalyst += sec.catalyst;
-            s.rally += sec.rally;
-            s.mending += sec.mending;
             s.woundedShare += sec.woundedShare;
             s.entrench += sec.entrench;
         }
@@ -285,9 +223,9 @@ public static class BattleResolver
     private static int Bond(CombatSection sec, BattleLegend legend) =>
         legend != null && sec.bonds != null && sec.bonds.TryGetValue(legend.name, out int v) ? Math.Max(0, Math.Min(3, v)) : 0;
 
-    private static void Opening(BattleReport report, Side a, Side d, Battlefield field, GroundSpec ground, float width, float entrench)
+    private static void Opening(BattleReport report, Side a, Side d, Battlefield field, GroundSpec ground, float entrench)
     {
-        var parts = new List<string> { $"{a.side.name} attack {d.side.name} on {field.place} ({ground.name}, room for {width:0} sections abreast)" };
+        var parts = new List<string> { $"{a.side.name} attack {d.side.name} on {field.place} ({ground.name}, sixteen combat hexes)" };
         if (field.riverCrossing) parts.Add("across a river");
         if (field.height > 0.02f) parts.Add("uphill");
         if (field.settlement) parts.Add("against a settlement");
@@ -317,29 +255,10 @@ public static class BattleResolver
     // ---------------------------------------------------------------------------------------------------------------
     // The line
 
-    private static void Commit(Side s, float width, int measure, BattleReport report)
+    /// <summary>Marks the sections that take the field this Measure.</summary>
+    private static void Muster(Side s)
     {
-        float used = s.side.sections.Where(x => x.committed && x.Standing && x.row == FormationRow.Front).Sum(x => x.width);
-        foreach (var sec in s.side.sections.Where(x => x.row == FormationRow.Front && x.Standing && !x.committed))
-        {
-            if (used > 0f && used + sec.width > width + 1e-3f) continue;
-            sec.committed = true;
-            used += sec.width;
-            if (measure > 1) report.log.Add($"Measure {measure}: {sec.name} steps into the gap in {s.side.name}'s line.");
-        }
-    }
-
-    private static int FrontCount(Side s) => s.side.sections.Count(x => x.row == FormationRow.Front && x.committed && x.Standing);
-
-    /// <summary>What an enemy can reach: the committed front, then the back lane once the front is gone, then the support.</summary>
-    private static List<CombatSection> Targets(Side enemy, bool reachesBack)
-    {
-        var front = enemy.side.sections.Where(x => x.row == FormationRow.Front && x.committed && x.Standing).ToList();
-        var back = enemy.side.sections.Where(x => x.row == FormationRow.Back && x.Standing).ToList();
-        if (reachesBack) { var both = front.Concat(back).ToList(); if (both.Count > 0) return both; }
-        else if (front.Count > 0) return front;
-        else if (back.Count > 0) return back;
-        return enemy.side.sections.Where(x => x.row == FormationRow.Support && x.Standing).ToList();
+        foreach (var sec in s.side.sections) sec.committed = sec.Fighting;
     }
 
     private static CombatSection Pick(List<CombatSection> targets, CombatRandom rng)
@@ -352,34 +271,6 @@ public static class BattleResolver
 
     // ---------------------------------------------------------------------------------------------------------------
     // Spells
-
-    private static void Spells(Side s, int m, Battlefield field, CombatTuning t, CombatRandom rng, Dictionary<CombatSection, Hit> hits, BattleReport report)
-    {
-        bool smart = s.Conducted || s.recon > s.enemy.recon;
-        // Composure is the magical reserve: a Mind Broken caster has nothing left to pay a spell with.
-        foreach (var sec in s.side.sections.Where(x => x.Fighting && x.Casts && !x.mindBroken && x.row != FormationRow.Support).ToList())
-        {
-            var targets = Targets(s.enemy, sec.row == FormationRow.Back);
-            if (targets.Count == 0) return;
-            Cast(s, sec, sec.name, sec.potency * sec.IntegrityShare, sec.Roots.ToList(), sec.harmony, sec.soulWeaver, sec.primary,
-                sec.row == FormationRow.Back, sec.dread, targets, smart, m, field, t, rng, hits, report);
-        }
-        var c = s.conductor;
-        if (s.Conducted && c.leitmotif != SpellBinding.Unattuned)
-        {
-            var targets = Targets(s.enemy, true);
-            if (targets.Count == 0) return;
-            var roots = new List<SpellBinding> { c.leitmotif };
-            // D13: Ornaments are the legend's from Age 0, but Ornamental Magic in the Symphony of War waits for its Age.
-            if (AgeCapabilities.IsAvailable(AgeCapabilities.OrnamentalMagic, field.age)) roots.AddRange(c.ornaments.Where(o => o != c.leitmotif));
-            var target = Choose(targets, roots, true, t, rng);
-            var root = HarmonicCircle.BestAgainst(roots, target.primary, t);
-            var tier = ConductorTier(field.age, t);
-            var harmony = HarmonicCircle.Seven.Where(b => b != root).OrderByDescending(c.Score).ThenBy(b => (int)b).Take((int)tier).ToList();
-            float potency = t.conductorPotency * c.Score(root) / 21f;
-            Cast(s, null, c.name, potency, new List<SpellBinding> { root }, harmony, true, c.leitmotif, true, 1f, new List<CombatSection> { target }, true, m, field, t, rng, hits, report);
-        }
-    }
 
     /// <summary>A Legend conducts with the largest chord its Age plays reliably (Discordant Interference at most 10%).</summary>
     public static ChordTier ConductorTier(int age, CombatTuning t)
@@ -407,7 +298,7 @@ public static class BattleResolver
 
     private static void Cast(Side s, CombatSection caster, string casterName, float basePotency, List<SpellBinding> roots, List<SpellBinding> harmony,
         bool soulWeaver, SpellBinding primary, bool fromBack, float dread, List<CombatSection> targets, bool smart, int m, Battlefield field,
-        CombatTuning t, CombatRandom rng, Dictionary<CombatSection, Hit> hits, BattleReport report)
+        CombatTuning t, CombatRandom rng, Dictionary<CombatSection, Hit> hits, BattleReport report, bool? forcedMisfire = null, bool payEssence = true)
     {
         if (roots.Count == 0 || basePotency <= 0f) return;
         var target = targets.Count == 1 ? targets[0] : Choose(targets, roots, smart, t, rng);
@@ -416,19 +307,26 @@ public static class BattleResolver
         var tier = (ChordTier)Math.Min(3, harmony.Count);
 
         float p = basePotency * t.tierPotency[(int)tier];
+        if (!s.side.sections.Contains(target)) p *= s.rules.TargetAttackFactor(s.attacker, target);
         if (soulWeaver)
         {
             p *= Tempo(s.side.tempo, m, t) * field.magicAccess;
             if (!AgeMagic.MajorNotes(field.age)) p *= t.minorNoteMagic;
         }
-        p *= Lerp(t.incoherentPotency, t.coherentPotency, field.coherence);
-        if (field.leyline) p *= t.leylinePotency;
+        var origin = Origin(s, caster);
+        var local = origin == null ? null : s.rules.State.Terrain[origin.battleHex];
+        bool channel = local == null ? field.leyline : local.leyline || local.harmonicChannel;
+        p *= Lerp(t.incoherentPotency, t.coherentPotency, local?.coherence ?? field.coherence);
+        if (channel) p *= t.leylinePotency;
         if (root == field.element) p *= t.landElement;
         if (root == SpellBinding.Cindergale && field.echo == 2) p *= t.crescendoFire;
         if (root == SpellBinding.Cindergale && field.echo == 4) p *= t.silenceFire;
         if (root == SpellBinding.Resonance && field.echo == 1) p *= t.resonanceEcho;
-        p *= 1f + s.catalyst;
-        if (caster != null && caster.needsAccompaniment && s.catalyst <= 0f) p *= 0.6f;
+        float catalyst = origin == null ? 0f : s.SupportOf(origin, x => x.catalyst);
+        p *= 1f + catalyst;
+        if (origin != null) p *= s.rules.AttackFactor(s.attacker, origin);
+        p *= 1f + s.crescendo;
+        if (caster != null && caster.needsAccompaniment && catalyst <= 0f) p *= 0.6f;
         var boost = s.Of(caster);
         p *= s.stack.potency * boost.potency * s.Nerve(t);
         if (harmony.Contains(SpellBinding.Cindergale) && (caster == null || caster.ComposureShare >= t.focusFrom)) p *= t.focusNote;
@@ -439,22 +337,14 @@ public static class BattleResolver
             if (harmony.Contains(SpellBinding.Resonance)) loss *= t.resonanceChannel;
             if (harmony.Contains(SpellBinding.Flux)) loss *= t.fluxChannel;
             if (harmony.Contains(SpellBinding.Void)) loss *= t.voidChannel;
-            if (field.leyline) loss *= t.leylineChannel;
+            if (channel) loss *= t.leylineChannel;
             p *= 1f - loss;
         }
         float spread = t.variance + (soulWeaver && s.side.tempo == SpellTempo.Polyrhythm ? t.polyrhythmSpread : 0f);
         p *= Math.Max(0f, 1f + (rng.NextFloat() * 2f - 1f) * spread);
 
-        float chance = soulWeaver ? AgeMagic.Interference(tier, field.age, t) : t.instinctInterference;
-        chance += field.dissonance * t.dissonanceInterference + (field.echo == 3 ? t.dissonanceEcho : 0f);
-        if (harmony.Contains(SpellBinding.Luminance)) chance *= t.precisionNote;
-        if (harmony.Contains(SpellBinding.Crystal)) chance *= t.precisionNote;
-        if (soulWeaver && s.side.tempo == SpellTempo.Ritardando) chance *= t.ritardandoInterference;
-        if (soulWeaver && s.side.tempo == SpellTempo.Polyrhythm) chance *= t.polyrhythmInterference;
-        chance = Math.Max(0f, Math.Min(0.95f, chance * s.stack.interference * boost.interference));
-
         float essence = soulWeaver ? t.essenceCost[(int)tier] : t.essenceCost[0];
-        bool misfire = rng.NextFloat() < chance;
+        bool misfire = forcedMisfire ?? rng.NextFloat() < Interference(s, caster, tier, soulWeaver, harmony, field, t);
         if (misfire)
         {
             p *= t.misfireLands;
@@ -466,18 +356,24 @@ public static class BattleResolver
             }
         }
         // Essence Sacrifice: the spell is paid from the caster's Composure (the conductor's own strain).
-        if (caster != null) { caster.composure -= essence; caster.casts++; if (misfire) caster.misfires++; }
-        else s.bar -= essence * t.conductorEssence;
+        if (payEssence)
+        {
+            if (caster != null) { caster.composure -= essence; caster.casts++; if (misfire) caster.misfires++; }
+            else s.bar -= essence * t.conductorEssence;
+        }
 
         float mult = HarmonicCircle.Multiplier(root, target.primary, t);
         float sensitivity = Lerp(t.structureSpellTaken, t.pureLightSpellTaken, 1f - target.structure);
-        bool barriers = s.enemy.side.tempo == SpellTempo.Legato && s.enemy.side.sections.Any(x => x.Standing && x.soulWeaver && x.Casts && !x.mindBroken);
-        float ward = target.ward + (barriers ? t.legatoWard : 0f) +
-                     (target.harmony.Contains(SpellBinding.Crystal) ? t.crystalWard : 0f);
+        var targetOwner = s.side.sections.Contains(target) ? s : s.enemy;
+        bool barriers = targetOwner.side.tempo == SpellTempo.Legato && targetOwner.side.sections.Any(x => x.Standing && x.soulWeaver && x.Casts && !x.mindBroken && targetOwner.rules.Support(x, target));
+        // Card Wards answer releases as Abjuration (BattleRun.Abjure); what is left here is the target's own resistance.
+        float ward = target.ward + (barriers ? t.legatoWard : 0f) + (target.harmony.Contains(SpellBinding.Crystal) ? t.crystalWard : 0f);
+        ward *= targetOwner.rules.DefenseFactor(targetOwner.attacker, target);
         if (target.mindBroken) ward *= t.mindBreakWard;
         ward = Math.Max(0f, Math.Min(0.9f, ward));
         float spellHits = p * t.spellHit * mult * sensitivity * (1f - ward);
         var hit = HitOf(hits, target);
+        hit.friendlyFire |= targetOwner == s;
         hit.integrity += spellHits * t.integrityPerSpellHit;
         hit.composure += spellHits * t.composurePerSpellHit * dread * s.stack.dread * boost.dread * (soulWeaver && s.side.tempo == SpellTempo.Polyrhythm ? t.polyrhythmDread : 1f);
 
@@ -502,6 +398,24 @@ public static class BattleResolver
         }
     }
 
+    /// <summary>
+    /// The chance a chord collapses into Discordant Interference: the Age's command of its tier (a creature's instinct
+    /// instead), capped at <paramref name="cap"/> (a card's own flicker), then the field's Dissonance, the Echo, the
+    /// precision of Luminance and Crystal Minor Notes, the tempo, and the legends' Seer stars.
+    /// </summary>
+    private static float Interference(Side s, CombatSection caster, ChordTier tier, bool soulWeaver, List<SpellBinding> harmony, Battlefield field, CombatTuning t, float cap = 1f)
+    {
+        float chance = soulWeaver ? AgeMagic.Interference(tier, field.age, t) : t.instinctInterference;
+        chance = Math.Min(chance, cap);
+        var origin = Origin(s, caster);
+        chance += (origin == null ? field.dissonance : s.rules.State.Terrain[origin.battleHex].dissonance) * t.dissonanceInterference + (field.echo == 3 ? t.dissonanceEcho : 0f);
+        if (harmony.Contains(SpellBinding.Luminance)) chance *= t.precisionNote;
+        if (harmony.Contains(SpellBinding.Crystal)) chance *= t.precisionNote;
+        if (soulWeaver && s.side.tempo == SpellTempo.Ritardando) chance *= t.ritardandoInterference;
+        if (soulWeaver && s.side.tempo == SpellTempo.Polyrhythm) chance *= t.polyrhythmInterference;
+        return Math.Max(0f, Math.Min(0.95f, chance * s.stack.interference * s.Of(caster).interference));
+    }
+
     private static float Tempo(SpellTempo tempo, int m, CombatTuning t)
     {
         int k = m - 1;
@@ -521,29 +435,34 @@ public static class BattleResolver
     // ---------------------------------------------------------------------------------------------------------------
     // Steel
 
-    private static void Steel(Side s, int m, Battlefield field, GroundSpec ground, float assault, CombatTuning t, CombatRandom rng, Dictionary<CombatSection, Hit> hits)
+    /// <summary>
+    /// Drilled steel: the section's attacks on its reachable targets (or <paramref name="pool"/>, a Skirmish's opponents),
+    /// half on one and the rest spread by frontage. <paramref name="share"/> is the Beat's Attrition share;
+    /// <paramref name="collided"/> applies the section's Impetus on the Measure its Charge or advance made contact.
+    /// </summary>
+    private static void Steel(Side s, int m, Battlefield field, GroundSpec ground, float assault, CombatTuning t, CombatRandom rng, Dictionary<CombatSection, Hit> hits,
+        CombatSection only = null, CombatSection declaredTarget = null, List<CombatSection> pool = null, float share = 1f, bool collided = false)
     {
-        int flank = Math.Min(t.maxFlank, Math.Max(0, FrontCount(s) - FrontCount(s.enemy)));
         float nerve = s.Nerve(t);
-        foreach (var sec in s.side.sections.Where(x => x.Fighting && x.attack > 0f && x.row != FormationRow.Support).ToList())
+        foreach (var sec in s.side.sections.Where(x => x.Fighting && x.attack > 0f && x.row != FormationRow.Support && (only == null || x == only)).ToList())
         {
             bool missile = sec.row == FormationRow.Back;
-            var targets = Targets(s.enemy, false);
-            if (targets.Count == 0) return;
-            float a = sec.attack * sec.IntegrityShare * s.stack.atk * s.Of(sec).atk * nerve * assault;
+            var targets = Reachable(s, sec);
+            if (pool != null) targets = targets.Where(pool.Contains).ToList();
+            if (declaredTarget != null) targets = targets.Where(x => x == declaredTarget).ToList();
+            if (targets.Count == 0) continue;
+            float a = sec.attack * sec.IntegrityShare * s.stack.atk * s.Of(sec).atk * nerve * assault * share;
+            a *= (1f + s.surge) * (1f - s.BlindOf(sec));
             if (sec.mindBroken) a *= t.mindBreakAttack;
-            a *= sec.On(s.footing ?? ground.ground)?.attack ?? 1f;
+            a *= sec.On(s.rules.State.Terrain[sec.battleHex].ground)?.attack ?? 1f;
+            a *= s.rules.AttackFactor(s.attacker, sec);
             if (missile)
             {
                 a *= ground.missiles;
                 if (field.weather > 1.2f) a *= t.stormMissiles;
                 if (field.concealed) a *= t.coverMissiles;
             }
-            else
-            {
-                if (m == 1 && ground.charges && !sec.mindBroken) a *= sec.charge;
-                a *= 1f + flank * t.flankPerSection;
-            }
+            else if (collided && ground.charges && !sec.mindBroken) a *= sec.charge;
             if (m == 1 && s.initiative) a *= t.initiative;
             a *= Math.Max(0f, 1f + (rng.NextFloat() * 2f - 1f) * t.variance);
             // Half the blow falls on one chosen section, the rest spreads along the line by frontage.
@@ -551,28 +470,32 @@ public static class BattleResolver
             float frontage = targets.Sum(x => Math.Max(0.1f, x.width));
             foreach (var x in targets)
             {
-                float share = a * ((1f - t.focus) * Math.Max(0.1f, x.width) / frontage + (x == target ? t.focus : 0f));
+                float portion = a * ((1f - t.focus) * Math.Max(0.1f, x.width) / frontage + (x == target ? t.focus : 0f));
+                portion *= s.rules.TargetAttackFactor(s.attacker, x);
                 var hit = HitOf(hits, x);
-                hit.attacks += share;
-                hit.pierce += share * sec.piercing;
-                hit.dread += share * sec.dread * s.stack.dread * s.Of(sec).dread;
+                hit.attacks += portion;
+                hit.pierce += portion * sec.piercing;
+                hit.dread += portion * sec.dread * s.stack.dread * s.Of(sec).dread;
+                if (missile && s.sure) hit.sure += portion;
             }
         }
     }
 
-    private static void Parry(CombatSection sec, Hit hit, Side owner, GroundSpec ground, float defenderDefense, CombatTuning t)
+    /// <summary>The Integrity and Composure a hit's attacks inflict after the section's own parries and armor (card Guards answer as Wards).</summary>
+    private static (float integrity, float composure) Parry(CombatSection sec, Hit hit, Side owner, float defenderDefense, CombatTuning t)
     {
-        if (hit.attacks <= 0f) return;
+        if (hit.attacks <= 0f) return (0f, 0f);
         float parry = (owner.attacker ? sec.breakthrough : sec.defense) * sec.IntegrityShare * owner.stack.def * owner.Of(sec).def * owner.Nerve(t);
-        parry *= sec.On(owner.footing ?? ground.ground)?.defense ?? 1f;
+        parry *= sec.On(owner.rules.State.Terrain[sec.battleHex].ground)?.defense ?? 1f;
         if (!owner.attacker) parry *= defenderDefense;
         if (sec.mindBroken) parry *= t.mindBreakParry;
-        float defended = Math.Min(hit.attacks, parry);
+        parry *= owner.rules.DefenseFactor(owner.attacker, sec);
+        float defended = Math.Min(hit.attacks - Math.Min(hit.attacks, hit.sure), parry);
         float struck = defended * t.defendedHit + (hit.attacks - defended) * t.undefendedHit;
-        float armor = sec.armor * (sec.mindBroken ? t.mindBreakArmor : 1f);
-        if (hit.pierce / hit.attacks < armor) struck *= t.armorBlock;
-        hit.integrity += struck * t.integrityPerHit;
-        hit.composure += struck * t.composurePerHit * (hit.dread / hit.attacks);
+        float armor = sec.armor * (sec.mindBroken ? t.mindBreakArmor : 1f) * owner.rules.DefenseFactor(owner.attacker, sec);
+        float armored = Math.Max(0f, hit.attacks - hit.armorBypass);
+        if (armored > 0f && hit.pierce / armored < armor) struck *= (hit.armorBypass + armored * t.armorBlock) / hit.attacks;
+        return (struck * t.integrityPerHit, struck * t.composurePerHit * (hit.dread / hit.attacks));
     }
 
     private static Hit HitOf(Dictionary<CombatSection, Hit> hits, CombatSection target)
@@ -586,7 +509,6 @@ public static class BattleResolver
 
     private static void Toll(Side s, int m, Battlefield field, CombatTuning t)
     {
-        bool lineGone = !s.side.sections.Any(x => x.row == FormationRow.Front && x.Standing);
         float rally = s.rally + (field.sacred ? t.sacredRally : 0f);
         foreach (var sec in s.side.sections.Where(x => x.Standing))
         {
@@ -598,37 +520,49 @@ public static class BattleResolver
                 sec.integrity -= worn;
                 sec.lost += worn;
             }
+            // Cindergale's flame keeps burning (a Burn card): no armor stops it.
+            var burning = s.Marks(sec);
+            if (burning != null && burning.burnLeft > 0 && burning.burn > 0f)
+            {
+                float burnt = Math.Min(Math.Max(0f, sec.integrity), burning.burn);
+                sec.integrity -= burnt;
+                sec.lost += burnt;
+            }
             if (field.echo == 4) sec.composure -= t.silenceChill;
             if (m >= t.fatigueFrom) sec.composure -= t.fatigue;
-            if (lineGone && sec.row == FormationRow.Back) sec.composure -= t.exposed;
+            if (sec.row == FormationRow.Back && s.enemy.side.Standing.Any(e => s.rules.Distance(e.battleHex, sec.battleHex) <= 1) &&
+                (s.side.StanceBroken || !s.rules.Protected(sec, s.attacker, s.enemy.side.Standing.OrderBy(e => s.rules.Distance(e.battleHex, sec.battleHex)).First().battleHex))) sec.composure -= t.exposed;
             // A Mind Broken section sits at empty and climbs back from there.
             if (sec.mindBroken) sec.composure = Math.Max(0f, sec.composure);
-            float lift = rally + s.Of(sec).rally;
+            float lift = rally + s.Of(sec).rally + s.SupportOf(sec, x => x.rally);
             if (lift > 0f) sec.composure = Math.Min(sec.maxComposure, sec.composure + lift);
         }
     }
 
     private static void States(Side s, int m, CombatTuning t, BattleReport report)
     {
-        int fell = 0, broke = 0;
         foreach (var sec in s.side.sections.Where(x => x.Standing))
         {
-            if (sec.integrity <= 0f)
+            if (sec.integrity <= 0f && !sec.deathKnell)
             {
                 sec.integrity = 0f;
                 sec.destroyed = true;
                 sec.committed = false;
-                fell++;
+                s.spatialEvent(s, sec, sec.eliteRole != BattleEliteRole.None ? BattleSpatialCause.EliteCasualty : BattleSpatialCause.AdjacentFormationCollapse, "A combatant fell; adjacent allies witness the collapse.");
+                if (sec.row == FormationRow.Front && !s.side.Standing.Any(x => x.battleHex == sec.battleHex && x.row == FormationRow.Front))
+                    s.spatialEvent(s, sec, BattleSpatialCause.CriticalPositionLost, "The last front element at this position fell.");
+                if (sec.leader == s.conductor && sec.eliteRole != BattleEliteRole.None && s.Conducted) { s.bar = 0f; s.conductorFallen = true; }
                 report.log.Add($"Measure {m}: {sec.name} of {s.side.name} is cut down.");
                 LeaderLeaves(s, sec, m, report);
                 continue;
             }
-            if (!sec.mindBroken && sec.composure <= 0f)
+            if (!sec.mindBroken && (sec.eliteRole != BattleEliteRole.None ? sec.ComposureShare < s.spiralingBelow : sec.composure <= 0f))
             {
-                sec.composure = 0f;
+                sec.composure = Math.Max(0f, sec.composure);
                 sec.mindBroken = true;
                 sec.timesMindBroken++;
-                broke++;
+                s.spatialEvent(s, sec, BattleSpatialCause.MindBreak, "Composure failed; adjacent allies are shaken.");
+                if (sec.leader == s.conductor && sec.eliteRole != BattleEliteRole.None && s.Conducted) s.bar = Math.Min(s.bar, s.barMax * s.spiralingBelow);
                 report.log.Add($"Measure {m}: {sec.name} of {s.side.name} suffers a Mind Break: its Composure breaks, its guard drops{(sec.Casts ? " and its magic gutters out" : string.Empty)}.");
             }
             else if (sec.mindBroken && sec.ComposureShare >= t.steadyAt)
@@ -636,19 +570,28 @@ public static class BattleResolver
                 sec.mindBroken = false;
                 report.log.Add($"Measure {m}: {sec.name} of {s.side.name} steadies and takes up the song again.");
             }
-            if (TryCapture(s, sec, m, t, report)) fell++;
+            if (TryCapture(s, sec, m, t, report))
+            {
+                s.spatialEvent(s, sec, sec.eliteRole != BattleEliteRole.None ? BattleSpatialCause.EliteCasualty : BattleSpatialCause.AdjacentFormationCollapse, "A combatant was subdued.");
+                if (sec.leader == s.conductor && sec.eliteRole != BattleEliteRole.None && s.Conducted) { s.bar = 0f; s.conductorFallen = true; }
+            }
         }
-        if (fell + broke == 0) return;
-        // Each fall shakes the rest of the line, after the measure (so the order of the sections does not matter).
-        float shock = fell * t.fallenShock + broke * t.mindBreakShock;
-        foreach (var sec in s.side.sections.Where(x => x.Standing)) sec.composure -= shock;
-        if (s.Conducted) s.bar -= (fell + 0.5f * broke) * t.sectionLostStrain;
     }
 
     /// <summary>A Mind Broken section below <see cref="CombatTuning.captureBelow"/> Integrity is subdued and taken alive, if the enemy takes captives.</summary>
     private static bool TryCapture(Side s, CombatSection sec, int m, CombatTuning t, BattleReport report)
     {
-        if (!s.enemy.side.takesCaptives || !sec.Standing || !sec.mindBroken || sec.integrity <= 0f || sec.IntegrityShare >= t.captureBelow) return false;
+        if (!s.enemy.side.takesCaptives || !sec.Standing || !sec.mindBroken) return false;
+        // Mass surrender: a broken ordinary section held in contact gives up with bodies still whole (60% Integrity and no will).
+        bool engaged = sec.eliteRole == BattleEliteRole.None && s.enemy.side.Standing.Any(x => x.battleHex == sec.battleHex);
+        if (sec.eliteRole != BattleEliteRole.None ? sec.ComposureShare > .05f && !sec.eliteCheckmate : sec.integrity <= 0f || sec.IntegrityShare >= (engaged ? Math.Max(t.captureBelow, t.surrenderBelow) : t.captureBelow)) return false;
+        if (!s.enemy.side.Standing.Any(x => s.rules.Distance(x.battleHex, sec.battleHex) <= 1)) return false;
+        Capture(s, sec, m, report);
+        return true;
+    }
+
+    private static void Capture(Side s, CombatSection sec, int m, BattleReport report)
+    {
         sec.captured = true;
         sec.committed = false;
         report.captives.Add(new BattleCaptive
@@ -657,8 +600,7 @@ public static class BattleResolver
             individuals = sec.Alive, integrity = Math.Max(0f, sec.integrity), measure = m,
         });
         report.log.Add($"Measure {m}: {sec.name} of {s.side.name}, Mind Broken and bleeding, is subdued and taken alive by {s.enemy.side.name}.");
-        LeaderLeaves(s, sec, m, report);
-        return true;
+        if (sec.eliteRole == BattleEliteRole.None) LeaderLeaves(s, sec, m, report);
     }
 
     /// <summary>A legend never goes down with its section: when the section is cut down or taken, it slips away alone.</summary>
@@ -666,20 +608,29 @@ public static class BattleResolver
     {
         var leader = sec.leader;
         if (leader == null || !s.leaders.ContainsKey(sec) || s.leftField.ContainsKey(leader)) return;
+        if (sec.eliteRole == BattleEliteRole.None && s.side.Standing.Any(x => x != sec && x.eliteRole != BattleEliteRole.None && x.leader == leader)) return;
         s.leftField[leader] = m;
         report.log.Add($"Measure {m}: {leader.name} is torn from {sec.name}'s fall and slips away from the field, alone.");
     }
 
-    private static void Conductor(Side s, int m, CombatTuning t, BattleReport report)
+    /// <summary>The Conductor's Mind Break comes at Spiraling, like every elite's; a fallen Conductor's bar is already empty. True when it newly broke.</summary>
+    private static bool Conductor(Side s, int m, CombatTuning t, BattleReport report)
     {
-        if (!s.Conducted || s.bar > 0f) return;
+        if (!s.Conducted || s.bar > s.barMax * s.spiralingBelow && !s.conductorFallen &&
+            !s.side.sections.Any(x => x.eliteRole == BattleEliteRole.Conductor && x.leader == s.conductor && x.mindBroken)) return false;
         s.conductorBroken = true;
-        s.bar = 0f;
+        if (s.conductorFallen) s.bar = 0f;
         // A Mind Break: the stack loses its commander's gifts and its heart, and fights on leaderless.
         s.rally -= s.stack.rally;
+        s.recon -= s.stack.recon; s.woundedShare -= s.stack.wounded;
         s.stack = None;
-        foreach (var sec in s.side.sections.Where(x => x.Standing)) sec.composure -= t.conductorFallShock;
-        report.log.Add($"Measure {m}: {s.conductor.name} suffers a Mind Break; the Soul Leitmotif goes dark and {s.side.name} fight on without a commander.");
+        float shock = s.commandCulture == BattleCommandCulture.Disciplined ? .5f : s.commandCulture == BattleCommandCulture.Fanatical ? .75f : s.commandCulture == BattleCommandCulture.Decentralized ? .25f : 1f;
+        foreach (var sec in s.side.sections.Where(x => x.Standing))
+        { sec.composure -= t.conductorFallShock * shock; if (s.commandCulture == BattleCommandCulture.Fanatical) sec.attack *= 1.1f; }
+        s.spatialEvent(s, s.side.sections.FirstOrDefault(x => x.eliteRole == BattleEliteRole.Conductor), BattleSpatialCause.ConductorDisrupted, "Command continuity failed.");
+        report.log.Add(s.conductorFallen ? $"Measure {m}: {s.conductor.name} falls; {s.side.name} fight on without a commander."
+            : $"Measure {m}: {s.conductor.name} suffers a Mind Break; the Soul Leitmotif goes dark and {s.side.name} fight on without a commander.");
+        return true;
     }
 
     private static float LineShare(Side s)
@@ -721,7 +672,12 @@ public static class BattleResolver
             sec.integrity -= worn;
             sec.lost += worn;
             sec.committed = false;
-            if (sec.integrity <= 0f) { sec.integrity = 0f; sec.destroyed = true; continue; }
+            if (sec.integrity <= 0f)
+            {
+                sec.integrity = 0f;
+                if (sec.eliteRole == BattleEliteRole.None) { sec.destroyed = true; continue; }
+                sec.deathKnell = true; sec.evacuated = sec.fled = true; continue;
+            }
             if (attached > 0) { sec.fled = true; continue; }
             // The broken and the bleeding are caught, not killed, by a side that takes captives.
             if (!TryCapture(s, sec, m, t, report)) sec.fled = true;
@@ -731,6 +687,7 @@ public static class BattleResolver
 
     private static SideBars Bars(Side s) => new SideBars
     {
+        stance = s.side.stance, stanceStability = s.side.stanceStability, stanceStabilityMax = s.side.maxStanceStability,
         integrity = s.side.LineIntegrity, integrityMax = s.side.LineMaxIntegrity,
         composure = s.side.LineComposure, composureMax = s.side.LineMaxComposure,
         conductor = s.conductor == null ? 0f : Math.Max(0f, s.bar), conductorMax = s.barMax,
@@ -754,6 +711,7 @@ public static class BattleResolver
             float gone = Math.Max(0f, s.startIntegrity[sec] - Math.Max(0f, sec.integrity));
             sec.wounded = gone * share;
             sec.dead = gone - sec.wounded;
+            if (sec.eliteRole != BattleEliteRole.None) { sec.dead = sec.permanentDeath ? s.startIntegrity[sec] : 0f; sec.wounded = sec.permanentDeath ? 0f : gone; }
             r.wounded += sec.wounded;
             r.dead += sec.dead;
             if (sec.mindBroken && sec.Standing) r.mindBroken++;
@@ -785,6 +743,8 @@ public static class BattleResolver
                 name = legend.name, role = role, section = section, attacker = s.attacker, won = won,
                 mindBroken = mindBroken, missing = missing, missingSevenths = missing ? t.missingSevenths : 0,
             };
+            var body = s.side.sections.FirstOrDefault(x => x.eliteRole != BattleEliteRole.None && x.leader == legend);
+            if (body != null) { fate.dead = body.permanentDeath; fate.captured = body.captured; fate.deathKnell = body.deathKnell; fate.missing = !fate.dead && !fate.captured && (body.evacuated || body.fled || missing); fate.missingSevenths = fate.missing ? t.missingSevenths : 0; }
             fate.strain = weight + (lost ? t.defeatStrain : 0f) + (mindBroken ? t.mindBreakStrain : 0f) + (missing ? t.missingStrain : 0f);
             // The companies it is attached to weigh on it: those cut down or taken, and those it left behind.
             foreach (var sec in s.side.sections)
@@ -795,6 +755,8 @@ public static class BattleResolver
                 else if (missing) fate.grief += t.attachmentGrief * bond;
             }
             fate.strain += fate.grief;
+            fate.parasiticStrain = s.side.sections.Where(x => x.leader == legend).Select(x => x.parasiticStrain).DefaultIfEmpty(0f).Max();
+            fate.strain += fate.parasiticStrain;
             if (won) fate.fragments.Add(new FragmentAward(FragmentKind.Defiance, role == BattleRole.Commander ? t.victoryDefiance : t.leaderDefiance));
             else if (lost) fate.fragments.Add(new FragmentAward(FragmentKind.Acceptance, t.defeatAcceptance));
             if (mindBroken) fate.conditions.Add(new LegendCondition(LegendConditions.Traumatized, t.traumaSevenths, "battle"));
@@ -809,7 +771,7 @@ public static class BattleResolver
         if (s.conductor != null)
         {
             float weight = s.barMax <= 0f ? 0f : t.battleWeight * Math.Max(0f, s.barMax - Math.Max(0f, s.bar)) / s.barMax;
-            Add(s.conductor, BattleRole.Commander, s.side.name, s.conductorBroken, doomed, weight);
+            Add(s.conductor, BattleRole.Commander, s.side.name, s.conductorBroken, doomed || s.leftField.ContainsKey(s.conductor), weight);
         }
         foreach (var sec in s.side.sections.Where(x => x.leader != null && s.leaders.ContainsKey(x)))
         {
@@ -820,17 +782,13 @@ public static class BattleResolver
             report.log.Add($"{fate.name} leaves the rest behind and is missing in action.");
     }
 
+    /// <summary>Both sides' verdicts (<see cref="BattleVerdicts.Tier"/>; a held field is the defender's win); returns the attacker's.</summary>
     private static BattleOutcome Grade(BattleReport report, int end)
     {
         float aLoss = report.attacker.LossShare, dLoss = report.defender.LossShare;
-        if (end > 0)
-        {
-            if (aLoss < 0.15f && dLoss > 0.4f) return BattleOutcome.DecisiveVictory;
-            if (aLoss >= 0.5f || aLoss > dLoss * 1.5f) return BattleOutcome.PyrrhicVictory;
-            return BattleOutcome.Victory;
-        }
-        if (end < 0) return dLoss < 0.15f && aLoss > 0.4f ? BattleOutcome.Rout : BattleOutcome.Defeat;
-        return BattleOutcome.Stalemate;
+        report.attacker.outcome = BattleVerdicts.Tier(end > 0, aLoss, dLoss);
+        report.defender.outcome = BattleVerdicts.Tier(end <= 0, dLoss, aLoss);
+        return report.attacker.outcome;
     }
 
     private static string Losses(SideResult r) =>
@@ -865,7 +823,7 @@ public static class BattleResolver
         var f = new BattleForecast { runs = Math.Max(1, runs) };
         for (int i = 0; i < f.runs; i++)
         {
-            var r = Resolve(setup.Clone(unchecked(setup.seed * 31 + i * 7919 + 1)), settings);
+            var r = Begin(setup.Clone(unchecked(setup.seed * 31 + i * 7919 + 1)), settings, auto: true).Finish();
             if (r.winner > 0) f.attackerWins++; else if (r.winner < 0) f.defenderWins++; else f.stalemates++;
             f.attackerLoss += r.attacker.LossShare / f.runs;
             f.defenderLoss += r.defender.LossShare / f.runs;
@@ -889,6 +847,7 @@ public sealed class BattleForecast
 /// <summary>A small deterministic generator (xorshift64*), so a seed replays the same battle.</summary>
 public sealed class CombatRandom
 {
+    public CombatRandom Clone() => new CombatRandom(0) { _state = _state };
     private ulong _state;
 
     public CombatRandom(int seed)
