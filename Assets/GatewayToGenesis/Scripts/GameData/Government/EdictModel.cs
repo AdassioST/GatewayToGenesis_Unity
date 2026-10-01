@@ -146,12 +146,12 @@ public class EdictState
     /// <summary>Sevenths since the edicts were established.</summary>
     public int sevenths;
     /// <summary>Stance id → option in force.</summary>
-    public Dictionary<string, string> stances = new Dictionary<string, string>();
+    [UnityEngine.SerializeField] public Dictionary<string, string> stances = new Dictionary<string, string>();
     /// <summary>Stance id → Sevenths before it can change again.</summary>
-    public Dictionary<string, int> stanceCooldowns = new Dictionary<string, int>();
+    [UnityEngine.SerializeField] public Dictionary<string, int> stanceCooldowns = new Dictionary<string, int>();
     public List<ActiveEdict> active = new List<ActiveEdict>();
     /// <summary>Edict id → Sevenths before it can be sealed again.</summary>
-    public Dictionary<string, int> edictCooldowns = new Dictionary<string, int>();
+    [UnityEngine.SerializeField] public Dictionary<string, int> edictCooldowns = new Dictionary<string, int>();
     public List<DecreeMoment> record = new List<DecreeMoment>();
     public int decrees;
 }

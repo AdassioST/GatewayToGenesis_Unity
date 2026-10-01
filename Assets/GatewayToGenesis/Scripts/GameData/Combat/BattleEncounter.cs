@@ -7,7 +7,7 @@ public enum BattleEncounterStep { Begin, Command, Crisis, Evacuate, Rhythm, Inpu
 public sealed class BattleEncounterAction
 {
     public BattleEncounterStep step;
-    public BattleCommand command;
+    [NonSerialized] public BattleCommand command;
     public int index, beat;
     public double time;
     public BattleRhythmOptions options;
@@ -19,8 +19,8 @@ public sealed class BattleEncounterState
     public int attackerUnit, defenderUnit;
     public bool playerAttacker, started, accepted, wasPaused;
     public double clock;
-    public BattleSetup original;
-    public BattleForecast forecast;
+    [NonSerialized] public BattleSetup original;
+    [NonSerialized] public BattleForecast forecast;
     public List<BattleEncounterAction> history = new List<BattleEncounterAction>();
 }
 

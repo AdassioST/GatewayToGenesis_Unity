@@ -1,12 +1,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Cinemachine;
+
 using System.Collections.Generic;
 
 public class CameraMovement : MonoBehaviour
 {
-    [SerializeField] CinemachineVirtualCamera virtualCamera;
+    [SerializeField] Unity.Cinemachine.CinemachineCamera virtualCamera;
     [SerializeField] Camera mainCamera;
 
     [SerializeField] float moveSpeed = 5f, zoomSpeed = 1f, screenEdgePercentage = 0.15f, smoothingTime = 0.2f;
@@ -14,11 +14,11 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] PolygonCollider2D worldBoundPolygon;
     [SerializeField] Transform cameraFollowPoint;
 
-    [SerializeField] CinemachineConfiner2D confiner2D;
+    [SerializeField] Unity.Cinemachine.CinemachineConfiner2D confiner2D;
 
     private Vector3 targetPosition;
 
-    private CinemachineTransposer transposer;
+    private Unity.Cinemachine.CinemachineFollow follow;
     private Vector3 velocity = Vector3.zero;
 
     [SerializeField] private float minZoom = 3f, maxZoom = 10f, currentZoom = 7f;
@@ -44,7 +44,7 @@ public class CameraMovement : MonoBehaviour
     public void SetZoom(float zoom)
     {
         currentZoom = Mathf.Clamp(zoom, minZoom, maxZoom);
-        if (virtualCamera != null) virtualCamera.m_Lens.OrthographicSize = currentZoom;
+        if (virtualCamera != null) virtualCamera.Lens.OrthographicSize = currentZoom;
         // Faster, snappier panning when zoomed out.
         float t = maxZoom > minZoom ? (currentZoom - minZoom) / (maxZoom - minZoom) : 1f;
         moveSpeed = Mathf.Lerp(5f, 10f, t);
@@ -59,8 +59,8 @@ public class CameraMovement : MonoBehaviour
         Instance = this;
         if (virtualCamera != null)
         {
-            transposer = virtualCamera.GetCinemachineComponent<CinemachineTransposer>();
-            currentZoom = virtualCamera.m_Lens.OrthographicSize;
+            follow = virtualCamera.GetComponent<Unity.Cinemachine.CinemachineFollow>();
+            currentZoom = virtualCamera.Lens.OrthographicSize;
         }
 
         screenSize = new Vector3(Screen.width, Screen.height, 0);
@@ -69,7 +69,7 @@ public class CameraMovement : MonoBehaviour
 
         if (confiner2D != null && worldBoundPolygon != null)
         {
-            confiner2D.m_BoundingShape2D = worldBoundPolygon;
+            confiner2D.BoundingShape2D = worldBoundPolygon;
         }
 
         UpdateCameraBounds();

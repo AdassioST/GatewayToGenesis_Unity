@@ -98,8 +98,6 @@ public class AuricVoice : MonoBehaviour
     private static void Copy(Material preset, Material to, int id, Color fallback) =>
         to.SetColor(id, preset != null && preset.HasProperty(id) ? preset.GetColor(id) : fallback);
 
-    private void Awake() => ShaderUtilities.GetShaderPropertyIDs();
-
     private void Start()
     {
         if (_material == null) return;

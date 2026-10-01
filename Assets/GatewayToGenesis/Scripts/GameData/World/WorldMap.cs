@@ -283,7 +283,7 @@ public class WorldMap
     /// <summary>Resonance plagues running through (or lately past) the Macro Biomes' creatures (saved; <see cref="WorldPlagues"/>).</summary>
     public List<Outbreak> Outbreaks { get; set; } = new List<Outbreak>();
     /// <summary>Each species' habitat cells by slot for <see cref="habitatAge"/> (derived, never saved; <see cref="WorldEcology.Habitat"/>).</summary>
-    public Dictionary<string, Dictionary<int, List<int>>> habitat;
+    [NonSerialized] public Dictionary<string, Dictionary<int, List<int>>> habitat;
     public int habitatAge = -1;
     /// <summary>
     /// The calendar as the world's rules read it (derived, never saved; <c>WorldSystem</c> sets it from the time system):

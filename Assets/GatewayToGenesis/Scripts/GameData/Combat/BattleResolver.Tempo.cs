@@ -14,7 +14,7 @@ public static partial class BattleResolver
         private readonly List<(Track track, Queued preparation)> overbeatReactions = new List<(Track, Queued)>();
         /// <summary>Tracks ringing as one instrument in Resolution Climax, and Tracks a Sympathetic Collapse threw to Detuned until Assessment.</summary>
         private readonly HashSet<Track> sympathetic = new HashSet<Track>(), sympatheticFall = new HashSet<Track>();
-        private bool pendingOverbeat, performingOverbeat, composingOverbeat;
+        private bool pendingOverbeat, composingOverbeat;
         public int TempoPercentage(bool attacker) => tempo[attacker].percentage;
         public string TempoMovement(bool attacker) => tempo[attacker].Movement;
         /// <summary>Consecutive Perfect sequences toward ignition (four pips beneath the Conductor's tempo marking).</summary>
@@ -347,7 +347,7 @@ public static partial class BattleResolver
         }
         private void PerformOverbeat()
         {
-            pendingOverbeat = false; performingOverbeat = true;
+            pendingOverbeat = false;
             try
             {
                 Enter(BattlePhase.Execution);
@@ -388,7 +388,7 @@ public static partial class BattleResolver
                 foreach (var c in contexts.Select(ctx => ctx.chord).Where(c => c?.overbeat == true).Distinct()) { c.state = BattleChordState.Resolved; FinishChord(c); }
                 FlushReactionsAndHits(); Coherence(); Pressure(); PumpCascade(); SyncCrises(); EliteChecks();
             }
-            finally { performingOverbeat = false; releasing = null; }
+            finally { releasing = null; }
         }
     }
 }
